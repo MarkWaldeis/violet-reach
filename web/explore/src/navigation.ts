@@ -30,7 +30,8 @@ export class Navigation {
     const z = m.spawn?.z ?? m.originZ + m.tileSize * m.tilesZ / 2;
     this.#camera.position.set(this.#clampX(x), m.maxHeight + 150, this.#clampZ(z));
     this.#yaw = m.spawn?.yaw ?? 0;
-    this.#pitch = -0.13;
+    const availableGround = m.tileSize * Math.min(m.tilesX / 2, m.tilesZ / 2, 10);
+    this.#pitch = Math.min(-0.13, 0.23 - Math.atan2(this.#spawnClearance(), availableGround));
     this.mode = "fly";
     this.landing = false;
     this.#applyLook();
@@ -40,7 +41,7 @@ export class Navigation {
     const p = this.#camera.position;
     const ground = this.#ground(p.x, p.z);
     if (ground === undefined) return false;
-    p.y = ground + 160;
+    p.y = ground + this.#spawnClearance();
     return true;
   }
 
@@ -97,6 +98,10 @@ export class Navigation {
 
   #applyLook() {
     this.#camera.rotation.set(this.#pitch, this.#yaw, 0, "YXZ");
+  }
+
+  #spawnClearance() {
+    return MathUtils.clamp(this.#manifest.tileSize * 3, FLY_CLEARANCE, 160);
   }
 
   #clampX(x: number) {

@@ -47,12 +47,14 @@ test("LOD hysteresis prevents churn near the boundary", () => {
   assert.equal(chooseLOD(2600), 3);
 });
 
-test("tiny terrain tiles bound the selection and flight step", () => {
+test("tiny terrain tiles bound the selection and spawn clearance", () => {
   const small = { ...m, tileSize: 1, tilesX: 8192, tilesZ: 8192 };
   const selected = selectTiles(small, 0, 0);
   assert.ok(selected.length < 450);
   const camera = new PerspectiveCamera();
   const nav = new Navigation(camera, small, () => 40);
+  assert.ok(nav.liftToSpawnHeight());
+  assert.equal(camera.position.y, 43);
   nav.keys.add("KeyW");
   nav.keys.add("ShiftLeft");
   nav.update(0.05);
