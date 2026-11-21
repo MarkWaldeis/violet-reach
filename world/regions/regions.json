@@ -1,0 +1,103 @@
+{
+  "convention": "Runtime: X east, Y up, Z south; Blender (x,y,z) = runtime (x,-z,y). Distances in metres.",
+  "map": "regions.png",
+  "row_direction": "+Z (north to south)",
+  "regions": [
+    {
+      "id": "lyrenschlucht",
+      "name": "Lyrenschlucht",
+      "index": 1,
+      "centre": [
+        -2450,
+        -2200
+      ],
+      "bbox": [
+        -4096.0,
+        -4096.0,
+        -168.0,
+        -688.0
+      ],
+      "description": "Grüne Schlucht mit hohen Felspfeilern; Säulenruinen und violette Kristallnester."
+    },
+    {
+      "id": "aschgrat",
+      "name": "Aschgrat-Canyon",
+      "index": 2,
+      "centre": [
+        1900,
+        -2350
+      ],
+      "bbox": [
+        -416.0,
+        -4096.0,
+        4096.0,
+        -424.0
+      ],
+      "description": "Gewundener tiefer Einschnitt im Hochplateau; künftige Bogenbrücken und Felsentore."
+    },
+    {
+      "id": "dornengang",
+      "name": "Dornengang",
+      "index": 3,
+      "centre": [
+        -2200,
+        2450
+      ],
+      "bbox": [
+        -4096.0,
+        1080.0,
+        -640.0,
+        4096.0
+      ],
+      "description": "Enger Pass zwischen steilen Graten; Wächtertore und Kristallspitzen."
+    },
+    {
+      "id": "weisswall",
+      "name": "Weißwall",
+      "index": 4,
+      "centre": [
+        -2400,
+        0
+      ],
+      "bbox": [
+        -4096.0,
+        -1128.0,
+        -672.0,
+        1288.0
+      ],
+      "description": "Lange helle Steilstufe mit Wasserfall; Platz für ein weißes Monumentaltor."
+    },
+    {
+      "id": "mondsichel",
+      "name": "Mondsichel",
+      "index": 5,
+      "centre": [
+        2500,
+        1000
+      ],
+      "bbox": [
+        1096.0,
+        -1056.0,
+        4096.0,
+        3792.0
+      ],
+      "description": "Sichelförmiger Bergkamm um ein grünes Tal; Aussichtstempel auf dem Grat."
+    },
+    {
+      "id": "spiegelsee",
+      "name": "Spiegelsee",
+      "index": 6,
+      "centre": [
+        650,
+        1750
+      ],
+      "bbox": [
+        -1376.0,
+        -1064.0,
+        4096.0,
+        4096.0
+      ],
+      "description": "Buchtenreiches Seebecken, Wiesen und Wald; sanfter zentraler Wanderstart, Uferpavillon."
+    }
+  ]
+}
