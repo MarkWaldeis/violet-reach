@@ -1,0 +1,20 @@
+{
+  "id": "ruin_wall_a",
+  "category": "monuments",
+  "title": "The Broken Retaining Wall",
+  "description": "About ten metres of fractured dry-laid limestone and the surviving terraced walk behind it.",
+  "target_size_m": [
+    10,
+    5,
+    5
+  ],
+  "lod_triangles": [
+    12500,
+    4500,
+    1300
+  ],
+  "texture_size": 2048,
+  "status": "blender_review",
+  "builder": "devin-501e5a510b5c43f2b6ce7952cf05094b",
+  "review": null
+}

@@ -1,0 +1,20 @@
+{
+  "id": "ruin_debris_a",
+  "category": "monuments",
+  "title": "The Fallen Survey Line",
+  "description": "Fractured limestone drums, a fallen moulding and weathered ashlar in an eight-metre scatter.",
+  "target_size_m": [
+    8,
+    6,
+    2
+  ],
+  "lod_triangles": [
+    9000,
+    3300,
+    950
+  ],
+  "texture_size": 2048,
+  "status": "blender_review",
+  "builder": "devin-501e5a510b5c43f2b6ce7952cf05094b",
+  "review": null
+}

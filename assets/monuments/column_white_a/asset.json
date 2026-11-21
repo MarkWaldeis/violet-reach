@@ -1,0 +1,20 @@
+{
+  "id": "column_white_a",
+  "category": "monuments",
+  "title": "Survey Column",
+  "description": "A freestanding tapered 18 m limestone column with fluted drums, a weathered plinth, and an overhanging capital.",
+  "target_size_m": [
+    4.9,
+    4.9,
+    18.1
+  ],
+  "lod_triangles": [
+    12500,
+    4300,
+    1200
+  ],
+  "texture_size": 2048,
+  "status": "blender_review",
+  "builder": "devin-501e5a510b5c43f2b6ce7952cf05094b",
+  "review": null
+}

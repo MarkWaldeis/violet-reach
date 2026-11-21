@@ -1,0 +1,20 @@
+{
+  "id": "stair_terrace_a",
+  "category": "monuments",
+  "title": "The Spillway Stair",
+  "description": "Thirty-four limestone risers in two flights connect ground to a six-metre upper terrace.",
+  "target_size_m": [
+    20,
+    12,
+    6.3
+  ],
+  "lod_triangles": [
+    19000,
+    6800,
+    2400
+  ],
+  "texture_size": 4096,
+  "status": "blender_review",
+  "builder": "devin-501e5a510b5c43f2b6ce7952cf05094b",
+  "review": null
+}
