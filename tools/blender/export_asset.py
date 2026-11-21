@@ -1,8 +1,8 @@
-"""blender -b <asset>.blend --python tools/blender/export_asset.py -- <asset_dir>
+"""blender -b <asset>.blend --python tools/blender/export_asset.py -- <asset_dir> <staging_dir>
 
 Turns the high-detail SOURCE into the game asset: LOD0 is decimated from the source and gets
 base colour, normal, roughness, occlusion and emission baked from it; lower LODs are decimated
-from LOD0 and share its textures. Writes export/<id>.raw.glb with nodes <id>_LOD0..n.
+from LOD0 and share its textures. Writes <staging_dir>/<id>.raw.glb with nodes <id>_LOD0..n.
 """
 import math
 import os
@@ -13,13 +13,11 @@ import bpy  # noqa: E402
 import numpy as np  # noqa: E402
 import vrlib  # noqa: E402
 
-asset_dir = os.path.abspath(vrlib.script_args()[0])
+asset_dir, export_dir = map(os.path.abspath, vrlib.script_args())
 meta = vrlib.load_meta(asset_dir)
 asset_id = meta["id"]
 tex = int(meta.get("texture_size", 2048))
 lod_tris = meta["lod_triangles"]
-export_dir = os.path.join(asset_dir, "export")
-os.makedirs(export_dir, exist_ok=True)
 scene = bpy.context.scene
 vrlib.use_cycles_cpu(scene, 24)
 scene.cycles.use_denoising = False
@@ -83,6 +81,8 @@ bake_mat = bpy.data.materials.new(asset_id + "_bake")
 bake_mat.use_nodes = True
 lod0.data.materials.clear()
 lod0.data.materials.append(bake_mat)
+for poly in lod0.data.polygons:
+    poly.material_index = 0
 
 bake("basecolor", "DIFFUSE", "sRGB", pass_filter={"COLOR"})
 bake("normal", "NORMAL", "Non-Color")
@@ -136,6 +136,7 @@ lod0.data.materials.clear()
 lod0.data.materials.append(mat)
 
 lods = [lod0]
+lod0_tris = vrlib.triangle_count(lods)
 for i, target in enumerate(lod_tris[1:], start=1):
     lod = lod0.copy()
     lod.data = lod0.data.copy()
@@ -143,14 +144,14 @@ for i, target in enumerate(lod_tris[1:], start=1):
     scene.collection.objects.link(lod)
     select_only([lod], lod)
     d = lod.modifiers.new("dec", "DECIMATE")
-    d.ratio = min(1.0, target / lod_tris[0])
+    d.ratio = min(1.0, target / lod0_tris)
     bpy.ops.object.modifier_apply(modifier=d.name)
     lods.append(lod)
 
 select_only(lods, lod0)
 raw = os.path.join(export_dir, asset_id + ".raw.glb")
 bpy.ops.export_scene.gltf(filepath=raw, use_selection=True, export_apply=True, export_yup=True,
-                          export_image_format="AUTO", export_tangents=False, export_extras=False)
+                          export_image_format="AUTO", export_tangents=True, export_extras=False)
 for name in images:
     os.remove(os.path.join(export_dir, f".{asset_id}_{name}.png"))
 print("VR_RESULT", {"lod_triangles": [vrlib.triangle_count([o]) for o in lods], "source_triangles": source_tris,

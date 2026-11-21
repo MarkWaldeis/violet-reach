@@ -18,23 +18,25 @@ art/                       Stilhandbuch und Materialbibliothek (ab Phase 1)
 
 ## Einrichten
 
-Blender 5.3 (`brew install --cask blender`), Node 22 oder neuer, Git LFS.
+Blender 5.3 (`brew install --cask blender`), Node 22 oder neuer und Git LFS.
 
 ```sh
-cd web && npm ci
+git lfs install
+git lfs pull
+npm --prefix web ci
 ```
 
 ## Ein Objekt von Blender bis in den Browser
 
 ```sh
 python3 tools/vr.py new crystals mein_kristall      # Ordner mit asset.json und build.py anlegen
-python3 tools/vr.py build mein_kristall             # build.py in Blender ausführen
+python3 tools/vr.py build mein_kristall --builder <bau-session>
 python3 tools/vr.py sheet mein_kristall --draft     # schnelle Vorschau: review/draft.jpg
 python3 tools/vr.py sheet mein_kristall             # Prüfblatt: review/sheet.jpg
 python3 tools/vr.py review mein_kristall --reviewer <andere-session> \
     --scores silhouette=9,form_detail=8,material=9,scale=9,style=8,defects=9
 python3 tools/vr.py export mein_kristall            # Detailstufen, gebackene Texturen, .glb
-cd web && npm run dev                               # http://localhost:5173/?asset=mein_kristall
+npm --prefix web run dev                            # http://localhost:5173/?asset=mein_kristall
 ```
 
 ## Das Tor
@@ -42,27 +44,16 @@ cd web && npm run dev                               # http://localhost:5173/?ass
 `vr.py export` und `vr.py check` lassen ein Objekt nur durch, wenn
 
 1. der Status `approved`, `exported` oder `in_game` ist,
-2. eine Bewertung von einer anderen Session als der Bau-Session vorliegt,
-3. jeder der sechs Punkte mindestens 8 von 10 hat,
-4. `build.py` seit der Bewertung unverändert ist,
-5. das Prüfblatt dasselbe ist, das bewertet wurde.
+2. eine Bewertung von einer anderen Session als der Bau-Session vorliegt und alle sechs Punkte zwischen 8 und 10 liegen,
+3. Quelle und Prüfblatt unverändert zur Bewertung passen,
+4. beim Veröffentlichen Prüfblatt, Bake-Einstellungen, GLB, Web-Register und Platzierungen zusammenpassen.
 
-`vr.py check` läuft bei jedem Pull Request. `python3 tools/test_gate.py` prüft diese Regeln selbst.
+`sheet` und `export` bauen die Blender-Quelle neu; eine lokale, veraltete `.blend` fließt nicht ein. Das Tor prüft die dokumentierten Session-IDs und Hashes auf Konsistenz; PR-Prüfer bestätigen zusätzlich die Herkunft der Freigabe.
 
-## Stand dieses Entwurfs
+`python3 tools/vr.py check` und `python3 tools/test_gate.py` laufen bei jedem Pull Request, ebenso der Produktions-Build des Viewers.
 
-Dieser Zweig ist ein Entwurf des Fundaments (Phase 0) aus der Plan-Session, zur Wiederverwendung durch die Bau-Sessions. Er ist nicht fertig.
+## Beweisobjekt
 
-Geprüft:
+Der [violette Kristallhaufen](assets/crystals/crystal_violet_cluster_a/review/sheet.jpg) ist im Asset-Viewer unter `/?asset=crystal_violet_cluster_a` zu sehen. Mit `&webgl=1` lässt sich der WebGL2-Rückfall gezielt starten. Die GLB enthält drei Detailstufen, gebackene WebP-Texturen und Meshopt-Kompression; KTX2 folgt später.
 
-- `vr.py build` und `vr.py sheet` laufen mit Blender 5.3.0 ohne Bildschirm (Cycles auf CPU); das Prüfblatt des ersten Objekts liegt unter `assets/crystals/crystal_violet_cluster_a/review/`.
-- Das Tor lehnt nicht freigegebene Objekte und Selbstbewertung ab; `python3 tools/test_gate.py` prüft sieben Regeln.
-- `web/` besteht die Typprüfung (`npx tsc --noEmit`).
-
-Nicht geprüft:
-
-- `vr.py export` (Backen, Detailstufen, `.glb`) wurde gestartet, aber vor dem Ende abgebrochen. `tools/blender/export_asset.py` ist deshalb ungetestet.
-- Der Viewer in `web/` wurde nie im Browser geöffnet und hat noch kein Objekt geladen.
-- Der CI-Ablauf in `.github/workflows/gate.yml` ist nie gelaufen.
-
-Das erste Objekt `crystal_violet_cluster_a` steht auf `blender_review` und hat keine Bewertung; es ist nicht freigegeben. Texturen wären vorerst WebP; KTX2 folgt in Phase 1.
+Der [Gelände-Viewer](web/explore/README.md) ist davon getrennt. Das Beweisobjekt ist noch nicht in der Welt platziert.

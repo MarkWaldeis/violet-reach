@@ -10,7 +10,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bpy  # noqa: E402
 import vrlib  # noqa: E402
 
-asset_dir = os.path.abspath(vrlib.script_args()[0])
+args = vrlib.script_args()
+asset_dir = os.path.abspath(args[0])
 vrlib.reset_scene()
 vrlib.source_collection()
 
@@ -23,6 +24,6 @@ objs = vrlib.source_objects()
 if not objs:
     raise SystemExit("build() left no mesh objects in the SOURCE collection")
 lo, hi = vrlib.world_bounds(objs)
+bpy.ops.wm.save_as_mainfile(filepath=args[1], compress=True)
 print("VR_RESULT", {"triangles": vrlib.triangle_count(objs), "size_m": [round(hi[i] - lo[i], 3) for i in range(3)],
                     "min_z": round(lo.z, 3)}, flush=True)
-bpy.ops.wm.save_as_mainfile(filepath=vrlib.blend_path(asset_dir), compress=True)

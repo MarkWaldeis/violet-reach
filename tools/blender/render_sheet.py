@@ -11,6 +11,7 @@ import json
 import math
 import os
 import sys
+import tempfile
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -25,8 +26,9 @@ draft = "--draft" in args
 samples = int(args[args.index("--samples") + 1]) if "--samples" in args else (32 if draft else 64)
 TILE = (960, 720)
 review_dir = os.path.join(asset_dir, "review")
-tmp_dir = os.path.join(review_dir, ".tiles")
-os.makedirs(tmp_dir, exist_ok=True)
+os.makedirs(review_dir, exist_ok=True)
+tiles_dir = tempfile.TemporaryDirectory(prefix=".tiles-", dir=review_dir)
+tmp_dir = tiles_dir.name
 
 scene = bpy.context.scene
 objs = vrlib.source_objects()
@@ -199,9 +201,7 @@ save_jpeg(sheet, os.path.join(review_dir, "draft.jpg" if draft else "sheet.jpg")
 if not draft:
     save_jpeg(load(tiles[0]), os.path.join(review_dir, "hero.jpg"), 90)
     save_jpeg(load(tiles[8]), os.path.join(review_dir, "closeup.jpg"), 90)
-for path in tiles:
-    os.remove(path)
-os.rmdir(tmp_dir)
+tiles_dir.cleanup()
 
 stats.update({"samples": samples, "render_seconds": round(time.time() - started, 1), "blender": bpy.app.version_string,
               "tiles": [os.path.basename(p)[:-4] for p in tiles]})

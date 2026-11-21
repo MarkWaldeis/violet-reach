@@ -1,5 +1,6 @@
 **/review/draft.jpg
 **/review/.tiles/
+**/review/.tiles-*/
 *.blend1
 __pycache__/
 node_modules/

@@ -1,1 +1,16 @@
-{"assets": []}
+{
+  "assets": [
+    {
+      "id": "crystal_violet_cluster_a",
+      "category": "crystals",
+      "title": "Violetter Kristallhaufen A",
+      "file": "crystal_violet_cluster_a.glb",
+      "size_m": [
+        4.107,
+        3.761,
+        3.514
+      ],
+      "bytes": 3316836
+    }
+  ]
+}

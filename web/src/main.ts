@@ -48,12 +48,15 @@ function buildLod(root: THREE.Object3D, sizeM: number): THREE.LOD {
     if (m) levels.push([Number(m[1]), o]);
   });
   levels.sort((a, b) => a[0] - b[0]);
+  if (levels.length === 0 || levels.some(([level], i) => level !== i)) {
+    throw new Error("Das Objekt hat keine vollständigen Detailstufen.");
+  }
   for (const [level, obj] of levels) {
     obj.traverse((o) => {
       if (o instanceof THREE.Mesh) o.castShadow = o.receiveShadow = true;
     });
-    // Switch when the object is roughly 1/3 and 1/9 of the screen height.
-    lod.addLevel(obj, level === 0 ? 0 : sizeM * 3 ** (level + 1));
+    lod.attach(obj);
+    lod.addLevel(obj, level === 0 ? 0 : sizeM * 3 ** (level + 1), 0.1);
   }
   return lod;
 }
@@ -65,7 +68,7 @@ async function main() {
   renderer.setSize(innerWidth, innerHeight);
   renderer.toneMapping = THREE.AgXToneMapping;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
   document.body.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
@@ -87,6 +90,7 @@ async function main() {
   sun.shadow.bias = -0.0005;
   sun.shadow.normalBias = 0.03;
   scene.add(sun);
+  scene.add(new THREE.HemisphereLight(0xe1eaff, 0xa4a475, 1.1));
 
   const ground = new THREE.Mesh(
     new THREE.CircleGeometry(400, 64),
@@ -96,22 +100,33 @@ async function main() {
   ground.receiveShadow = true;
   scene.add(ground);
 
-  const manifest: { assets: ManifestAsset[] } = await (await fetch("./assets/manifest.json")).json();
+  const manifestUrl = new URL("./assets/manifest.json", document.baseURI);
+  const response = await fetch(manifestUrl);
+  if (!response.ok) throw new Error(`Asset-Register konnte nicht geladen werden (HTTP ${response.status}).`);
+  const manifest: { assets: ManifestAsset[] } = await response.json();
   if (manifest.assets.length === 0) {
     status.textContent = "Noch kein Objekt hat das Blender-Tor passiert.";
     return;
   }
-  const entry = manifest.assets.find((a) => a.id === params.get("asset")) ?? manifest.assets[0];
+  const requested = params.get("asset");
+  const entry = requested === null ? manifest.assets[0] : manifest.assets.find((a) => a.id === requested);
+  if (!entry) throw new Error(`Kein freigegebenes Objekt mit der ID „${requested}“.`);
   const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
-  const gltf = await loader.loadAsync(`./assets/${entry.file}`);
+  const gltf = await loader.loadAsync(new URL(entry.file, manifestUrl).href);
   const size = Math.max(...entry.size_m);
   const lod = buildLod(gltf.scene, size);
   scene.add(lod);
 
-  controls.target.set(0, entry.size_m[2] * 0.45, 0);
-  camera.position.set(size * 1.5, size * 0.75, size * 1.7);
+  const bounds = new THREE.Box3().setFromObject(lod.levels[0].object);
+  bounds.getCenter(controls.target);
+  const fov = THREE.MathUtils.degToRad(camera.fov) / 2;
+  const portraitFov = Math.atan(Math.tan(fov) * camera.aspect);
+  const radius = bounds.getBoundingSphere(new THREE.Sphere()).radius;
+  const distance = radius / Math.sin(Math.min(fov, portraitFov));
+  camera.position.copy(controls.target).addScaledVector(new THREE.Vector3(3, 1.15, -1.65).normalize(), distance);
   controls.minDistance = size * 0.4;
   controls.maxDistance = size * 40;
+  controls.update();
 
   const post = new THREE.RenderPipeline(renderer);
   const scenePass = pass(scene, camera);
@@ -124,8 +139,11 @@ async function main() {
     renderer.setSize(innerWidth, innerHeight);
   });
 
-  status.remove();
   const backend = (renderer.backend as { isWebGPUBackend?: boolean }).isWebGPUBackend ? "WebGPU" : "WebGL2";
+  post.render();
+  status.remove();
+  document.querySelector<HTMLElement>("#asset-title")!.textContent = entry.title;
+  document.querySelector<HTMLElement>("#viewer-details")!.hidden = false;
   let frames = 0, last = performance.now(), fps = 0;
   renderer.setAnimationLoop(() => {
     controls.update();
@@ -138,8 +156,8 @@ async function main() {
       last = now;
       const info = renderer.info.render;
       hud.textContent =
-        `${entry.title}\n${backend} · ${fps.toFixed(0)} Bilder/s\n` +
-        `LOD ${lod.getCurrentLevel()} · ${info.triangles.toLocaleString("de")} Dreiecke · ${info.drawCalls} Zeichenaufrufe\n` +
+        `${backend} · ${fps.toFixed(0)} Bilder/s · ` +
+        `LOD ${lod.getCurrentLevel()} · ${info.triangles.toLocaleString("de")} Dreiecke · ` +
         `${(entry.bytes / 1e6).toFixed(2)} MB`;
     }
   });

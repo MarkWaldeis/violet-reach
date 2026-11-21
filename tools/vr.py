@@ -14,9 +14,13 @@ import argparse
 import hashlib
 import json
 import os
+from pathlib import Path
+import re
 import shutil
+import struct
 import subprocess
 import sys
+import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ASSETS = os.path.join(ROOT, "assets")
@@ -28,10 +32,6 @@ STATUSES = ["planned", "modeling", "blender_review", "approved", "exported", "in
 SHIPPABLE = {"approved", "exported", "in_game"}
 CRITERIA = ["silhouette", "form_detail", "material", "scale", "style", "defects"]
 PASS_SCORE = 8
-
-
-class GateError(Exception):
-    pass
 
 
 def asset_dirs():
@@ -68,7 +68,23 @@ def sha256(path):
 
 
 def source_hash(asset_dir):
-    return sha256(os.path.join(asset_dir, "build.py"))
+    inputs = [os.path.join(asset_dir, "build.py")]
+    inputs += [os.path.join(BLENDER_TOOLS, name) for name in ("run_build.py", "vrlib.py")]
+    return hashlib.sha256("".join(sha256(path) for path in inputs).encode()).hexdigest()
+
+
+def sheet_problems(asset_dir):
+    sheet = os.path.join(asset_dir, "review", "sheet.jpg")
+    try:
+        with open(os.path.join(asset_dir, "review", "sheet.json")) as f:
+            receipt = json.load(f)
+        if receipt.get("source_sha256") != source_hash(asset_dir):
+            return ["build.py or Blender build tools changed; render a new sheet"]
+        if receipt.get("sheet_sha256") != sha256(sheet):
+            return ["review/sheet.jpg does not match the render receipt"]
+    except (OSError, ValueError):
+        return ["review sheet or render receipt is missing or unreadable"]
+    return []
 
 
 def gate_problems(asset_dir, meta):
@@ -79,16 +95,20 @@ def gate_problems(asset_dir, meta):
         problems.append(f"status is '{meta.get('status')}', needs one of {sorted(SHIPPABLE)}")
     if not review:
         return problems + ["no review recorded"]
+    if not meta.get("builder"):
+        problems.append("asset has no builder")
     if not review.get("reviewer"):
         problems.append("review has no reviewer")
     elif review["reviewer"] == meta.get("builder"):
         problems.append("reviewer is the builder; a different session must review")
     scores = review.get("scores", {})
     for c in CRITERIA:
-        if not isinstance(scores.get(c), int):
+        if type(scores.get(c)) is not int:
             problems.append(f"missing score: {c}")
         elif scores[c] < PASS_SCORE:
             problems.append(f"score {c}={scores[c]} is below {PASS_SCORE}")
+        elif scores[c] > 10:
+            problems.append(f"score {c}={scores[c]} is above 10")
     if review.get("source_sha256") != source_hash(asset_dir):
         problems.append("build.py changed after the review; render a new sheet and review again")
     sheet = os.path.join(asset_dir, "review", "sheet.jpg")
@@ -96,12 +116,12 @@ def gate_problems(asset_dir, meta):
         problems.append("review/sheet.jpg is missing")
     elif review.get("sheet_sha256") != sha256(sheet):
         problems.append("review/sheet.jpg is not the sheet that was reviewed")
-    return problems
+    return problems + sheet_problems(asset_dir)
 
 
 def blender(args, blend=None):
     exe = os.environ.get("BLENDER", "blender")
-    cmd = [exe, "-b"] + ([blend] if blend else ["--factory-startup"]) + args
+    cmd = [exe, "-b"] + ([blend] if blend else ["--factory-startup"]) + ["--python-exit-code", "1"] + args
     proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     result = [line for line in proc.stdout.splitlines() if line.startswith("VR_RESULT")]
     if proc.returncode != 0 or not result:
@@ -114,6 +134,10 @@ def blend_file(asset_dir):
     return os.path.join(asset_dir, os.path.basename(asset_dir) + ".blend")
 
 
+def build_source(asset_dir, output):
+    blender(["--python", os.path.join(BLENDER_TOOLS, "run_build.py"), "--", asset_dir, output])
+
+
 def cmd_status(_):
     rows = [(os.path.basename(d), load(d)) for d in asset_dirs()]
     width = max((len(r[0]) for r in rows), default=10)
@@ -123,6 +147,10 @@ def cmd_status(_):
 
 
 def cmd_new(a):
+    if any(not re.fullmatch(r"[a-z0-9][a-z0-9_-]*", name) for name in (a.category, a.id)):
+        raise SystemExit("category and id must be lowercase slugs")
+    if any(os.path.basename(d) == a.id for d in asset_dirs()):
+        raise SystemExit(f"asset id '{a.id}' already exists")
     d = os.path.join(ASSETS, a.category, a.id)
     if os.path.exists(d):
         raise SystemExit(f"{d} already exists")
@@ -140,8 +168,10 @@ def cmd_new(a):
 
 def cmd_build(a):
     d = find(a.id)
-    blender(["--python", os.path.join(BLENDER_TOOLS, "run_build.py"), "--", d])
     meta = load(d)
+    if a.builder and meta["status"] in SHIPPABLE and a.builder != meta.get("builder"):
+        raise SystemExit("cannot change the builder of an approved asset")
+    build_source(d, blend_file(d))
     if meta["status"] == "planned":
         meta["status"] = "modeling"
     if a.builder:
@@ -154,9 +184,20 @@ def cmd_sheet(a):
     extra = ["--draft"] if a.draft else []
     if a.samples:
         extra += ["--samples", str(a.samples)]
+    digest = source_hash(d)
+    build_source(d, blend_file(d))
     blender(["--python", os.path.join(BLENDER_TOOLS, "render_sheet.py"), "--", d] + extra, blend=blend_file(d))
     if a.draft:
         return
+    if source_hash(d) != digest:
+        raise SystemExit("source changed during render; render again")
+    receipt_path = os.path.join(d, "review", "sheet.json")
+    with open(receipt_path) as f:
+        receipt = json.load(f)
+    receipt.update(source_sha256=digest, sheet_sha256=sha256(os.path.join(d, "review", "sheet.jpg")))
+    with open(receipt_path, "w") as f:
+        json.dump(receipt, f, indent=2)
+        f.write("\n")
     meta = load(d)
     # A new sheet always needs a new review.
     meta["status"] = "blender_review"
@@ -169,6 +210,11 @@ def cmd_review(a):
     meta = load(d)
     if meta["status"] != "blender_review":
         raise SystemExit(f"{a.id} is '{meta['status']}'; render the sheet first (vr.py sheet {a.id})")
+    if not meta.get("builder"):
+        raise SystemExit("record the builder first (vr.py build <id> --builder <session>)")
+    problems = sheet_problems(d)
+    if problems:
+        raise SystemExit("\n".join(problems))
     try:
         scores = {k: int(v) for k, v in (pair.split("=") for pair in a.scores.split(","))}
     except ValueError:
@@ -177,7 +223,9 @@ def cmd_review(a):
         raise SystemExit(f"--scores needs exactly: {', '.join(CRITERIA)}")
     if any(not 1 <= v <= 10 for v in scores.values()):
         raise SystemExit("scores run from 1 to 10")
-    if a.reviewer == meta.get("builder"):
+    if not a.reviewer.strip():
+        raise SystemExit("reviewer cannot be blank")
+    if a.reviewer.strip() == meta.get("builder"):
         raise SystemExit("the builder cannot review their own asset")
     meta["review"] = {"reviewer": a.reviewer, "scores": scores, "notes": a.notes or "",
                       "round": (meta.get("review_rounds", 0) + 1),
@@ -196,91 +244,150 @@ def cmd_export(a):
     problems = gate_problems(d, meta)
     if problems:
         raise SystemExit(f"{a.id} has not passed the Blender gate:\n  - " + "\n  - ".join(problems))
-    blender(["--python", os.path.join(BLENDER_TOOLS, "export_asset.py"), "--", d], blend=blend_file(d))
-    raw = os.path.join(d, "export", a.id + ".raw.glb")
+    digest = source_hash(d)
     out = os.path.join(d, "export", a.id + ".glb")
     gltf = ["npx", "--no-install", "gltf-transform"]
     web = os.path.join(ROOT, "web")
-    tmp = raw + ".tmp.glb"
-    subprocess.run(gltf + ["webp", raw, tmp, "--quality", "92"], cwd=web, check=True, stdout=subprocess.DEVNULL)
-    subprocess.run(gltf + ["meshopt", tmp, out], cwd=web, check=True, stdout=subprocess.DEVNULL)
-    os.remove(raw)
-    os.remove(tmp)
+    with tempfile.TemporaryDirectory(dir=d) as work:
+        scene = os.path.join(work, a.id + ".blend")
+        build_source(d, scene)
+        blender(["--python", os.path.join(BLENDER_TOOLS, "export_asset.py"), "--", d, work], blend=scene)
+        raw = os.path.join(work, a.id + ".raw.glb")
+        tmp = os.path.join(work, "webp.glb")
+        packed = os.path.join(work, "packed.glb")
+        subprocess.run(gltf + ["webp", raw, tmp, "--quality", "92"], cwd=web, check=True)
+        subprocess.run(gltf + ["meshopt", tmp, packed], cwd=web, check=True)
+        if gate_problems(d, load(d)) or load(d) != meta or source_hash(d) != digest:
+            raise SystemExit("source, sheet or approval changed during export; retry")
+        os.makedirs(os.path.dirname(out), exist_ok=True)
+        os.replace(packed, out)
     if meta["status"] == "approved":
         meta["status"] = "exported"
+    with open(os.path.join(d, "review", "sheet.json")) as f:
+        meta["size_m"] = json.load(f)["size_m"]
     meta["export"] = {"file": f"export/{a.id}.glb", "bytes": os.path.getsize(out), "sha256": sha256(out),
-                      "source_sha256": source_hash(d)}
+                      "source_sha256": digest, "sheet_sha256": meta["review"]["sheet_sha256"],
+                      "lod_triangles": meta["lod_triangles"], "texture_size": meta["texture_size"]}
     save(d, meta)
     sync_web()
     print(f"{a.id}: exported {meta['export']['bytes'] / 1e6:.2f} MB")
 
 
+def export_path(asset_dir):
+    return Path(asset_dir) / "export" / (Path(asset_dir).name + ".glb")
+
+
+def matches_glb(path, export):
+    if not path.is_file() or path.is_symlink():
+        return False
+    size = path.stat().st_size
+    if size < 20 or size != export.get("bytes"):
+        return False
+    with path.open("rb") as f:
+        if struct.unpack("<4sII", f.read(12)) != (b"glTF", 2, size):
+            return False
+    return sha256(path) == export.get("sha256")
+
+
+def export_problems(asset_dir, meta):
+    export = meta["export"]
+    path = export_path(asset_dir)
+    problems = []
+    if export.get("file") != f"export/{path.name}" or not matches_glb(path, export):
+        problems.append("exported GLB is missing or does not match asset.json")
+    if export.get("source_sha256") != source_hash(asset_dir):
+        problems.append("source changed after export")
+    if export.get("sheet_sha256") != (meta.get("review") or {}).get("sheet_sha256"):
+        problems.append("export is not tied to the approved review sheet")
+    if any(export.get(key) != meta.get(key) for key in ("lod_triangles", "texture_size")):
+        problems.append("LOD or texture settings changed after export")
+    return problems
+
+
+def manifest_entry(meta):
+    return {"id": meta["id"], "category": meta["category"], "title": meta["title"],
+            "file": meta["id"] + ".glb", "size_m": meta["size_m"], "bytes": meta["export"]["bytes"]}
+
+
 def sync_web():
-    """Copy gated exports into web/public/assets and write the manifest the runtime loads."""
-    os.makedirs(WEB_ASSETS, exist_ok=True)
+    """Regenerate the public manifest and flat copies of valid exports."""
+    public = Path(WEB_ASSETS)
+    public.mkdir(parents=True, exist_ok=True)
     manifest = []
-    keep = {"manifest.json"}
     for d in asset_dirs():
         meta = load(d)
-        export = meta.get("export")
-        if not export or gate_problems(d, meta):
+        if meta["status"] not in {"exported", "in_game"}:
             continue
-        name = meta["id"] + ".glb"
-        shutil.copyfile(os.path.join(d, export["file"]), os.path.join(WEB_ASSETS, name))
-        keep.add(name)
-        manifest.append({"id": meta["id"], "category": meta["category"], "title": meta["title"], "file": name,
-                         "size_m": meta.get("size_m", meta["target_size_m"]), "bytes": export["bytes"]})
-    for name in os.listdir(WEB_ASSETS):
-        if name not in keep:
-            os.remove(os.path.join(WEB_ASSETS, name))
-    with open(os.path.join(WEB_ASSETS, "manifest.json"), "w") as f:
-        json.dump({"assets": manifest}, f, indent=2, ensure_ascii=False)
-        f.write("\n")
+        if not meta.get("export") or gate_problems(d, meta) or export_problems(d, meta):
+            raise SystemExit(f"{meta['id']}: cannot sync an invalid export")
+        manifest.append(manifest_entry(meta))
+        shutil.copyfile(export_path(d), public / manifest[-1]["file"])
+    for path in public.glob("*.glb"):
+        if path.name not in {entry["file"] for entry in manifest}:
+            path.unlink()
+    (public / "manifest.json").write_text(json.dumps({"assets": manifest}, indent=2, ensure_ascii=False) + "\n")
+
+
+def model_paths(root):
+    """Find checked-in GLB/glTF files, not package caches or build products."""
+    for path, dirs, files in os.walk(root):
+        dirs[:] = [d for d in dirs if d not in {"node_modules", "dist", ".git"}]
+        for name in files:
+            if Path(name).suffix.lower() in {".glb", ".gltf"}:
+                yield Path(path) / name
 
 
 def cmd_check(_):
     errors = []
-    by_id = {}
+    known_ids = set()
+    published = {}
+    canonical = set()
+    manifest = []
+    public = Path(WEB_ASSETS)
     for d in asset_dirs():
         meta = load(d)
         rel = os.path.relpath(d, ROOT)
-        by_id[meta["id"]] = (d, meta)
+        if meta["id"] in known_ids:
+            errors.append(f"{rel}: duplicate asset id '{meta['id']}'")
+        known_ids.add(meta["id"])
         if meta["id"] != os.path.basename(d) or meta["category"] != os.path.basename(os.path.dirname(d)):
             errors.append(f"{rel}: id/category do not match the folder")
         if meta["status"] not in STATUSES:
             errors.append(f"{rel}: unknown status '{meta['status']}'")
-        problems = gate_problems(d, meta)
-        ships = meta["status"] in SHIPPABLE or os.path.isdir(os.path.join(d, "export"))
-        if ships and problems:
-            errors += [f"{rel}: {p}" for p in problems]
+        problems = gate_problems(d, meta) if meta["status"] in SHIPPABLE else []
         export = meta.get("export")
-        if export:
-            path = os.path.join(d, export["file"])
-            if not os.path.isfile(path) or sha256(path) != export["sha256"]:
-                errors.append(f"{rel}: exported .glb does not match asset.json")
-            if export["source_sha256"] != source_hash(d):
-                errors.append(f"{rel}: build.py changed after export")
-    # Nothing may sit in the web folder unless it is the export of a gated asset.
-    if os.path.isdir(WEB_ASSETS):
-        for name in sorted(os.listdir(WEB_ASSETS)):
-            if not name.endswith(".glb"):
-                continue
-            entry = by_id.get(name[:-4])
-            if not entry or gate_problems(*entry) or not entry[1].get("export"):
-                errors.append(f"web/public/assets/{name}: not the export of an approved asset")
-            elif sha256(os.path.join(WEB_ASSETS, name)) != entry[1]["export"]["sha256"]:
-                errors.append(f"web/public/assets/{name}: differs from the approved export")
+        if meta["status"] in {"exported", "in_game"}:
+            if not export:
+                problems.append("export receipt is missing")
+            elif not problems:
+                problems.extend(export_problems(d, meta))
+                if not problems:
+                    canonical.add(export_path(d))
+                    entry = manifest_entry(meta)
+                    manifest.append(entry)
+                    published[entry["id"]] = public / entry["file"]
+                    if not matches_glb(published[entry["id"]], export):
+                        problems.append("public GLB is missing or differs from the approved export")
+        elif export:
+            problems.append("only exported or in_game assets may have an export receipt")
+        errors.extend(f"{rel}: {p}" for p in problems)
+    for path in set(model_paths(ASSETS)) - canonical | (set(model_paths(Path(ROOT) / "web")) - set(published.values())):
+        errors.append(f"{os.path.relpath(path, ROOT)}: not the export of an approved asset")
+    try:
+        if json.loads((public / "manifest.json").read_text()) != {"assets": manifest}:
+            errors.append("public manifest does not match the approved exports")
+    except (OSError, ValueError):
+        errors.append("public manifest is missing or unreadable")
     if os.path.isfile(PLACEMENTS):
         with open(PLACEMENTS) as f:
             for item in json.load(f).get("placements", []):
-                entry = by_id.get(item["asset"])
-                if not entry or not entry[1].get("export") or gate_problems(*entry):
+                if item["asset"] not in published:
                     errors.append(f"world/placements.json: '{item['asset']}' has not passed the Blender gate")
-    for e in errors:
+    for e in sorted(errors):
         print("GATE FAIL:", e)
     if errors:
         raise SystemExit(1)
-    print(f"gate ok: {len(by_id)} assets checked")
+    print(f"gate ok: {len(known_ids)} assets checked")
 
 
 def main():
