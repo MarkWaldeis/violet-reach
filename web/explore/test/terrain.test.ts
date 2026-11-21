@@ -55,10 +55,20 @@ test("tiny terrain tiles bound the selection and spawn clearance", () => {
   const nav = new Navigation(camera, small, () => 40);
   assert.ok(nav.liftToSpawnHeight());
   assert.equal(camera.position.y, 43);
-  nav.keys.add("KeyW");
-  nav.keys.add("ShiftLeft");
-  nav.update(0.05);
-  assert.ok(camera.position.z < 0 && camera.position.z >= -0.5);
+});
+
+test("boost still increases flight speed on 1 m tiles at different frame rates", () => {
+  const small = { ...m, tileSize: 1, tilesX: 8192, tilesZ: 8192 };
+  const distance = (frames: number, boost: boolean) => {
+    const camera = new PerspectiveCamera();
+    const nav = new Navigation(camera, small, () => 40);
+    nav.keys.add("KeyW");
+    if (boost) nav.keys.add("ShiftLeft");
+    for (let i = 0; i < frames; i++) nav.update(1 / frames);
+    return -camera.position.z;
+  };
+  assert.ok(distance(30, true) > distance(30, false));
+  assert.ok(Math.abs(distance(30, true) - distance(60, true)) < 0.001);
 });
 
 test("walking height interpolates both rendered triangles, including edge samples", () => {
