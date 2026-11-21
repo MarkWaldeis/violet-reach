@@ -1,0 +1,53 @@
+{
+  "id": "crystal_violet_cluster_a",
+  "category": "crystals",
+  "title": "Violetter Kristallhaufen A",
+  "description": "Hoher violetter Hauptkristall mit Nebenkristallen und Splittern auf einem bemoosten Felssockel. Akzentobjekt für Lichtungen und Canyonränder.",
+  "target_size_m": [
+    3.5,
+    3.5,
+    3.6
+  ],
+  "lod_triangles": [
+    24000,
+    8000,
+    2000
+  ],
+  "texture_size": 2048,
+  "status": "exported",
+  "builder": "devin-312dd5edfa7b40dcb43b7f90ca32ffa1",
+  "review": {
+    "reviewer": "devin-9c56c6453d684e4ca232882d2651fda1",
+    "scores": {
+      "silhouette": 9,
+      "form_detail": 8,
+      "material": 8,
+      "scale": 8,
+      "style": 8,
+      "defects": 8
+    },
+    "notes": "Eigenständige Blender-Prüfung: klare Silhouette aus acht Richtungen, facettierte Splitter und bemooster Sockel, keine offensichtlichen Löcher im Prüfblatt. Violette Akzentfarbe passt zur Referenz. Höhe 3,51 m; Ausläufer machen den Sockel breiter als die Zielbreite. Freigabe als Beweisobjekt, noch keine Platzierung.",
+    "round": 1,
+    "source_sha256": "17020b6360bb72455fceb4918ed42ac7c387faad018551de1d2c851e13ebd03d",
+    "sheet_sha256": "51064c16c5262262a1a64c178d77dce3387ac0a22ef7c5b99579066fb5c50066"
+  },
+  "review_rounds": 1,
+  "size_m": [
+    4.107,
+    3.761,
+    3.514
+  ],
+  "export": {
+    "file": "export/crystal_violet_cluster_a.glb",
+    "bytes": 3316836,
+    "sha256": "5b0a87175b0387fcf3ee999a945b8b332c885a2cac97dafbc005666fa41c6163",
+    "source_sha256": "17020b6360bb72455fceb4918ed42ac7c387faad018551de1d2c851e13ebd03d",
+    "sheet_sha256": "51064c16c5262262a1a64c178d77dce3387ac0a22ef7c5b99579066fb5c50066",
+    "lod_triangles": [
+      24000,
+      8000,
+      2000
+    ],
+    "texture_size": 2048
+  }
+}
