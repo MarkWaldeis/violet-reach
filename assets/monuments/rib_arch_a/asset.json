@@ -2,11 +2,11 @@
   "id": "rib_arch_a",
   "category": "monuments",
   "title": "The Tidemark Sails",
-  "description": "Six tapering, jointed limestone ribs sweeping across a single skewed stylobate.",
+  "description": "Six flattened, keeled limestone ribs fan out over a shared stepped foundation.",
   "target_size_m": [
-    44,
-    54,
-    78
+    68,
+    83,
+    79
   ],
   "lod_triangles": [
     42000,

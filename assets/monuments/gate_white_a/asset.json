@@ -2,11 +2,11 @@
   "id": "gate_white_a",
   "category": "monuments",
   "title": "Floodmark Gate",
-  "description": "A monumental limestone gate with battered piers, a 34 m clear central span height, and a low stone threshold.",
+  "description": "A battered limestone gate with a pointed, moulded arch, a saddle keystone and approximately 34 m clear opening height.",
   "target_size_m": [
     18,
-    49,
-    41
+    50,
+    38
   ],
   "lod_triangles": [
     21000,
