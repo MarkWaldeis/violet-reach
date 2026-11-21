@@ -71,7 +71,7 @@ def sha256(path):
 def source_hash(asset_dir):
     inputs = [os.path.join(asset_dir, "build.py")]
     inputs += [os.path.join(BLENDER_TOOLS, name) for name in ("run_build.py", "vrlib.py")]
-    tree = ast.parse(Path(inputs[0]).read_text())
+    tree = ast.parse(Path(inputs[0]).read_text(encoding="utf-8-sig"))
     uses_vrmat = any(
         (isinstance(node, ast.Import) and any(alias.name.split(".")[-1] == "vrmat" for alias in node.names))
         or (isinstance(node, ast.ImportFrom) and
