@@ -24,21 +24,21 @@ und dokumentierte Node-Änderungen, nie den gemeinsamen Cache still verändern.
 
 | Name | Aussehen und Einsatz | Rauheit / Bump-Distanz | Struktur |
 |---|---|---|---|
-| `monument_white` | Sauberer warmer Kalkstein; große neue Rippen und Verkleidung | 0,76 / 0,002 m | Feine Poren, leichte Mineralwolken, matte Flächen |
+| `monument_white` | Sauberer heller Kalkstein; große neue Rippen und Verkleidung | 0,76 / 0,003 m | Großflächige Mineralwolken, feines Korn und Poren, dezente helle Kanten über Pointiness |
 | `monument_weathered` | Fleckiger, rauerer Altstein; Ruinen und exponierte Sockel | 0,88 / 0,012 m | Poren, Patina, mehrstufiges Noise und dezente Pointiness-Abnutzung |
 | `canyon_layered` | Heller, horizontal geschichteter Kalkfels | 0,88 / 0,014 m | Gestrecktes 3D-Noise, Poren; große Schichtbänke zusätzlich modellieren |
 | `sandstone` | Warmer Naturstein für Bögen und trockene Ausläufer | 0,87 / 0,008 m | Geschichtetes Korn, ohne Metallglanz |
-| `mossy_rock` | Dunkler Stein mit unregelmäßigen oliven Moosinseln | 0,92 / 0,009 m | Grobmaske, feines polstriges Noise und Steinporen |
+| `mossy_rock` | Rissiger grauer Stein mit weichen oliven Moospolstern auf Oberseiten | 0,92 / 0,009 m | Normal-Z-Wachstumsmaske mit Noise, faseriges Relief; Seiten zeigen überwiegend Risse und Korn |
 | `grass_ground` | Matte olivgrüne Grasnarbe; Untergrund unter Halmen | 0,94 / 0,006 m | Breite Farbflecken und gerichtetes Feinkorn; keine Halmsilhouetten |
 | `forest_soil` | Dunkle Erde unter Baumgruppen | 0,95 / 0,008 m | Voronoi-Körnchen, feine Rauheit, größere Tonwertwolken |
 | `dirt_path` | Hellerer trockener Erdweg | 0,90 / 0,004 m | Kleinteiliges mineralisches Korn; Fahrspuren als Geometrie/Decal später |
 | `river_stones` | Graue, feuchte Ufersteine | 0,34 / 0,003 m | Gerundetes Voronoi-Relief, niedrigerer Glanz als Wasser |
 | `tree_bark` | Braune Längsfurchen | 0,92 / 0,012 m | In Z gestrecktes Noise; Stammachse vor dem Backen beachten |
 | `foliage_leaf` | Dunkles olivgrünes Blatt | 0,76 / 0,0005 m | Feine gerichtete Maserung; opakes Blattmesh statt Alpha-Karte |
-| `violet_crystal` | Violetter opaker Körper, feine Wachstumsstreifen | 0,23 / 0,0004 m | Voronoi-Bruchadern mit Emission bis 0,55; Facetten durch Geometrie |
-| `violet_energy` | Helleres violettes Energievolumen | 0,38 / 0,0002 m | Violette Bruchadern, Emission bis 3; kein transparentes Portal |
+| `violet_crystal` | Dunkelvioletter opaker Edelstein mit helleren Facetten und inneren Bändern | 0,23 / 0,0004 m | Längliche Zellen modulieren Körper und Facettennormalen, verzerrte Einschlüsse; nur seltene Risse emittieren bis 0,16, kein Liniengitter |
+| `violet_energy` | Überwiegend emissive, fließende violette Energie mit lavendelhellen Kernen | 0,38 / 0,0002 m | Längliche turbulente Noise-Schlieren statt Zellgitter; Emission 0,7–2,5, reduzierte Spiegelung; kein transparentes Portal |
 | `water_opaque` | Ruhiges tiefes Blaugrün | 0,19 / 0,0007 m | Gerichtete Mikrowellen; statischer Grundlook ohne Transparenz oder Animation |
-| `ochre_inlay` | Warme helle Steinfassung, sparsam verwenden | 0,69 / 0,001 m | Feine Poren; ausdrücklich kein Gold/Metall |
+| `ochre_inlay` | Warme Ocker-/Cremefassung mit dunkleren eingelegten Bändern, sparsam verwenden | 0,69 / 0,001 m | Geometrisches diagonales Bandmotiv mit leichtem Relief und feinem Korn; ausdrücklich kein Gold/Metall |
 
 `vrmat.load_palette()` prüft sRGB/Linear-Konsistenz und alle Materialfarbreferenzen.
 Es gibt keine zweite Python-Farbkopie, die vom JSON abweichen könnte.

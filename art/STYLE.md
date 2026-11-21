@@ -135,6 +135,9 @@ Gerichtete Facetten und Wachstumslinien; Gruppen mit einem Hauptkörper und klei
 Gegengewichten. Dunkle Körperfarbe muss neben hellen Adern sichtbar bleiben.
 Keine Glaskugeln, keine Transmission, kein gleichmäßig weißes Emissionsmaterial.
 Energieobjekte dürfen glatter und heller sein, behalten aber ein violettes Volumen.
+`violet_crystal` nutzt dunkle Kerne, innere Bänder und gerichtete Facettenlichter;
+Risse leuchten nur schwach. `violet_energy` zeigt dagegen überwiegend emissive,
+fließende Schlieren mit hellen Kernen. Kein gleichmäßiges weißes Zellliniengitter.
 
 Kristallgruppen 0,5–5 m; regionale Energiekerne 10–35 m als seltene Landmarken.
 Das genehmigte Phase-0-Beweisobjekt behält seine eigenen Materialien und Freigabe.
