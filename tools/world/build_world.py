@@ -1,6 +1,5 @@
 """Deterministic metre-scale world. Run with Blender; no third-party packages beyond numpy."""
 import argparse
-from collections import defaultdict
 import json
 import math
 from pathlib import Path
@@ -21,8 +20,49 @@ REGIONS = [
     ('dornengang', 'Dornengang', (-2200, -2450), 'Enger Pass zwischen steilen Graten; Wächtertore und Kristallspitzen.'),
     ('weisswall', 'Weißwall', (-2400, 0), 'Lange helle Steilstufe mit Wasserfall; Platz für ein weißes Monumentaltor.'),
     ('mondsichel', 'Mondsichel', (2500, -1000), 'Sichelförmiger Bergkamm um ein grünes Tal; Aussichtstempel auf dem Grat.'),
-    ('spiegelsee', 'Spiegelsee', (450, -1250), 'Rundes Seebecken, Wiesen und Wald; sanfter zentraler Wanderstart, Uferpavillon.'),
+    ('spiegelsee', 'Spiegelsee', (650, -1750), 'Buchtenreiches Seebecken, Wiesen und Wald; sanfter zentraler Wanderstart, Uferpavillon.'),
 ]
+
+
+def smoothstep(value):
+    value = np.clip(value, 0, 1)
+    return value*value*(3-2*value)
+
+
+def canyon_center(y):
+    return 1850+450*np.sin(y/600)+140*np.sin(y/265)
+
+
+def lake_radius(theta, radius):
+    return radius*(1+.085*np.sin(3*theta+.4)+.055*np.sin(5*theta-1.3)
+                   +.025*np.sin(9*theta)+.16*np.exp(-((np.sin((theta-2.5)/2))/.23)**2))
+
+
+def lake_signed_distance(x, y, cx, cy, radius):
+    return np.hypot(x-cx,y-cy)-lake_radius(np.arctan2(y-cy,x-cx),radius)
+
+
+def gorge_distance(x, y):
+    sx=(x+2450-150*np.sin((y-2000)/450))/850
+    sy=(y-2300)/1260
+    angle=np.arctan2(sy,sx)
+    return np.hypot(sx,sy)*(1+.10*np.sin(5*angle)+.055*np.sin(9*angle+.6))
+
+
+def pillar_layout():
+    rng = np.random.default_rng(SEED)
+    pillars = []
+    while len(pillars)<44:
+        px,py = rng.uniform(-3400,-1400),rng.uniform(1100,3500)
+        if gorge_distance(px,py)>.83:
+            continue
+        if any(math.hypot(px-x,py-y)<140 for x,y,_,_,_ in pillars):
+            continue
+        pillars.append((px,py,rng.uniform(36,100),rng.uniform(.7,1.4),rng.uniform(235,440)))
+    return pillars
+
+
+PILLARS = pillar_layout()
 
 
 def write_json(path, data):
@@ -46,28 +86,34 @@ def terrain(x, y):
     wx = x + 160*noise(x, y, 1100, 11)
     wy = y + 160*noise(x, y, 1100, 12)
     h = np.full(np.broadcast_shapes(x.shape, y.shape), 275, dtype=np.float32)
-    for scale, amp in [(1800, 120), (850, 75), (360, 32), (150, 14), (65, 6), (25, 2)]:
+    for scale, amp in [(1800, 95), (850, 85), (360, 48), (150, 25), (65, 11), (25, 4)]:
         h += amp*noise(wx, wy, scale, int(scale))
-    # Elevated northern plateau with a 200–400 m incision.
+    # Elevated northern plateau with a 400–500 m incision.
     plateau = np.exp(-((wx-1800)/2000)**4-((wy-2300)/1500)**4)
-    h += 340*plateau
-    canyon_x = 1750 + 420*np.sin(wy/530) + 140*np.sin(wy/230)
-    h -= 335*np.exp(-((wx-canyon_x)/175)**4)*plateau
-    # Pillar gorge: broad floor, separated tapered towers.
-    g = np.exp(-((wx+2350)/1050)**4-((wy-2150)/1100)**4)
-    h -= 85*g
-    crag_x,crag_y = x+18*noise(x,y,85,22),y+18*noise(x,y,85,23)
-    for px, py, radius, height in [(-2900,2400,120,340),(-2380,2650,100,390),(-1910,2300,140,310),(-2650,1700,115,370),(-2070,1550,95,340),(-3100,1950,85,300),(-1600,2900,110,350),(-2250,2050,80,280)]:
-        h += height*np.exp(-(((crag_x-px)**2+(crag_y-py)**2)/radius**2)**1.3)
-    # Long west-facing plateau edge; the crossing river drops through this wall.
-    wall = np.exp(-((y-50)/1550)**6)
-    edge = -1450 + 100*np.sin(y/450)
-    h += 280*(1-np.tanh((wx-edge)/65))/2*wall
+    h += 480*plateau
+    canyon_d = abs(x-canyon_center(y)+28*noise(x,y,130,19))
+    for width, depth, shoulder in [(410,100,60),(295,140,35),(180,200,25)]:
+        h -= depth*smoothstep((width-canyon_d)/shoulder)*plateau
+    # Broad western tableland and its eastern escarpment.
+    wall = smoothstep((y+2350)/650)*smoothstep((2900-y)/600)
+    edge = -1540+120*np.sin(y/670)+45*noise(x,y,220,18)
+    h += 490*smoothstep((edge-x)/38)*wall
+    # Cut a cliff-enclosed amphitheatre into the northern tableland.
+    g = gorge_distance(wx,wy)
+    gorge = smoothstep((1-g)/.085)
+    floor = 185+28*noise(x,y,230,24)+10*noise(x,y,65,25)
+    h = h*(1-gorge)+floor*gorge
+    crag_x,crag_y = x+9*noise(x,y,45,22),y+9*noise(x,y,45,23)
+    for px,py,radius,aspect,height in PILLARS:
+        d = np.sqrt(((crag_x-px)/radius)**2+((crag_y-py)/(radius*aspect))**2)
+        cap = height+12*noise(x,y,35,26)+5*noise(x,y,13,27)
+        h += cap*smoothstep((1-d)/.105)
     # Two continuous, knuckled ridges flank a narrow southern pass.
     path = -2150 + 190*np.sin(y/390)
     band = np.exp(-((y+2400)/1250)**6)
-    for offset in (-330, 330):
-        h += 330*np.exp(-((wx-path-offset)/180)**2)*band*(0.85+0.15*noise(x,y,260,7))
+    for offset in (-245, 245):
+        crest = 460+100*noise(x,y,110,7)+50*(1-abs(noise(x,y,40,8)))
+        h += crest*np.exp(-((wx-path-offset)/155)**4)*band
     # An open crescent: arc ends taper rather than close into a crater.
     dx, dy = wx-2350, wy+1150
     r = np.sqrt(dx*dx+dy*dy)
@@ -75,13 +121,15 @@ def terrain(x, y):
     arc = np.clip((angle+2.2)/0.5,0,1)*np.clip((2.7-angle)/0.5,0,1)
     h += 400*np.exp(-((r-1000-65*noise(wx,wy,300,5))/190)**2)*arc
     # Pleasant gently rolling centre; no mountains at the walking spawn.
-    meadow = np.exp(-((x-50)/900)**4-((y+200)/1000)**4)
-    h = h*(1-meadow) + (210+18*noise(x,y,500,4))*meadow
+    meadow = np.exp(-((x-50)/380)**4-((y+200)/420)**4)
+    h = h*(1-meadow) + (230+15*noise(x,y,180,4)+4*noise(x,y,40,6))*meadow
     # Irregular mountain backdrop, entirely inside the world extent.
     rim = np.clip((np.maximum(abs(wx),abs(wy))-3250)/850,0,1)
     h += rim**1.6*(560+240*(1-abs(noise(wx,wy,430,90)))+90*(1-abs(noise(wx,wy,150,91))))
     rough = np.clip((h-380)/200,0,1)
-    h += rough*(20*noise(x,y,95,71)+9*noise(x,y,35,72))
+    h += rough*(14*noise(x,y,95,71)+4*noise(x,y,35,72))
+    h -= (1-meadow)*(8*np.exp(-(noise(wx,wy,260,73)/.12)**2)
+                            +3*np.exp(-(noise(wx,wy,80,74)/.1)**2))
     return h.astype(np.float32)
 
 
@@ -107,23 +155,24 @@ def smooth_path(controls):
 
 def hydrology():
     rivers = [
-        ('Weißfall', [(-3250,650,450,24),(-2400,450,440,30),(-1640,350,420,32),(-1410,300,280,33),(-1150,200,235,35),(-450,-450,210,38),(200,-1150,185,42),(650,-1630,180,46)]),
-        ('Aschenlauf', [(2200,3300,355,20),(1910,2800,310,24),(1330,2400,290,26),(1410,1900,270,28),(1800,1300,245,32),(1200,500,220,35),(1100,-500,195,40),(1000,-1460,180,46)]),
-        ('Dornbach', [(-2300,-1550,288,18),(-2100,-2150,250,22),(-1700,-2950,220,28),(-650,-2800,200,32),(550,-2150,180,38)]),
-        ('Spiegelstrom', [(1200,-2050,180,46),(1700,-2500,170,52),(2100,-2800,153,55),(2550,-3000,140,58),(3100,-3400,125,62),(3600,-3900,110,65),(3800,-4096,100,70)]),
+        ('Weißfall', [(-3250,650,650,18),(-2800,420,630,22),(-2300,650,610,27),(-1840,470,595,31),(-1540,440,250,34),(-1150,100,235,38),(-550,160,222,42),(-720,-350,210,46),(-180,-630,202,49),(-350,-1050,195,53),(200,-1320,185,58),(550,-1660,180,65)]),
+        ('Aschenlauf', [*[(float(canyon_center(y)),y,z,w) for y,z,w in [(3400,410,18),(2900,380,22),(2400,350,27),(1900,320,32),(1400,295,37),(950,270,42)]],(1850,550,248,46),(1470,0,227,49),(1710,-460,211,53),(1400,-950,194,57),(1550,-1360,184,63),(1260,-1590,180,68)]),
+        ('Dornbach', [(-2200,-1540,380,15),(-2050,-2090,320,19),(-2300,-2540,278,24),(-1830,-2900,245,29),(-1250,-2650,225,34),(-1000,-2270,210,38),(-600,-2400,200,42),(-150,-2030,190,47),(100,-1740,184,52),(470,-1870,180,58)]),
+        ('Spiegelstrom', [(830,-2310,180,65),(680,-2670,176,72),(1220,-2850,168,78),(1610,-2700,161,84),(2150,-2920,150,91),(2420,-3400,132,98),(3030,-3590,119,108),(3440,-3940,106,116),(3550,-4096,100,124)]),
     ]
-    lakes = [('Spiegelsee',900,-1900,520,180),('Hirschweiher',-650,-2800,190,200),('Aschenauge',1910,2800,160,310)]
+    lakes = [('Spiegelsee',900,-1900,520,180),('Hirschweiher',-600,-2400,210,200),('Aschenauge',float(canyon_center(2900)),2900,175,380)]
     paths = [(n,smooth_path(p)) for n,p in rivers]
     for _,p in paths:
         distance = np.r_[0,np.cumsum(np.linalg.norm(np.diff(p[:,:2],axis=0),axis=1))]
         tangent = np.gradient(p[:,:2],axis=0)
         normal = np.column_stack((-tangent[:,1],tangent[:,0]))
         normal /= np.linalg.norm(normal,axis=1)[:,None]
-        meander = (55*np.sin(distance/185)+21*np.sin(distance/79))*np.sin(np.pi*distance/distance[-1])**2
+        curvature = np.linalg.norm(np.gradient(normal,axis=0),axis=1)
+        meander = (34*np.sin(distance/210)+18*noise(distance,np.zeros_like(distance),135,83))*np.sin(np.pi*distance/distance[-1])**2/(1+curvature*8)
         p[:,:2] += normal*meander[:,None]
-        p[:,3] *= 1.6*(1+.18*np.sin(distance/125)+.09*np.sin(distance/51))
+        p[:,3] *= (1+.16*np.sin(distance/160)+.07*np.sin(distance/63)+np.minimum(curvature, .2))
         for _,cx,cy,r,level in lakes:
-            inside = np.hypot(p[:,0]-cx,p[:,1]-cy)<r*.98
+            inside = lake_signed_distance(p[:,0],p[:,1],cx,cy,r)<120
             p[inside,2] = level
         p[:,2] = np.minimum.accumulate(p[:,2])
     return paths, lakes
@@ -133,17 +182,19 @@ def carve(h, axis, rivers, lakes):
     spacing = float(axis[1]-axis[0])
     xx,yy = np.meshgrid(axis,axis)
     for _,cx,cy,r,level in lakes:
-        d = np.sqrt((xx-cx)**2+(yy-cy)**2)
-        target = level-17+23*(d/r)**6
-        weight = np.clip((r*1.35-d)/(r*.25),0,1)
-        h[:] = h*(1-weight)+np.maximum(target,level-19)*weight
+        d = lake_signed_distance(xx,yy,cx,cy,r)
+        bank = np.maximum(d,0)
+        target = level+np.where(d<0,np.maximum(d*.12,-22),.11*bank+.00035*bank*bank)
+        weight = smoothstep((r*.65-d)/(r*.45))
+        h[:] = h*(1-weight)+target*weight
     del xx,yy
+    channel_ceiling = np.full(h.shape,np.inf,dtype=np.float32)
     for _, points in rivers:
         distance = np.full(h.shape,np.inf,dtype=np.float32)
         water = np.zeros(h.shape,dtype=np.float32)
         widths = np.ones(h.shape,dtype=np.float32)
         for p,q in zip(points[:-1],points[1:]):
-            pad = max(p[3],q[3])*3+55
+            pad = max(p[3],q[3])*4+210
             lo = np.maximum(0, np.floor((np.minimum(p[:2],q[:2])-pad+4096)/spacing).astype(int))
             hi = np.minimum(len(axis), np.ceil((np.maximum(p[:2],q[:2])+pad+4096)/spacing).astype(int)+1)
             xx,yy = np.meshgrid(axis[lo[0]:hi[0]],axis[lo[1]:hi[1]])
@@ -162,17 +213,20 @@ def carve(h, axis, rivers, lakes):
             cut = np.s_[row:row+128,:]
             d,level,width = np.minimum(distance[cut],1e9),water[cut],widths[cut]
             a = h[cut]
-            weight = np.clip((width*3+40-d)/(width*2+40),0,1)
-            weight = weight*weight*(3-2*weight)
-            a[:] = a*(1-weight)+np.minimum(a,level+12+.15*d+.0009*d*d)*weight
-            bed = level-7+7*(d/(width*.5))**2
-            a[:] = np.where(d<width*.8,bed,a)
+            weight = smoothstep((width*4+200-d)/(width*3+200))
+            bank = np.maximum(d-width*.5,0)
+            bed = np.where(d<width*.5,level-6+6*(d/(width*.5))**2,
+                           level+.035*bank+.0005*bank*bank)
+            a[:] = a*(1-weight)+bed*weight
+            channel_ceiling[cut] = np.minimum(channel_ceiling[cut],np.where(d<width*.8,bed,np.inf))
+    # Shared floodplains may overlap, but a later tributary cannot dam an earlier one.
+    np.minimum(h,channel_ceiling,out=h)
     # River banks must not create emergent causeways inside a flat lake.
     for _,cx,cy,r,level in lakes:
         for row in range(0,len(axis),128):
-            d = np.hypot(axis[None,:]-cx,axis[row:row+128,None]-cy)
+            d = lake_signed_distance(axis[None,:],axis[row:row+128,None],cx,cy,r)
             a = h[row:row+128]
-            a[:] = np.where(d<r*(17/23)**(1/6),np.minimum(a,level-1),a)
+            a[:] = np.where(d<0,np.minimum(a,level-.7),a)
     return h
 
 
@@ -211,9 +265,9 @@ def export(h, axis, rivers, lakes, draft, blender_version):
     lake_records = []
     for n,cx,cy,r,level in lakes:
         # Shore polygon is outside the waterline (where terrain > level).
-        outline = [[cx+r*math.cos(t),-cy-r*math.sin(t)] for t in np.linspace(0,2*math.pi,97)[:-1]]
+        outline = [[cx+(lake_radius(t,r)+18)*math.cos(t),-cy-(lake_radius(t,r)+18)*math.sin(t)] for t in np.linspace(0,2*math.pi,97)[:-1]]
         lake_records.append(dict(name=n,water_y=level,outline=outline))
-    write_json(OUT/'hydrology.json',dict(convention=AXES,river_point_format=['x','z','water_y','width'],rivers=[dict(name=n,polyline=[[float(x),float(-y),float(z),float(w)] for x,y,z,w in p]) for n,p in rivers],lakes=lake_records,waterfall=dict(river='Weißfall',position=[-1410,-300],description='Weißwall: steiler Abschnitt von 420 m auf 280 m; später Wasserfallgeometrie ergänzen.')))
+    write_json(OUT/'hydrology.json',dict(convention=AXES,river_point_format=['x','z','water_y','width'],rivers=[dict(name=n,polyline=[[float(x),float(-y),float(z),float(w)] for x,y,z,w in p]) for n,p in rivers],lakes=lake_records,waterfall=dict(river='Weißfall',position=[-1540,-440],description='Weißwall: steiler Abschnitt von 595 m auf 250 m; später Wasserfallgeometrie ergänzen.')))
 
 
 def build_scene(h, axis, rivers, lakes, draft):
@@ -239,16 +293,21 @@ def build_scene(h, axis, rivers, lakes, draft):
     gy,gx = np.gradient(heights,float(a[1]-a[0]))
     slope = np.sqrt(gx*gx+gy*gy)
     variation = noise(xx,yy,210,3)*.5+.5
-    forest = np.clip((noise(xx,yy,430,62)+.1)*2,0,1)*(1-np.clip((slope-.4)*2,0,1))
-    grass = np.array([.17,.34,.055])[None,None,:]*(.8+.35*variation[...,None])
-    color = grass*(1-forest[...,None]*.7)+np.array([.045,.16,.085])*forest[...,None]*.7
-    rock = np.clip((slope-.55)/.8,0,1)[...,None]
-    color = color*(1-rock)+np.array([.53,.51,.39])*rock
+    forest = smoothstep((noise(xx,yy,400,62)+.12)*3+noise(xx,yy,65,63)*.65)*(1-np.clip((slope-.45)*2,0,1))
+    crown = .65+.35*(noise(xx,yy,17,64)*.5+.5)
+    grass = np.array([.21,.36,.075])[None,None,:]*(.78+.4*variation[...,None])
+    color = grass*(1-forest[...,None]*.92)+np.array([.018,.075,.035])*crown[...,None]*forest[...,None]*.92
+    rock = np.clip((slope-.85)/.95,0,1)[...,None]
+    strata = (.86+.10*np.sin(heights/13)+.04*noise(xx,yy,22,65))[...,None]
+    color = color*(1-rock)+np.array([.72,.74,.69])*strata*rock
     snow = np.clip((heights-850)/230,0,.7)[...,None]
     color = color*(1-snow)+np.array([.72,.76,.71])*snow
     for _,cx,cy,r,level in lakes:
-        shore = (np.abs(np.sqrt((xx-cx)**2+(yy-cy)**2)-r)<32)&(heights<level+14)
-        color[shore]=[.62,.56,.33]
+        d = lake_signed_distance(xx,yy,cx,cy,r)
+        shore = (d>0)&(d<22+20*noise(xx,yy,85,66))&(heights>level)&(heights<level+7)&(slope<.3)
+        color[shore]=[.61,.57,.37]
+        reeds = (d>0)&(d<45)&(heights<level+5)&(noise(xx,yy,120,67)>.1)
+        color[reeds]=[.14,.23,.055]
     attr = mesh.color_attributes.new(name='biome',type='FLOAT_COLOR',domain='POINT')
     attr.data.foreach_set('color',np.column_stack((color.reshape(-1,3),np.ones(n*n))).ravel())
     mat=bpy.data.materials.new('Meadow • forest • limestone')
@@ -259,7 +318,11 @@ def build_scene(h, axis, rivers, lakes, draft):
     vc=nodes.new('ShaderNodeVertexColor'); vc.layer_name='biome'
     mat.node_tree.links.new(vc.outputs['Color'],bsdf.inputs['Base Color'])
     tex=nodes.new('ShaderNodeTexNoise'); tex.inputs['Scale'].default_value=.11
-    bump=nodes.new('ShaderNodeBump'); bump.inputs['Strength'].default_value=.24; bump.inputs['Distance'].default_value=2
+    geometry=nodes.new('ShaderNodeNewGeometry')
+    mat.node_tree.links.new(geometry.outputs['Position'],tex.inputs['Vector'])
+    grain=nodes.new('ShaderNodeMixRGB'); grain.blend_type='MULTIPLY'; grain.inputs[0].default_value=.2
+    mat.node_tree.links.new(vc.outputs['Color'],grain.inputs[1]); mat.node_tree.links.new(tex.outputs['Fac'],grain.inputs[2]); mat.node_tree.links.new(grain.outputs[0],bsdf.inputs['Base Color'])
+    bump=nodes.new('ShaderNodeBump'); bump.inputs['Strength'].default_value=.4; bump.inputs['Distance'].default_value=1
     mat.node_tree.links.new(tex.outputs['Fac'],bump.inputs['Height'])
     mat.node_tree.links.new(bump.outputs['Normal'],bsdf.inputs['Normal'])
     mesh.materials.append(mat)
@@ -278,17 +341,17 @@ def build_scene(h, axis, rivers, lakes, draft):
                 verts.append([*xy,point[2]+.5])
         surface(name,verts,[(2*i,2*i+1,2*i+3,2*i+2) for i in range(len(p)-1)])
     for name,cx,cy,r,level in lakes:
-        radius=r*(17/23)**(1/6)
-        verts=[(cx+radius*math.cos(t),cy+radius*math.sin(t),level+.8) for t in np.linspace(0,2*math.pi,128,endpoint=False)]
-        surface(name,verts,[tuple(range(128))])
+        verts=[(cx,cy,level+.8)]+[(cx+lake_radius(t,r)*math.cos(t),cy+lake_radius(t,r)*math.sin(t),level+.8) for t in np.linspace(0,2*math.pi,256,endpoint=False)]
+        surface(name,verts,[(0,i+1,(i+1)%256+1) for i in range(256)])
     scene=bpy.context.scene
     scene.render.engine='CYCLES'; scene.cycles.device='CPU'; scene.cycles.samples=24 if draft else 48
     scene.cycles.use_denoising=True
     world=bpy.data.worlds.new('Pale blue atmosphere'); world.use_nodes=True; scene.world=world
-    world.node_tree.nodes['Background'].inputs[0].default_value=(.55,.7,.86,1)
-    world.node_tree.nodes['Background'].inputs[1].default_value=.45
+    sky=world.node_tree.nodes.new('ShaderNodeTexSky'); sky.sky_type='SINGLE_SCATTERING'; sky.sun_elevation=math.radians(30); sky.sun_rotation=math.radians(205); sky.sun_disc=False; sky.air_density=1.1; sky.aerosol_density=.5
+    world.node_tree.links.new(sky.outputs[0],world.node_tree.nodes['Background'].inputs[0])
+    world.node_tree.nodes['Background'].inputs[1].default_value=.22
     bpy.ops.object.light_add(type='SUN',location=(-3000,-4000,7000))
-    sun=bpy.context.object; sun.rotation_euler=(math.radians(25),math.radians(-30),math.radians(-25)); sun.data.energy=3; sun.data.color=(1,.94,.84); sun.data.angle=.12
+    sun=bpy.context.object; sun.rotation_euler=Vector((.86,.22,-.5)).to_track_quat('-Z','Y').to_euler(); sun.data.energy=3; sun.data.color=(1,.95,.85); sun.data.angle=.055
     bpy.ops.object.camera_add(location=(0,0,14000))
     camera=bpy.context.object; scene.camera=camera; camera.data.type='ORTHO'; camera.data.ortho_scale=9350; camera.data.clip_end=50000
     camera.rotation_euler=(0,0,0)
@@ -312,31 +375,32 @@ def build_scene(h, axis, rivers, lakes, draft):
         for dx,dy,z,material in [(4,-5,1700,dark),(0,0,1710,white)]:
             cu=bpy.data.curves.new(body,'FONT'); cu.body=body; cu.size=size; cu.align_x='CENTER'; cu.extrude=0
             ob=bpy.data.objects.new(body,cu); annotations.objects.link(ob); ob.location=(x+dx,y+dy,z); cu.materials.append(material)
-    b=np.linspace(-4096,4096,129); bx,by=np.meshgrid(b,b); ri=region_indices(bx,by)
-    borders=defaultdict(list)
-    for j in range(128):
-        for i in range(128):
-            if ri[j,i]!=ri[j,i+1]: borders[tuple(sorted((int(ri[j,i]),int(ri[j,i+1]))))].append(((2*i+1,2*j-1),(2*i+1,2*j+1)))
-            if ri[j,i]!=ri[j+1,i]: borders[tuple(sorted((int(ri[j,i]),int(ri[j+1,i]))))].append(((2*i-1,2*j+1),(2*i+1,2*j+1)))
-    for edges in borders.values():
-        graph=defaultdict(set)
-        for p,q in edges: graph[p].add(q); graph[q].add(p)
-        unused={tuple(sorted(edge)) for edge in edges}
-        while unused:
-            endpoints=sorted(p for p in graph if len(graph[p])==1 and any(tuple(sorted((p,q))) in unused for q in graph[p]))
-            node=endpoints[0] if endpoints else min(unused)[0]
-            chain=[node]
-            while True:
-                options=sorted(q for q in graph[node] if tuple(sorted((node,q))) in unused)
-                if not options: break
-                nxt=options[0]; unused.remove(tuple(sorted((node,nxt)))); chain.append(nxt); node=nxt
-            points=np.array([(-4096+p[0]*32,-4096+p[1]*32,1600) for p in chain],dtype=float)
-            for _ in range(3):
-                smooth=[points[0]]
-                for p,q in zip(points[:-1],points[1:]): smooth.extend((.75*p+.25*q,.25*p+.75*q))
-                points=np.array(smooth+[points[-1]])
-            line('Region border',points,white,2)
-    for _,name,(cx,cy),_ in REGIONS: text(name.upper(),cx,cy+220,119)
+    b=np.linspace(-4096,4096,513); bx,by=np.meshgrid(b,b); ri=region_indices(bx,by)
+    for index in range(1,7):
+        mask=(ri==index).astype(float)
+        for _ in range(3):
+            for axis_ in (0,1):
+                padded=np.pad(mask,((2,2),(0,0)) if axis_==0 else ((0,0),(2,2)),mode='edge')
+                if axis_==0: mask=sum(w*padded[k:k+513,:] for k,w in enumerate((1,4,6,4,1)))/16
+                else: mask=sum(w*padded[:,k:k+513] for k,w in enumerate((1,4,6,4,1)))/16
+        curve=bpy.data.curves.new('Smoothed region contour','CURVE'); curve.dimensions='3D'; curve.bevel_depth=2; curve.bevel_resolution=2; curve.materials.append(white)
+        # Interpolated marching squares of a Gaussian-smoothed region mask.
+        crossing=(np.minimum.reduce((mask[:-1,:-1],mask[1:,:-1],mask[1:,1:],mask[:-1,1:]))<.5)&(np.maximum.reduce((mask[:-1,:-1],mask[1:,:-1],mask[1:,1:],mask[:-1,1:]))>=.5)
+        for j,i in np.argwhere(crossing):
+            values=[mask[j,i],mask[j,i+1],mask[j+1,i+1],mask[j+1,i]]
+            corners=[(b[i],b[j]),(b[i+1],b[j]),(b[i+1],b[j+1]),(b[i],b[j+1])]
+            points=[]
+            for k in range(4):
+                q=(k+1)%4
+                if (values[k]<.5)!=(values[q]<.5):
+                    t=(.5-values[k])/(values[q]-values[k]); points.append((corners[k][0]*(1-t)+corners[q][0]*t,corners[k][1]*(1-t)+corners[q][1]*t))
+            for k in range(0,len(points)-1,2):
+                spline=curve.splines.new('POLY'); spline.points.add(1)
+                for v,(px,py) in zip(spline.points,points[k:k+2]): v.co=(px,py,1600,1)
+        ob=bpy.data.objects.new('Region contour',curve); annotations.objects.link(ob)
+    for _,name,(cx,cy),_ in REGIONS:
+        if name=='Spiegelsee': cx,cy=50,-2930
+        text(name.upper(),cx,cy+220,119)
     for name,cx,cy,r,level in lakes: text(name,cx,cy,75)
     for name,p in rivers:
         q=p[len(p)//2]; text(name,q[0]+170,q[1],66)
@@ -345,12 +409,12 @@ def build_scene(h, axis, rivers, lakes, draft):
     line('Scale bar',[(-3650,-3950,1700),(-2650,-3950,1700)],white,9); text('1 km',-3150,-3830,70)
     scene.render.filepath=str(review/'overview.jpg'); bpy.ops.render.render(write_still=True)
     annotations.hide_render=True
-    camera.data.type='PERSP'; camera.data.lens=43; camera.data.clip_end=50000
-    camera.location=(8300,-11000,10500); target=Vector((0,500,100)); camera.rotation_euler=(target-camera.location).to_track_quat('-Z','Y').to_euler()
+    camera.data.type='PERSP'; camera.data.lens=26; camera.data.clip_end=50000
+    camera.location=(2450,-3100,1000); target=Vector((-700,1800,360)); camera.rotation_euler=(target-camera.location).to_track_quat('-Z','Y').to_euler()
     scene.render.resolution_x=2400; scene.render.resolution_y=1800
     # Thin atmospheric volume limited to the landscape.
     bpy.ops.mesh.primitive_cube_add(size=2,location=(0,0,1800)); haze=bpy.context.object; haze.name='Atmospheric haze'; haze.scale=(6500,6500,1900)
-    hm=bpy.data.materials.new('Distance haze'); hm.use_nodes=True; ns=hm.node_tree.nodes; ns.clear(); volume=ns.new('ShaderNodeVolumeScatter'); volume.inputs['Density'].default_value=.000014; volume.inputs['Color'].default_value=(.65,.76,.86,1); volume.inputs['Anisotropy'].default_value=.25; out=ns.new('ShaderNodeOutputMaterial'); hm.node_tree.links.new(volume.outputs[0],out.inputs['Volume']); haze.data.materials.append(hm)
+    hm=bpy.data.materials.new('Distance haze'); hm.use_nodes=True; ns=hm.node_tree.nodes; ns.clear(); volume=ns.new('ShaderNodeVolumeScatter'); volume.inputs['Density'].default_value=.000035; volume.inputs['Color'].default_value=(.65,.76,.86,1); volume.inputs['Anisotropy'].default_value=.25; out=ns.new('ShaderNodeOutputMaterial'); hm.node_tree.links.new(volume.outputs[0],out.inputs['Volume']); haze.data.materials.append(hm)
     scene.render.filepath=str(review/'oblique.jpg'); bpy.ops.render.render(write_still=True)
     bpy.ops.wm.save_as_mainfile(filepath=str(OUT/'terrain.blend'))
 

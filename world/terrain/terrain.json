@@ -10,13 +10,13 @@
   "samples": 4097,
   "tileSize": 512,
   "tileSamples": 257,
-  "h_min": 93.0,
-  "h_max": 1537.9571533203125,
+  "h_min": 94.0,
+  "h_max": 1732.3597412109375,
   "encoding": "uint16 little-endian; rows +Z, columns +X; h = minHeight + v/65535 * (maxHeight-minHeight)",
   "water_levels": {
     "Spiegelsee": 180,
     "Hirschweiher": 200,
-    "Aschenauge": 310
+    "Aschenauge": 380
   },
   "seed": 73129,
   "blender_version": "5.3.0",

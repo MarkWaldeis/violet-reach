@@ -31,7 +31,7 @@
         -416.0,
         -4096.0,
         4096.0,
-        -472.0
+        -424.0
       ],
       "description": "Gewundener tiefer Einschnitt im Hochplateau; künftige Bogenbrücken und Felsentore."
     },
@@ -45,8 +45,8 @@
       ],
       "bbox": [
         -4096.0,
-        1120.0,
-        -280.0,
+        1080.0,
+        -640.0,
         4096.0
       ],
       "description": "Enger Pass zwischen steilen Graten; Wächtertore und Kristallspitzen."
@@ -62,7 +62,7 @@
       "bbox": [
         -4096.0,
         -1128.0,
-        -928.0,
+        -672.0,
         1288.0
       ],
       "description": "Lange helle Steilstufe mit Wasserfall; Platz für ein weißes Monumentaltor."
@@ -76,10 +76,10 @@
         1000
       ],
       "bbox": [
-        1416.0,
+        1096.0,
         -1056.0,
         4096.0,
-        4096.0
+        3792.0
       ],
       "description": "Sichelförmiger Bergkamm um ein grünes Tal; Aussichtstempel auf dem Grat."
     },
@@ -88,16 +88,16 @@
       "name": "Spiegelsee",
       "index": 6,
       "centre": [
-        450,
-        1250
+        650,
+        1750
       ],
       "bbox": [
-        -1568.0,
-        -1296.0,
-        2952.0,
+        -1376.0,
+        -1064.0,
+        4096.0,
         4096.0
       ],
-      "description": "Rundes Seebecken, Wiesen und Wald; sanfter zentraler Wanderstart, Uferpavillon."
+      "description": "Buchtenreiches Seebecken, Wiesen und Wald; sanfter zentraler Wanderstart, Uferpavillon."
     }
   ]
 }

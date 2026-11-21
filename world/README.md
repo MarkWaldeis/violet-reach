@@ -25,12 +25,12 @@ Keine PNG-Höhenkacheln: das R16-Format ist der vereinbarte Runtime-Handoff.
 Begrenzungsrechtecke, Charakter und geplante Landmarken stehen in
 `regions/regions.json`. Die verrauschten Regionsgrenzen teilen die gesamte Welt:
 
-1. **Lyrenschlucht** — grüne Pfeilerschlucht mit schlanken Felsnadeln.
-2. **Aschgrat-Canyon** — tief gewundener Einschnitt im nördlichen Plateau.
+1. **Lyrenschlucht** — eingesenkte, klippenumschlossene Schlucht mit 44 steilen Felspfeilern und zerklüfteten Plateaukappen.
+2. **Aschgrat-Canyon** — breiter, tief gewundener Einschnitt mit gestuften Kalkwänden im nördlichen Plateau.
 3. **Dornengang** — schmaler Pass zwischen steilen Parallelgraten.
-4. **Weißwall** — lange helle Steilstufe mit Weißfall-Übergang.
+4. **Weißwall** — rund 490 m hohe, durchgehende Abbruchkante eines breiten westlichen Hochlands mit Weißfall-Übergang.
 5. **Mondsichel** — sichelförmiger Grat um ein geschütztes Tal.
-6. **Spiegelsee** — rundes Seebecken, Wiesen und sanfter zentraler Wanderstart.
+6. **Spiegelsee** — ungefähr rundes Seebecken mit Buchten, unregelmäßigen Strand- und Schilfzonen, Wiesen und sanftem Wanderstart.
 
 `hydrology.json`: Flusslinien `[x,z,water_y,width]`, Seen mit `water_y` und
 Uferpolygon `[x,z]`. Uferpolygone liegen am trockenen äußeren Ufersaum, die
@@ -48,7 +48,9 @@ Weltgrenze. `--draft` interpoliert die grobe Vorschau ins gleiche Exportformat;
 für die endgültige Welt ohne diesen Schalter bauen.
 
 `review/overview.jpg` (beschriftet), `overview_plain.jpg` und `oblique.jpg`
-werden mit **Cycles CPU** erzeugt. `terrain.blend` ist lokal regenerierbar
+werden mit **Cycles CPU** erzeugt. Die Schrägansicht liegt innerhalb des
+Bergrands auf Überflughöhe; die Übersicht zeigt geglättete, interpolierte
+Maskenkonturen statt Pixelkanten. `terrain.blend` ist lokal regenerierbar
 und nicht versioniert. Die Mesh-Vorschau hat 1025² Vertices; die Runtime-
 Höhenfelder behalten volle Auflösung. Die Render zeigen den Weltentwurf,
 nicht die spätere Vegetations- und Monumentproduktion.
