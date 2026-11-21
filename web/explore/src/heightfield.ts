@@ -22,7 +22,7 @@ export function parseManifest(value: unknown): TerrainManifest {
   const positiveInt = (n: number) => Number.isSafeInteger(n) && n > 0;
   if (
     !m || m.version !== 1 || !positiveInt(m.tilesX) || !positiveInt(m.tilesZ) ||
-    !Number.isFinite(m.tileSize) || m.tileSize <= 0 || m.tileSize > 8000 ||
+    !Number.isFinite(m.tileSize) || m.tileSize < 1 || m.tileSize > 8000 ||
     ![17, 33, 65, 129, 257].includes(m.samples) ||
     ![m.originX, m.originZ, m.minHeight, m.maxHeight].every(Number.isFinite) ||
     !(m.maxHeight > m.minHeight) ||
@@ -55,14 +55,15 @@ export function distanceToTile(m: TerrainManifest, tile: TileCoords, x: number, 
 }
 
 export function selectTiles(m: TerrainManifest, x: number, z: number) {
-  const from = worldTile(m, x - MAX_TILE_DISTANCE, z - MAX_TILE_DISTANCE);
-  const to = worldTile(m, x + MAX_TILE_DISTANCE, z + MAX_TILE_DISTANCE);
+  const radius = Math.min(MAX_TILE_DISTANCE, 10 * m.tileSize);
+  const from = worldTile(m, x - radius, z - radius);
+  const to = worldTile(m, x + radius, z + radius);
   const result: { coords: TileCoords; distance: number }[] = [];
   for (let tz = from.z; tz <= to.z; tz++) {
     for (let tx = from.x; tx <= to.x; tx++) {
       const coords = { x: tx, z: tz };
       const distance = distanceToTile(m, coords, x, z);
-      if (distance < MAX_TILE_DISTANCE) result.push({ coords, distance });
+      if (distance < radius) result.push({ coords, distance });
     }
   }
   return result.sort((a, b) => a.distance - b.distance);

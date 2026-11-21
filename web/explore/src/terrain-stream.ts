@@ -43,7 +43,7 @@ export class TerrainStream {
   }
 
   update(x: number, z: number, now: number) {
-    if (Math.hypot(x - this.#last.x, z - this.#last.z) >= 24) {
+    if (Math.hypot(x - this.#last.x, z - this.#last.z) >= Math.min(24, this.manifest.tileSize / 2)) {
       this.#last = { x, z };
       const wanted = new Map<string, Tile>();
       for (const { coords, distance } of selectTiles(this.manifest, x, z).slice(0, ACTIVE_LIMIT)) {

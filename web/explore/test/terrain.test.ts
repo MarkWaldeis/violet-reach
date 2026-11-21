@@ -47,6 +47,18 @@ test("LOD hysteresis prevents churn near the boundary", () => {
   assert.equal(chooseLOD(2600), 3);
 });
 
+test("tiny terrain tiles bound the selection and flight step", () => {
+  const small = { ...m, tileSize: 1, tilesX: 8192, tilesZ: 8192 };
+  const selected = selectTiles(small, 0, 0);
+  assert.ok(selected.length < 450);
+  const camera = new PerspectiveCamera();
+  const nav = new Navigation(camera, small, () => 40);
+  nav.keys.add("KeyW");
+  nav.keys.add("ShiftLeft");
+  nav.update(0.05);
+  assert.ok(camera.position.z < 0 && camera.position.z >= -0.5);
+});
+
 test("walking height interpolates both rendered triangles, including edge samples", () => {
   const tile = new Float32Array([0, 5, 10, 15, 20, 25, 30, 35, 100]);
   assert.equal(sampleTile(tile, 3, 2, 0.25, 0.25), 10);

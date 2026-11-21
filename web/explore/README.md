@@ -19,7 +19,7 @@ npm run preview
 
 Den exportierten Ordner `world/terrain/runtime/` unverändert statisch bereitstellen, zum Beispiel unter `web/explore/public/terrain/`. Dann die Vorschau mit `?terrain=./terrain/manifest.json` öffnen. Bei separatem Hosting muss der Server CORS erlauben. Nach dem Build ist `dist/` ohne Serverlogik statisch auslieferbar.
 
-Manifest v1 enthält `version: 1`, `tilesX`, `tilesZ`, `tileSize` in Metern, `samples` pro Kante (17, 33, 65, 129 oder 257), `originX`, `originZ`, `minHeight` und `maxHeight` in Metern. Optional setzt `spawn: {x,z,yaw}` den Startpunkt; `yaw` ist in Radiant, bei Null blickt die Kamera nach Norden (−Z). Wenn kein Startpunkt angegeben ist, beginnt der Flug in der Mitte der Karte.
+Manifest v1 enthält `version: 1`, `tilesX`, `tilesZ`, `tileSize` in Metern (mindestens 1 m), `samples` pro Kante (17, 33, 65, 129 oder 257), `originX`, `originZ`, `minHeight` und `maxHeight` in Metern. Optional setzt `spawn: {x,z,yaw}` den Startpunkt; `yaw` ist in Radiant, bei Null blickt die Kamera nach Norden (−Z). Wenn kein Startpunkt angegeben ist, beginnt der Flug in der Mitte der Karte.
 
 Neben dem Manifest liegt für jede Null-basierte Kachel eine Datei `<x>_<z>.r16` mit `samples²` vorzeichenlosen 16-Bit-Werten in Little-Endian. Zeilen laufen nach +Z (Süden), Spalten nach +X (Osten); +Y ist oben. Beide Nachbarn enthalten dieselben Randwerte. `minHeight + sample / 65535 * (maxHeight - minHeight)` ergibt die Höhe. Der Export ist von der Laufzeit unabhängig; Regions- und Hydrologiedaten werden hier noch nicht gerendert.
 

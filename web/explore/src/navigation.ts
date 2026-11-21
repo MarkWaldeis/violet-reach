@@ -72,7 +72,8 @@ export class Navigation {
     const sprint = held("ShiftLeft") || held("ShiftRight");
     const flying = this.mode === "fly";
     const directionLength = Math.max(1, Math.hypot(right, forward, flying ? up : 0));
-    const dtSpeed = dt * (flying ? (sprint ? 193 : 68) : (sprint ? 8 : 4.5)) / directionLength;
+    const step = dt * (flying ? (sprint ? 193 : 68) : (sprint ? 8 : 4.5));
+    const dtSpeed = Math.min(step, this.#manifest.tileSize / 2) / directionLength;
     const cp = flying ? Math.cos(this.#pitch) : 1;
     const x = this.#clampX(p.x + (right * Math.cos(this.#yaw) - forward * Math.sin(this.#yaw) * cp) * dtSpeed);
     const z = this.#clampZ(p.z + (-right * Math.sin(this.#yaw) - forward * Math.cos(this.#yaw) * cp) * dtSpeed);
