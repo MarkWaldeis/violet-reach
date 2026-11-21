@@ -4,6 +4,8 @@ Große Fantasy-Welt für den PC-Browser. Jedes Objekt wird einzeln in Blender ge
 
 - Plan mit allen Phasen und Sessions: [PLAN.md](PLAN.md)
 - Anleitung für Bau- und Prüf-Sessions: [docs/SESSIONS.md](docs/SESSIONS.md)
+- Stilhandbuch und Referenzen: [art/STYLE.md](art/STYLE.md)
+- Palette und Materialmuster: [art/palette.png](art/palette.png), [Materialbibliothek](art/materials/README.md)
 
 ## Aufbau
 
@@ -36,6 +38,7 @@ python3 tools/vr.py sheet mein_kristall             # Prüfblatt: review/sheet.j
 python3 tools/vr.py review mein_kristall --reviewer <andere-session> \
     --scores silhouette=9,form_detail=8,material=9,scale=9,style=8,defects=9
 python3 tools/vr.py export mein_kristall            # Detailstufen, gebackene Texturen, .glb
+python3 tools/vr.py swatches                        # Materialbibliothek: Cycles/CPU, Kontaktblatt
 npm --prefix web run dev                            # http://localhost:5173/?asset=mein_kristall
 ```
 

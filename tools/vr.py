@@ -11,6 +11,7 @@
   vr.py check                       the gate, run by CI: fails if anything unapproved ships
 """
 import argparse
+import ast
 import hashlib
 import json
 import os
@@ -70,6 +71,15 @@ def sha256(path):
 def source_hash(asset_dir):
     inputs = [os.path.join(asset_dir, "build.py")]
     inputs += [os.path.join(BLENDER_TOOLS, name) for name in ("run_build.py", "vrlib.py")]
+    tree = ast.parse(Path(inputs[0]).read_text(encoding="utf-8-sig"))
+    uses_vrmat = any(
+        (isinstance(node, ast.Import) and any(alias.name.split(".")[-1] == "vrmat" for alias in node.names))
+        or (isinstance(node, ast.ImportFrom) and
+            ((node.module or "").split(".")[-1] == "vrmat" or any(alias.name == "vrmat" for alias in node.names)))
+        for node in ast.walk(tree)
+    )
+    if uses_vrmat:
+        inputs += [os.path.join(BLENDER_TOOLS, "vrmat.py"), os.path.join(ROOT, "art", "palette.json")]
     return hashlib.sha256("".join(sha256(path) for path in inputs).encode()).hexdigest()
 
 
@@ -402,8 +412,13 @@ def main():
     s.add_argument("--scores", required=True); s.add_argument("--notes"); s.set_defaults(fn=cmd_review)
     s = sub.add_parser("export"); s.add_argument("id"); s.set_defaults(fn=cmd_export)
     sub.add_parser("check").set_defaults(fn=cmd_check)
+    sub.add_parser("swatches", help="Materialmuster mit Cycles/CPU rendern").set_defaults(fn=cmd_swatches)
     args = p.parse_args()
     args.fn(args)
+
+
+def cmd_swatches(_):
+    blender(["--python", os.path.join(BLENDER_TOOLS, "render_swatches.py")])
 
 
 if __name__ == "__main__":

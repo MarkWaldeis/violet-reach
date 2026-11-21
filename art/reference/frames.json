@@ -1,0 +1,156 @@
+[
+  {
+    "file": "ref_01_white_monuments_sky.jpg",
+    "video": "lang",
+    "seconds": 1,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_02_pillar_light.jpg",
+    "video": "lang",
+    "seconds": 4,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_03_canyon_cliffs.jpg",
+    "video": "lang",
+    "seconds": 6,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_04_white_ribbed_arches.jpg",
+    "video": "lang",
+    "seconds": 8,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_05_river_arch.jpg",
+    "video": "lang",
+    "seconds": 12,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_06_weathered_wall.jpg",
+    "video": "lang",
+    "seconds": 16,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_07_violet_crater.jpg",
+    "video": "lang",
+    "seconds": 18,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_08_ribbed_crown.jpg",
+    "video": "lang",
+    "seconds": 22,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_09_crescent_grass.jpg",
+    "video": "lang",
+    "seconds": 26,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_10_lake_shore.jpg",
+    "video": "lang",
+    "seconds": 30,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_11_floating_bodies.jpg",
+    "video": "lang",
+    "seconds": 34,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_12_forest_path.jpg",
+    "video": "kurz",
+    "seconds": 2,
+    "crop_xywh": [
+      8,
+      812,
+      1154,
+      659
+    ]
+  },
+  {
+    "file": "ref_13_forest_ground.jpg",
+    "video": "kurz",
+    "seconds": 7,
+    "crop_xywh": [
+      8,
+      812,
+      1154,
+      659
+    ]
+  },
+  {
+    "file": "ref_14_grass_light.jpg",
+    "video": "kurz",
+    "seconds": 12,
+    "crop_xywh": [
+      8,
+      812,
+      1154,
+      659
+    ]
+  }
+]

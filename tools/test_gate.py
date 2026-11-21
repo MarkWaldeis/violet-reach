@@ -12,7 +12,9 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, str(Path(__file__).resolve().parent / "blender"))
 import vr  # noqa: E402
+import vrmat  # noqa: E402
 
 
 def make(root, **overrides):
@@ -115,6 +117,51 @@ def shipping_checks(root):
 
 def main():
     results = []
+    with tempfile.TemporaryDirectory() as root:
+        d, _ = make(root)
+        original = vr.source_hash(d)
+        real_sha256 = vr.sha256
+
+        def changed_library(path):
+            return "changed" if str(path).endswith("vrmat.py") else real_sha256(path)
+
+        with patch.object(vr, "sha256", side_effect=changed_library):
+            results.append(expect("legacy asset hash ignores vrmat", [] if vr.source_hash(d) == original else ["changed"], None))
+        for statement in ("import vrmat", "import vrmat as materials", "from vrmat import get", "from tools.blender import vrmat"):
+            Path(d, "build.py").write_text(statement + "\ndef build(): pass\n")
+            baseline = vr.source_hash(d)
+            with patch.object(vr, "sha256", side_effect=changed_library):
+                results.append(expect(statement + " includes library hash", ["changed"] if vr.source_hash(d) != baseline else [], "changed"))
+            with patch.object(vr, "sha256", side_effect=lambda p: "changed" if str(p).endswith("palette.json") else real_sha256(p)):
+                results.append(expect(statement + " includes palette hash", ["changed"] if vr.source_hash(d) != baseline else [], "changed"))
+        Path(d, "build.py").write_text('# import vrmat\nTEXT = "vrmat"\n')
+        baseline = vr.source_hash(d)
+        with patch.object(vr, "sha256", side_effect=changed_library):
+            results.append(expect("comments and strings do not opt into vrmat", [] if vr.source_hash(d) == baseline else ["changed"], None))
+    colors = vrmat.load_palette()
+    results.append(expect("all material colors match sRGB and linear palette", [] if colors else ["empty"], None))
+    results.append(expect("ochre accent remains in palette without an inlay material",
+                          [] if "accent_ochre" in colors and "ochre_inlay" not in vrmat.SPECS else ["inconsistent"], None))
+    try:
+        vrmat.get("ochre_inlay")
+    except KeyError:
+        results.append(expect("removed inlay material is refused", ["refused"], "refused"))
+    else:
+        results.append(False)
+    try:
+        vrmat.get("unknown")
+    except KeyError:
+        results.append(expect("unknown material name is refused", ["refused"], "refused"))
+    else:
+        results.append(False)
+    for invalid in ({"colors": {}}, {"colors": {"broken": {"srgb_hex": "#FFFFFF", "linear_rgb": [0, 0, 0]}}}):
+        with patch.object(Path, "read_text", return_value=json.dumps(invalid)):
+            try:
+                vrmat.load_palette()
+            except ValueError:
+                results.append(expect("empty or inconsistent palette is refused", ["refused"], "refused"))
+            else:
+                results.append(False)
     with tempfile.TemporaryDirectory() as root:
         d, meta = make(root)
         results.append(expect("approved asset passes", vr.gate_problems(d, meta), None))

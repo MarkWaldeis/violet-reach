@@ -1,0 +1,413 @@
+{
+  "method": "Kuratierte Regionen; Kanalmedian sRGB; IEC 61966-2-1",
+  "colors": {
+    "monument_white": {
+      "group": "Monument",
+      "role": "Heller Kalkstein",
+      "srgb_hex": "#E8DABE",
+      "linear_rgb": [
+        0.8069523,
+        0.7011019,
+        0.5149177
+      ],
+      "frame": "ref_07_violet_crater.jpg",
+      "region_xyxy": [
+        920,
+        115,
+        960,
+        165
+      ]
+    },
+    "monument_shadow": {
+      "group": "Monument",
+      "role": "Kühler Stein in Vertiefungen",
+      "srgb_hex": "#AAA9A4",
+      "linear_rgb": [
+        0.4019778,
+        0.3967552,
+        0.3712377
+      ],
+      "frame": "ref_07_violet_crater.jpg",
+      "region_xyxy": [
+        740,
+        175,
+        770,
+        220
+      ]
+    },
+    "stone_weathered": {
+      "group": "Monument",
+      "role": "Verwitterte Kanten",
+      "srgb_hex": "#DCCDB1",
+      "linear_rgb": [
+        0.7156935,
+        0.6104956,
+        0.4396572
+      ],
+      "frame": "ref_03_canyon_cliffs.jpg",
+      "region_xyxy": [
+        390,
+        430,
+        425,
+        460
+      ]
+    },
+    "canyon_chalk": {
+      "group": "Fels",
+      "role": "Helle Bruchflächen",
+      "srgb_hex": "#BCB296",
+      "linear_rgb": [
+        0.5028865,
+        0.4452012,
+        0.3049873
+      ],
+      "frame": "ref_03_canyon_cliffs.jpg",
+      "region_xyxy": [
+        730,
+        470,
+        760,
+        510
+      ]
+    },
+    "canyon_strata": {
+      "group": "Fels",
+      "role": "Dunkle Schichten",
+      "srgb_hex": "#9B8E7E",
+      "linear_rgb": [
+        0.3277781,
+        0.2704978,
+        0.2086369
+      ],
+      "frame": "ref_03_canyon_cliffs.jpg",
+      "region_xyxy": [
+        860,
+        520,
+        880,
+        550
+      ]
+    },
+    "sandstone": {
+      "group": "Fels",
+      "role": "Warmer Naturbogen",
+      "srgb_hex": "#D3B490",
+      "linear_rgb": [
+        0.6514056,
+        0.456411,
+        0.2788943
+      ],
+      "frame": "ref_03_canyon_cliffs.jpg",
+      "region_xyxy": [
+        360,
+        190,
+        390,
+        215
+      ]
+    },
+    "moss": {
+      "group": "Vegetation",
+      "role": "Moospolster",
+      "srgb_hex": "#3D4C2B",
+      "linear_rgb": [
+        0.0466651,
+        0.0722719,
+        0.0241576
+      ],
+      "frame": "ref_09_crescent_grass.jpg",
+      "region_xyxy": [
+        1020,
+        490,
+        1060,
+        520
+      ]
+    },
+    "grass_green": {
+      "group": "Vegetation",
+      "role": "Gras-Mittelton",
+      "srgb_hex": "#696F44",
+      "linear_rgb": [
+        0.1412633,
+        0.1589608,
+        0.0578054
+      ],
+      "frame": "ref_09_crescent_grass.jpg",
+      "region_xyxy": [
+        900,
+        380,
+        960,
+        410
+      ]
+    },
+    "grass_dry": {
+      "group": "Vegetation",
+      "role": "Sonnige Halme",
+      "srgb_hex": "#635C30",
+      "linear_rgb": [
+        0.1247718,
+        0.1070231,
+        0.0295568
+      ],
+      "frame": "ref_13_forest_ground.jpg",
+      "region_xyxy": [
+        760,
+        350,
+        800,
+        390
+      ]
+    },
+    "leaf_green": {
+      "group": "Vegetation",
+      "role": "Laub-Mittelton",
+      "srgb_hex": "#313C1D",
+      "linear_rgb": [
+        0.0307134,
+        0.0451862,
+        0.0122865
+      ],
+      "frame": "ref_14_grass_light.jpg",
+      "region_xyxy": [
+        520,
+        135,
+        560,
+        160
+      ]
+    },
+    "leaf_shadow": {
+      "group": "Vegetation",
+      "role": "Laub-Schatten",
+      "srgb_hex": "#050E06",
+      "linear_rgb": [
+        0.0015176,
+        0.0043914,
+        0.0018212
+      ],
+      "frame": "ref_14_grass_light.jpg",
+      "region_xyxy": [
+        620,
+        185,
+        650,
+        210
+      ]
+    },
+    "bark": {
+      "group": "Vegetation",
+      "role": "Baumrinde",
+      "srgb_hex": "#41321D",
+      "linear_rgb": [
+        0.0528606,
+        0.031896,
+        0.0122865
+      ],
+      "frame": "ref_14_grass_light.jpg",
+      "region_xyxy": [
+        526,
+        233,
+        536,
+        261
+      ]
+    },
+    "soil": {
+      "group": "Boden",
+      "role": "Offene Erde",
+      "srgb_hex": "#665548",
+      "linear_rgb": [
+        0.1328683,
+        0.0908417,
+        0.0648033
+      ],
+      "frame": "ref_07_violet_crater.jpg",
+      "region_xyxy": [
+        400,
+        450,
+        450,
+        480
+      ]
+    },
+    "path_sand": {
+      "group": "Boden",
+      "role": "Trockener Ufersaum",
+      "srgb_hex": "#B6A176",
+      "linear_rgb": [
+        0.4677838,
+        0.3564001,
+        0.1811642
+      ],
+      "frame": "ref_10_lake_shore.jpg",
+      "region_xyxy": [
+        700,
+        460,
+        740,
+        480
+      ]
+    },
+    "shore_wet": {
+      "group": "Boden",
+      "role": "Feuchter Stein",
+      "srgb_hex": "#5D6064",
+      "linear_rgb": [
+        0.1094617,
+        0.1169707,
+        0.1274377
+      ],
+      "frame": "ref_10_lake_shore.jpg",
+      "region_xyxy": [
+        230,
+        270,
+        260,
+        285
+      ]
+    },
+    "water_deep": {
+      "group": "Wasser",
+      "role": "Tiefes Seewasser",
+      "srgb_hex": "#254447",
+      "linear_rgb": [
+        0.0185002,
+        0.0578054,
+        0.06301
+      ],
+      "frame": "ref_11_floating_bodies.jpg",
+      "region_xyxy": [
+        450,
+        490,
+        510,
+        520
+      ]
+    },
+    "water_shallow": {
+      "group": "Wasser",
+      "role": "Flachwasser",
+      "srgb_hex": "#618383",
+      "linear_rgb": [
+        0.1195384,
+        0.2269659,
+        0.2269659
+      ],
+      "frame": "ref_10_lake_shore.jpg",
+      "region_xyxy": [
+        660,
+        375,
+        690,
+        395
+      ]
+    },
+    "sky_blue": {
+      "group": "Himmel",
+      "role": "Himmelsblau",
+      "srgb_hex": "#708CAB",
+      "linear_rgb": [
+        0.1620294,
+        0.2622507,
+        0.4072402
+      ],
+      "frame": "ref_04_white_ribbed_arches.jpg",
+      "region_xyxy": [
+        750,
+        10,
+        800,
+        40
+      ]
+    },
+    "haze": {
+      "group": "Himmel",
+      "role": "Ferne und Dunst",
+      "srgb_hex": "#C7BE9E",
+      "linear_rgb": [
+        0.5711248,
+        0.5149177,
+        0.3419144
+      ],
+      "frame": "ref_11_floating_bodies.jpg",
+      "region_xyxy": [
+        1000,
+        270,
+        1040,
+        290
+      ]
+    },
+    "cloud_cream": {
+      "group": "Himmel",
+      "role": "Warme Wolken",
+      "srgb_hex": "#E6E1CE",
+      "linear_rgb": [
+        0.7912979,
+        0.7529422,
+        0.6172066
+      ],
+      "frame": "ref_04_white_ribbed_arches.jpg",
+      "region_xyxy": [
+        790,
+        140,
+        820,
+        155
+      ]
+    },
+    "violet_body": {
+      "group": "Kristall",
+      "role": "Violetter Körper",
+      "srgb_hex": "#8553C6",
+      "linear_rgb": [
+        0.2345506,
+        0.0865005,
+        0.5647115
+      ],
+      "frame": "ref_07_violet_crater.jpg",
+      "region_xyxy": [
+        191,
+        275,
+        207,
+        287
+      ]
+    },
+    "violet_shadow": {
+      "group": "Kristall",
+      "role": "Tiefe Facetten",
+      "srgb_hex": "#6948AA",
+      "linear_rgb": [
+        0.1412633,
+        0.0648033,
+        0.4019778
+      ],
+      "frame": "ref_07_violet_crater.jpg",
+      "region_xyxy": [
+        145,
+        267,
+        165,
+        280
+      ]
+    },
+    "violet_glow": {
+      "group": "Kristall",
+      "role": "Helle Energieadern",
+      "srgb_hex": "#E0C0E0",
+      "linear_rgb": [
+        0.7454042,
+        0.5271151,
+        0.7454042
+      ],
+      "frame": "ref_07_violet_crater.jpg",
+      "region_xyxy": [
+        692,
+        237,
+        700,
+        243
+      ]
+    },
+    "accent_ochre": {
+      "group": "Akzent",
+      "role": "Ockerfarbene Steinfassungen, kein belegtes Metall",
+      "srgb_hex": "#EED8AE",
+      "linear_rgb": [
+        0.8549926,
+        0.6866853,
+        0.4232677
+      ],
+      "frame": "ref_07_violet_crater.jpg",
+      "region_xyxy": [
+        750,
+        353,
+        768,
+        366
+      ]
+    }
+  }
+}
