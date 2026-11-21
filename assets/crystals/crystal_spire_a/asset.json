@@ -1,0 +1,20 @@
+{
+  "id": "crystal_spire_a",
+  "category": "crystals",
+  "title": "Faultwake Spire",
+  "description": "A seven-metre violet blade growing up through a limestone fault with an uplifted bank and a downthrown bank.",
+  "target_size_m": [
+    5.2,
+    5.7,
+    7.4
+  ],
+  "lod_triangles": [
+    7200,
+    2300,
+    750
+  ],
+  "texture_size": 2048,
+  "status": "blender_review",
+  "builder": "devin-a193abe14f544701aef56a91e66901c2",
+  "review": null
+}

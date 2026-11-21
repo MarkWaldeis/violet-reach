@@ -1,0 +1,20 @@
+{
+  "id": "floating_island_a",
+  "category": "sky",
+  "title": "Driftward Plateau",
+  "description": "A grass-capped, fractured limestone plateau with exposed bedding and detached skyline fragments.",
+  "target_size_m": [
+    335,
+    180,
+    160
+  ],
+  "lod_triangles": [
+    4200,
+    1300,
+    450
+  ],
+  "texture_size": 2048,
+  "status": "blender_review",
+  "builder": "devin-a193abe14f544701aef56a91e66901c2",
+  "review": null
+}

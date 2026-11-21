@@ -1,0 +1,20 @@
+{
+  "id": "energy_core_a",
+  "category": "energy",
+  "title": "Threefold Reliquary",
+  "description": "Corbelled white limestone ribs surround a levitating violet seed and its free-standing energy filaments.",
+  "target_size_m": [
+    16,
+    16,
+    21.2
+  ],
+  "lod_triangles": [
+    19000,
+    6500,
+    2200
+  ],
+  "texture_size": 2048,
+  "status": "blender_review",
+  "builder": "devin-a193abe14f544701aef56a91e66901c2",
+  "review": null
+}

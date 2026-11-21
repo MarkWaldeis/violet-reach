@@ -1,0 +1,20 @@
+{
+  "id": "lake_shore_a",
+  "category": "shore",
+  "title": "Shinglewake Shore",
+  "description": "A scalloped sandy lake margin with contrasting wet cobbles, loose shingle and grass tufts. Water is on the negative Y side, at Z=0.",
+  "target_size_m": [
+    21.4,
+    7.7,
+    1.15
+  ],
+  "lod_triangles": [
+    13500,
+    5000,
+    1800
+  ],
+  "texture_size": 2048,
+  "status": "blender_review",
+  "builder": "devin-a193abe14f544701aef56a91e66901c2",
+  "review": null
+}

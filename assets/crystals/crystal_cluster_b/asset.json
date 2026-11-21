@@ -1,0 +1,20 @@
+{
+  "id": "crystal_cluster_b",
+  "category": "crystals",
+  "title": "Wakesplit Crystal Cluster",
+  "description": "A three-metre cluster and opposing side growths erupt through a limestone shelf, leaving an open apron of bare earth.",
+  "target_size_m": [
+    5.8,
+    4.1,
+    3
+  ],
+  "lod_triangles": [
+    8500,
+    2600,
+    850
+  ],
+  "texture_size": 2048,
+  "status": "blender_review",
+  "builder": "devin-a193abe14f544701aef56a91e66901c2",
+  "review": null
+}

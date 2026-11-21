@@ -1,0 +1,20 @@
+{
+  "id": "bridge_arch_a",
+  "category": "bridges",
+  "title": "Pale Ford Arch",
+  "description": "A 25-metre barrel vault with a 3.7-metre freestanding slab deck, flared abutments and alternating open and solid limestone parapets.",
+  "target_size_m": [
+    36,
+    5.8,
+    6.7
+  ],
+  "lod_triangles": [
+    21000,
+    7500,
+    2500
+  ],
+  "texture_size": 2048,
+  "status": "blender_review",
+  "builder": "devin-a193abe14f544701aef56a91e66901c2",
+  "review": null
+}
