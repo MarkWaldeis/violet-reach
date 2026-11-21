@@ -14,7 +14,22 @@
     1200
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-501e5a510b5c43f2b6ce7952cf05094b",
-  "review": null
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 7,
+      "material": 6,
+      "scale": 8,
+      "style": 7,
+      "defects": 7
+    },
+    "notes": "Abgelehnt. (1) Material: auf dem ganzen Schaft graue Fleckenwolken (Tarnmuster, closeup.jpg) statt hellem Kalkstein mit lokalem Schmutz; Ablehnungsgrund laut STYLE.md (Schmutz lokal, nicht Vollflächenmarmor). Fix: Fleckung stark reduzieren, Verwitterung nur an Fugen, Basis und Wetterseite. (2) Form: Kanneluren sind aufgeblähte Wülste statt scharfkantig eingetiefter Rillen; alle Trommeln gleich hoch, keine Abplatzungen, Kapitell ist eine schlichte Scheibe. Fix: Kanneluren mit Stegen schneiden, Trommelhöhen leicht variieren, 2–3 abgeplatzte Kanten/Risse, Kapitell mit Profil (Hals, Wulst, Abakus). (3) Basis ist ein einfaches Polygon mit sichtbaren Facetten; mehr Segmente oder bewusst gebrochene Kanten. Maßstab 18 m zur Figur plausibel.",
+    "round": 1,
+    "source_sha256": "a13281faca4f1c7855db003b14fa955f798a519d53596bc726c0a2d27b661249",
+    "sheet_sha256": "39abd50542956fe50da83ed29fb94c008d0c806a16952e13c8ced9569bc25d82"
+  },
+  "review_rounds": 1
 }

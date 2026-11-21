@@ -14,7 +14,22 @@
     2200
   ],
   "texture_size": 4096,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-501e5a510b5c43f2b6ce7952cf05094b",
-  "review": null
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 7,
+      "material": 6,
+      "scale": 8,
+      "style": 6,
+      "defects": 7
+    },
+    "notes": "Abgelehnt. (1) Material: die Oberfläche wirkt in hero/closeup fast strukturlos glatt-weiß (weißer Kunststoff, Ablehnungsfall); keine Poren, Abplatzungen, Kantenverwitterung oder lokale Patina sichtbar. Fix: monument_white-Struktur auf den finalen Flächen sichtbar machen, Kantenbruch/Pointiness prüfen, Fußzonen mit monument_weathered. (2) Form: die Keilsteine sind gleich große, gewölbte Seifenstücke mit weichen Kissenkanten; Pfeiler aus gleich hohen gestapelten Platten. Fix: Keilsteine mit scharfen gefasten Kanten, Schlussstein betonen, Lagenhöhen in den Pfeilern staffeln, einzelne gebrochene Ecken und Fugenversatz. (3) Stil: der gotische Spitzbogen mit Strebepfeilern ist ein fremdes Bauprofil; STYLE.md verlangt große glatte Massen, verjüngte Pfeiler und gebogene Rippen mit weichen Radienwechseln. Fix: Bogenprofil an die Rippensprache anlehnen (z. B. gegeneinander geneigte Rippenpaare, asymmetrische Höhen). (4) Bodenplatten im Durchgang wirken wie dünne aufgelegte Fliesen; Fix: in den Sockel einbinden. Maßstab der Öffnung passt.",
+    "round": 1,
+    "source_sha256": "58411c312ca4fecdf27e9d8da56186639b05996b51e92d5d3275f9b879045b0b",
+    "sheet_sha256": "0bfa86507cbb2acfa202d932862b5d177c769f96250856fc54495c3ea974d67e"
+  },
+  "review_rounds": 1
 }

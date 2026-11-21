@@ -14,7 +14,22 @@
     4500
   ],
   "texture_size": 4096,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-501e5a510b5c43f2b6ce7952cf05094b",
-  "review": null
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 6,
+      "material": 6,
+      "scale": 6,
+      "style": 6,
+      "defects": 7
+    },
+    "notes": "Abgelehnt. (1) Form/Stil: alle Rippen sind gleichartig aus gleich langen, kissenartig gewölbten Blöcken gesetzt (Raupen-/Wirbelsäulen-Look); in ref 04/08 sind Rippen große glatte, verjüngte Kalksteinkörper mit wenigen Fugen und wechselnden Radien. Fix: Blocklängen nach oben deutlich steigern und variieren, Fugen als feine Rücksprünge statt Kissenwulst, Querschnitt pro Rippe unterschiedlich (2–8 m), Rippenrücken mit Grat/Kehle. (2) Silhouette: die gekrümmten freien Spitzen enden dünn wie Grashalme/Tentakel; Fix: Spitzen kräftiger abschließen oder paarweise zu Bögen schließen, ein bis zwei dominante Rippen. (3) Maßstab: 80 m hohe Rippen stehen auf einer flachen, kleinen Stufenplatte; kein glaubhaftes Fundament, Maßfigur auf dem Blatt kaum auffindbar. Fix: massive Sockel/Wurzelkörper pro Rippe mit begehbarer Öffnung >= 2,2 m in Figurennähe. (4) Material: monument_white zeigt großflächige graue Fleckenwolken auf allen Blöcken (Vollflächenmarmor, closeup.jpg); Schmutz lokal an Fugen und Fußzonen konzentrieren.",
+    "round": 1,
+    "source_sha256": "94e4ac7e8988b314f48ff61400fe71ea32dc38cee9048a0eb6ebdda646a16ffd",
+    "sheet_sha256": "85204cddd0265a784dfe8f99ebdcf55376c66376af96742806ad4bb8c3c95c79"
+  },
+  "review_rounds": 1
 }
