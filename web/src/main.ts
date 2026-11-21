@@ -42,6 +42,7 @@ function skyTexture(): THREE.DataTexture {
 /** One exported .glb holds <id>_LOD0..n as sibling nodes; wrap them in a THREE.LOD. */
 function buildLod(root: THREE.Object3D, sizeM: number): THREE.LOD {
   const lod = new THREE.LOD();
+  lod.autoUpdate = false;
   const levels: [number, THREE.Object3D][] = [];
   root.traverse((o) => {
     const m = /_LOD(\d+)$/.exec(o.name);
@@ -140,14 +141,20 @@ async function main() {
   });
 
   const backend = (renderer.backend as { isWebGPUBackend?: boolean }).isWebGPUBackend ? "WebGPU" : "WebGL2";
-  post.render();
+  function renderFrame() {
+    controls.update();
+    camera.updateMatrixWorld();
+    // Keep the viewer camera's LOD for all passes, including the shadow camera.
+    lod.update(camera);
+    post.render();
+  }
+  renderFrame();
   status.remove();
   document.querySelector<HTMLElement>("#asset-title")!.textContent = entry.title;
   document.querySelector<HTMLElement>("#viewer-details")!.hidden = false;
   let frames = 0, last = performance.now(), fps = 0;
   renderer.setAnimationLoop(() => {
-    controls.update();
-    post.render();
+    renderFrame();
     frames++;
     const now = performance.now();
     if (now - last >= 500) {
