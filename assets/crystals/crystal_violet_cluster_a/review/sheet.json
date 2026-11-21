@@ -1,0 +1,26 @@
+{
+  "triangles": 143738,
+  "size_m": [
+    4.107,
+    3.761,
+    3.514
+  ],
+  "objects": 44,
+  "samples": 64,
+  "render_seconds": 129.5,
+  "blender": "5.3.0",
+  "tiles": [
+    "turn_020",
+    "turn_065",
+    "turn_110",
+    "turn_155",
+    "turn_200",
+    "turn_245",
+    "turn_290",
+    "turn_335",
+    "closeup_upper",
+    "closeup_base",
+    "wire",
+    "clay"
+  ]
+}
