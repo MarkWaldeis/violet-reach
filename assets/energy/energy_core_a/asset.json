@@ -14,7 +14,22 @@
     2200
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-a193abe14f544701aef56a91e66901c2",
-  "review": null
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 6,
+      "material": 5,
+      "scale": 8,
+      "style": 6,
+      "defects": 6
+    },
+    "notes": "Abgelehnt. (1) Material Kern: violet_energy liest sich als weiß-blaue Blitzadern auf dunkelblauem Grund (closeup.jpg): Adern fast weiß, Grundton Indigo statt Violett, glattes Ei ohne Facetten oder Innenstruktur – genau der Ablehnungsfall 'fast weiß durch Emission'. Fix: Filamente gesättigt violett mit nur schmalem hellem Kern, Emission reduzieren, Kern mit gerichteten Facetten oder Schalen statt glatter Ellipse. (2) Freie Filamente: dünne Bandspiralen wirken wie lose Drähte, durchstoßen bzw. kleben an der Kernoberfläche. Fix: dickere, abgesetzte Bögen mit klarem Abstand oder weglassen. (3) Rippen: drei nahezu gleich breite, gleich gebogene Hörner mit gleichmäßiger Blockteilung (Ablehnungsfall 'gleich breite Rippen'); kein Höhen-/Stärkenrhythmus wie in ref 04/08, keine Brüche/Abplatzungen, Kalkstein wirkt an den Rippen grau gefleckt. Fix: unterschiedliche Höhen und Stärken, Verjüngung variieren, Fugen versetzen, lokale Verwitterung statt Vollflächenflecken. (4) Kein sichtbarer Bezug Kern–Sockel (Schwebeachse, Lichtsäule o. Ä.). Sockel mit Ringstufen und Fugen ist gut und kann bleiben.",
+    "round": 1,
+    "source_sha256": "4978842b5ba256f7b15f6b78e6047af96a7f25b974e0d697be2c561c84bc5e47",
+    "sheet_sha256": "29109b9bc33c8b96421f7d297e5a36d63a8702f764cdbf291d426c0332925728"
+  },
+  "review_rounds": 1
 }

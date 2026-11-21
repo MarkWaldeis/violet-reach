@@ -14,7 +14,22 @@
     1800
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-a193abe14f544701aef56a91e66901c2",
-  "review": null
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 5,
+      "form_detail": 4,
+      "material": 5,
+      "scale": 7,
+      "style": 5,
+      "defects": 4
+    },
+    "notes": "Abgelehnt. (1) Defekt: die Grenze Gras/Sand ist eine treppenförmige Sägezahnkante (Kachel 10 und hero.jpg) – Materialmaske folgt den Gitterzellen. Fix: Übergang über geglättete Vertex-/Noise-Maske oder eigene Kantengeometrie, unregelmäßig weich. (2) Wasser/nasser Rand: kein nasser, dunklerer und glatterer Uferstreifen (shore_wet) und kein Wasseranschluss bei Z=0; der Prüfling zeigt nicht, wie das Ufer ins Wasser läuft. Fix: Wasserlinie mit nassem Sandband 1–3 m, Wasserebene auf dem Prüfblatt mitrendern. (3) Steine: alle Kiesel sind glatte, blau glänzende Gelkugeln, nass und trocken identisch, ohne Bruchkanten (Ablehnungsfall). Fix: abgeflachte, unregelmäßige Geröllformen, trockene Steine matter und heller, nur wassernahe glänzend. (4) Gras: einzelne gleichförmige Halmbüschel gleichmäßig gestreut, Böschung ist eine glatte grüne Wurst ohne Erde oder Wurzelkante. Fix: Büschelgruppen mit Größenstaffelung, offene Erde, kleine Abbruchkante. (5) closeup.jpg ist eine flache Seitenansicht ohne Aussage; Nahaufnahme auf die Wasserlinie richten. Maßstab plausibel.",
+    "round": 1,
+    "source_sha256": "85971de7602efd3fce93abf4c9fccd9142c52811f1b0cbeb4fb0e8be4f4d50f9",
+    "sheet_sha256": "79419d3c5750fca9d387432a2c6e739d301c65a1009b855c0f7fe162865602b5"
+  },
+  "review_rounds": 1
 }

@@ -14,7 +14,22 @@
     2500
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-a193abe14f544701aef56a91e66901c2",
-  "review": null
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 7,
+      "scale": 6,
+      "style": 7,
+      "defects": 7
+    },
+    "notes": "Abgelehnt, nah an Freigabe. Gut: klare Bogensilhouette, sauber modellierte Keilsteine, Brüstung mit Pilastern, Fugen und Kappsteinen. (1) Maßstab: das Deck (deck_z) ist eine glatte Plattenrampe mit bis zu 25° Neigung an den Enden ohne Stufen – nicht begehbar. Fix: Deckneigung auf <=10° flacher machen (größerer Radius/niedrigere Scheitelhöhe) oder die steilen Abschnitte als Treppen mit 0,15–0,20 m Stufen ausführen. (2) Material: monument_white zeigt auf Deckplatten und Brüstung großflächige graue Fleckenwolken (Vollflächenmarmor, closeup-Kacheln) statt lokaler Verschmutzung; Fix: Fleckung stark reduzieren, Schmutz an Fugen, Tropfkanten und Fußzonen konzentrieren. (3) Rhythmus: alle Brüstungsfelder und Balusteröffnungen sind identisch und gleich verteilt; Fix: Feldlängen und Öffnungen staffeln, Scheitelfeld betonen. (4) Defekte/Kontakt: Deckenden laufen als dünner Keil auf den Boden aus, die Widerlager sind für einen 25-m-Bogen schmal; Fix: kräftigere Widerlager/Flügelmauern mit Stufenanlauf, die den Bogenschub glaubhaft aufnehmen.",
+    "round": 1,
+    "source_sha256": "9c7fe0338e0c3b179f76d0fa2e597c57b9ef7382745c68d7915e9fa15f915c7e",
+    "sheet_sha256": "696241b31375ad03ff5ef9457aa3d71e3688d1246bb88bd15815df860082e1ea"
+  },
+  "review_rounds": 1
 }

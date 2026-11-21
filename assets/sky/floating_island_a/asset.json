@@ -14,7 +14,22 @@
     450
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-a193abe14f544701aef56a91e66901c2",
-  "review": null
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 5,
+      "form_detail": 4,
+      "material": 5,
+      "scale": 7,
+      "style": 5,
+      "defects": 5
+    },
+    "notes": "Abgelehnt. (1) Silhouette: generischer umgedrehter Kegel mit flachem Graskissen, aus allen 8 Ansichten fast gleich; ref 11 verlangt fragmentierte/gespaltene, geschichtete Volumen. Fix: asymmetrischer Bruchkörper mit großen Abspaltungen, Überhängen, Klüften durch den Körper. (2) Detail: grobe Low-Poly-Facetten an der gesamten Unterseite, Schichtbänke als dünne aufgemalte Streifen statt modellierter Bänke; für 335 m Breite sind die Kanten in closeup.jpg flächig und leer. Fix: Bänke und senkrechte Brüche modellieren, Normalen-/AO-Bake-Detail für die Nahansicht. (3) Defekte/Material: die hängenden Fragmente tragen gezackte Zickzack-Streifen (gestreckte Textur bzw. falsche Orientierung des Schichtmaterials), wirken wie Eiszapfen; Graskappe ist eine gleichmäßige grüne Fläche mit verstreuten Kieseln ohne Gruppenrhythmus, Rand ohne Erd-/Wurzelkante. Fix: Schichtrichtung je Fragment an dessen Lage ausrichten, Grasfläche mit Trockeninseln, Erdkante und einzelnen Felsgruppen. (4) Maßstab: keine Maßfigur bzw. Lesbarkeit der Größe auf dem Blatt; einen Baum oder ein Bauwerk als Größenreferenz auf der Kappe ergänzen.",
+    "round": 1,
+    "source_sha256": "c08ada38f3efcf7ec1249e339444de775fa3e44cb12b6b4b1f9aab9645d19663",
+    "sheet_sha256": "7c8c1890237f49c101b8352c325c52a4b97049edf08425671f60d610c16bae99"
+  },
+  "review_rounds": 1
 }
