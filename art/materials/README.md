@@ -36,9 +36,8 @@ und dokumentierte Node-Änderungen, nie den gemeinsamen Cache still verändern.
 | `tree_bark` | Braune Längsfurchen | 0,92 / 0,012 m | In Z gestrecktes Noise; Stammachse vor dem Backen beachten |
 | `foliage_leaf` | Dunkles olivgrünes Blatt | 0,76 / 0,0005 m | Feine gerichtete Maserung; opakes Blattmesh statt Alpha-Karte |
 | `violet_crystal` | Dunkelvioletter opaker Edelstein mit helleren Facetten und inneren Bändern | 0,23 / 0,0004 m | Längliche Zellen modulieren Körper und Facettennormalen, verzerrte Einschlüsse; nur seltene Risse emittieren bis 0,16, kein Liniengitter |
-| `violet_energy` | Überwiegend emissive, fließende violette Energie mit lavendelhellen Kernen | 0,38 / 0,0002 m | Längliche turbulente Noise-Schlieren statt Zellgitter; Emission 0,7–2,5, reduzierte Spiegelung; kein transparentes Portal |
+| `violet_energy` | Dunkler violetter Grund mit gesättigt leuchtenden, fließenden Filamenten und schmalen hellen Kernen | 0,38 / 0,0002 m | Verzerrte Noise-Isolinien statt Marmorwolken; quadriertes `violet_body` für gesättigte Säume, `violet_glow` im Kern; Emission 0,18–12, keine Spiegelung; kein transparentes Portal |
 | `water_opaque` | Ruhiges tiefes Blaugrün | 0,19 / 0,0007 m | Gerichtete Mikrowellen; statischer Grundlook ohne Transparenz oder Animation |
-| `ochre_inlay` | Warme Ocker-/Cremefassung mit dunkleren eingelegten Bändern, sparsam verwenden | 0,69 / 0,001 m | Geometrisches diagonales Bandmotiv mit leichtem Relief und feinem Korn; ausdrücklich kein Gold/Metall |
 
 `vrmat.load_palette()` prüft sRGB/Linear-Konsistenz und alle Materialfarbreferenzen.
 Es gibt keine zweite Python-Farbkopie, die vom JSON abweichen könnte.

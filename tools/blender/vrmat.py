@@ -27,7 +27,6 @@ SPECS = {
     "violet_crystal": ("violet_body", "violet_shadow", .23, .0004, "crystal"),
     "violet_energy": ("violet_body", "violet_glow", .38, .0002, "energy"),
     "water_opaque": ("water_deep", "water_shallow", .19, .0007, "water"),
-    "ochre_inlay": ("accent_ochre", "sandstone", .69, .001, "inlay"),
 }
 
 
@@ -114,15 +113,6 @@ def get(name):
         node.inputs[1].default_value = factors
         links.new(vector, node.inputs[0])
         return node.outputs["Vector"]
-
-    def wave(scale, distortion, vector=vector):
-        node = nodes.new("ShaderNodeTexWave")
-        node.bands_direction = "DIAGONAL"
-        node.inputs["Scale"].default_value = scale
-        node.inputs["Distortion"].default_value = distortion
-        node.inputs["Detail"].default_value = 5
-        links.new(vector, node.inputs["Vector"])
-        return node.outputs["Fac"]
 
     coarse, fine = noise(2.3), noise(145)
     mask, height = coarse, fine
@@ -211,12 +201,6 @@ def get(name):
         moss_color = ramp(fibers, toned("moss", .55), rgba("moss"), (.25, .78))
         base = mix(growth, rock, moss_color)
         height = mix(growth, mix(.55, noise(90, 6), cracks, "MULTIPLY"), fibers)
-    if family == "inlay":
-        bands = wave(2.8, .08)
-        design = ramp(bands, (0, 0, 0, 1), (1, 1, 1, 1), (.72, .79))
-        ochre = ramp(coarse, rgba("sandstone"), rgba("accent_ochre"))
-        base = mix(design, ochre, toned("sandstone", .42))
-        height = mix(.8, fine, design)
     if family == "crystal":
         cells = nodes.new("ShaderNodeTexVoronoi")
         cells.inputs["Scale"].default_value = 3.5
@@ -244,16 +228,26 @@ def get(name):
         bsdf.inputs["Emission Color"].default_value = rgba("violet_glow")
         links.new(multiply(cracks, .16), bsdf.inputs["Emission Strength"])
     if family == "energy":
-        flow = noise(1, 6, stretched((5, 5, .65)))
-        core = ramp(flow, (0, 0, 0, 1), (1, 1, 1, 1), (.38, .7))
-        base = ramp(flow, toned("violet_body", .6), toned("violet_glow", .8), (.3, .72))
-        links.new(base, bsdf.inputs["Emission Color"])
+        flow = noise(1, 3, stretched((4, 4, .45)))
+        centered = nodes.new("ShaderNodeMath")
+        centered.operation = "SUBTRACT"
+        centered.inputs[1].default_value = .5
+        links.new(flow, centered.inputs[0])
+        distance = nodes.new("ShaderNodeMath")
+        distance.operation = "ABSOLUTE"
+        links.new(centered.outputs[0], distance.inputs[0])
+        filaments = ramp(distance.outputs[0], (1, 1, 1, 1), (0, 0, 0, 1), (.012, .065))
+        core = ramp(distance.outputs[0], (1, 1, 1, 1), (0, 0, 0, 1), (.005, .015))
+        saturated = mix(1, rgba("violet_body"), rgba("violet_body"), "MULTIPLY")
+        emission = mix(core, saturated, rgba("violet_glow"))
+        links.new(emission, bsdf.inputs["Emission Color"])
+        base = ramp(flow, toned("violet_body", .04), toned("violet_body", .12))
         gain = nodes.new("ShaderNodeMapRange")
-        gain.inputs["To Min"].default_value = .7
-        gain.inputs["To Max"].default_value = 2.5
-        links.new(core, gain.inputs["Value"])
+        gain.inputs["To Min"].default_value = .18
+        gain.inputs["To Max"].default_value = 12
+        links.new(filaments, gain.inputs["Value"])
         links.new(gain.outputs["Result"], bsdf.inputs["Emission Strength"])
-        bsdf.inputs["Specular IOR Level"].default_value = .12
+        bsdf.inputs["Specular IOR Level"].default_value = 0
     links.new(base, bsdf.inputs["Base Color"])
     rough = nodes.new("ShaderNodeMapRange")
     rough.inputs["To Min"].default_value = max(.08, roughness - .13)

@@ -140,6 +140,14 @@ def main():
             results.append(expect("comments and strings do not opt into vrmat", [] if vr.source_hash(d) == baseline else ["changed"], None))
     colors = vrmat.load_palette()
     results.append(expect("all material colors match sRGB and linear palette", [] if colors else ["empty"], None))
+    results.append(expect("ochre accent remains in palette without an inlay material",
+                          [] if "accent_ochre" in colors and "ochre_inlay" not in vrmat.SPECS else ["inconsistent"], None))
+    try:
+        vrmat.get("ochre_inlay")
+    except KeyError:
+        results.append(expect("removed inlay material is refused", ["refused"], "refused"))
+    else:
+        results.append(False)
     try:
         vrmat.get("unknown")
     except KeyError:

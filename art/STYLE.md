@@ -137,7 +137,8 @@ Keine Glaskugeln, keine Transmission, kein gleichmäßig weißes Emissionsmateri
 Energieobjekte dürfen glatter und heller sein, behalten aber ein violettes Volumen.
 `violet_crystal` nutzt dunkle Kerne, innere Bänder und gerichtete Facettenlichter;
 Risse leuchten nur schwach. `violet_energy` zeigt dagegen überwiegend emissive,
-fließende Schlieren mit hellen Kernen. Kein gleichmäßiges weißes Zellliniengitter.
+gesättigte fließende Filamente mit schmalen hellen Kernen auf dunklem violettem
+Grund. Kein gleichmäßiges weißes Zellliniengitter und keine blassen Marmorwolken.
 
 Kristallgruppen 0,5–5 m; regionale Energiekerne 10–35 m als seltene Landmarken.
 Das genehmigte Phase-0-Beweisobjekt behält seine eigenen Materialien und Freigabe.
@@ -188,7 +189,7 @@ Materialien backen; Himmel und Dunst werden im Laufzeit-/Atmosphäre-Teil umgese
    die `vrmat` importieren; diese brauchen neue Prüfblätter und Freigaben. Statische
    Python-Imports verwenden, keine dynamischen Imports an der Hash-Erkennung vorbei.
 
-![Alle 15 Materialien unter identischem Licht](materials/swatches.jpg)
+![Alle 14 Materialien unter identischem Licht](materials/swatches.jpg)
 
 ## Prüfmaßstab
 
