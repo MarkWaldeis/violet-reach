@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#151b20" />
+    <title>Violet Reach — Erkundung</title>
+  </head>
+  <body>
+    <main id="stage" aria-label="Violet Reach Erkundung">
+      <div class="vignette" aria-hidden="true"></div>
+      <header class="masthead">
+        <div class="eyebrow"><span class="sigil" aria-hidden="true"></span> GELÄNDE · PHASE 1B</div>
+        <h1>Violet Reach</h1>
+        <div id="terrain-label">Testlandschaft</div>
+      </header>
+      <div class="orientation" aria-hidden="true"><span id="heading">N · 0°</span></div>
+      <div class="pill"><span class="sigil" aria-hidden="true"></span><span id="mode">Flug</span></div>
+      <div class="reticle" aria-hidden="true"></div>
+      <p id="status" role="status">Startkachel wird geladen …</p>
+      <footer class="overlay-footer">
+        <section class="panel control-panel" aria-label="Steuerung">
+          <div class="button-row">
+            <button type="button" id="toggle" disabled>Landen</button>
+            <button type="button" id="reset" disabled>Zum Start</button>
+          </div>
+          <div class="key-row">
+            <span><kbd>W A S D</kbd> Bewegen</span>
+            <span><kbd>↑ ↓ ← →</kbd> Blick</span>
+            <span><kbd>⇧</kbd> Tempo</span>
+          </div>
+          <div class="key-row">
+            <span><kbd>F</kbd> Wechseln</span>
+            <span id="flight-controls"><kbd>Q E</kbd> Höhe</span>
+            <span id="look-label">Klicken oder ziehen</span>
+          </div>
+        </section>
+        <div class="panel readout" aria-label="Renderer und Geländedaten">
+          <div class="readout-title">
+            <span id="backend">—</span>
+            <span id="stream-status" data-state="loading">Gelände lädt</span>
+          </div>
+          <div id="coordinates">—</div>
+          <div id="telemetry"></div>
+        </div>
+      </footer>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
