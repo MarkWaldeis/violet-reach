@@ -39,7 +39,7 @@ export class TerrainStream {
   static async open(url: URL, material: Material) {
     const response = await fetch(url);
     if (!response.ok) throw new Error(`Gelände-Manifest: HTTP ${response.status}`);
-    return new TerrainStream(parseManifest(await response.json()), url, material);
+    return new TerrainStream(parseManifest(await response.json()), new URL(response.url || url.href), material);
   }
 
   update(x: number, z: number, now: number) {
