@@ -1,0 +1,68 @@
+* { box-sizing: border-box; }
+:root {
+  color-scheme: dark;
+  color: #f3f0eb;
+  background: #151b20;
+  font: 14px/1.45 system-ui, sans-serif;
+  --violet: #e0c3ff;
+  --glass: rgba(18, 22, 31, 0.81);
+  --line: rgba(235, 230, 255, 0.19);
+}
+html, body, #stage { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+#stage { position: relative; isolation: isolate; }
+canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -2; touch-action: none; }
+canvas:focus { outline: none; }
+canvas:focus-visible { outline: 2px solid var(--violet); outline-offset: -2px; }
+.vignette {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(180deg, #151a2c91, transparent 29%, transparent 74%, #12151d9e);
+}
+.masthead { position: absolute; top: 26px; left: 30px; text-shadow: 0 2px 14px #1a162ed9; pointer-events: none; }
+.eyebrow, .pill, .orientation, .readout-title { font-size: 11px; font-weight: 650; letter-spacing: 0.12em; }
+.eyebrow { display: flex; align-items: center; gap: 10px; color: #f0dfff; }
+.sigil { width: 7px; height: 7px; background: var(--violet); transform: rotate(45deg); box-shadow: 0 0 14px #bc87ffb0; }
+h1 { margin: 1px 0 0; font: 400 clamp(30px, 5vw, 53px)/1.12 Georgia, serif; letter-spacing: -0.035em; }
+#terrain-label { margin-top: 6px; color: #f3eafc; font-size: 12px; letter-spacing: 0.03em; }
+.orientation { position: absolute; left: 50%; top: 23px; transform: translateX(-50%); text-align: center; text-shadow: 0 1px 6px #141625; pointer-events: none; }
+.orientation::after {
+  content: "";
+  display: block;
+  width: 100px;
+  height: 5px;
+  margin-top: 6px;
+  background: repeating-linear-gradient(90deg, transparent 0 9px, #fff9 9px 10px);
+}
+.pill { position: absolute; top: 27px; right: 28px; display: flex; align-items: center; gap: 10px; min-width: 92px; justify-content: center; padding: 8px 13px; border: 1px solid var(--line); border-radius: 30px; background: var(--glass); pointer-events: none; }
+.reticle { position: absolute; top: 50%; left: 50%; width: 5px; height: 5px; transform: translate(-50%, -50%); border-radius: 50%; border: 1px solid #fff9; box-shadow: 0 0 5px #1b112c66; pointer-events: none; }
+#status { position: absolute; top: 50%; left: 50%; margin: 0; transform: translate(-50%, -50%); max-width: min(80%, 420px); border: 1px solid var(--line); background: #171b28; border-radius: 10px; padding: 12px 18px; text-align: center; }
+.overlay-footer { display: flex; justify-content: space-between; align-items: end; gap: 12px; position: absolute; inset: auto 27px 24px; pointer-events: none; }
+.panel { background: var(--glass); padding: 12px 15px; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 12px 30px #08071033; }
+.button-row, .key-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.button-row { margin-bottom: 9px; }
+.key-row { gap: 12px; color: #e1dce8; font-size: 11px; }
+.key-row + .key-row { margin-top: 5px; }
+kbd { color: #f5effd; font: 10px/1 system-ui, sans-serif; background: #ffffff15; border: 1px solid #ffffff26; border-radius: 3px; padding: 2px 4px; margin-right: 2px; }
+button { pointer-events: auto; border: 1px solid var(--line); border-radius: 6px; background: #ffffff13; color: inherit; padding: 5px 11px; cursor: pointer; font: 600 12px system-ui, sans-serif; }
+button:hover { background: #ffffff29; }
+button:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; }
+button:disabled { opacity: 0.5; cursor: wait; }
+#toggle { background: #d7b9f8; border-color: #efdeff; color: #211330; min-width: 70px; }
+#toggle:hover { background: #ead8fe; }
+.readout { min-width: 238px; font-size: 11px; color: #e2dce9; font-variant-numeric: tabular-nums; }
+.readout-title { display: flex; justify-content: space-between; gap: 16px; color: #f4eaff; margin-bottom: 5px; }
+#backend { color: var(--violet); }
+#stream-status { font-size: 10px; letter-spacing: 0.025em; color: #ede5f1; }
+#stream-status[data-state="error"] { color: #ffb7b7; }
+#stream-status[data-state="ready"] { color: #c5e4b0; }
+#coordinates { color: #f8f3fa; }
+#telemetry { white-space: pre-line; }
+@media (max-width: 650px) {
+  .masthead { top: 16px; left: 13px; }
+  .pill { top: 16px; right: 13px; }
+  .orientation { display: none; }
+  .overlay-footer { flex-wrap: wrap; inset: auto 12px 12px; gap: 7px; }
+  .panel { padding: 7px 9px; }
+}
