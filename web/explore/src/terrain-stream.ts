@@ -105,6 +105,7 @@ export class TerrainStream {
     tile.pending?.abort();
     if (!tile.mesh) return;
     this.group.remove(tile.mesh);
+    tile.mesh.dispose();
     tile.mesh.geometry.dispose();
   }
 
