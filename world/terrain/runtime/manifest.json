@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "tilesX": 16,
+  "tilesZ": 16,
+  "tileSize": 512,
+  "samples": 257,
+  "originX": -4096,
+  "originZ": -4096,
+  "minHeight": 93.0,
+  "maxHeight": 1537.9571533203125
+}

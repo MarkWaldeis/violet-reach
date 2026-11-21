@@ -1,0 +1,24 @@
+{
+  "convention": "Runtime: X east, Y up, Z south; Blender (x,y,z) = runtime (x,-z,y). Distances in metres.",
+  "extent": [
+    -4096,
+    -4096,
+    4096,
+    4096
+  ],
+  "spacing": 2,
+  "samples": 4097,
+  "tileSize": 512,
+  "tileSamples": 257,
+  "h_min": 93.0,
+  "h_max": 1537.9571533203125,
+  "encoding": "uint16 little-endian; rows +Z, columns +X; h = minHeight + v/65535 * (maxHeight-minHeight)",
+  "water_levels": {
+    "Spiegelsee": 180,
+    "Hirschweiher": 200,
+    "Aschenauge": 310
+  },
+  "seed": 73129,
+  "blender_version": "5.3.0",
+  "draft": false
+}
