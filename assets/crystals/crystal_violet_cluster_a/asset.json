@@ -1,0 +1,20 @@
+{
+  "id": "crystal_violet_cluster_a",
+  "category": "crystals",
+  "title": "Violetter Kristallhaufen A",
+  "description": "Hoher violetter Hauptkristall mit Nebenkristallen und Splittern auf einem bemoosten Felssockel. Akzentobjekt für Lichtungen und Canyonränder.",
+  "target_size_m": [
+    3.5,
+    3.5,
+    3.6
+  ],
+  "lod_triangles": [
+    24000,
+    8000,
+    2000
+  ],
+  "texture_size": 2048,
+  "status": "blender_review",
+  "builder": "devin-312dd5edfa7b40dcb43b7f90ca32ffa1",
+  "review": null
+}
