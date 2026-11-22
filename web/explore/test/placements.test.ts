@@ -30,6 +30,11 @@ test("single placement follows terrain plus offset; empty documents produce no i
   assert.throws(() => expandPlacements([single], () => undefined, water), /Missing/);
   assert.deepEqual(expandPlacements([single], () => undefined, water, () => false), []);
 });
+test("large scatter expansion does not exceed the engine's argument limit", () => {
+  const large: ScatterPlacement = { asset: "crystal", scatter: { ...entry.scatter, count: 150000, min_spacing: 0,
+    rect: { minX: 0, minZ: 0, maxX: 100000, maxZ: 100000 } } };
+  assert.equal(expandPlacements([large], ground, water).length, 150000);
+});
 test("scatter is seeded, spaced, scaled and optionally slope aligned", () => {
   const a = expandPlacements([entry], ground, water);
   assert.equal(a.length, 100);

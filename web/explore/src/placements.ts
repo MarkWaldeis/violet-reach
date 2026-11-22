@@ -54,10 +54,11 @@ export function expandPlacements(
       return ((t ^ t >>> 14) >>> 0) / 4294967296;
     };
     const polygon = s.polygon;
-    const r = s.rect ?? {
-      minX: Math.min(...polygon!.map((p) => p[0])), maxX: Math.max(...polygon!.map((p) => p[0])),
-      minZ: Math.min(...polygon!.map((p) => p[1])), maxZ: Math.max(...polygon!.map((p) => p[1])),
-    };
+    const r = s.rect ?? { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity };
+    if (!s.rect) for (const [x, z] of polygon!) {
+      r.minX = Math.min(r.minX, x); r.maxX = Math.max(r.maxX, x);
+      r.minZ = Math.min(r.minZ, z); r.maxZ = Math.max(r.maxZ, z);
+    }
     const accepted: InstancePlacement[] = [];
     const cells = new Map<string, InstancePlacement[]>();
     const cellSize = Math.max(s.min_spacing, 1);
@@ -86,7 +87,7 @@ export function expandPlacements(
       cells.get(key)!.push(instance);
     }
     if (accepted.length !== s.count) throw new Error(`Scatter ${entry.asset}: placed ${accepted.length}/${s.count}; constraints exhausted`);
-    result.push(...accepted);
+    for (const instance of accepted) result.push(instance);
   }
   return result;
 }
