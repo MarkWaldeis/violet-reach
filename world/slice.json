@@ -56,7 +56,7 @@
       "tintVariation": 0.12
     },
     "grass_tuft_a": {
-      "maxDistance": 24,
+      "maxDistance": 20,
       "lodScale": 0.3,
       "lodRatio": 4,
       "shadowLODs": 0,
@@ -70,7 +70,7 @@
       "tintVariation": 0.1
     },
     "reed_cluster_a": {
-      "maxDistance": 14,
+      "maxDistance": 12,
       "lodScale": 0.25,
       "shadowLODs": 0,
       "tintVariation": 0.08
@@ -78,6 +78,10 @@
     "crystal_spire_a": {
       "maxDistance": 1200,
       "shadowLODs": 1
+    },
+    "stair_terrace_a": {
+      "lodScale": 0.7,
+      "shadowLODs": 2
     }
   }
 }

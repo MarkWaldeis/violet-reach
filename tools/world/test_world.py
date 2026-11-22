@@ -138,6 +138,21 @@ def main():
     require(max(wet)<179.9, 'Bridge inlet is not wet under the opening')
     require(min(banks)>180.075 and max(banks)-min(banks)<.075, 'Bridge landing footprints are not supported by dry, level banks')
     print('PASS: inlet is wet under the bridge; both full landing footprints are dry and supported')
+    stair = next(p for p in placements if p['asset']=='stair_terrace_a')
+    fixture = json.loads(Path(__file__).with_name('stair_support.json').read_text())
+    asset = json.loads((WORLD.parent/'assets/monuments/stair_terrace_a/asset.json').read_text())
+    require(fixture['source_sha256']==asset['review']['source_sha256'], 'Stair contact fixture needs regeneration for the new approved source')
+    def surface(x,z):
+        ix,iz = math.floor(x/2)*2,math.floor(z/2)*2
+        u,v = (x-ix)/2,(z-iz)/2
+        a,b,c,d = sample(ix,iz),sample(ix+2,iz),sample(ix,iz+2),sample(ix+2,iz+2)
+        return a+(b-a)*u+(c-a)*v if u+v<=1 else d+(c-d)*(1-u)+(b-d)*(1-v)
+    c,s = math.cos(stair['yaw']),math.sin(stair['yaw'])
+    base = surface(stair['x'],stair['z'])+stair.get('y_offset',0)
+    burial = [surface(stair['x']+c*x+s*z,stair['z']-s*x+c*z)-base-y
+              for x,y,z in fixture['contact_points']]
+    require(len(burial)>400 and min(burial)>.015 and max(burial)<.5, 'Stair front apron floats or is deeply buried')
+    print(f'PASS: {len(burial)} exported stair contact samples supported; burial {min(burial):.3f}…{max(burial):.3f} m')
     print(f'WORLD OK — height range {low:.2f}…{high:.2f} m; quantization {(high-low)/65535:.4f} m')
 
 
