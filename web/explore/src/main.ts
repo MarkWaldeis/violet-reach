@@ -10,6 +10,10 @@ import { selectWater, type Hydrology } from "./hydrology.ts";
 import { surfaceData } from "./surface-data.ts";
 import { waterSurface } from "./water.ts";
 import { warmScene } from "./scene-warmup.ts";
+import { parseQAParams } from "./qa-params.ts";
+import { FLY_CLEARANCE } from "./navigation.ts";
+import { adapterInfo, FrameHistory, FrameStability, STABLE_FRAMES, trackTextures, type FrameRecord, type VRProbe } from "./qa-probe.ts";
+import { freezeWorldTime, worldTimeFrozen } from "./world-time.ts";
 
 const stage = document.querySelector<HTMLElement>("#stage")!;
 const status = document.querySelector<HTMLElement>("#status")!;
@@ -31,17 +35,23 @@ const controls = new Set([
 ]);
 
 async function main() {
+  const qa = parseQAParams(params);
+  const { quality } = qa;
+  if (!qa.hud) document.documentElement.dataset.hud = "off";
+  if (qa.freeze) freezeWorldTime();
   const renderer = new WebGPURenderer({
     antialias: true,
     forceWebGL: params.has("webgl"),
   });
+  const textures = trackTextures(renderer.info);
   await renderer.init();
   const backend = renderer.coordinateSystem === WebGPUCoordinateSystem ? "WebGPU" : "WebGL2";
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+  const adapter = backend === "WebGPU" ? await adapterInfo(renderer.backend).catch(() => null) : null;
+  renderer.setPixelRatio(Math.min(devicePixelRatio, quality.pixelRatio));
   renderer.toneMapping = AgXToneMapping;
   renderer.toneMappingExposure = 1.1;
   renderer.outputColorSpace = SRGBColorSpace;
-  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.enabled = quality.shadows;
   renderer.shadowMap.type = PCFShadowMap;
   const canvas = renderer.domElement;
   canvas.tabIndex = 0;
@@ -50,8 +60,8 @@ async function main() {
   rendererLabel.textContent = backend;
 
   const scene = new Scene();
-  const atmosphere = setupAtmosphere(scene);
-  const camera = new PerspectiveCamera(57, 1, 0.25, 10000);
+  const atmosphere = setupAtmosphere(scene, quality);
+  const camera = new PerspectiveCamera(qa.fov, 1, 0.25, 10000);
   let slice: Slice | undefined;
   if (!params.has("demo") && !params.has("terrain")) {
     const response = await fetch(new URL("./slice.json", location.href));
@@ -74,12 +84,26 @@ async function main() {
     groundMaterial.copy(terrainMaterial(surface));
     scene.add(waterSurface(region, surface));
   }
-  const assets = slice ? await sliceAssets(slice, terrain, params) : undefined;
+  const assets = slice ? await sliceAssets(slice, terrain, params, quality.assetDistanceScale) : undefined;
   if (assets) scene.add(assets.group);
   const nav = new Navigation(camera, terrain.manifest, (x, z) => terrain.heightAt(x, z));
   const { position } = camera;
   let ready = false;
   let failed = false;
+  let pose = qa.cam ? { ...qa.cam, agl: qa.agl } : undefined;
+  const groundAt = (x: number, z: number) => terrain.fullHeightAt(x, z) ?? terrain.heightAt(x, z);
+  // ?cam / __vr.setCamera: apply once the ground below the camera is known; no spawn lift.
+  function applyPose() {
+    if (!pose) return nav.liftToSpawnHeight(params.has("walk"));
+    const ground = groundAt(pose.x, pose.z);
+    if (ground === undefined) {
+      camera.position.set(pose.x, camera.position.y, pose.z); // stream the tiles under the requested pose first
+      return false;
+    }
+    const y = pose.agl ? ground + pose.y : pose.y;
+    nav.setPose(pose.x, y, pose.z, pose.yaw, pose.pitch, y - ground <= FLY_CLEARANCE ? "walk" : "fly");
+    return true;
+  }
 
   function resize() {
     const { clientWidth, clientHeight } = stage;
@@ -92,6 +116,7 @@ async function main() {
   resize();
 
   function resetView() {
+    pose = undefined;
     nav.reset();
     ready = false;
     failed = false;
@@ -153,12 +178,58 @@ async function main() {
   let last = performance.now();
   let hudAt = last;
   let frames = 0;
+  const history = new FrameHistory();
+  const stability = new FrameStability();
+  let probeReady = false;
+  let frameId = 0;
+  let driver: ((now: number, last: FrameRecord | undefined) => void) | undefined;
+  let waiting: ((record: FrameRecord) => void)[] = [];
+  const terrainStatus = () => {
+    const { lods, total, failed: missing, pending } = terrain.stats;
+    const loaded = lods.reduce((a, b) => a + b, 0);
+    return { lods, total, loaded, failed: missing, pending, complete: !missing && !pending && loaded === total };
+  };
+  const probe: VRProbe = {
+    get ready() { return probeReady; },
+    stats() {
+      const p = camera.position, info = renderer.info, records = history.records;
+      const ground = groundAt(p.x, p.z);
+      return {
+        backend, adapter, quality: { ...quality }, ready: probeReady, stableFrames: stability.frames, frame: frameId,
+        fps: history.fps(), frameTimes: records.map((r) => r.frameMs), cpuTimes: records.map((r) => r.cpuMs),
+        triangles: info.render.triangles, drawCalls: info.render.drawCalls,
+        geometries: info.memory.geometries, textures: info.memory.textures,
+        textureBytes: textures.bytes(), textureBytesThree: info.memory.texturesSize, textureSizes: textures.summary(),
+        camera: { x: p.x, y: p.y, z: p.z, yaw: nav.yaw, pitch: nav.pitch, agl: ground === undefined ? null : p.y - ground, fov: camera.fov, mode: nav.mode },
+        terrain: terrainStatus(), assets: assets ? { ...assets.stats } : null, frozen: worldTimeFrozen(),
+      };
+    },
+    setCamera(x, y, z, yaw, pitch, options = {}) {
+      if (![x, y, z, yaw, pitch].every(Number.isFinite)) throw new Error("setCamera: endliche Zahlen erwartet");
+      pose = { x, y, z, yaw, pitch, agl: !!options.agl };
+      ready = applyPose();
+      stability.reset();
+      probeReady = false;
+      if (ready) {
+        status.hidden = true;
+        reset.disabled = toggle.disabled = false;
+      }
+      const p = camera.position;
+      return { x: p.x, y: p.y, z: p.z, yaw: nav.yaw, pitch: nav.pitch };
+    },
+    frame: () => new Promise((resolve) => { waiting.push(resolve); }),
+    drive(callback) { driver = callback ?? undefined; },
+  };
+  window.__vr = probe;
   renderer.setAnimationLoop((now) => {
+    const cpuStart = performance.now();
+    const frameMs = now - last;
+    driver?.(now, history.last);
     const dt = Math.max(0, Math.min(0.05, (now - last) / 1000));
     last = now;
     terrain.update(position.x, position.z, now);
     if (!ready && !failed) {
-      ready = nav.liftToSpawnHeight(params.has("walk"));
+      ready = applyPose();
       if (ready) {
         status.hidden = true;
         reset.disabled = toggle.disabled = false;
@@ -172,6 +243,17 @@ async function main() {
     assets?.update(camera, stage.clientHeight, now, fullHeight === undefined ? 0 : Math.max(0, position.y - fullHeight));
     renderer.render(scene, camera);
     frames++;
+    frameId++;
+    const p = camera.position, t = terrainStatus(), a = assets?.stats;
+    const signature = [ready, t.complete, t.lods, t.pending, a?.lods, a?.visibleChunks, p.x, p.y, p.z, nav.yaw, nav.pitch].join("|");
+    probeReady = ready && t.complete && stability.observe(signature) >= STABLE_FRAMES;
+    const record = { now, frameMs, cpuMs: performance.now() - cpuStart, triangles: renderer.info.render.triangles, drawCalls: renderer.info.render.drawCalls };
+    history.push(record);
+    if (waiting.length) {
+      const resolved = waiting;
+      waiting = [];
+      for (const resolve of resolved) resolve(record);
+    }
 
     if (now - hudAt < 250) return;
     const ground = terrain.heightAt(position.x, position.z);

@@ -66,3 +66,5 @@ button:disabled { opacity: 0.5; cursor: wait; }
   .overlay-footer { flex-wrap: wrap; inset: auto 12px 12px; gap: 7px; }
   .panel { padding: 7px 9px; }
 }
+/* ?hud=0: canvas only, for reproducible QA captures. */
+html[data-hud="off"] #stage > :not(canvas) { display: none !important; }

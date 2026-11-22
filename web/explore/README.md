@@ -114,3 +114,115 @@ Manifest v1 enthält `version: 1`, `tilesX`, `tilesZ`, `tileSize` in Metern (min
 Neben dem Manifest liegt für jede Null-basierte Kachel eine Datei `<x>_<z>.r16` mit `samples²` vorzeichenlosen 16-Bit-Werten in Little-Endian. Zeilen laufen nach +Z (Süden), Spalten nach +X (Osten); +Y ist oben. Beide Nachbarn enthalten dieselben Randwerte. `minHeight + sample / 65535 * (maxHeight - minHeight)` ergibt die Höhe. Der Export ist von der Laufzeit unabhängig; Hydrologie wird im Slice-Modus gerendert, Regionsdaten noch nicht.
 
 **Streaming:** Vier parallele Requests; zuerst die nächsten Kacheln. Aktive Kacheln sind durch Radius und Anzahl begrenzt. Höhen werden einmal pro Aufenthalt geladen und bei Bedarf für den Render-LOD ausgedünnt; Geometrie außerhalb der Reichweite wird freigegeben. Der Gehboden folgt den gerenderten Dreiecken, und die Kamera wartet an der Kante, wenn eine benötigte Kachel noch fehlt.
+
+## Prüfparameter und Prüfwerkzeuge (GRAFIK_PLAN.md 6)
+
+Alle Parameter sind optional; ohne sie verhält sich die Laufzeit wie bisher
+(Stufe „high", FOV 57°, HUD sichtbar, laufende Zeit, Spawn mit Anheben).
+
+| Parameter | Wirkung |
+|---|---|
+| `?cam=x,y,z,yaw,pitch` | Feste Kamerapose als Start, kein Spawn-Lift. `y` absolut in Metern. Die Pose bleibt exakt stehen (auch unter 2,6 m, ohne Bodenklemmung), bis eine Bewegungstaste gedrückt wird; dann übernimmt die Navigation (Gehen, wenn die Pose höchstens 2,6 m über Grund liegt, sonst Flug). |
+| `&agl=1` | `y` aus `cam` ist Höhe über Grund. Grund = vollauflösende R16-Höhe (`terrain.fullHeightAt`, Rückfall `heightAt`); unter Wasser ist das der Seegrund. |
+| `?fov=<grad>` | Vertikales Sichtfeld, 10–120, Standard 57. |
+| `?hud=0` | Blendet alle HUD-/Overlay-Elemente aus, nur die Leinwand bleibt. |
+| `?quality=low\|medium\|high\|ultra` | Qualitätsstufe aus `src/quality.ts`, Standard `high` (= bisheriges Verhalten). |
+| `?freeze=1` | Alle zeitabhängigen Shader-Effekte (Wolkendrift, Wasserwellen) laufen auf fester Zeit `FROZEN_TIME` = 0 s (`src/world-time.ts`). |
+
+**Winkelkonvention** (wie `src/navigation.ts`, `rotation.order = "YXZ"`): `yaw = 0`
+blickt nach Norden (−Z), positives `yaw` dreht nach Westen (gegen den
+Uhrzeigersinn von oben), Blickrichtung = (−sin yaw · cos pitch, sin pitch,
+−cos yaw · cos pitch). Positives `pitch` blickt nach oben, Grenze ±1,42 rad.
+Für ein Ziel in Richtung (dx, dz) gilt `yaw = atan2(−dx, −dz)`. Die Sonne steht bei
+yaw 0,735 und 0,557 rad Höhe.
+
+**Qualitätsstufen** (`src/quality.ts`; Gras und Nachbearbeitung kommen später dazu):
+
+| Stufe | pixelRatio max | Schatten | Kaskaden × Kartengröße | Objekt-Sichtweite |
+|---|---|---|---|---|
+| low | 1 | aus | – | × 0,5 |
+| medium | 1 | an | 2 × 1024² | × 0,75 |
+| high | 1,5 | an | 3 × 2048² | × 1 |
+| ultra | 2 | an | 3 × 4096² | × 1,25 |
+
+Ein explizites `?assetDistance=` hat Vorrang vor dem Sichtweiten-Faktor.
+
+### `window.__vr`
+
+Typisiert in `src/qa-probe.ts` (`VRProbe`), immer vorhanden.
+
+- `ready: boolean` — Pose angewendet, alle aktiven Geländekacheln geladen und in
+  der gewünschten Detailstufe gebaut (keine pending/failed Kacheln), Slice-Objekte
+  geladen und danach 30 Bilder (`STABLE_FRAMES`) ohne Änderung von Kachel-LODs,
+  Instanz-LODs, sichtbaren Chunks oder Pose. `setCamera` setzt `ready` zurück.
+- `stats()` — `{backend, adapter: {vendor, architecture, device, description} | null
+  (GPUDevice.adapterInfo, nur WebGPU), quality, ready, stableFrames, frame, fps,
+  frameTimes[] (ms, letzte 240 Bilder aus rAF-Zeitstempeln), cpuTimes[] (ms
+  JavaScript-Zeit je Bild: Update + Render-Aufruf), triangles, drawCalls,
+  geometries, textures, textureBytes, textureBytesThree, textureSizes, camera
+  {x,y,z,yaw,pitch,agl,fov,mode}, terrain {lods,total,loaded,failed,pending,complete},
+  assets, frozen}`.
+- `setCamera(x, y, z, yaw, pitch, {agl?})` — setzt die Pose sofort (wie `?cam`).
+- `frame()` — Promise, die nach dem nächsten gerenderten Bild mit
+  `{now, frameMs, cpuMs, triangles, drawCalls}` erfüllt wird.
+- `drive(callback | null)` — Rückruf am Anfang jedes Animationsbilds (vor Update
+  und Render) mit rAF-Zeit und dem Datensatz des vorigen Bilds; damit fährt
+  `bench.mjs` Strecken in Echtzeit.
+
+**Texturspeicher** (`textureBytes`): Die Laufzeit verfolgt über
+`renderer.info.createTexture/destroyTexture` alle tatsächlich hochgeladenen
+Texturen (inklusive Schattenkarten und Render-Targets) und summiert
+Breite × Höhe × Ebenen (Würfel = 6) × Bytes/Pixel × 4/3, wenn eine Mip-Kette
+erzeugt wird. Bytes/Pixel aus Format und Typ (RGB zählt als RGBA, weil die GPU
+auffüllt; Tiefe 4 Bytes). Komprimierte Texturen zählen mit der Summe ihrer
+Mip-Daten. Nicht enthalten: Bildpuffer/MSAA-Ziele des Backends und Treiber-
+Ausrichtung. `textureBytesThree` ist Three.js' eigener Zähler zum Vergleich.
+
+### Lesezeichen und Prüfskripte
+
+`world/bookmarks.json` enthält die 13 Lesezeichen (G1–G7, F1–F4, H1, H2, je mit
+Pose, Referenzbildern und Schwerpunkt), die Bildfolgen `walk`/`fly` (je 8 s,
+15 Bilder/s) und die Messstrecken `ground` (Bodenweg 400 m mit 10 m/s) und
+`flight` (Kreis r = 420 m, 150 m über Grund, 68 m/s). Posen nutzen immer `agl`.
+
+Die Skripte unter `tools/qa/` (Node-ESM, Playwright aus diesem Paket) steuern
+das echte Google Chrome sichtbar (`channel: "chrome"`, 1920 × 1080,
+deviceScaleFactor 1), damit wirklich die Grafikkarte rendert; es wird kein
+Playwright-Browser heruntergeladen. Sie starten bei Bedarf einen eigenen
+Vite-Prüfserver auf Port **5198** (`--strictPort`; 5199 gehört der Start-Datei)
+und beenden ihn wieder. Für diesen Server gilt `VR_GATE_CACHE_MS=30000`: das
+Tor (`vr.py check`) wird höchstens alle 30 s erneut ausgeführt, statt bei jeder
+der über 270 Anfragen (sonst lädt der Ausschnitt mehrere Minuten). Ohne die
+Variable bleibt die Prüfung je Anfrage wie bisher.
+
+Ein Lauf ist nur gültig mit `backend === "WebGPU"` und einem AMD-Adapter; sonst
+endet er mit Exit-Code 3. `--webgl` erzwingt einen ausdrücklich als WebGL2
+markierten Lauf. Alle Bilder landen unter
+`C:\Users\<Name>\devin-screenshots\violet-reach\<lauf>\`, nie im Repo.
+
+```sh
+# alle Vergleichsbilder (+ Bildfolgen als PNG-Serie und MP4)
+node tools/qa/capture.mjs [--run <name>] [--only G1,F2] [--quality high] [--seq] [--webgl] [--timeout 180]
+# Messbericht bench.json, Abgleich mit web/explore/perf-budget.json (Exit 4 bei Verstoß)
+node tools/qa/bench.mjs [--run <name>] [--quality high] [--webgl] [--only ground,flight]
+# Probeaufnahmen beliebiger Posen (Lesezeichen einrichten)
+node tools/qa/shot.mjs --run <name> G9=x,agl,z,yaw,pitch ...
+```
+
+`capture.mjs` öffnet je Lesezeichen eine frische Seite mit
+`?hud=0&freeze=1&cam=…&agl=1&fov=…&quality=…`, wartet auf `__vr.ready`
+(Zeitlimit mit Zustandsmeldung) und schreibt `<id>.png`, `<id>_compare.jpg`
+(links Referenz, rechts Spiel, je 960 × 540), `metrics.json` (aus
+`tools/qa/compare.py`: Helligkeit, Kontrast p5–p95, Sättigung, Farbton von
+Grünflächen und Himmel für Referenz und Spiel) und `index.json` (Dateien, URLs,
+Soll- und Ist-Posen, Zähler). Mit `--seq` werden die Bildfolgen Bild für Bild
+gesetzt; je Schritt rendert die Seite 4 Bilder wie ein 60-Hz-Monitor, damit
+Nachladen und LOD-Wechsel wie im Spiel sichtbar werden.
+
+`bench.mjs` wärmt je Strecke bis `ready` auf und fährt sie dann in Echtzeit:
+Die Pose wird in jedem Bild aus dem rAF-Zeitstempel interpoliert, die Bildzeit
+ist also echt. `bench.json` enthält je Strecke Mittel-FPS, 1-%-Low
+(1000 / Mittel der schlechtesten 1 % Bildzeiten), längstes Bild, Perzentile,
+CPU-Zeit je Bild, Dreiecke und Draw Calls (max/Mittel), Texturspeicher,
+Backend/Adapter und Stufe. Bei VSync ist die Bildrate auf die Bildwiederholrate
+gedeckelt; die CPU-Zeit zeigt dann die Reserve.

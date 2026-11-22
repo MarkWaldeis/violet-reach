@@ -1,9 +1,10 @@
 import { DoubleSide, Group, Mesh, MeshStandardNodeMaterial } from "three/webgpu";
 import {
-  attribute, cameraPosition, color, float, mix, mx_noise_float, positionWorld, smoothstep, time,
+  attribute, cameraPosition, color, float, mix, mx_noise_float, positionWorld, smoothstep,
   transformNormalToView, vec2, vec3,
 } from "three/tsl";
 import { sunDirection } from "./atmosphere.ts";
+import { worldTime as time } from "./world-time.ts";
 import type { WaterRegion } from "./hydrology.ts";
 import { swatch } from "./palette.ts";
 import type { SurfaceData } from "./surface-data.ts";

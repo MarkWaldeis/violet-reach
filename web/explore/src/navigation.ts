@@ -1,8 +1,8 @@
 import { MathUtils, PerspectiveCamera } from "three/webgpu";
 import type { TerrainManifest } from "./heightfield.ts";
 
-const EYE_HEIGHT = 1.8;
-const FLY_CLEARANCE = 2.6;
+export const EYE_HEIGHT = 1.8;
+export const FLY_CLEARANCE = 2.6;
 type Mode = "fly" | "walk";
 type GroundHeight = (x: number, z: number) => number | undefined;
 
@@ -15,6 +15,8 @@ export class Navigation {
   #ground: GroundHeight;
   #yaw = 0;
   #pitch = 0;
+  /** A pose set via setPose stays exactly in place (no ground clamp) until a movement key is held. */
+  #pinned = false;
 
   constructor(camera: PerspectiveCamera, manifest: TerrainManifest, ground: GroundHeight) {
     this.#camera = camera;
@@ -34,6 +36,21 @@ export class Navigation {
     this.#pitch = Math.min(-0.13, 0.23 - Math.atan2(this.#spawnClearance(), availableGround));
     this.mode = "fly";
     this.landing = false;
+    this.#pinned = false;
+    this.#applyLook();
+  }
+
+  get yaw() { return this.#yaw; }
+  get pitch() { return this.#pitch; }
+
+  /** Fixed pose for QA (?cam / __vr.setCamera); y is absolute. Yaw 0 looks north (−Z), positive yaw turns west, positive pitch looks up. */
+  setPose(x: number, y: number, z: number, yaw: number, pitch: number, mode: Mode = "fly") {
+    this.#camera.position.set(this.#clampX(x), y, this.#clampZ(z));
+    this.#yaw = yaw;
+    this.#pitch = MathUtils.clamp(pitch, -1.42, 1.42);
+    this.mode = mode;
+    this.landing = false;
+    this.#pinned = true;
     this.#applyLook();
   }
 
@@ -51,6 +68,7 @@ export class Navigation {
     const p = this.#camera.position;
     if (this.#ground(p.x, p.z) === undefined) return;
     this.mode = this.mode === "fly" ? "walk" : "fly";
+    this.#pinned = false;
     this.landing = this.mode === "walk";
     if (this.landing && this.#pitch < -0.18) {
       this.#pitch = -0.18;
@@ -69,6 +87,10 @@ export class Navigation {
     const p = this.#camera.position;
     this.look((held("ArrowRight") - held("ArrowLeft")) * dt * 1.4, (held("ArrowDown") - held("ArrowUp")) * dt * 1.2);
 
+    if (this.#pinned) {
+      if (!["KeyW", "KeyA", "KeyS", "KeyD", "KeyQ", "KeyE"].some((code) => this.keys.has(code))) return;
+      this.#pinned = false;
+    }
     const forward = held("KeyW") - held("KeyS");
     const right = held("KeyD") - held("KeyA");
     const up = held("KeyE") - held("KeyQ");

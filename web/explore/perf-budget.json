@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "source": "GRAFIK_PLAN.md Abschnitt 11, gemessen auf RX 6600 bei 1920×1080 über die Strecken ground und flight (tools/qa/bench.mjs)",
+  "notes": {
+    "fpsMean": "Bei VSync auf einem 60-Hz-Monitor liegt das Mittel konstruktionsbedingt bei 59,9–60,0; vsyncTolerance fängt diese Rundung ab.",
+    "fps1Low": "1000 / Mittel der schlechtesten 1 % Bildzeiten (rAF-Zeitstempel).",
+    "textureBytes": "Schätzung von __vr.stats().textureBytes: Σ Breite × Höhe × Ebenen × Bytes/Pixel × 4/3 bei Mip-Kette.",
+    "triangles": "Richtwert, nur Warnung; maßgeblich ist die Bildzeit."
+  },
+  "levels": {
+    "high": {
+      "fpsMean": { "min": 60, "vsyncTolerance": 0.5 },
+      "fps1Low": { "min": 45 },
+      "longestFrameMs": { "max": 50 },
+      "drawCalls": { "max": 400 },
+      "textureBytes": { "max": 1610612736 },
+      "triangles": { "warn": { "ground": 4000000, "flight": 5000000 } }
+    }
+  }
+}

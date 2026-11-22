@@ -2,12 +2,16 @@ import {
   Color, DirectionalLight, HemisphereLight, Scene, Vector3,
 } from "three/webgpu";
 import { CSMShadowNode } from "three/addons/csm/CSMShadowNode.js";
-import { cameraPosition, cameraProjectionMatrixInverse, cameraWorldMatrix, color, fog, mix, mx_noise_float, positionWorld, screenUV, smoothstep, time, vec2, vec3, vec4 } from "three/tsl";
+import { cameraPosition, cameraProjectionMatrixInverse, cameraWorldMatrix, color, fog, mix, mx_noise_float, positionWorld, screenUV, smoothstep, vec2, vec3, vec4 } from "three/tsl";
+import { worldTime as time } from "./world-time.ts";
 import { swatch } from "./palette.ts";
 
 export const sunDirection = new Vector3(-0.56, 0.52, -0.62).normalize();
 
-export function setupAtmosphere(scene: Scene) {
+export interface ShadowSettings { shadows: boolean; shadowMapSize: number; shadowCascades: number }
+const DEFAULT_SHADOWS: ShadowSettings = { shadows: true, shadowMapSize: 2048, shadowCascades: 3 };
+
+export function setupAtmosphere(scene: Scene, quality: ShadowSettings = DEFAULT_SHADOWS) {
   const clip = vec4(screenUV.mul(vec2(2, -2)).add(vec2(-1, 1)), 1, 1);
   const direction = cameraWorldMatrix.mul(vec4(cameraProjectionMatrixInverse.mul(clip).xyz.normalize(), 0)).xyz.normalize();
   const horizon = smoothstep(-0.04, 0.38, direction.y).oneMinus();
@@ -42,15 +46,18 @@ export function setupAtmosphere(scene: Scene) {
 
   const sun = new DirectionalLight(swatch("monument_white"), 3);
   sun.position.copy(sunDirection).multiplyScalar(1000);
-  sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
+  const shadows = quality.shadows && quality.shadowCascades > 0;
+  sun.castShadow = shadows;
+  sun.shadow.mapSize.set(quality.shadowMapSize, quality.shadowMapSize);
   sun.shadow.bias = -0.00015;
   sun.shadow.normalBias = 0.7;
-  const csm = new CSMShadowNode(sun, { cascades: 3, maxFar: 1100, mode: "practical", lightMargin: 350 });
-  csm.fade = true;
-  sun.shadow.shadowNode = csm;
+  const csm = shadows ? new CSMShadowNode(sun, { cascades: quality.shadowCascades, maxFar: 1100, mode: "practical", lightMargin: 350 }) : undefined;
+  if (csm) {
+    csm.fade = true;
+    sun.shadow.shadowNode = csm;
+  }
   const skyFill = new Color(swatch("sky_blue")).lerp(new Color(swatch("cloud_cream")), 0.65);
   const groundFill = new Color(swatch("monument_shadow")).lerp(new Color(swatch("stone_weathered")), 0.35);
   scene.add(sun, sun.target, new HemisphereLight(skyFill, groundFill, 1.9));
-  return { resize: () => { if (csm.camera) csm.updateFrustums(); } };
+  return { sun, resize: () => { if (csm?.camera) csm.updateFrustums(); } };
 }

@@ -5,7 +5,7 @@ import { InstanceAssets } from "./instance-assets.ts";
 import { placementWaterAt, type Hydrology } from "./hydrology.ts";
 import { scatterSurface } from "./scatter-surface.ts";
 
-export async function sliceAssets(slice: Slice, terrain: TerrainStream, params: URLSearchParams) {
+export async function sliceAssets(slice: Slice, terrain: TerrainStream, params: URLSearchParams, distanceScale = 1) {
   const [document, hydrology] = await Promise.all([
     readJSON<{ placements: Placement[] }>("./placements.json"), readJSON<Hydrology>("./hydrology.json"),
   ]);
@@ -34,5 +34,5 @@ export async function sliceAssets(slice: Slice, terrain: TerrainStream, params: 
   });
   const maxDistance = params.has("assetDistance") ? Number(params.get("assetDistance")) : undefined;
   if (maxDistance !== undefined && (!Number.isFinite(maxDistance) || maxDistance <= 0)) throw new Error("assetDistance muss positiv sein");
-  return InstanceAssets.load(instances, { maxDistance }, slice.asset_options);
+  return InstanceAssets.load(instances, { maxDistance, distanceScale }, slice.asset_options);
 }

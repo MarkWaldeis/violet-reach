@@ -1,10 +1,13 @@
 export interface Point3 { x: number; y: number; z: number }
 export interface Plane extends Point3 { constant: number }
 export interface Chunk<T> { centre: Point3; radius: number; items: T[] }
-export interface AssetRenderOptions { maxDistance?: number; lodScale?: number; lodRatio?: number; aerialLODScale?: number; tintVariation?: number; shadowLODs?: number; maxLOD?: number }
+export interface AssetRenderOptions { maxDistance?: number; lodScale?: number; lodRatio?: number; aerialLODScale?: number; tintVariation?: number; shadowLODs?: number; maxLOD?: number; distanceScale?: number }
 
 export function assetRenderOptions(size: number, global: AssetRenderOptions = {}, asset: AssetRenderOptions = {}) {
-  const maxDistance = global.maxDistance ?? asset.maxDistance ?? size * 40;
+  // distanceScale (quality level) scales per-asset/default distances; an explicit global maxDistance wins.
+  const distanceScale = global.distanceScale ?? 1;
+  if (!Number.isFinite(distanceScale) || distanceScale <= 0) throw new Error("Invalid asset distance, LOD or shadow settings");
+  const maxDistance = global.maxDistance ?? (asset.maxDistance ?? size * 40) * distanceScale;
   const lodScale = global.lodScale ?? asset.lodScale ?? 1;
   const lodRatio = global.lodRatio ?? asset.lodRatio ?? 3;
   const aerialLODScale = global.aerialLODScale ?? asset.aerialLODScale ?? 1;

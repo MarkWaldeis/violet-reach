@@ -52,11 +52,20 @@ export function worldContent() {
     configResolved(config) { building = config.command === "build"; },
     configureServer(server) {
       // Revalidate on each request so a changed approval never keeps shipping in dev.
+      // VR_GATE_CACHE_MS (opt-in, used by tools/qa) reuses a passed gate check for that long:
+      // the synchronous `vr.py check` takes ~1 s and would otherwise serialise all 256 tile requests.
+      const ttl = Math.max(0, Number(process.env.VR_GATE_CACHE_MS) || 0);
+      let cached = { files: undefined, at: -Infinity };
+      const files = () => {
+        if (ttl && cached.files && Date.now() - cached.at < ttl) return cached.files;
+        cached = { files: worldFiles(), at: Date.now() };
+        return cached.files;
+      };
       server.middlewares.use((req, res, next) => {
         const name = decodeURIComponent((req.url ?? "").split("?")[0]).replace(/^\//, "");
         if (!/^(terrain\/|assets\/|hydrology\.json$|slice\.json$|placements\.json$)/.test(name)) return next();
         try {
-          const path = worldFiles().get(name);
+          const path = files().get(name);
           if (!path) { res.statusCode = 404; res.end(); return; }
           res.setHeader("Content-Type", name.endsWith(".json") ? "application/json" : "application/octet-stream");
           res.setHeader("Content-Length", statSync(path).size);
