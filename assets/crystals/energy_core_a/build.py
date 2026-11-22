@@ -377,33 +377,55 @@ def ground_disc(name, radius, squash, location, mat):
     return vrlib.link_to_source(obj)
 
 
-def radial_glow(crystal, radius, height):
-    bm = bmesh.new()
-    bm.from_mesh(crystal.data)
-    bmesh.ops.triangulate(bm, faces=bm.faces[:])
-    bmesh.ops.subdivide_edges(bm, edges=bm.edges[:], cuts=14, use_grid_fill=True)
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-    bm.to_mesh(crystal.data)
-    bm.free()
-    distance = crystal.data.attributes.new("core_distance", "FLOAT", "POINT")
-    glow = crystal.data.attributes.new("core_glow", "FLOAT", "POINT")
-    for vertex, d, g in zip(crystal.data.vertices, distance.data, glow.data):
-        p = vertex.co - Vector((0, 0, height * 0.5))
-        d.value = Vector((p.x / (radius * 1.15), p.y / (radius * 1.15),
-                          p.z / (radius * 1.6))).length
-        g.value = max(0, min(1, (1.1 - d.value) / 0.5)) ** 2
-    mat = crystal.data.materials[0]
+def radial_glow(crystals):
+    centre = Vector((0, 0, 8.1))
+    radii = Vector((4.3, 4.3, 6.8))
+    for crystal in crystals:
+        bm = bmesh.new()
+        bm.from_mesh(crystal.data)
+        bmesh.ops.triangulate(bm, faces=bm.faces[:])
+        bmesh.ops.subdivide_edges(bm, edges=bm.edges[:], cuts=10, use_grid_fill=True)
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        bm.to_mesh(crystal.data)
+        bm.free()
+        distance = crystal.data.attributes.new("core_distance", "FLOAT", "POINT")
+        glow = crystal.data.attributes.new("core_glow", "FLOAT", "POINT")
+        for vertex, d, g in zip(crystal.data.vertices, distance.data, glow.data):
+            p = crystal.matrix_world @ vertex.co - centre
+            d.value = Vector(tuple(p[i] / radii[i] for i in range(3))).length
+            g.value = max(0, min(1, (1.05 - d.value) / 0.65)) ** 2
+        crystal["glow_radii"] = list(radii)
+        crystal["glow_centre"] = list(centre)
+    mat = crystals[0].data.materials[0]
     nodes, links = mat.node_tree.nodes, mat.node_tree.links
+    bsdf = nodes["Principled BSDF"]
     attribute = nodes.new("ShaderNodeAttribute")
     attribute.attribute_name = "core_glow"
     gain = nodes.new("ShaderNodeMath")
     gain.operation = "MULTIPLY_ADD"
-    gain.inputs[1].default_value = 2
-    gain.inputs[2].default_value = 0.025
+    gain.inputs[1].default_value = 1.8
+    gain.inputs[2].default_value = 0.015
     links.new(attribute.outputs["Fac"], gain.inputs[0])
-    links.new(gain.outputs[0], nodes["Principled BSDF"].inputs["Emission Strength"])
-    crystal["glow_radii"] = (radius * 1.15, radius * 1.15, radius * 1.6)
-    crystal["glow_centre"] = (0, 0, height * 0.5)
+    links.new(gain.outputs[0], bsdf.inputs["Emission Strength"])
+    palette = vrmat.load_palette()
+    body = bsdf.inputs["Base Color"].links[0].from_socket
+    inner = nodes.new("ShaderNodeMixRGB")
+    inner.inputs[0].default_value = 0.18
+    inner.inputs[2].default_value = (*palette["violet_glow"]["linear_rgb"], 1)
+    links.new(body, inner.inputs[1])
+    links.new(inner.outputs[0], bsdf.inputs["Emission Color"])
+    depth = nodes.new("ShaderNodeMixRGB")
+    depth.blend_type = "MULTIPLY"
+    depth.inputs[0].default_value = 1
+    depth.inputs[2].default_value = (0.6, 0.6, 0.6, 1)
+    links.new(body, depth.inputs[1])
+    links.new(depth.outputs[0], bsdf.inputs["Base Color"])
+    for name in ("Roughness", "Normal"):
+        for link in list(bsdf.inputs[name].links):
+            links.remove(link)
+    bsdf.inputs["Roughness"].default_value = 0.32
+    bsdf.inputs["Specular IOR Level"].default_value = 0.16
+    bsdf.inputs["Coat Weight"].default_value = 0
 
 
 def menhir(name, rng, size, location, angle, mat):
@@ -466,7 +488,7 @@ def menhir(name, rng, size, location, angle, mat):
     obj = bpy.data.objects.new(name, mesh)
     obj.data.materials.append(mat)
     obj.location = location
-    obj.rotation_euler = Euler((0.08, -0.18, angle))
+    obj.rotation_euler = Euler((0.08, -0.27, angle))
     obj["socket_local"] = list(socket)
     return vrlib.link_to_source(obj)
 
@@ -483,7 +505,7 @@ def energy_filaments(stones):
     bsdf.inputs["Emission Color"].default_value = tuple(
         0.92 * a + 0.08 * b for a, b in zip(palette["violet_body"]["linear_rgb"],
                                           palette["violet_glow"]["linear_rgb"])) + (1,)
-    bsdf.inputs["Emission Strength"].default_value = 1.1
+    bsdf.inputs["Emission Strength"].default_value = 2.6
     bsdf.inputs["Roughness"].default_value = 0.45
     for i, stone in enumerate(stones):
         anchor = stone.matrix_world @ Vector(stone["socket_local"])
@@ -491,13 +513,13 @@ def energy_filaments(stones):
         radial = Vector((math.cos(angle), math.sin(angle), 0))
         tangent = Vector((-math.sin(angle), math.cos(angle), 0))
         points = [anchor - Vector((0, 0, 0.08))]
-        for outward, around, height in ((0.35, 0.5, 0.18), (0.15, 0.95, 0.55),
-                                        (-0.65, 1.15, 0.85), (-1.25, 0.65, 1.3)):
+        for outward, around, height in ((-0.2, 0.3, 0.8), (-0.9, 0.7, 1.7),
+                                        (-1.8, 0.65, 2.7), (-2.7, 0.15, 3.7)):
             points.append(anchor + radial * outward + tangent * around + Vector((0, 0, height)))
         curve = bpy.data.curves.new(f"filament_{i}", "CURVE")
         curve.dimensions = "3D"
         curve.resolution_u = 20
-        curve.bevel_depth = 0.09
+        curve.bevel_depth = 0.075
         curve.bevel_resolution = 3
         spline = curve.splines.new("BEZIER")
         spline.bezier_points.add(len(points) - 1)
@@ -521,24 +543,40 @@ def build():
     rock = support_material("Weathered notched limestone", 0.65)
     earth = support_material("Mossy shared earth", 0.45, earth=True)
     ground_disc("Shared earth bed", 7.4, 0.075, (0, 0, 0.12), earth)
+    bed = make_rock("Continuous fractured cradle", rng, 4.6, 0.43, 6, rock)
+    bed.location = (0, 0, 1.4)
+    for i in range(7):
+        angle = math.tau * i / 7 + 0.2
+        distance = 2.4 + rng.uniform(-0.2, 0.2)
+        rubble = make_rock(f"Interlocked cradle rubble {i}", rng, rng.uniform(1.6, 2.1),
+                           rng.uniform(0.55, 0.8), 5, rock)
+        rubble.location = (math.cos(angle) * distance, math.sin(angle) * distance,
+                           rng.uniform(1.5, 2.2))
+        rubble.rotation_euler = Euler((rng.uniform(-0.2, 0.2), rng.uniform(-0.2, 0.2), angle))
     stones = []
-    for i in range(5):
-        angle = math.tau * i / 5 + 0.3
+    for i in range(4):
+        angle = math.tau * i / 4 + 0.3
         distance = 4.4 + rng.uniform(-0.15, 0.15)
-        height = rng.uniform(4.6, 5.1)
+        height = rng.uniform(5.0, 5.8)
         location = (math.cos(angle) * distance, math.sin(angle) * distance, height * 0.43)
-        stone = menhir(f"Cradle stone {i}", rng, (rng.uniform(3.3, 3.9), rng.uniform(2.7, 3.2), height),
+        stone = menhir(f"Cradle stone {i}", rng, (rng.uniform(2.7, 3.2), rng.uniform(2.4, 2.8), height),
                        location, angle, rock)
         stones.append(stone)
         socket = make_rock(f"Buried stone socket {i}", rng, 1.6, 0.13, 5, earth)
         socket.location = (*location[:2], 0.18)
-    crystal = make_crystal("Levitating violet seed", rng, 3.0, 13.1, crystal_material())
-    chip_tip(crystal, 13.1, 0.96)
-    radial_glow(crystal, 3.0, 13.1)
+    mat = crystal_material()
+    crystals = []
+    main = make_crystal("crystal_core_main", rng, 2.05, 13.9, mat)
+    chip_tip(main, 13.9, 0.965)
+    place(main, rng, 2.2, 0.24, math.radians(5), 2.7)
+    crystals.append(main)
+    for i, (height, angle, tilt) in enumerate(((9.1, 0.2, 15), (10.5, 2.2, 18),
+                                              (7.2, 3.7, 21), (8.4, 5.0, 16))):
+        crystal = make_crystal(f"crystal_core_intergrown_{i}", rng, height * 0.15, height, mat)
+        chip_tip(crystal, height, 0.95)
+        place(crystal, rng, angle, 1.45, math.radians(tilt), 2.5)
+        crystals.append(crystal)
     bpy.context.view_layer.update()
-    _, tops = vrlib.world_bounds(stones)
-    bottom, _ = vrlib.world_bounds([crystal])
-    crystal.location.z += tops.z + 0.22 - bottom.z
-    bpy.context.view_layer.update()
+    radial_glow(crystals)
     energy_filaments(stones)
     finish()

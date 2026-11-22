@@ -14,22 +14,8 @@
     1150
   ],
   "texture_size": 2048,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-79c81cd3e9c64cc49f913648e628a347",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 8,
-      "form_detail": 8,
-      "material": 7,
-      "scale": 8,
-      "style": 8,
-      "defects": 7
-    },
-    "notes": "Round 3 (last): rejected, needs escalation. Fixed: the crystals now reuse the approved proof make_crystal() and crystal_material(), so the spire reads as a real crystal: a tall faceted main prism with a termination and 3-4 intergrown secondaries, and material at the reference level. Still failing, all on the base: (1) material 7: the limestone top is a blotchy white/dark-grey camouflage pattern, not weathered limestone, and the vertical cut faces show stretched, streaked texture (projection stretching) (closeup_base, hero). (2) defects 7: thin black crack lines are painted onto the stone surfaces instead of modelled breaks, and the blocks are flat-topped slabs with sharp straight cut sides (closeup_base). Fix: build the base with cluster_b's support_material() and its layered rock recipe (no painted fracture lines, box/triplanar mapping on the side faces), and break the slab tops into bed planes.",
-    "round": 3,
-    "source_sha256": "77c38d0aebc51e87bb1e2e7bc2a235199b67ab08ab442d1a38b4162ba6e843b3",
-    "sheet_sha256": "5e5ea50cdf2f02bec22ec881b7dfa1b909e3fcd83a49009bd4ca8d0f7cbdc0ce"
-  },
+  "review": null,
   "review_rounds": 3
 }

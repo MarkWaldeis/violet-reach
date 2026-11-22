@@ -14,22 +14,8 @@
     2100
   ],
   "texture_size": 4096,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-79c81cd3e9c64cc49f913648e628a347",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 7,
-      "form_detail": 6,
-      "material": 6,
-      "scale": 8,
-      "style": 6,
-      "defects": 6
-    },
-    "notes": "Round 2: rejected, one round left. (1) material 6: the core is still one smooth violet body with a soft radial glow gradient; STYLE asks violet_energy for mostly emissive, saturated flowing filaments with narrow bright cores on dark violet, and there are none inside or on the core (closeup, all turns). (2) defects 6: one top facet renders as a flat white triangle again (turn_225), and the 'filaments' are short pale ribbons hooked over each menhir like bag handles (closeup_base). (3) form_detail 6: the core is a low-poly 8-sided gem with bevel-smoothed long faces, and the menhirs are smooth soap-like faceted blocks. (4) silhouette/style 7/6: the core balances on a single stub stone above the ring, so it reads as a rocket on a launch pad; the soil disc is a hard-edged flat patch. Fix: give the core the proof's internal facet structure, a dark body and emissive filament veins running through it; fix the top-facet normal/shading; anchor the core in a fractured rock socket or let it float clearly, with filaments flowing between the stones and the core; weather and split the menhirs with the cluster_b support material; break up the soil edge.",
-    "round": 2,
-    "source_sha256": "b06283e0eb45a496bd7c7414e3fce87eee81bba7d0384acc79f0b548ae468d2a",
-    "sheet_sha256": "f579bd18ce53d39c3f6c4e96d2ec8c18c01b044b93ab70fcb41869a9fea4193c"
-  },
+  "review": null,
   "review_rounds": 2
 }
