@@ -14,7 +14,22 @@
     840
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-b06222e48d554ae4a6a116ad07645e06",
-  "review": null
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 7,
+      "material": 6,
+      "scale": 8,
+      "style": 7,
+      "defects": 7
+    },
+    "notes": "Round 1 (new build). Much better than the old cluster: real prismatic bodies with terminations, one main crystal with smaller counterweights, a believable limestone and earth socket, and the scale is right (3 m). Defects: (1) material: the crystal reads as one opaque saturated purple with soft gradient streaks. STYLE.md wants dark cores, inner bands and directional facet highlights next to lighter veins, and none of that is visible in hero.jpg or closeup.jpg. Add a dark violet_shadow core and 2-4 inner growth bands parallel to the c-axis, and keep the bright violet only on facet edges and veins. (2) form_detail: in closeup_upper/closeup_base the shafts are covered in random low-poly facet patches, so the surface reads as crumpled paper instead of a few large flat prism faces. Keep 6 clean prism faces per shaft and put detail into growth steps and chipped edges. (3) defects/style: the only fracture is a thin dark painted-on zigzag on the main shaft (also in the wire view). Model 1-2 real fractures with a step offset that glow faintly, per 'Risse leuchten nur schwach'. The shaft tips are all clean and unchipped.",
+    "round": 1,
+    "source_sha256": "fa82a509bb1f96d550e2b9f29c5d31240937894ffa398bdd54f638544aa5938b",
+    "sheet_sha256": "874d7ff49ce947c1110b7c458c7ec5479b83233ceabb560dc5dad7c8e1898595"
+  },
+  "review_rounds": 1
 }
