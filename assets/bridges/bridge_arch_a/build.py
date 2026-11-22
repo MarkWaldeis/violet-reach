@@ -18,7 +18,7 @@ def prism(name, rings, material, rounding):
     mesh = bpy.data.meshes.new(name)
     mesh.from_pydata([v for ring in rings for v in ring], [], faces)
     mesh.update()
-    mesh.materials.append(vrmat.get(material))
+    mesh.materials.append(vrmat.get(material) if isinstance(material, str) else material)
     obj = vrlib.link_to_source(bpy.data.objects.new(name, mesh))
     if rounding:
         bevel = obj.modifiers.new("Dressed and worn edges", "BEVEL")
@@ -32,6 +32,28 @@ def deck_z(x):
     if a >= 18:
         return .034
     return .034+5.52*math.cos(math.pi*a/36)**1.02
+
+
+def paving_stations():
+    stations = [18.0]
+    for n in range(1,31):
+        stations.append(36/math.pi*math.acos((n*.176/5.52)**(1/1.02)))
+    return stations
+
+
+def dressed_stone():
+    """A local low-contrast honed finish, retaining the library's limestone pores."""
+    mat = vrmat.get("monument_white").copy()
+    mat.name = "Pale Ford / honed limestone"
+    nodes, links = mat.node_tree.nodes, mat.node_tree.links
+    bsdf = nodes["Principled BSDF"]
+    diffuse = bsdf.inputs["Base Color"]
+    mix = nodes.new("ShaderNodeMixRGB")
+    mix.inputs[0].default_value = .83
+    mix.inputs[2].default_value = (*vrmat.load_palette()["monument_white"]["linear_rgb"], 1)
+    links.new(diffuse.links[0].from_socket, mix.inputs[1])
+    links.new(mix.outputs[0], diffuse)
+    return mat
 
 
 def arch_point(a, r):
@@ -63,25 +85,73 @@ def pier(name,x,y,height,material):
     prism(name,rings,material,.036)
 
 
+def wingwalls(side, pale):
+    for bank in (-1,1):
+        for j in range(10):
+            z = -.048+j*.235
+            if j>0:
+                z += .007
+            reach = 17.95 - j*.49
+            start = 12.17 + .09*j
+            mid = (reach+start)/2
+            bulge = 3.12-.060*j
+            # Mirrored returns spread out beyond the walkable stair width.
+            outline = [(start,1.85),(mid,1.9),(reach,2.04),(reach-.09,bulge),
+                       (mid+.22,bulge+.12),(start-.16,bulge-.27)]
+            if side*bank<0:
+                outline.reverse()
+            prism(f"Splayed wing {side:+}/{bank:+}/{j+1}", [
+                [(side*x,bank*y,z0) for x,y in outline] for z0 in (z,z+.23)],
+                "monument_weathered" if j in (0,2) else pale,.030)
+    for j,(a,b) in enumerate(((17.98,18.83),(18.84,19.51),(19.51,20.18))):
+        x0,x1 = sorted((side*a,side*b))
+        run(f"Bank landing {side:+}/{j+1}",x0,x1,-2.17,2.17,-.05,.034,
+            pale,.021,lambda x:0)
+
+
+def stairs(pale, rng):
+    stations = paving_stations()
+    for side in (-1,1):
+        for i,(a,b) in enumerate(zip(stations,stations[1:]+[0.0])):
+            if i==30 and side==1:
+                continue
+            x0,x1 = sorted((a*side,b*side)) if i<30 else (-a,a)
+            z = .034+i*.176
+            split = [-1.865,-.95,.02,.94,1.865]
+            for j in (1,2,3):
+                split[j] += rng.uniform(-.14,.14)
+            for j,(u,v) in enumerate(zip(split,split[1:])):
+                run(f"Stair tread {side:+}/{i+1}.{j+1}",
+                    x0+.004,x1-.004,u+.005,v-.005,-.238,.0,
+                    pale,.012,lambda x,z=z:z)
+    for side in (-1,1):
+        for x in (-16.57,-13.48,-8.8,-4.18,0,4.18,8.8,13.48,16.57):
+            # Modelled cover blocks anchor the coping at strongly loaded pier lines.
+            run(f"Projecting drip block {side:+}/{x:+.2f}",x-.14,x+.14,
+                *sorted((side*2.13,side*2.33)),-.24,-.08,pale,.026)
+
+
 def build():
     rng = random.Random(135719)
+    pale = dressed_stone()
     n = 39
     for i in range(n):
         a,b = ((i+v)*math.pi/n for v in (.015,.985))
         arch_block(f"Barrel voussoir {i+1:02}",a,b,0,.89,-1.88,1.88,
-                   "monument_weathered" if i%7==0 else "monument_white",.022)
+                   "monument_weathered" if i in (0,1,37,38) else pale,.022)
         for side in (-1,1):
             y0,y1 = sorted((side*1.82,side*(2.38 if i==n//2 else 2.24)))
             arch_block(f"Face voussoir {side:+d}/{i+1:02}",a,b,-.15 if i==n//2 else -.04,
                        .85 if i==n//2 else .68,y0,y1,
-                       "monument_weathered" if rng.random()<.11 else "monument_white",.041)
+                       "monument_weathered" if i in (0,1,37,38) else pale,.041)
 
     for side in (-1,1):
+        wingwalls(side,pale)
         for i,(xa,xb,z,w) in enumerate(((11.98,15.09,-.04,2.87),(12.05,14.82,.23,2.67),
                                          (12.46,14.63,.48,2.56),(13.38,14.47,.73,2.49))):
             x0,x1 = sorted((side*xa,side*xb))
             run(f"Abutment footing {side:+}/{i+1}",x0,x1,-w,w,z,z+.255,
-                "monument_weathered" if i%2==0 else "monument_white",.042,lambda x:0)
+                "monument_weathered" if i<2 else pale,.042,lambda x:0)
         for i in range(10):
             z = .02+.27*i
             xa = max(12.4,13.2055*math.sqrt(max(0,1-((z-.21)/5.01)**2)))
@@ -98,22 +168,18 @@ def build():
                 prism(f"Retaining masonry {side:+}/{i+1}.{j+1}",
                       [[(x,y,z) for x,y in section],
                        [(x,y,min(z+.255,deck_z(x)-.149)) for x,y in section]],
-                      "monument_weathered",.026)
+                      pale,.026)
 
+    stairs(pale,rng)
     for i in range(53):
         x0,x1 = -17.99+i*35.98/53,-17.99+(i+1)*35.98/53
         for side in (-1,1):
             width = .29 if i in (0,52) else .20
             lo,hi = sorted((side*1.87,side*(2.21+width*.15)))
-            run(f"Drip cornice {side:+}/{i+1:02}",x0+.009,x1-.009,lo,hi,-.29 if i not in (0,52) else -.074,
-                -.104 if i not in (0,52) else .012,
-                "monument_white",.033)
-        for j in range(4):
-            y0 = -1.85+j*.925+.037*math.sin(i*1.7+j) if j else -1.85
-            y1 = -1.85+(j+1)*.925+.037*math.sin(i*1.7+j+1) if j<3 else 1.85
-            run(f"Paving {i+1:02}.{j+1}",x0+.007,x1-.007,y0+.007,y1-.007,
-                -.126 if max(abs(x0),abs(x1))<17 else -.07,0,
-                "monument_weathered" if rng.random()<.21 else "monument_white",.017)
+            run(f"Recessed drip course {side:+}/{i+1:02}",x0+.009,x1-.009,lo,hi,-.25,-.19 if i not in (0,52) else -.06,
+                "monument_weathered",.014)
+            run(f"Drip cornice {side:+}/{i+1:02}",x0+.009,x1-.009,lo,hi,-.19 if i not in (0,52) else -.058,
+                -.04 if i not in (0,52) else .016,pale,.027)
     for i in range(67):
         a,b = ((i+v)*36/67-18 for v in (.015,.985))
         if abs((a+b)/2)>17.65:
@@ -122,24 +188,30 @@ def build():
         if all(deck_z(x)-.10>extrados(x)+.04 for x in xs):
             section = [(x,-2.025) for x in xs]+[(x,2.025) for x in reversed(xs)]
             prism(f"Spandrel ashlar {i+1:02}",[[(x,y,extrados(x)-.01) for x,y in section],
-                 [(x,y,deck_z(x)-.095) for x,y in section]],"monument_white",.017)
+                 [(x,y,deck_z(x)-.095) for x,y in section]],pale,.017)
 
     for side in (-1,1):
-        for i in range(25):
-            x = -16.8+i*1.4
-            if i in (0,6,12,18,24):
-                pier(f"Parapet pilaster {side:+}/{i+1:02}",x,side*2.005,1.13,"monument_white")
-            if i>=24:
-                continue
+        breaks = (-18,-16.57,-14.6,-13.48,-11.25,-8.8,-7.1,-5.9,-4.18,-2.65,
+                  -1.18,1.18,2.65,4.18,5.9,7.1,8.8,11.25,13.48,14.6,16.57,18)
+        for x in (-18,-16.57,-13.48,-8.8,-4.18,-1.18,1.18,4.18,8.8,13.48,16.57,18):
+            pier(f"Parapet pier {side:+}/{x:+.2f}",x,side*2.005,1.11 if abs(x)>2 else 1.29,pale)
+        for i,(x,xx) in enumerate(zip(breaks,breaks[1:])):
             yo,yi=sorted((side*2.21,side*1.86))
-            a,b=x+.018,x+1.4-.018
+            a,b=x+.013,xx-.013
+            mid = (a+b)/2
+            crest = abs(mid)<1.0
+            crown = 1.08 if crest else .97
             run(f"Parapet base {side:+}/{i+1:02}",a,b,yo,yi,-.084,.26,"monument_weathered",.025)
-            if i%6 in (0,1,4,5):
-                run(f"Solid parapet field {side:+}/{i+1:02}",a,b,yo+.046,yi-.046,.18,.81,
-                    "monument_white",.026)
+            if crest or abs(mid)>13 or i in (4,6,14,16):
+                run(f"Solid parapet field {side:+}/{i+1:02}",a,b,yo+.046,yi-.046,.18,crown-.11,pale,.026)
+                if crest:
+                    run(f"Crown relief {side:+}",a+.29,b-.29,*sorted((side*2.18,side*2.24)),.35,.79,pale,.039)
             else:
-                for j in range(2):
-                    pier(f"Open parapet baluster {side:+}/{i+1:02}.{j+1}",a+.3+j*.67,
-                         side*2.025,.87,"monument_white")
-            run(f"Parapet coping {side:+}/{i+1:02}",a,b,yo-.037,yi+.037,.78,.98,
-                "monument_white",.038)
+                count = 2 if b-a<1.65 else 3
+                pitch = (b-a)/count
+                for j in range(count):
+                    pier(f"Open parapet baluster {side:+}/{i+1:02}.{j+1}",a+(j+.5)*pitch,
+                         side*2.025,.87,pale)
+            run(f"Parapet coping {side:+}/{i+1:02}",a,b,yo-.037,yi+.037,crown-.19,crown,pale,.038)
+    for ob in vrlib.source_objects():
+        ob.location.z += .008

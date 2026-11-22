@@ -37,6 +37,7 @@ size = hi - lo
 centre = (lo + hi) / 2
 radius = max(size) / 2 * 1.3
 stats = {"triangles": vrlib.triangle_count(objs), "size_m": [round(v, 3) for v in size], "objects": len(objs)}
+context = [ob for ob in scene.objects if ob.get("vr_review_context")]
 
 
 def studio():
@@ -70,9 +71,11 @@ def studio():
     sun_obj.rotation_euler = (math.radians(52), 0, math.radians(35))
     scene.collection.objects.link(sun_obj)
 
-    bpy.ops.mesh.primitive_plane_add(size=max(60, radius * 30), location=(0, 0, 0))
+    bpy.ops.mesh.primitive_plane_add(size=max(60, radius * 30),
+                                     location=(0, 0, min(lo.z, 0) - .01 if context else 0))
     ground = bpy.context.object
     ground.name = "vr_ground"
+    ground.hide_render = bool(scene.get("vr_review_floating"))
     gmat = bpy.data.materials.new("vr_ground")
     gmat.use_nodes = True
     b = gmat.node_tree.nodes["Principled BSDF"]
@@ -91,6 +94,7 @@ def studio():
     fmat.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0.9, 0.35, 0.05, 1)
     for o in (body, head):
         o.data.materials.append(fmat)
+        o.hide_render = ground.hide_render
     return [body, head]
 
 
@@ -140,6 +144,11 @@ views = [("turn_%03d" % a, a, 14, centre, full_distance) for a in range(20, 380,
 detail_target = Vector((centre.x, centre.y, lo.z + size.z * 0.62))
 views.append(("closeup_upper", 65, 8, detail_target, full_distance * 0.42))
 views.append(("closeup_base", 205, 22, Vector((centre.x, centre.y, lo.z + size.z * 0.16)), full_distance * 0.40))
+for i, name in ((8, "closeup_upper"), (9, "closeup_base")):
+    framing = scene.get("vr_" + name)
+    if framing is not None:
+        x, y, z, az, el, distance = framing
+        views[i] = (name, az, el, Vector((x, y, z)), distance)
 
 if draft:
     views = [views[0], views[8], views[9]]
@@ -148,14 +157,16 @@ started = time.time()
 tiles = []
 for name, az, el, target, dist in views:
     for o in figure:
-        o.hide_render = name.startswith("closeup")
+        o.hide_render = bool(scene.get("vr_review_floating")) or name.startswith("closeup")
     aim(az, el, target, dist)
     scene.render.filepath = os.path.join(tmp_dir, name + ".png")
     bpy.ops.render.render(write_still=True)
     tiles.append(scene.render.filepath)
 
 for o in figure:
-    o.hide_render = False
+    o.hide_render = bool(scene.get("vr_review_floating"))
+for ob in context:
+    ob.hide_render = True
 for kind in (() if draft else ("wire", "clay")):
     bpy.context.view_layer.material_override = override_material(kind)
     aim(20, 14, centre, full_distance)
