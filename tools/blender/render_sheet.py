@@ -80,27 +80,18 @@ def studio():
     b.inputs["Roughness"].default_value = 0.9
     ground.data.materials.append(gmat)
 
-    figure_xyz = scene.get("vr_review_figure", (centre.x, hi.y + 0.5, 0))
-    x, y = figure_xyz[:2]
-    ground_z = figure_xyz[2] if len(figure_xyz) == 3 else 0
-    objects = []
-    if "vr_review_figure" in scene:
-        for dx, dy, z, girth, depth in ((0,0,1.14,.24,.69),(-.12,0,.39,.095,.76),
-                                         (.12,0,.39,.095,.76),(-.31,0,1.07,.085,.64),
-                                         (.31,0,1.05,.085,.61)):
-            bpy.ops.mesh.primitive_cylinder_add(radius=girth, depth=depth, location=(x+dx,y+dy,ground_z+z))
-            objects.append(bpy.context.object)
-    else:
-        bpy.ops.mesh.primitive_cylinder_add(radius=0.22, depth=1.5, location=(x, y, 0.75))
-        objects.append(bpy.context.object)
-    bpy.ops.mesh.primitive_uv_sphere_add(radius=0.15, location=(x, y, ground_z+1.65))
-    objects.append(bpy.context.object)
+    # 1.8 m figure for scale: body, head.
+    figure_xy = (centre.x, hi.y + 0.5)
+    bpy.ops.mesh.primitive_cylinder_add(radius=0.22, depth=1.5, location=(*figure_xy, 0.75))
+    body = bpy.context.object
+    bpy.ops.mesh.primitive_uv_sphere_add(radius=0.15, location=(*figure_xy, 1.65))
+    head = bpy.context.object
     fmat = bpy.data.materials.new("vr_figure")
     fmat.use_nodes = True
     fmat.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0.9, 0.35, 0.05, 1)
-    for o in objects:
+    for o in (body, head):
         o.data.materials.append(fmat)
-    return objects
+    return [body, head]
 
 
 def override_material(kind):
@@ -146,15 +137,9 @@ def aim(azimuth_deg, elevation_deg, target, distance):
 fov = 2 * math.atan(min(cam_data.sensor_width, cam_data.sensor_width * TILE[1] / TILE[0] * 1.0) / (2 * cam_data.lens))
 full_distance = radius / math.sin(fov / 2)
 views = [("turn_%03d" % a, a, 14, centre, full_distance) for a in range(20, 380, 45)]
-if "vr_review_hero" in scene:
-    az, el, scale, z_offset = scene["vr_review_hero"]
-    views[0] = ("turn_%03d" % (az % 360), az, el, centre + Vector((0, 0, z_offset)), full_distance * scale)
 detail_target = Vector((centre.x, centre.y, lo.z + size.z * 0.62))
 views.append(("closeup_upper", 65, 8, detail_target, full_distance * 0.42))
 views.append(("closeup_base", 205, 22, Vector((centre.x, centre.y, lo.z + size.z * 0.16)), full_distance * 0.40))
-if "vr_review_base" in scene:
-    x, y, z, az, el, scale = scene["vr_review_base"]
-    views[9] = ("closeup_base", az, el, Vector((x, y, z)), full_distance * scale)
 
 if draft:
     views = [views[0], views[8], views[9]]
@@ -162,9 +147,8 @@ if draft:
 started = time.time()
 tiles = []
 for name, az, el, target, dist in views:
-    show_base_figure = name == "closeup_base" and scene.get("vr_review_figure_base", False)
     for o in figure:
-        o.hide_render = name.startswith("closeup") and not show_base_figure
+        o.hide_render = name.startswith("closeup")
     aim(az, el, target, dist)
     scene.render.filepath = os.path.join(tmp_dir, name + ".png")
     bpy.ops.render.render(write_still=True)
