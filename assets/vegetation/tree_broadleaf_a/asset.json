@@ -14,8 +14,22 @@
     3000
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-bbbec46812f34f45bdf2489c6f83c0fa",
-  "review": null,
-  "review_rounds": 1
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 7,
+      "material": 8,
+      "scale": 8,
+      "style": 8,
+      "defects": 7
+    },
+    "notes": "Round 2. Fixed: the foliage is olive with darker undersides, and the crown is broken into irregular lobes with air between them; bark has vertical furrows (hero, turn_200, closeup_base). Still failing: the root flare is still a flat five-pointed starfish lying on the ground (closeup_base); and the trunk ends in a flat collar from which three branches start at the same height, like a cut stump with sticks pushed in (hero). Fix: 3-4 buttress roots of different length and height that dive into the soil, with soil and grass banked against them; let the branches fork from the trunk at different heights with a smooth swelling at each fork.",
+    "round": 2,
+    "source_sha256": "9eb3c551964aaa0d37104c03eb6cdf4fb02e98aabac68a1ded97579c9d9fabfc",
+    "sheet_sha256": "5efa6fb77c0fd21dd0b37fd219c4a363b6cb53ab79fe04c3ade2b94ff564ef36"
+  },
+  "review_rounds": 2
 }

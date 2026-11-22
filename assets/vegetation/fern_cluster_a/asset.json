@@ -14,8 +14,22 @@
     1000
   ],
   "texture_size": 1024,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-bbbec46812f34f45bdf2489c6f83c0fa",
-  "review": null,
-  "review_rounds": 1
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 7,
+      "scale": 8,
+      "style": 8,
+      "defects": 7
+    },
+    "notes": "Round 2. Fixed: the fronds are now lacy, pinnate and arching, no longer a cycad (hero, closeup_upper). Still failing: one frond and a small cluster in the centre are near-black purple, which reads as a dead or wrongly assigned material, not as an old brown frond (closeup_upper, closeup_base); one bare dark stipe sticks out of the base towards the ground. Fix: give the old fronds a dry brown-olive tone instead of black-violet, remove or shorten the loose stipe, and add a small soil and litter base with a few curled fiddleheads.",
+    "round": 2,
+    "source_sha256": "f3fcb86eae57d987df85556d467b0fc18dc26806ff9d5f2aa280c23117c9a50d",
+    "sheet_sha256": "7e559d0f4e2f00050b176f11ec63648208d6c559324f7c21352e6473d52a15e5"
+  },
+  "review_rounds": 2
 }
