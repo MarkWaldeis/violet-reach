@@ -14,8 +14,22 @@
     1000
   ],
   "texture_size": 1024,
-  "status": "blender_review",
+  "status": "approved",
   "builder": "devin-bbbec46812f34f45bdf2489c6f83c0fa",
-  "review": null,
-  "review_rounds": 3
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 8,
+      "scale": 8,
+      "style": 8,
+      "defects": 8
+    },
+    "notes": "Lead extra round: approved. Fixed: the bulbous bread-roll base is gone; the crown now emerges from a low, small soil patch covered by fiddleheads, short blades and frond stubs, with a soft edge (t9). Fronds unchanged and still good. Polish (non-blocking): the soil reads slightly purple-brown in the base view.",
+    "round": 4,
+    "source_sha256": "5498a5d6afc9001d630c74113283665e94fe2c7cc4a4820b9419e214496e6649",
+    "sheet_sha256": "fa4aac1d20fec6ae96ee06417c222ec2c432957d9dcec5ff24aebb38aaa8350f"
+  },
+  "review_rounds": 4
 }

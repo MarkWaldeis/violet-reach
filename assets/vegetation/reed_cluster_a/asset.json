@@ -14,8 +14,22 @@
     600
   ],
   "texture_size": 1024,
-  "status": "blender_review",
+  "status": "approved",
   "builder": "devin-bbbec46812f34f45bdf2489c6f83c0fa",
-  "review": null,
-  "review_rounds": 3
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 8,
+      "scale": 8,
+      "style": 8,
+      "defects": 8
+    },
+    "notes": "Lead extra round: approved. Fixed: the glossy pillow mound is gone; the stems now rise directly out of a flat, matte mud patch with broken edges and dead stem stubs, hidden under the grass skirt at normal view distance (hero, t8). Polish (non-blocking): at close range (t9) the patch is one flat, uniform mid-brown with a sharp cut-paper edge; darker wet tones and a softer edge would help.",
+    "round": 4,
+    "source_sha256": "193159eb97e46fb65e535afb083b2d67e708bcacc709924eb50fbe981fb4ca99",
+    "sheet_sha256": "41a16c943569a30ca3548b13c2fc29383a06209383aaf5fc07ccbf90e7ee6c11"
+  },
+  "review_rounds": 4
 }
