@@ -64,7 +64,13 @@ def limestone(name):
     pores = next(n for n in nodes if n.type == "TEX_VORONOI")
     pores.inputs["Scale"].default_value = 27 * grain_scale
     grain = noise(13 * grain_scale, 2)
-    pits = ramp(pores.outputs["Distance"], .12, .31, .36, 1)
+    clusters = ramp(noise(3.4 * grain_scale, 3), .29, .66, .10, .96)
+    coarse_pits = ramp(pores.outputs["Distance"], .10, .30, .43, 1)
+    fine_cells = nodes.new("ShaderNodeTexVoronoi")
+    fine_cells.inputs["Scale"].default_value = 84 * grain_scale
+    links.new(coords, fine_cells.inputs["Vector"])
+    fine_pits = ramp(fine_cells.outputs["Distance"], .08, .24, .60, 1)
+    pits = mix(clusters, fine_pits, coarse_pits)
     deposits = ramp(grain, .23, .79, .80, 1)
     tone = mix(.72, tone, mix(.54, deposits, pits, "MULTIPLY"), "MULTIPLY")
 
@@ -91,29 +97,47 @@ def limestone(name):
     return mat
 
 
-def block(name, x, y, z, length, depth, height, rng, stone, fracture=0, wear=.025, tilt=0):
+def block(name, x, y, z, length, depth, height, rng, stone, fracture=0, wear=.025, tilt=0,
+          split=None, pitch=0, yaw=0):
     c = min(length, depth) * (.13 if fracture else .036)
     w, d = length / 2, depth / 2
     outline = [(-w + c, -d), (w - c, -d), (w, -d + c), (w, d - c),
                (w - c, d), (-w + c, d), (-w, d - c), (-w, -d + c)]
     outline = [(a + rng.uniform(-wear, wear), b + rng.uniform(-wear, wear)) for a, b in outline]
     vertices = []
-    for i, (a, b) in enumerate(outline):
-        vertices.append((x + a, y + b, z))
+    def point(a, b, height_offset, progress):
+        if split is not None:
+            low, high = split
+            shoulder = (a+w)/length
+            skew = math.sin(3.8*x+.6)*b/d
+            offset = low+(high-low)*progress + length*(.21*(abs(b/d+.22)-.50)+.21*skew)
+            a += shoulder * max(-.88*length, offset)
+        return (x + a*math.cos(yaw) - b*math.sin(yaw),
+                y + a*math.sin(yaw) + b*math.cos(yaw) - pitch*height_offset,
+                z + height_offset + pitch*b)
+
+    for a, b in outline:
+        vertices.append(point(a, b, 0, 0))
     fault = rng.choice((-1, 1))
     notch = int(abs(x*17 + z*31 + y*7)) % 8
     for i, (a, b) in enumerate(outline):
         loss = fracture * (.12 + .61 * max(0, fault * a / w) + .18 * max(0, b / d) + rng.uniform(0, .10))
         spall = min(.10, height * .14) if i == notch else 0
-        vertices.append((x + a*(1-spall) + rng.uniform(-wear, wear),
-                         y + b*(1-spall) + rng.uniform(-wear, wear),
-                         z + height - loss - spall + tilt * a / w))
+        vertices.append(point(a*(1-spall) + rng.uniform(-wear, wear),
+                              b*(1-spall) + rng.uniform(-wear, wear),
+                              height - loss - spall + tilt * a / w, 1))
     faces = [tuple(reversed(range(8)))]
-    faces.extend((i, (i + 1) % 8, 8 + (i + 1) % 8, 8 + i) for i in range(8))
+    split_faces = []
+    for i in range(8):
+        j = (i+1) % 8
+        if split is not None and i in (1, 2, 3):
+            split_faces.extend((len(faces), len(faces)+1))
+            faces.extend(((i, j, 8+i), (j, 8+j, 8+i)))
+        else:
+            faces.append((i, j, 8+j, 8+i))
     if fracture:
         for a, b in ((-.32, -.38), (.37, .18)):
-            vertices.append((x + w * a, y + d * b,
-                             z + height - fracture * (.24 + .6 * max(0, fault * a))))
+            vertices.append(point(w*a, d*b, height - fracture * (.24 + .6 * max(0, fault * a)), 1))
         faces.extend((8+i, 8+(i+1)%8, 16 if i in (0, 5, 6, 7) else 17) for i in range(8))
         faces.extend(((9, 17, 16), (13, 16, 17)))
     else:
@@ -124,6 +148,10 @@ def block(name, x, y, z, length, depth, height, rng, stone, fracture=0, wear=.02
     obj = bpy.data.objects.new(name, data)
     vrlib.link_to_source(obj)
     obj.data.materials.append(vrmat.get(stone) if stone == "mossy_rock" else limestone(stone))
+    if split_faces:
+        obj.data.materials.append(limestone("monument_weathered"))
+        for i in split_faces:
+            data.polygons[i].material_index = 1
     bevel = obj.modifiers.new("Worn arrises", "BEVEL")
     bevel.width, bevel.segments = min(wear * .43, height * .11), 2
     bevel.angle_limit = math.radians(18)
@@ -135,28 +163,46 @@ def build():
     white, old = "monument_white", "monument_weathered"
     block("Inset retaining bed", -.05, -1, -.035, 9.55, 1.26, .95, rng, old)
     schedule = [
-        (0, .54, ((-5, -3.61, -2.05, -.04, 1.32, 2.89, 4.86),)),
-        (.52, .81, ((-4.88, -3.03, -1.0, .75, 2.22, 3.92), (4.4, 4.85))),
-        (1.31, .46, ((-4.86, -3.72, -2.0, -.36, .73), (1.41, 2.58, 3.81))),
-        (1.75, .88, ((-4.79, -2.98, -1.29, .27), (2.29, 3.25, 3.72))),
-        (2.61, .59, ((-4.79, -3.57, -2.19, -.82), (2.78, 3.65))),
-        (3.18, .74, ((-4.70, -3.15, -1.75, -.99),)),
-        (3.90, .52, ((-4.74, -4.16, -2.75, -1.99),)),
-        (4.38, .54, ((-4.70, -4.13, -3.03),)),
+        (0, .56, (-5, -3.61, -2.05, -.04, 1.32, 2.25), (3.10, 2.76)),
+        (.56, .80, (-4.88, -3.03, -1.0, .75, 1.77), (2.75, 1.98)),
+        (1.36, .53, (-4.86, -3.72, -2.0, -.36, .91), (1.98, 2.48)),
+        (1.89, .76, (-4.79, -3.65, -2.98, -1.29, -.27), (1.74, .26)),
+        (2.65, .60, (-4.79, -3.57, -2.19, -.63), (.31, -.16)),
+        (3.25, .68, (-4.70, -3.31, -2.26), (-1.12, -1.03)),
+        (3.93, .53, (-4.74, -4.02, -2.90), (-1.04, -2.48)),
+        (4.46, .54, (-4.70, -4.13, -3.64), (-2.91, -3.24)),
     ]
-    for course, (z, h, runs) in enumerate(schedule):
-        for run, joints in enumerate(runs):
-            for i, (a, b) in enumerate(zip(joints, joints[1:])):
-                terminal = i >= len(joints) - 2
-                exposed = course >= 6 or run > 0 or (terminal and course in (2, 4, 5))
-                damaged = h * rng.uniform(.17, .62) if exposed else 0
-                block(f"Retaining course {course} run {run} stone {i}", (a + b) / 2,
-                      -1.09 + .044*course + rng.uniform(-.065, .065), z, b-a-.026,
-                      1.95-course*.063, h, rng, old if course == 0 else white, fracture=damaged,
-                      wear=.027 if exposed else .016, tilt=rng.uniform(-.064, .061) if exposed else 0)
-            a, b = joints[0] + .09, joints[-1] - .09
-            block(f"Recessed hearting {course} run {run}", (a+b)/2, -.93+.04*course,
-                  max(-.035,z-.20), b-a, 1.27-course*.053, .268, rng, old, wear=.011)
+    for course, (z, h, joints, (low, high)) in enumerate(schedule):
+        limits = (*joints, max(low, high))
+        for i, (a, b) in enumerate(zip(limits, limits[1:])):
+            if (course, i) == (3, 1):
+                continue
+            missing_half = (course, i) == (4, 2)
+            if missing_half:
+                b = a+(b-a)*.58
+            tip = i == len(limits)-2
+            loose = (course, i) in ((2, 3), (4, 1), (6, 0))
+            y = -1.09 + .044*course - (.21 if loose else 0) + rng.uniform(-.073, .073)
+            eroded = rng.uniform(.039, .096)
+            sloped = (1, .78, .63, .19, .09, .61, .29, .43)[course]
+            block(f"Retaining course {course} stone {i}", (a+b)/2, y, z+eroded*.38, b-a-eroded,
+                  1.95-course*.063, h-eroded, rng, old if course == 0 else white,
+                  fracture=h*(.22+sloped*.36 if tip else .36 if missing_half else .22 if loose or course >= 6 else 0),
+                  wear=.030 if tip or loose else .022, tilt=.085 if loose else 0,
+                  split=(low-b, high-b) if tip else (.06, -.24) if missing_half else None,
+                  pitch=.14 if loose else 0, yaw=-.12 if loose else 0)
+            if not missing_half and (course != 3 or i not in (0, 2)):
+                end = min(low, high) - .08 if tip else b
+                if end - a > .24:
+                    block(f"Recessed hearting {course} stone {i}", (a+end)/2, -.97+.04*course,
+                          max(-.035,z-.19), end-a-.09, 1.12-course*.045, .30, rng, old, wear=.011)
+    block("Split header over breach", -1.07, -.99, 2.46, 1.15, 1.24, .38, rng, white,
+          fracture=.27, split=(0, -.62), wear=.019, yaw=.20, pitch=-.10)
+    for i, (x, z, length, h) in enumerate(((3.98, -.027, 1.74, .68), (4.36, .61, .94, .69),
+                                            (4.49, 1.22, .72, .54), (3.27, .53, .65, .39))):
+        block(f"Broken detached return {i}", x, -1.12+.06*i, z, length, 1.59, h, rng,
+              old if i == 0 else white, fracture=h*.46, split=(0, -length*.25),
+              pitch=.07 if i in (1, 3) else 0, yaw=.07*i)
     # The lower walk turns behind the break, where tread blocks rise to the remaining platform.
     block("Rear terrace lower bed", -.92, .98, 0, 7.79, 2.44, .38, rng, old)
     for i in range(7):
@@ -175,7 +221,18 @@ def build():
                               (-.12,-2.04,.56,.36,.22), (.86,-2.53,.22,.19,.16))):
         x, y, l, d, h = spec
         block(f"Dislodged fragment {i}", x, y, -.02, l, d, h, rng, old if i%3==0 else white,
-              fracture=h*.72, wear=.017, tilt=h*.076)
+              fracture=h*.68, wear=.017, tilt=h*.076, yaw=rng.uniform(-.56,.56))
+    for i, (x, y, z, length, depth, h) in enumerate(((3.67,-2.11,.25,.56,.43,.30),
+            (3.94,-2.12,.36,.48,.31,.27), (2.43,-2.34,.11,.53,.31,.32),
+            (1.12,-2.17,.19,.47,.40,.38), (1.31,-2.35,.07,.28,.27,.26))):
+        block(f"Stacked fall fragment {i}", x, y, z, length, depth, h, rng, white,
+              fracture=h*.64, yaw=rng.uniform(-.81,.81), wear=.013)
+    for i in range(27):
+        x, y = rng.choice(((1.15,-2.42),(2.51,-2.56),(3.74,-2.50)))
+        size = rng.uniform(.09,.29)
+        block(f"Broken rubble chip {i}", x+rng.uniform(-.57,.57), y+rng.uniform(-.32,.34),
+              -.019, size, size*rng.uniform(.63,.91), size*.61, rng, old if i%4==0 else white,
+              fracture=size*.30, wear=.006, yaw=rng.uniform(-1,1))
     for seed, (x, y) in enumerate(((-3.83,-2.02),(-.77,-2.01),(1.22,-2.09),(3.02,-2.04))):
         for i in range(9):
             block(f"Groundside moss cluster {seed} fragment {i}", x+rng.uniform(-.18,.18),
