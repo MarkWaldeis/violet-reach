@@ -14,8 +14,22 @@
     2600
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-8d8786f1f7144ea59f31fe8bffc2bd4c",
-  "review": null,
-  "review_rounds": 5
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 7,
+      "material": 7,
+      "scale": 8,
+      "style": 8,
+      "defects": 7
+    },
+    "notes": "New budget round 2: rejected. Fixed: the ledge soffits are now broken, dripping undersides of varied depth instead of flat trays; the keel ends in a blunt broken tip instead of a needle; the stray plate and the black rim wedge are gone; the cliff faces have crisp fracture planes between darker vertical joints; hanging grass runs along the turf rim (closeup, closeup_base, turn tiles). Still failing: (1) material/defects 7: the soffit undersides render pale cream-yellow, lighter and warmer than the grey cliff faces, with smeared, stretched texture and thin black zigzag hairlines across them (closeup_base upper left and centre). (2) form_detail 7: the keel tip ends in large flat, untextured clean slabs (closeup_base lower centre), and the cliff faces are one even scale of small cubic facets, like crumpled low-poly paper, with no larger bed planes between the joints (closeup bottom). (3) defects 7: the turf still meets the rock along a hard thin dark line with no visible soil band (the roots are too thin to read at any review distance), with small white specks along the seam; the meadow rocks are flat-faced low-poly prisms; the satellite in turn_067 is a lone faceted cube. Fix: give the soffits the same grey limestone material and texture scale as the faces with proper mapping (no stretch, no black lines); break the keel tip slabs with fractures and texture; add a larger bed-plane scale to the faces; show a 0.3-0.8 m dark soil band with visible root strands under the turf lip; round and fracture the meadow rocks; give the cube satellite a turf cap or remove it.",
+    "round": 6,
+    "source_sha256": "898ed9dc38e889e7fdc4de8ff0c99f9a76880bc6847e2522b2c35a9e735acb0b",
+    "sheet_sha256": "0daa3e93458b0c80071f40d431ae0eb26b304976c83b9b3813ba9d5bb504be99"
+  },
+  "review_rounds": 6
 }
