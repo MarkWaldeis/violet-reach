@@ -14,7 +14,22 @@
     600
   ],
   "texture_size": 1024,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-bbbec46812f34f45bdf2489c6f83c0fa",
-  "review": null
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 7,
+      "material": 7,
+      "scale": 8,
+      "style": 7,
+      "defects": 7
+    },
+    "notes": "Round 1. Good: 1.83 m (matches the figure), dense base, a mix of upright culms and drooping leaves, dry leaves mixed in. Defects: (1) the seed heads are rows of separate brown oval beads on spokes, which read as allium/cartoon pods rather than a reed panicle; build soft, feathery panicles (Phragmites) or dense cattail spikes, slightly bent by their weight. (2) Many culms are bare straight sticks of identical thickness rising above the foliage; add nodes and leaf sheaths along the culms and vary their height and lean. (3) Color: dark teal-green leaves, seed heads uniform mid-brown; shift the leaves toward olive and give the heads a warmer straw-brown with a lighter tip. (4) The base has no wet soil or mud collar, even though this asset is meant for the shore.",
+    "round": 1,
+    "source_sha256": "a456d7f0f9b6351c85f772503b0fd07e5ade4aa3a0ccd61f2261d5301f6b3938",
+    "sheet_sha256": "b0fe76f2f88429a71ed67b7d2a20b9bb6e4e2fed148729458d9df9eba0d6335e"
+  },
+  "review_rounds": 1
 }

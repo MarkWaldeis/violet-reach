@@ -14,7 +14,22 @@
     1000
   ],
   "texture_size": 1024,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-bbbec46812f34f45bdf2489c6f83c0fa",
-  "review": null
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 6,
+      "material": 7,
+      "scale": 8,
+      "style": 6,
+      "defects": 7
+    },
+    "notes": "Round 1. Good: 1.3 x 0.7 m, fronds arch out of one centre with dry lower fronds and cast readable shadows. Defects: (1) form/style: every frond is a single row of identical oval leaflets at even spacing along a stiff stalk, so it reads as a cycad, palm or mimosa, not a fern (ref_14). Fern fronds are bipinnate and lacy, with pinnae that taper toward the tip and the base, plus a few unrolling fiddleheads. (2) The fronds stand stiffly upright and then hook down at the tip like whips; give them one continuous arch. (3) The lower dry fronds are pale cream/beige and lie flat on the ground like paper; use darker dry brown and lift them slightly. (4) At some frond tips the leaflets detach from the rachis (closeup top left). (5) Color: the green is dark teal rather than olive.",
+    "round": 1,
+    "source_sha256": "17cc102c52b693aeaa608a0ef09081cac1a50968cff5d61b4e2f2f06f7cf91a6",
+    "sheet_sha256": "ed583bb6a5003bac95db144dd1a30ac710005523445593c1ec1614b0b8ecc77b"
+  },
+  "review_rounds": 1
 }

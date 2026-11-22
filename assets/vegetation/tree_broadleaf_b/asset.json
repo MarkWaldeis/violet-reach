@@ -14,7 +14,22 @@
     2500
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-bbbec46812f34f45bdf2489c6f83c0fa",
-  "review": null
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 7,
+      "material": 7,
+      "scale": 8,
+      "style": 7,
+      "defects": 7
+    },
+    "notes": "Round 1. Good: 11.2 m high with a 7.3 m crown, modelled leaves, slight trunk lean. Defects: (1) the crown is a closed egg/ball with no lobes and no sky gaps, so it reads as a lollipop; break it into irregular branch clusters with air between them. (2) A single straight trunk runs into the crown with no visible fork or main limbs (STYLE.md: forks and root flares visible). (3) The root flare repeats tree_broadleaf_a's flat star fins. (4) The bark is a smooth tube with no tree_bark furrows. (5) The foliage is dark blue-green, not olive; the tops are barely lighter. Also make it read clearly as a different species from tree_a, not just a smaller copy.",
+    "round": 1,
+    "source_sha256": "61a089c69f9930c27d5b8ab2aeb97cf6c282502dace20bf2fbbb420607e1ad7c",
+    "sheet_sha256": "dbc7d6454f0191b86862d25f40aeaea23c30f478fd319a37eed36e439e1ac3c8"
+  },
+  "review_rounds": 1
 }

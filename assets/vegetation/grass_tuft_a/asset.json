@@ -14,7 +14,22 @@
     120
   ],
   "texture_size": 512,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-bbbec46812f34f45bdf2489c6f83c0fa",
-  "review": null
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 6,
+      "material": 7,
+      "scale": 8,
+      "style": 7,
+      "defects": 7
+    },
+    "notes": "Round 1. Good: 0.64 m (inside the 0.15-0.7 m range), mixed green and dry blades, a few thin wispy blades. Defects: (1) form: the blades are wide, flat, straight ribbons that fan out stiffly from one pinched point, like a bouquet in a vase or a yucca; real tufts have narrow blades that curve and droop at different lengths, and a wider base footprint. (2) The close-up shows hard flat-shaded polygon facets with no midrib or fold; give the blades a V-fold or midrib and a few more segments for curvature (2,496 triangles is too few at this size). (3) Color: dark teal-green; shift toward olive with more dry tips (grass_ground/grass_dry). (4) The base ends abruptly at the ground plane with no soil or old leaf sheaths.",
+    "round": 1,
+    "source_sha256": "82e667796a743a764408e441fdc7a9a52b7aa50c494872bdcc57ff0d2ce94738",
+    "sheet_sha256": "295e4d8e59e58584db72c4ce1c812e06ca78af61d771063c624921b80cf47a47"
+  },
+  "review_rounds": 1
 }

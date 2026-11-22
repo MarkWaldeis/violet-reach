@@ -14,7 +14,22 @@
     3000
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-bbbec46812f34f45bdf2489c6f83c0fa",
-  "review": null
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 7,
+      "material": 7,
+      "scale": 8,
+      "style": 7,
+      "defects": 7
+    },
+    "notes": "Round 1, the strongest tree. Good: 15.6 m high with a 14 m crown (in the STYLE.md range), modelled leaves, darker underside, two-lobed crown, visible fork. Defects: (1) silhouette: a tall bare trunk carries one dense, closed crown mass (lollipop); STYLE.md asks for broad irregular crowns with air, so open gaps between 3-5 branch clusters and let main limbs show through the crown (ref_12/13). (2) The root flare is four flat, sharp-edged fins in a star (closeup_base tile); replace them with 5-7 rounded, uneven root spurs that sink into the ground. (3) Bark: tree_bark wants brown longitudinal furrows with 0.012 m relief, but the trunk is a smooth brown tube with faint streaks; build or displace readable furrows and add moss on the weather side. (4) The foliage reads dark blue-green, not olive (foliage_leaf); warm up the sunlit tops. (5) Branches above the fork are hidden; there is no branch structure in closeup_upper apart from a few thin twigs.",
+    "round": 1,
+    "source_sha256": "6ab4b6ab44d32ae9e2a70aa282a2fdc65224c429216365e443d31dbcf46aec92",
+    "sheet_sha256": "17f8cd2f1a71cd573eed6838cdbcb772452da71adaf5ced70203fb44fb96870f"
+  },
+  "review_rounds": 1
 }

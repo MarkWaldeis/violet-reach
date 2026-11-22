@@ -14,7 +14,22 @@
     1200
   ],
   "texture_size": 1024,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-bbbec46812f34f45bdf2489c6f83c0fa",
-  "review": null
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 7,
+      "scale": 8,
+      "style": 8,
+      "defects": 8
+    },
+    "notes": "Round 1, closest in this PR: it fails only on material. Good: 2.6 x 2.2 m, an airy irregular dome, multiple stems visible at the base, modelled leaves with light/dark variation, it reads well next to the figure. Defect (material 7): the leaves are dark teal/blue-green and the shaded interior goes nearly black, not the dark olive of foliage_leaf with warmer olive tops. Shift the hue toward olive (less blue), lift the sunlit tops and keep the interior dark green rather than black. Minor: the stems converge into one point at the ground like a broom; spread the stem bases a little and add leaf litter or soil at the base.",
+    "round": 1,
+    "source_sha256": "1b5ae5777351c708c1e3976759236e927f197dea399679ee49c5dc19333afa8d",
+    "sheet_sha256": "bdaf013b9990fefd7c64f7327c01f16d504ae16677573a457c008a93a0a1b35b"
+  },
+  "review_rounds": 1
 }
