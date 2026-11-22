@@ -14,8 +14,22 @@
     1300
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-501e5a510b5c43f2b6ce7952cf05094b",
-  "review": null,
-  "review_rounds": 2
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 7,
+      "material": 7,
+      "scale": 8,
+      "style": 7,
+      "defects": 7
+    },
+    "notes": "Round 3 (final, rebuilt). Fixed: the single diagonal staircase profile is gone; there are now two wall remnants of different heights with broken tops. Not fixed or new: (1) the remnants are neat rectangular brick stacks: every block is whole, the same proportion and cleanly jointed, and the broken tops are small crumpled caps on otherwise intact courses (closeup.jpg). (2) A new stair and paved platform in front duplicate stair_terrace_a, so the asset again reads as a staircase. (3) There is almost no rubble (one small stone in hero.jpg) to account for the missing masonry, and no dirt or moss at the foot. (4) The material is uniform clean white. Fix: drop the stair, break blocks and courses irregularly, displace and tilt some blocks, add rubble that matches the missing volume, and add local weathering at the foot and joints.",
+    "round": 3,
+    "source_sha256": "27b3a193e5fcfcc7fdfccb2b0e6098abfd4acd2ce6e3acf5176db4839b5ddcbc",
+    "sheet_sha256": "dae3b8c09406a7a538376c73fe3b43ca6a5ceaf82a90d869bd79a6b9b2b70373"
+  },
+  "review_rounds": 3
 }

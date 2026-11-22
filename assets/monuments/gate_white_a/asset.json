@@ -14,8 +14,22 @@
     2200
   ],
   "texture_size": 4096,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-501e5a510b5c43f2b6ce7952cf05094b",
-  "review": null,
-  "review_rounds": 2
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 7,
+      "material": 7,
+      "scale": 8,
+      "style": 7,
+      "defects": 7
+    },
+    "notes": "Round 3 (final, rebuilt). Fixed: the Gothic piers are gone, the arch is a clean round arch with a projecting keystone, and the voussoir surfaces are consistent. Not fixed or new: (1) the piers are now plain cylindrical drums capped by flat overhanging discs, and the arch sits on the disc like an object placed on a table; there is no impost or springer tying the arch into the pier (hero.jpg). (2) The passage floor is still a thin plate with a chamfered edge laid on the ground (closeup_base), which round 1 and round 2 already raised. (3) The voussoir joints are open black slots (closeup.jpg), not tight recessed joints. (4) Material: clean white with no weathering at the pier feet; the pebbles sit in an even ring around each pier base. Fix: square or bound piers with an impost block the arch springs from, a floor bound into a plinth, tight joints, and local dirt at the feet.",
+    "round": 3,
+    "source_sha256": "3c4638df7a102590a7908dc8276715cf333b11a91069279a128ac3e248f8de85",
+    "sheet_sha256": "5a1a8707667b466209df3798933220f7e52ec76fcf543ccf2ec9c740b3d4e615"
+  },
+  "review_rounds": 3
 }
