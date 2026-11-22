@@ -1,0 +1,20 @@
+{
+  "id": "tree_broadleaf_b",
+  "category": "vegetation",
+  "title": "Geneigter Laubbaum B",
+  "description": "Geneigter Laubbaum mit niedriger ungleicher Zweiergabel und durchgehend verschmolzenen Astkragen. Rekursive Nebenäste tragen eine einseitig aufstrebende, unregelmäßige Laubkrone mit dunklem Inneren und olivgrünen Sonnenflächen.",
+  "target_size_m": [
+    7,
+    7,
+    11
+  ],
+  "lod_triangles": [
+    45000,
+    12000,
+    2500
+  ],
+  "texture_size": 2048,
+  "status": "blender_review",
+  "builder": "devin-bbbec46812f34f45bdf2489c6f83c0fa",
+  "review": null
+}

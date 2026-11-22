@@ -1,0 +1,20 @@
+{
+  "id": "reed_cluster_a",
+  "category": "vegetation",
+  "title": "Schilfhorst A",
+  "description": "Gefächerter Uferhorst mit 31 schlanken Halmen, überhängenden Blattspreiten, fünf braunen Samenständen sowie einzelnen gebrochenen und trockenen Halmen.",
+  "target_size_m": [
+    1.7,
+    1.7,
+    2.1
+  ],
+  "lod_triangles": [
+    6000,
+    2000,
+    600
+  ],
+  "texture_size": 1024,
+  "status": "blender_review",
+  "builder": "devin-bbbec46812f34f45bdf2489c6f83c0fa",
+  "review": null
+}

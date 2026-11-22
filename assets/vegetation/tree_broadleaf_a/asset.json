@@ -1,0 +1,20 @@
+{
+  "id": "tree_broadleaf_a",
+  "category": "vegetation",
+  "title": "Breitkroniger Laubbaum A",
+  "description": "Breiter Laubbaum mit dreifacher Stammgabel und modelliertem Wurzelanlauf. Rekursiv verzweigte Tragäste, Seitenäste und Endzweige erschließen eine unregelmäßige Krone ab etwa fünf Metern. Opake Blattspreiten bilden dunkles Innenlaub und hellere olivgrüne Außenseiten.",
+  "target_size_m": [
+    14,
+    13.5,
+    16
+  ],
+  "lod_triangles": [
+    60000,
+    15000,
+    3000
+  ],
+  "texture_size": 2048,
+  "status": "blender_review",
+  "builder": "devin-bbbec46812f34f45bdf2489c6f83c0fa",
+  "review": null
+}

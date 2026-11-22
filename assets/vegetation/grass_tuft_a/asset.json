@@ -1,0 +1,20 @@
+{
+  "id": "grass_tuft_a",
+  "category": "vegetation",
+  "title": "Grasbüschel A",
+  "description": "Dichtes Grasbüschel mit 96 realen gefalteten und leicht gedrehten Blattspreiten; einzelne geknickte Halme und 18 trockene Strohhalme.",
+  "target_size_m": [
+    0.6,
+    0.6,
+    0.65
+  ],
+  "lod_triangles": [
+    1500,
+    500,
+    120
+  ],
+  "texture_size": 512,
+  "status": "blender_review",
+  "builder": "devin-bbbec46812f34f45bdf2489c6f83c0fa",
+  "review": null
+}
