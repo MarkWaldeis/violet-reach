@@ -14,13 +14,28 @@
     2100
   ],
   "texture_size": 4096,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-10557958564a4a9894cdbd6bc867cb9f",
-  "review": null,
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 6,
+      "material": 6,
+      "scale": 8,
+      "style": 6,
+      "defects": 6
+    },
+    "notes": "Round 1 of the new budget, judged against the PR #6 round-3 notes. Better: the gear-wheel slots are gone, there is a fall line of drums ending in a capital, and the drums sit in turf (hero.jpg, closeup_base). Still failing: the flutes are now convex rounded ribs, so every drum reads as corrugated sheet or a pleated paper lantern, the same fault as round 1 of PR #6 (closeup_upper). Fix: concave Doric flutes cut into the drum with sharp arrises between them, matching column_white_a. Break faces: the fracture surfaces are coarse crumpled triangulation like crushed foil (closeup_base). Fix: a few large conchoidal fracture planes with crisp edges and small secondary chips. Capital: the cushion capital is a smooth featureless form with a round drilled hole on its face; give it a profiled echinus, an abacus with a broken corner, and remove the hole. Material: clean uniform white everywhere; add grime where the drums meet the ground and lichen on the up-facing sides.",
+    "round": 1,
+    "source_sha256": "3da1842c9f3b2b42dc8e301eac66e52d6881ad4e84e41246cce902da1595f58b",
+    "sheet_sha256": "37c60f723a5fa626fc5c78bfa85d105ab866ccf28a53385f4af6d607e951e1be"
+  },
   "references": [
     "art/reference/ref_01_white_monuments_sky.jpg",
     "art/reference/ref_03_canyon_cliffs.jpg",
     "art/reference/ref_06_weathered_wall.jpg",
     "art/reference/ref_08_ribbed_crown.jpg"
-  ]
+  ],
+  "review_rounds": 1
 }

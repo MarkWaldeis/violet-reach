@@ -14,13 +14,28 @@
     1900
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-10557958564a4a9894cdbd6bc867cb9f",
-  "review": null,
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 7,
+      "scale": 8,
+      "style": 8,
+      "defects": 7
+    },
+    "notes": "Round 1 of the new budget, judged against the PR #6 round-3 notes. Fixed: the base torus is now a clean profiled moulding, the drum joints follow the flute profile without zigzag offsets, the capital has a proper echinus and abacus, and the plinth is set into turf with chips and grass (closeup_base). Cracks: improved, two real hairline cracks, but each ends in a round dark dot and they are too thin to read beyond the close-up (closeup_upper). Fix: widen one crack into a cut V-groove with a small spall at its end instead of the dot, and add one larger missing chunk at a flute arris. Remaining defects: round drilled-looking holes on the front of the base torus, on the abacus corner and on a drum (hero.jpg, closeup_base); remove them or turn them into irregular spalls. Material: still clean uniform white from foot to capital; STYLE.md wants local weathering. Fix: darker staining and lichen at the plinth and on the weather side of the lower drums, light grime in the flute bottoms and at the drum joints, the upper shaft left clean.",
+    "round": 1,
+    "source_sha256": "0fb4999b02b98cbece78895d809a027db9a5602f6822e3236c084b1d3f110bd9",
+    "sheet_sha256": "64d9db1f64f611ff699086d4b12a8d24f1aaeeadfb64762ddb74b4dc8826700d"
+  },
   "references": [
     "art/reference/ref_01_white_monuments_sky.jpg",
     "art/reference/ref_03_canyon_cliffs.jpg",
     "art/reference/ref_04_white_ribbed_arches.jpg",
     "art/reference/ref_08_ribbed_crown.jpg"
-  ]
+  ],
+  "review_rounds": 1
 }

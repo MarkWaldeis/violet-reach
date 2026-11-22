@@ -14,13 +14,28 @@
     2400
   ],
   "texture_size": 4096,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-10557958564a4a9894cdbd6bc867cb9f",
-  "review": null,
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 7,
+      "material": 6,
+      "scale": 8,
+      "style": 7,
+      "defects": 6
+    },
+    "notes": "Round 1 of the new budget, judged against the PR #6 round-3 notes. Better: the separate stair is gone, the breach now has a real collapse fan of large blocks, and turf runs along the foot (closeup_base). Still failing: both remnants are still neat stacks of whole rectangular blocks with crisp clean edges; the left remnant steps down evenly on both sides like a stepped pyramid (hero.jpg, closeup_upper). Fix: break the top courses irregularly with fractured block halves and a few blocks displaced or tilted out of plane, so the profile is ragged, not stepped. Rubble infill: it is a grid of small clean cubes in the core of the right remnant, which reads as a voxel pattern, not mortar-bound rubble (closeup_upper). Fix: irregular fist-to-head-size stones set in a darker mortar matrix, recessed behind the facing. The arched niche in the right remnant is unexplained; drop it or make it a drain with a stained outflow. Material: uniform clean white with grey flat-shaded top faces; add weathering at the foot, in the joints and on the top surfaces.",
+    "round": 1,
+    "source_sha256": "ada40aedbee9a689119fa15bbe99f6f7f7b279fb54330ed2c86ce93371f555cf",
+    "sheet_sha256": "132469b92fb4d6ef14251f11807b6dbfd890dbf3ba831db43ad0521a0c6fd42a"
+  },
   "references": [
     "art/reference/ref_01_white_monuments_sky.jpg",
     "art/reference/ref_03_canyon_cliffs.jpg",
     "art/reference/ref_04_white_ribbed_arches.jpg",
     "art/reference/ref_06_weathered_wall.jpg"
-  ]
+  ],
+  "review_rounds": 1
 }
