@@ -72,14 +72,16 @@ def source_hash(asset_dir):
     inputs = [os.path.join(asset_dir, "build.py")]
     inputs += [os.path.join(BLENDER_TOOLS, name) for name in ("run_build.py", "vrlib.py")]
     tree = ast.parse(Path(inputs[0]).read_text(encoding="utf-8-sig"))
-    uses_vrmat = any(
-        (isinstance(node, ast.Import) and any(alias.name.split(".")[-1] == "vrmat" for alias in node.names))
-        or (isinstance(node, ast.ImportFrom) and
-            ((node.module or "").split(".")[-1] == "vrmat" or any(alias.name == "vrmat" for alias in node.names)))
-        for node in ast.walk(tree)
-    )
-    if uses_vrmat:
+    imports = set()
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Import, ast.ImportFrom)):
+            imports.update(alias.name.split(".")[-1] for alias in node.names)
+        if isinstance(node, ast.ImportFrom) and node.module:
+            imports.add(node.module.split(".")[-1])
+    if "vrmat" in imports:
         inputs += [os.path.join(BLENDER_TOOLS, "vrmat.py"), os.path.join(ROOT, "art", "palette.json")]
+    if "vrcolumn" in imports:
+        inputs.append(os.path.join(BLENDER_TOOLS, "vrcolumn.py"))
     return hashlib.sha256("".join(sha256(path) for path in inputs).encode()).hexdigest()
 
 

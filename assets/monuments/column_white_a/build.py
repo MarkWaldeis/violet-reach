@@ -8,6 +8,14 @@ import bpy
 from mathutils import Euler, Vector
 from mathutils.geometry import delaunay_2d_cdt
 
+from vrcolumn import (
+    FLUTE_DEPTH,
+    drum,
+    flute,
+    fracture_planes,
+    survey_capital,
+    weather_stone,
+)
 import vrlib
 import vrmat
 
@@ -28,7 +36,7 @@ def mesh(name, vertices, faces, materials=(), smooth=False, indices=()):
 
 def stone_library(prefix):
     palette = vrmat.load_palette()
-    cream, shade = (palette[k]["linear_rgb"] for k in ("monument_white", "stone_weathered"))
+    cream = palette["monument_white"]["linear_rgb"]
     tones = []
     for i, (value, warmth) in enumerate(
         (
@@ -58,26 +66,14 @@ def stone_library(prefix):
             1,
         )
         coord = next(n for n in nodes if n.type == "TEX_COORD")
-        weather = nodes.new("ShaderNodeTexNoise")
-        links.new(coord.outputs["Object"], weather.inputs["Vector"])
-        weather.inputs["Scale"].default_value = 3.1
-        weather.inputs["Detail"].default_value = 4.0
-        height = nodes.new("ShaderNodeSeparateXYZ")
-        links.new(coord.outputs["Object"], height.inputs[0])
-        reach = nodes.new("ShaderNodeMath")
-        reach.operation = "MULTIPLY_ADD"
-        links.new(weather.outputs["Fac"], reach.inputs[0])
-        reach.inputs[1].default_value = 1.17
-        reach.inputs[2].default_value = -0.34
-        depth = nodes.new("ShaderNodeMath")
-        depth.operation = "SUBTRACT"
-        depth.use_clamp = True
-        links.new(reach.outputs[0], depth.inputs[0])
-        links.new(height.outputs["Z"], depth.inputs[1])
-        contact = nodes.new("ShaderNodeMixRGB")
-        links.new(depth.outputs[0], contact.inputs[0])
-        links.new(tone.outputs[0], contact.inputs[1])
-        contact.inputs[2].default_value = (*[0.58 * a + 0.15 * b for a, b in zip(shade, cream)], 1)
+        weather = weather_stone(
+            tree,
+            coord.outputs["Object"],
+            tone.outputs[0],
+            palette,
+            height=3.4,
+            recess=0.19,
+        )
         bands = nodes.new("ShaderNodeVectorMath")
         bands.operation = "MULTIPLY"
         bands.inputs[1].default_value = (2.1, 2.1, 17.0)
@@ -93,7 +89,7 @@ def stone_library(prefix):
         calcite = nodes.new("ShaderNodeMixRGB")
         calcite.blend_type = "MULTIPLY"
         calcite.inputs[0].default_value = 0.34
-        links.new(contact.outputs[0], calcite.inputs[1])
+        links.new(weather, calcite.inputs[1])
         links.new(streak.outputs[0], calcite.inputs[2])
         links.new(calcite.outputs[0], surface.inputs["Base Color"])
         surface.inputs["Specular IOR Level"].default_value = 0.24
@@ -129,13 +125,17 @@ def turf(cx, cy, rx, ry, height, rng, style, blades=130):
         r = 1 + 0.13 * math.sin(3 * a + phase) + 0.07 * math.sin(5 * a - phase)
         x, y = cx + rx * t * r * math.cos(a), cy + ry * t * r * math.sin(a)
         relief = (1 - t * t) ** 1.6 * (
-            0.75 + 0.16 * math.cos(5 * t + 2 * a + phase) + 0.10 * math.sin(10 * t - 3 * a)
+            0.75
+            + 0.16 * math.cos(5 * t + 2 * a + phase)
+            + 0.10 * math.sin(10 * t - 3 * a)
         )
         z = -0.047 + (height + 0.047) * relief
         return x, y, z
 
     vs = [(cx, cy, height * 0.79)]
-    vs += [point(j / rows, math.tau * i / n) for j in range(1, rows + 1) for i in range(n)]
+    vs += [
+        point(j / rows, math.tau * i / n) for j in range(1, rows + 1) for i in range(n)
+    ]
     fs = [(0, 1 + i, 1 + (i + 1) % n) for i in range(n)]
     for j in range(rows - 1):
         for i in range(n):
@@ -144,12 +144,21 @@ def turf(cx, cy, rx, ry, height, rng, style, blades=130):
     fs.append(tuple(range(rows * n, (rows - 1) * n, -1)))
     # A continuous shader blend conceals the soil/grass transition at the edge.
     ground = mesh("Turf over settled soil", vs, fs, (soil,), True)
-    mask = ground.data.color_attributes.new(name="turf_cover", type="FLOAT_COLOR", domain="POINT")
+    mask = ground.data.color_attributes.new(
+        name="turf_cover", type="FLOAT_COLOR", domain="POINT"
+    )
     for i, datum in enumerate(mask.data):
         t = 0 if i == 0 else ((i - 1) // n + 1) / rows
         x, y, _ = vs[i]
         w = max(
-            0, min(1, 1.32 - 0.94 * t + 0.26 * math.sin(8 * x + 2 * y) + 0.28 * math.sin(5 * y - 3 * x))
+            0,
+            min(
+                1,
+                1.32
+                - 0.94 * t
+                + 0.26 * math.sin(8 * x + 2 * y)
+                + 0.28 * math.sin(5 * y - 3 * x),
+            ),
         )
         datum.color = (w, w, w, 1)
 
@@ -158,7 +167,8 @@ def turf(cx, cy, rx, ry, height, rng, style, blades=130):
         a, t = rng.uniform(0, math.tau), rng.uniform(0.44, 0.93)
         for _ in range(rng.randint(5, 14)):
             x, y, z = point(
-                min(0.96, max(0.05, t + rng.uniform(-0.11, 0.11))), a + rng.uniform(-0.19, 0.19)
+                min(0.96, max(0.05, t + rng.uniform(-0.11, 0.11))),
+                a + rng.uniform(-0.19, 0.19),
             )
             if z < 0.005:
                 continue
@@ -177,7 +187,13 @@ def turf(cx, cy, rx, ry, height, rng, style, blades=130):
                     for k in (-1, 1)
                 )
             verts.append((x + dx * lean, y + dy * lean, z + h - 0.01))
-            faces.extend(((p, p + 1, p + 3, p + 2), (p + 2, p + 3, p + 5, p + 4), (p + 4, p + 5, p + 6)))
+            faces.extend(
+                (
+                    (p, p + 1, p + 3, p + 2),
+                    (p + 2, p + 3, p + 5, p + 4),
+                    (p + 4, p + 5, p + 6),
+                )
+            )
             indices.extend((int(rng.random() < 0.23),) * 3)
     if faces:
         mesh("Bent grass blades & dry tips", verts, faces, (leaf, straw), True, indices)
@@ -196,19 +212,16 @@ def ground_materials(prefix):
     tree.links.new(cover.outputs["Color"], mix.inputs[0])
     tree.links.new(surface.inputs["Base Color"].links[0].from_socket, mix.inputs[1])
     moss, straw = (palette[k]["linear_rgb"] for k in ("grass_green", "grass_dry"))
-    mix.inputs[2].default_value = (*(a * 0.69 + b * 0.22 for a, b in zip(moss, straw)), 1)
+    mix.inputs[2].default_value = (
+        *(a * 0.69 + b * 0.22 for a, b in zip(moss, straw)),
+        1,
+    )
     tree.links.new(mix.outputs[0], surface.inputs["Base Color"])
     return (
         soil,
         accent(prefix + " · grass", "foliage_leaf", "grass_green", 1.02, 0.84),
         accent(prefix + " · dry grass", "foliage_leaf", "grass_dry", 1.22, 0.87),
     )
-
-
-def flute(a):
-    # Same 20 shallow, smoothly filleted cuts on both standing and fallen shafts.
-    u = abs(math.remainder(20 * a / math.tau, 1.0)) / 0.406
-    return (1 - u * u) ** 3 if u < 1 else 0.0
 
 
 def turned(name, layers, radius, materials, n=480):
@@ -277,12 +290,14 @@ def fissure(obj, track, material):
         tangent = Vector((-math.sin(a), math.cos(a), 0))
         centre = axis * shaft_radius(h) + Vector((0, 0, h))
         prev, nxt = track[max(0, i - 1)], track[min(len(track) - 1, i + 1)]
-        slant = Vector(((nxt[0] - prev[0]) * shaft_radius(h), nxt[1] - prev[1])).normalized()
+        slant = Vector(
+            ((nxt[0] - prev[0]) * shaft_radius(h), nxt[1] - prev[1])
+        ).normalized()
         across = tangent * slant.y - Vector((0, 0, slant.x))
         vertices.extend(
             (
-                centre + axis * 0.13 - across * width,
-                centre + axis * 0.13 + across * width,
+                centre + axis * 0.066 - across * width,
+                centre + axis * 0.066 + across * width,
                 centre - axis * depth + across * width * 0.17,
             )
         )
@@ -293,28 +308,6 @@ def fissure(obj, track, material):
             faces.append((p, q, q + 3, p + 3))
     top = len(vertices) - 3
     faces.append((top, top + 1, top + 2))
-    cut(obj, vertices, faces, material)
-
-
-def edge_spall(obj, a, z, radius, width, height, depth, material):
-    """Tapered flake that takes an arris with it, rather than a line on the surface."""
-    axis = Vector((math.cos(a), math.sin(a), 0))
-    tangent = Vector((-math.sin(a), math.cos(a), 0))
-    centre = axis * radius + Vector((0, 0, z))
-    outline = (
-        (-0.76, -0.27),
-        (-0.2, -0.77),
-        (0.43, -0.57),
-        (0.86, -0.08),
-        (0.57, 0.71),
-        (-0.36, 0.69),
-        (-0.92, 0.21),
-    )
-    vertices = [centre + axis * 0.38 + tangent * width * x + Vector((0, 0, height * y)) for x, y in outline]
-    vertices.append(centre - axis * depth + Vector((0, 0, -0.081)))
-    n = len(outline)
-    faces = [tuple(range(n))]
-    faces.extend(((i + 1) % n, i, n) for i in range(n))
     cut(obj, vertices, faces, material)
 
 
@@ -349,7 +342,9 @@ def relief(bm, rng):
                     points.append(p)
         if len(points) == boundary:
             continue
-        coords, _, pieces, ids, _, _ = delaunay_2d_cdt(points, [], [tuple(range(boundary))], 1, 1e-6)
+        coords, _, pieces, ids, _, _ = delaunay_2d_cdt(
+            points, [], [tuple(range(boundary))], 1, 1e-6
+        )
         amount = min(0.048, 0.11 * min(dx, dy))
         phi = rng.uniform(0, math.tau)
         bmesh.ops.delete(bm, geom=[face], context="FACES_ONLY")
@@ -371,7 +366,9 @@ def relief(bm, rng):
                 + 0.17 * math.cos(21 * x + 38 * y)
                 + 0.12 * math.sin(46 * x - 41 * y)
             )
-            corners.append(bm.verts.new(origin + u * x + v * y + normal * (amount * fade * gouge)))
+            corners.append(
+                bm.verts.new(origin + u * x + v * y + normal * (amount * fade * gouge))
+            )
         for ids in pieces:
             new = bm.faces.new([corners[i] for i in ids])
             new.material_index = 1
@@ -403,14 +400,32 @@ def stone_block(
     for sx in (-1, 1):
         for sy in (-1, 1):
             bevel = rng.uniform(0.035, 0.13) * min(w, d)
-            planes.append(((sx * (w - bevel), sy * d, 0), (sx * rng.uniform(0.66, 1.3), sy, 0), False))
+            planes.append(
+                (
+                    (sx * (w - bevel), sy * d, 0),
+                    (sx * rng.uniform(0.66, 1.3), sy, 0),
+                    False,
+                )
+            )
         for sz in (-1, 1):
             bevel = rng.uniform(0.027, 0.095) * min(w, h)
-            planes.append(((sx * w, 0, sz * (h - bevel)), (sx, 0, sz * rng.uniform(0.70, 1.3)), False))
+            planes.append(
+                (
+                    (sx * w, 0, sz * (h - bevel)),
+                    (sx, 0, sz * rng.uniform(0.70, 1.3)),
+                    False,
+                )
+            )
     for sy in (-1, 1):
         for sz in (-1, 1):
             bevel = rng.uniform(0.05, 0.12) * min(d, h)
-            planes.append(((0, sy * d, sz * (h - bevel)), (0, sy, sz * rng.uniform(0.7, 1.3)), False))
+            planes.append(
+                (
+                    (0, sy * d, sz * (h - bevel)),
+                    (0, sy, sz * rng.uniform(0.7, 1.3)),
+                    False,
+                )
+            )
     if broken:
         for _ in range(rng.randint(2, 4)):
             sx, sy, sz = (rng.choice((-1, 1)) for _ in range(3))
@@ -431,7 +446,9 @@ def stone_block(
             )
     if spalled:
         sx, sy = rng.choice((-1, 1)), rng.choice((-1, 1))
-        planes.append(((sx * w * 0.21, sy * d * 0.92, h * 0.74), (sx * 0.19, sy * 0.72, 1), True))
+        planes.append(
+            ((sx * w * 0.21, sy * d * 0.92, h * 0.74), (sx * 0.19, sy * 0.72, 1), True)
+        )
     if fracture:
         planes.extend(fracture)
     for point, normal, fresh in planes:
@@ -444,7 +461,9 @@ def stone_block(
             clear_outer=True,
         )
         edges = [
-            e for e in out["geom_cut"] if isinstance(e, bmesh.types.BMEdge) and e.is_valid and e.is_boundary
+            e
+            for e in out["geom_cut"]
+            if isinstance(e, bmesh.types.BMEdge) and e.is_valid and e.is_boundary
         ]
         if edges:
             result = bmesh.ops.holes_fill(bm, edges=edges, sides=0)
@@ -491,88 +510,102 @@ def shaft(tones, mortar, fracture, rng):
     levels = (1.82, 3.79, 5.92, 7.66, 9.91, 11.67, 13.71, 15.44)
     for index, (start, end) in enumerate(zip(levels, levels[1:])):
         lo, hi = start + 0.009, end - 0.009
-        rows = [lo, lo + 0.004, lo + 0.012]
-        rows += [lo + 0.021 + (hi - lo - 0.042) * i / 22 for i in range(23)]
-        rows += [hi - 0.012, hi - 0.004, hi]
-        wear = rng.uniform(0.54, 1)
-        phases = [rng.uniform(0, math.tau) for _ in range(2)]
-
-        def radius(i, a):
-            z = rows[i]
-            lip = max(0, 1 - min(z - lo, hi - z) / 0.021)
-            run = min(1, (z - SHAFT_BOTTOM) / 0.23, (SHAFT_TOP - z) / 0.29)
-            t = (z - lo) / (hi - lo)
-            # Wear disappears towards each bed, leaving the nominal profile aligned.
-            hand = (
-                wear
-                * math.sin(math.pi * t) ** 2
-                * (0.004 * math.sin(9 * a + phases[0]) + 0.002 * math.sin(43 * a + phases[1] + 6 * t))
-            )
-            return shaft_radius(z) - 0.074 * flute(a) * max(0, run) - 0.013 * lip**2 + hand
-
-        obj = turned(
-            f"Survey shaft · drum {index+1:02}", rows, radius, (tones[[2, 0, 3, 1, 6, 2, 4][index]],), n=480
+        obj = drum(
+            mesh,
+            f"Survey shaft · drum {index+1:02}",
+            lo,
+            hi,
+            shaft_radius,
+            lambda z: min(1, (z - SHAFT_BOTTOM) / 0.23, (SHAFT_TOP - z) / 0.29),
+            tones[[2, 0, 3, 1, 6, 2, 4][index]],
+            rng,
         )
         if index == 1:
             fissure(
                 obj,
                 (
-                    (0.48, 3.72, 0.019, 0.12),
-                    (0.50, 3.95, 0.044, 0.18),
-                    (0.54, 4.15, 0.032, 0.17),
-                    (0.68, 4.29, 0.052, 0.18),
-                    (0.71, 4.51, 0.026, 0.14),
-                    (0.77, 4.63, 0.006, 0.083),
+                    (0.47, 3.68, 0.044, 0.15),
+                    (0.49, 3.96, 0.082, 0.22),
+                    (0.52, 4.16, 0.060, 0.18),
+                    (0.70, 4.30, 0.052, 0.17),
+                    (0.71, 4.56, 0.026, 0.10),
+                    (0.76, 4.78, 0.019, 0.057),
+                    (0.77, 4.94, 0.008, 0.012),
+                    (0.80, 5.06, 0.002, -0.026),
                 ),
                 fracture,
             )
+        if index == 3:
             fissure(
                 obj,
-                ((0.68, 4.29, 0.033, 0.15), (0.60, 4.44, 0.018, 0.13), (0.58, 4.60, 0.005, 0.08)),
+                (
+                    (4.14, 9.99, 0.044, 0.22),
+                    (4.13, 9.66, 0.049, 0.21),
+                    (4.01, 9.42, 0.060, 0.21),
+                    (3.96, 9.23, 0.053, 0.18),
+                    (3.86, 8.93, 0.029, 0.13),
+                    (3.83, 8.61, 0.018, 0.069),
+                    (3.77, 8.45, 0.004, 0.012),
+                    (3.73, 8.35, 0.002, -0.025),
+                ),
                 fracture,
             )
-        if index == 2:
-            edge_spall(obj, 3.62, start + 0.065, shaft_radius(start), 0.43, 0.33, 0.28, fracture)
-        if index == 3:
-            edge_spall(obj, 0.93, 9.81, shaft_radius(9.81), 0.46, 0.37, 0.26, fracture)
+            bed_spall(obj, 4.11, hi, -1, fracture)
         if index == 4:
             fissure(
                 obj,
                 (
-                    (1.03, 9.83, 0.019, 0.14),
-                    (1.02, 10.13, 0.032, 0.16),
-                    (0.89, 10.31, 0.033, 0.19),
-                    (0.85, 10.48, 0.024, 0.17),
-                    (0.75, 10.70, 0.018, 0.16),
-                    (0.74, 10.81, 0.006, 0.082),
+                    (1.02, 9.83, 0.064, 0.22),
+                    (1.03, 10.20, 0.078, 0.24),
+                    (1.14, 10.36, 0.069, 0.19),
+                    (1.15, 10.59, 0.043, 0.16),
+                    (1.28, 10.77, 0.032, 0.115),
+                    (1.32, 10.99, 0.016, 0.051),
+                    (1.41, 11.18, 0.002, -0.021),
                 ),
                 fracture,
             )
-            edge_spall(obj, 1.025, 10.01, shaft_radius(10.01), 0.27, 0.31, 0.27, fracture)
-            fissure(
-                obj,
-                (
-                    (4.12, 11.73, 0.015, 0.14),
-                    (4.14, 11.43, 0.030, 0.17),
-                    (4.02, 11.24, 0.036, 0.17),
-                    (3.98, 10.98, 0.020, 0.13),
-                    (3.85, 10.81, 0.006, 0.084),
-                ),
-                fracture,
-            )
-        if index == 5:
-            edge_spall(obj, 4.16, 11.74, shaft_radius(11.74), 0.24, 0.34, 0.20, fracture)
-        if index == 6:
-            edge_spall(obj, 2.21, 14.46, shaft_radius(14.46), 0.28, 0.26, 0.17, fracture)
+            bed_spall(obj, 1.03, lo, 1, fracture)
 
     for i, z in enumerate(levels[1:-1]):
         turned(
             f"Recessed lime bedding {i+1}",
             [z - 0.037, z + 0.037],
-            lambda j, a: shaft_radius(z) - 0.035 - 0.074 * flute(a),
+            lambda j, a: shaft_radius(z) - 0.029 - FLUTE_DEPTH * flute(a),
             (mortar,),
             n=480,
         )
+
+
+def bed_spall(obj, angle, z, sign, fracture):
+    radial = Vector((math.cos(angle), math.sin(angle), 0))
+    along = Vector((-radial.y, radial.x, 0))
+    centre = radial * shaft_radius(z) + Vector((0, 0, z))
+    outline = (
+        (-0.45, -0.15),
+        (0.40, -0.15),
+        (0.37, 0.19),
+        (0.14, 0.27),
+        (0.05, 0.39),
+        (-0.12, 0.31),
+        (-0.24, 0.12),
+        (-0.46, 0.055),
+    )
+    vertices = [
+        centre + 0.28 * radial + x * along + Vector((0, 0, sign * h))
+        for x, h in outline
+    ]
+    vertices.append(
+        centre - 0.32 * radial + 0.049 * along + Vector((0, 0, -sign * 0.096))
+    )
+    n = len(outline)
+    faces = [tuple(range(n)), *[((i + 1) % n, i, n) for i in range(n)]]
+    cut(
+        obj,
+        vertices,
+        faces if sign > 0 else [tuple(reversed(f)) for f in faces],
+        fracture,
+    )
 
 
 def footing(tones, mortar, fracture, rng):
@@ -591,7 +624,11 @@ def footing(tones, mortar, fracture, rng):
                 spalled=(i + j) % 3 == 0,
             )
         stone_block(
-            "Packed foundation bedding", (span - 0.08, span - 0.08, h + 0.028), (0, 0, z), mortar, rng
+            "Packed foundation bedding",
+            (span - 0.08, span - 0.08, h + 0.028),
+            (0, 0, z),
+            mortar,
+            rng,
         )
     curve = blend_curve(
         (
@@ -605,66 +642,30 @@ def footing(tones, mortar, fracture, rng):
         ),
         14,
     )
-    obj = moulding("Attic footing · broad torus and scotia", curve, tones[3])
-    edge_spall(obj, 3.54, 1.29, 2.36, 0.62, 0.22, 0.25, fracture)
-    edge_spall(obj, 0.17, 1.23, 2.34, 0.29, 0.23, 0.18, fracture)
+    moulding("Attic footing · broad torus and scotia", curve, tones[3])
 
 
 def capital(tones, fracture):
-    collar = blend_curve(
-        (
-            ((15.408, 1.405), (15.46, 1.405), (15.46, 1.47), (15.50, 1.48)),
-            ((15.50, 1.48), (15.54, 1.58), (15.64, 1.59), (15.69, 1.50)),
-            ((15.69, 1.50), (15.753, 1.42), (15.82, 1.43), (15.98, 1.43)),
-            ((15.98, 1.43), (16.06, 1.43), (16.04, 1.53), (16.12, 1.55)),
-        )
+    _, _, abacus = survey_capital(moulding, blend_curve, tones)
+    fracture_planes(
+        abacus,
+        [
+            ((-1.90, 1.96, 17.82), (-0.75, 0.65, 0.32)),
+            ((-2.01, 1.99, 17.88), (-0.95, 0.38, 0.59)),
+        ],
+        fracture,
     )
-    moulding("Capital · neck and astragal", collar, tones[0])
-    cushion = blend_curve(
-        (
-            ((16.08, 1.48), (16.15, 1.48), (16.18, 1.48), (16.27, 1.51)),
-            ((16.27, 1.51), (16.53, 1.53), (16.77, 1.92), (17.04, 1.98)),
-            ((17.04, 1.98), (17.17, 2.01), (17.26, 2.02), (17.42, 2.02)),
-        ),
-        18,
-    )
-
-    def cushion_shape(a, z, r):
-        t = min(1, max(0, (z - 16.21) / 1.16))
-        square = (abs(math.cos(a)) ** 8 + abs(math.sin(a)) ** 8) ** (-0.125)
-        # A subdued eight-lobed transition, carved into the mass of the echinus.
-        petal = 0.084 * math.sin(math.pi * t) ** 1.4 * math.cos(8 * a + 0.6 * math.sin(math.pi * t))
-        return r * (1 + (square - 1) * t * t) + petal
-
-    moulding("Capital · lobed cushion echinus", cushion, tones[2], cushion_shape)
-    abacus = blend_curve(
-        (
-            ((17.34, 2.008), (17.41, 2.008), (17.43, 2.13), (17.51, 2.145)),
-            ((17.51, 2.145), (17.58, 2.151), (17.84, 2.184), (17.92, 2.184)),
-            ((17.92, 2.184), (17.966, 2.184), (17.993, 2.157), (18, 2.124)),
-        ),
-        16,
-    )
-
-    def square(a, z, r):
-        ca, sa = abs(math.cos(a)), abs(math.sin(a))
-        big, small = max(ca, sa), min(ca, sa)
-        flat = r / big
-        if flat * small <= r - 0.22:
-            return flat
-        s = (r - 0.22) * (big + small)
-        return s + math.sqrt(max(0, s * s - 2 * (r - 0.22) ** 2 + 0.22**2))
-
-    obj = moulding("Capital · solid square abacus", abacus, tones[1], square, n=480)
-    edge_spall(obj, 0.80, 17.81, 2.93, 0.42, 0.28, 0.43, fracture)
-    edge_spall(obj, 4.55, 17.98, 2.22, 0.22, 0.27, 0.20, fracture)
 
 
 def build():
     rng = random.Random(483039)
     tones = stone_library("Survey Column")
-    mortar = accent("Compressed lime and grit", "monument_weathered", "stone_weathered", 0.49, 0.84)
-    fracture = accent("Old limestone fracture", "monument_white", "monument_white", 0.72, 0.72)
+    mortar = accent(
+        "Compressed lime and grit", "monument_weathered", "stone_weathered", 0.49, 0.84
+    )
+    fracture = accent(
+        "Old limestone fracture", "monument_white", "monument_white", 0.87, 0.61
+    )
     footing(tones, mortar, fracture, rng)
     shaft(tones, mortar, fracture, rng)
     capital(tones, fracture)
@@ -681,7 +682,12 @@ def build():
     )
     for x, y, a, b, h, count in skirts:
         turf(x, y, a, b, h, rng, ground, blades=count)
-    for cx, cy, count in ((-2.18, -2.55, 21), (2.56, -1.07, 12), (0.4, 2.68, 16), (-2.61, 1.0, 7)):
+    for cx, cy, count in (
+        (-2.18, -2.55, 21),
+        (2.56, -1.07, 12),
+        (0.4, 2.68, 16),
+        (-2.61, 1.0, 7),
+    ):
         for _ in range(count):
             x, y = cx + rng.gauss(0, 0.36), cy + rng.gauss(0, 0.30)
             size = rng.uniform(0.075, 0.44) ** 1.18
