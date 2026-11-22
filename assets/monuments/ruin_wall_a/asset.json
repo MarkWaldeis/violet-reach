@@ -14,14 +14,28 @@
     2400
   ],
   "texture_size": 4096,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-10557958564a4a9894cdbd6bc867cb9f",
-  "review": null,
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 7,
+      "material": 6,
+      "scale": 8,
+      "style": 7,
+      "defects": 7
+    },
+    "notes": "Round 2, checked against the round-1 points. Fixed: the top courses are broken and tilted, the left remnant is no longer a stepped pyramid, and the cube-grid infill is gone; the collapse fan is good (hero, closeup_base). Still failing: every block is a clean, sharp-edged white box or a faceted wedge with straight chamfers, so the broken upper courses read as cut ice or low-poly gems, not fractured limestone (closeup_upper); some faces carry a small hammered dimple pattern. There is no visible mortar or rubble core, and the colour is one even white with only light grey smudges. Fix: fracture faces with a few large planes plus secondary chips and rounded weathered arrises on the exposed tops; darker mortar in the joints with a rubble core visible at the breaks; local grime and lichen at the foot, on the weather side and on the top courses; remove the dimple pattern.",
+    "round": 2,
+    "source_sha256": "57a61a4d404a1ea5679d0f5641f74198414a219360b1b84a0966529bba251418",
+    "sheet_sha256": "8a5e33bf44de891fdaf4e06b7e6c6e4fc0d6daa8cf20bc334071d7bacf5b8d3c"
+  },
   "references": [
     "art/reference/ref_01_white_monuments_sky.jpg",
     "art/reference/ref_03_canyon_cliffs.jpg",
     "art/reference/ref_04_white_ribbed_arches.jpg",
     "art/reference/ref_06_weathered_wall.jpg"
   ],
-  "review_rounds": 1
+  "review_rounds": 2
 }
