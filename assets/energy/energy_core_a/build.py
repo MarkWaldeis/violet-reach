@@ -391,14 +391,14 @@ def earth_bed(name, angle, base, rng):
     n = 48
     rows = []
     phase = rng.uniform(0, math.tau)
-    for span, height in ((.96,-.085), (1,-.009), (.81,.078), (.65,.22), (.38,.32), (.13,.28)):
+    for span, height in ((.96,-.055), (1,-.009), (.81,.078), (.65,.22), (.38,.32), (.13,.28)):
         row = []
         for j in range(n):
             theta = j*math.tau/n
             erosion = 1 + .08*math.sin(3*theta+phase) + .055*math.cos(7*theta-phase)
             p = centre + span*erosion*((depth+.62)*math.cos(theta)*forward
                                        + (width+.79)*math.sin(theta)*across)
-            p.z = height + min(.16, height+.09)*noise_vector(p*2.15).z
+            p.z = max(-.055, height + min(.16, height+.09)*noise_vector(p*2.15).z)
             row.append(p)
         rows.append(row)
     return mesh_object(name+" | settled mineral earth", *loft(rows), ["dirt_path"], smooth=True)
