@@ -14,22 +14,22 @@
     3100
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "approved",
   "builder": "devin-a193abe14f544701aef56a91e66901c2",
   "review": {
     "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
     "scores": {
       "silhouette": 8,
       "form_detail": 8,
-      "material": 7,
+      "material": 8,
       "scale": 8,
       "style": 8,
-      "defects": 7
+      "defects": 8
     },
-    "notes": "Round 3 (final), closest to passing. Fixed: the parapet now varies, with heavier posts, newel posts at the ends and a carved crown panel; the stairs meet stepped abutments; a weathered band now sits at the abutment base. Not fixed: (1) apart from that thin base band the stone is still uniformly clean ivory; joints, the underside of the coping and the arch intrados show no localized weathering, and no balusters are chipped or broken (round-2 points 1-2). (2) The front landing is still loose thin slabs lying on the ground with gaps, not tied into the abutment and wing walls (round-2 point 3). (3) hero.jpg frames the bridge tiny in the middle of the image, so the hero view cannot show the detail; frame it to fill the shot.",
-    "round": 3,
-    "source_sha256": "e345efdbc99a06c9cc0fb4caa1d0f1394edad94975d696731e21bff2631e195a",
-    "sheet_sha256": "c3e85505e7206a02b793abac9ba46d239036bcaee66e3912aee2c31e84953c72"
+    "notes": "Extra final round (round 4), approved. Round-3 points checked: (1) localized weathering now present where asked: damp band under every coping, recessed dark mortar joints in vault and arch face, grey patina on upper parapet fields, footing patina at abutments/wing walls, damp seep on the intrados; balusters now carry modelled corner chips. (2) Front landing is now one bonded plinth tied into the abutment and wing walls, no loose slabs or gaps. (3) hero.jpg now frames the bridge across most of the image. Non-blocking polish for later: the intrados seep stops exactly at voussoir edges with a streaky noise pattern, so two stones read like dark slate inserts in closeup.jpg; let the stain run across joints and soften the streaks. Face voussoirs and the landing top remain very clean; a little edge wear there would help.",
+    "round": 4,
+    "source_sha256": "079e0a669262bd1dccd8eba573109faf47fac9b6c0075ea03460b72e0fab9c7f",
+    "sheet_sha256": "ffc27ac3b3d9f88872f5c2691ff56acc23d3fca086d07a3db5673d65ccf66fe7"
   },
-  "review_rounds": 3
+  "review_rounds": 4
 }
