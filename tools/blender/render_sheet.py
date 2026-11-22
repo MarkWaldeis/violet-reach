@@ -137,9 +137,21 @@ def aim(azimuth_deg, elevation_deg, target, distance):
 fov = 2 * math.atan(min(cam_data.sensor_width, cam_data.sensor_width * TILE[1] / TILE[0] * 1.0) / (2 * cam_data.lens))
 full_distance = radius / math.sin(fov / 2)
 views = [("turn_%03d" % a, a, 14, centre, full_distance) for a in range(20, 380, 45)]
+hero = scene.get("vr_hero")
+if hero is not None:
+    x, y, z, az, el, distance = hero
+    views = [("turn_%03d" % a, a, 14, centre, full_distance)
+             for a in ((az + offset) % 360 for offset in range(0, 360, 45))]
+    views[0] = (views[0][0], az, el, Vector((x, y, z)), distance)
+
 detail_target = Vector((centre.x, centre.y, lo.z + size.z * 0.62))
 views.append(("closeup_upper", 65, 8, detail_target, full_distance * 0.42))
 views.append(("closeup_base", 205, 22, Vector((centre.x, centre.y, lo.z + size.z * 0.16)), full_distance * 0.40))
+for i, name in ((8, "closeup_upper"), (9, "closeup_base")):
+    framing = scene.get("vr_" + name)
+    if framing is not None:
+        x, y, z, az, el, distance = framing
+        views[i] = (name, az, el, Vector((x, y, z)), distance)
 
 if draft:
     views = [views[0], views[8], views[9]]
@@ -158,7 +170,7 @@ for o in figure:
     o.hide_render = False
 for kind in (() if draft else ("wire", "clay")):
     bpy.context.view_layer.material_override = override_material(kind)
-    aim(20, 14, centre, full_distance)
+    aim(*views[0][1:])
     scene.render.filepath = os.path.join(tmp_dir, kind + ".png")
     bpy.ops.render.render(write_still=True)
     tiles.append(scene.render.filepath)

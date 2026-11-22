@@ -1,0 +1,35 @@
+{
+  "id": "bridge_arch_a",
+  "category": "bridges",
+  "title": "Pale Ford Arch",
+  "description": "A 25-metre barrel vault with a 3.7-metre freestanding slab deck, flared abutments and alternating open and solid limestone parapets.",
+  "target_size_m": [
+    36,
+    5.8,
+    6.7
+  ],
+  "lod_triangles": [
+    27000,
+    9200,
+    3100
+  ],
+  "texture_size": 2048,
+  "status": "approved",
+  "builder": "devin-a193abe14f544701aef56a91e66901c2",
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 8,
+      "scale": 8,
+      "style": 8,
+      "defects": 8
+    },
+    "notes": "Extra final round (round 4), approved. Round-3 points checked: (1) localized weathering now present where asked: damp band under every coping, recessed dark mortar joints in vault and arch face, grey patina on upper parapet fields, footing patina at abutments/wing walls, damp seep on the intrados; balusters now carry modelled corner chips. (2) Front landing is now one bonded plinth tied into the abutment and wing walls, no loose slabs or gaps. (3) hero.jpg now frames the bridge across most of the image. Non-blocking polish for later: the intrados seep stops exactly at voussoir edges with a streaky noise pattern, so two stones read like dark slate inserts in closeup.jpg; let the stain run across joints and soften the streaks. Face voussoirs and the landing top remain very clean; a little edge wear there would help.",
+    "round": 4,
+    "source_sha256": "079e0a669262bd1dccd8eba573109faf47fac9b6c0075ea03460b72e0fab9c7f",
+    "sheet_sha256": "ffc27ac3b3d9f88872f5c2691ff56acc23d3fca086d07a3db5673d65ccf66fe7"
+  },
+  "review_rounds": 4
+}
