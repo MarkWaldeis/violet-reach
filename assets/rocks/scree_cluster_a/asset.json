@@ -14,7 +14,22 @@
     1000
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-376742566d344b90aa5a22ec7e9cc164",
-  "review": null
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 6,
+      "material": 6,
+      "scale": 8,
+      "style": 6,
+      "defects": 6
+    },
+    "notes": "Round 1. The size spread and the big leaning slabs are a good start, and the scale figure reads. Defects: every stone is the same rounded faceted potato with soft edges and a few round dimples (closeup_base); STYLE.md scree is angular, freshly broken chalk with sharp fracture faces. Fix: angular plate and wedge fragments with flat fracture faces and crisp edges, rounded only on older stones. No fall line: the pile is a flat heap with the large slabs at the back and small stones on top; real scree has a talus slope with the largest blocks rolled furthest down and fines up at the source. Fix: build a sloped cone (30-35 degrees) with size grading downslope. No ground contact: stones sit on the bare ground plane with no fines, sand or gravel bed between them and dark empty gaps between stones (closeup_base, hero.jpg). Fix: add a fine gravel/sand bed under and between the stones, partly burying the lower ones, plus a few grass tufts at the edges. Material: one uniform grey-beige on every stone with no light fresh fracture faces vs darker weathered faces. Fix: per-stone variation, light fresh breaks, darker lichen-stained older tops.",
+    "round": 1,
+    "source_sha256": "c812f23ad4e1f7e20d5c48346950a910698a17d7ec4a991ca8c0bf51eb36895f",
+    "sheet_sha256": "d7d112fdd9f035351d51ea557d5273e5803cfd185d73165b059ff0c1ab127b54"
+  },
+  "review_rounds": 1
 }
