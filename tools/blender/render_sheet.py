@@ -60,7 +60,15 @@ def studio():
     nt.links.new(coord.outputs["Generated"], sep.inputs["Vector"])
     nt.links.new(sep.outputs["Z"], remap.inputs["Value"])
     nt.links.new(remap.outputs["Result"], ramp.inputs["Fac"])
-    nt.links.new(ramp.outputs["Color"], bg.inputs["Color"])
+    sky = ramp.outputs["Color"]
+    if scene.get("vr_review_neutral_sky"):
+        rays = nt.nodes.new("ShaderNodeLightPath")
+        illumination = nt.nodes.new("ShaderNodeMixRGB")
+        illumination.inputs[1].default_value = (.53, .51, .46, 1)
+        nt.links.new(rays.outputs["Is Camera Ray"], illumination.inputs[0])
+        nt.links.new(sky, illumination.inputs[2])
+        sky = illumination.outputs["Color"]
+    nt.links.new(sky, bg.inputs["Color"])
     bg.inputs["Strength"].default_value = 0.9
     scene.world = world
 
