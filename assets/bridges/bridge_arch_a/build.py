@@ -57,6 +57,20 @@ def dressed_stone():
     return mat
 
 
+def damp_stone():
+    mat = vrmat.get("monument_weathered").copy()
+    mat.name = "Pale Ford / concentrated ochre and mineral damp"
+    nt = mat.node_tree
+    socket = nt.nodes["Principled BSDF"].inputs["Base Color"]
+    mix = nt.nodes.new("ShaderNodeMixRGB")
+    mix.blend_type = "MULTIPLY"
+    mix.inputs[0].default_value = .67
+    mix.inputs[2].default_value = (.48,.37,.25,1)
+    nt.links.new(socket.links[0].from_socket,mix.inputs[1])
+    nt.links.new(mix.outputs[0],socket)
+    return mat
+
+
 def arch_point(a, r):
     return (12.50 + r*.85)*math.cos(a), .21+(4.18+r)*math.sin(a)
 
@@ -78,15 +92,45 @@ def run(name, x0, x1, y0, y1, depth0, depth1, material, bevel, follows=deck_z):
     prism(name, [[(x,y,max(-.052,follows(x)+d)) for x,y in section] for d in (depth0,depth1)], material,bevel)
 
 
-def pier(name,x,y,height,material):
+def column(name,x,y,height,rx,ry,profile,material,scar=0):
+    outline = [(-.69,-1),(.74,-1),(1,-.62),(1,.64),(.68,1),(-.76,1),(-1,.59),(-1,-.56)]
     rings = []
-    for f,s in ((0,1),(.21,1),(.28,.83),(.63,.60),(.89,.59),(1,.68)):
-        outline = [(-.72,-.9),(.65,-.9),(1,-.52),(1,.57),(.66,.91),(-.70,.91),(-1,.54),(-1,-.54)]
-        rings.append([(x+.34*s*u,y+.26*s*v,deck_z(x+.34*s*u)+height*f) for u,v in outline])
-    prism(name,rings,material,.036)
+    for k,(f,s) in enumerate(profile):
+        ring = []
+        for j,(u,v) in enumerate(outline):
+            if scar and j in (1,2) and .29<f<.78:
+                u -= scar*(.62 if j==2 else .34)
+                v += scar*(.45 if j==1 else .25)
+                f_chip = .07*scar*math.cos(k*2+j)
+            else:
+                f_chip = 0
+            q = x+rx*s*u
+            ring.append((q,y+ry*s*v,deck_z(q)+height*(f+f_chip)))
+        rings.append(ring)
+    prism(name,rings,material,.016 if rx<.24 else .034)
 
 
-def wingwalls(side, pale):
+def crown_panel(side,a,b,pale,damp):
+    yi,yo = sorted((side*1.89,side*2.19))
+    run(f"Crown ashlar panel {side:+}",a,b,yi,yo,.25,.94,pale,.041)
+    for face in (-1,1):
+        y = side*2.04+face*.155
+        for z,w in ((.38,.77),(.81,.77),(.51,.59),(.67,.59)):
+            run(f"Crown tablet moulding {side:+}/{face:+}/{z}",-w,w,*sorted((y,y+face*.061)),
+                z,z+.043,damp if z==.38 else pale,.012)
+        for x in (-.69,.69):
+            run(f"Raised crown tablet jamb {side:+}/{face:+}/{x}",x-.065,x+.065,
+                *sorted((y,y+face*.072)),.40,.83,pale,.020)
+        for i,offset in enumerate((-.28,0,.28)):
+            points = [(offset-.12,.605),(offset,.419),(offset+.12,.605),(offset,.79)]
+            if face>0:
+                points.reverse()
+            prism(f"Carved lozenge boss {side:+}/{face:+}/{i}",
+                  [[(x,q,deck_z(x)+z) for x,z in points] for q in (y,y+face*(.098 if i==1 else .066))],
+                  pale,.016)
+
+
+def wingwalls(side, pale, damp):
     for bank in (-1,1):
         for j in range(10):
             z = -.048+j*.235
@@ -103,11 +147,21 @@ def wingwalls(side, pale):
                 outline.reverse()
             prism(f"Splayed wing {side:+}/{bank:+}/{j+1}", [
                 [(side*x,bank*y,z0) for x,y in outline] for z0 in (z,z+.23)],
-                "monument_weathered" if j in (0,2) else pale,.030)
-    for j,(a,b) in enumerate(((17.98,18.83),(18.84,19.51),(19.51,20.18))):
+                damp if j==0 else "monument_weathered" if j==1 else pale,.030)
+        for j,(a,b,w,z) in enumerate(((17.1,18.09,2.64,.46),(18.1,18.92,2.61,.39),
+                                      (18.93,19.58,2.53,.32),(19.59,20.02,2.42,.23))):
+            x0,x1 = sorted((side*a,side*b))
+            y0,y1 = sorted((bank*1.80,bank*w))
+            run(f"Interlocked landing return {side:+}/{bank:+}/{j}",x0,x1,y0,y1,-.05,z,
+                pale,.039,lambda x:0)
+    for j,(a,b,z) in enumerate(((18.0,18.49,.178),(18.49,19.31,.178),
+                               (19.31,19.86,.178),(19.86,20.47,.034))):
         x0,x1 = sorted((side*a,side*b))
-        run(f"Bank landing {side:+}/{j+1}",x0,x1,-2.17,2.17,-.05,.034,
-            pale,.021,lambda x:0)
+        run(f"Bedded landing core {side:+}/{j}",x0,x1,-2.09,2.09,-.048,z-.025,
+            damp,.018,lambda x:0)
+        for k,(y0,y1) in enumerate(zip((-2.07,-1.11,-.04,1.07),(-1.11,-.04,1.07,2.07))):
+            run(f"Thick landing paving {side:+}/{j}/{k}",x0+.005,x1-.005,y0+.007,y1-.007,
+                z-.14,z,pale,.025,lambda x:0)
 
 
 def stairs(pale, rng, treads):
@@ -129,6 +183,7 @@ def stairs(pale, rng, treads):
 def build():
     rng = random.Random(135719)
     pale = dressed_stone()
+    damp = damp_stone()
     treads = tread_intervals()
     n = 39
     for i in range(n):
@@ -142,12 +197,12 @@ def build():
                        "monument_weathered" if i in (0,1,37,38) else pale,.041)
 
     for side in (-1,1):
-        wingwalls(side,pale)
+        wingwalls(side,pale,damp)
         for i,(xa,xb,z,w) in enumerate(((11.98,15.09,-.04,2.87),(12.05,14.82,.23,2.67),
                                          (12.46,14.63,.48,2.56),(13.38,14.47,.73,2.49))):
             x0,x1 = sorted((side*xa,side*xb))
             run(f"Abutment footing {side:+}/{i+1}",x0,x1,-w,w,z,z+.255,
-                "monument_weathered" if i<2 else pale,.042,lambda x:0)
+                damp if i==0 else "monument_weathered" if i==1 else pale,.042,lambda x:0)
         for i in range(10):
             z = .02+.27*i
             xa = max(12.4,13.2055*math.sqrt(max(0,1-((z-.21)/5.01)**2)))
@@ -186,7 +241,11 @@ def build():
         breaks = (-18,-16.57,-14.6,-13.48,-11.25,-8.8,-7.1,-5.9,-4.18,-2.65,
                   -1.18,1.18,2.65,4.18,5.9,7.1,8.8,11.25,13.48,14.6,16.57,18)
         for x in (-18,-16.57,-13.48,-8.8,-4.18,-1.18,1.18,4.18,8.8,13.48,16.57,18):
-            pier(f"Parapet pier {side:+}/{x:+.2f}",x,side*2.005,1.11 if abs(x)>2 else 1.29,pale)
+            h = 1.25 if abs(x)>2 else 1.62
+            column(f"Heavy parapet pier shaft {side:+}/{x:+.2f}",x,side*2.17,h,.35,.29,
+                   ((.03,1.06),(.17,1.06),(.23,.87),(.79,.82),(.85,.98),(.95,.98)),pale)
+            run(f"Pier oversailing cap {side:+}/{x:+.2f}",x-.43,x+.43,
+                *sorted((side*1.84,side*2.57)),h-.108,h+.025,pale,.055)
         for i,(x,xx) in enumerate(zip(breaks,breaks[1:])):
             yo,yi=sorted((side*2.21,side*1.86))
             a,b=x+.013,xx-.013
@@ -194,16 +253,28 @@ def build():
             crest = abs(mid)<1.0
             crown = 1.08 if crest else .97
             run(f"Parapet base {side:+}/{i+1:02}",a,b,yo,yi,-.084,.26,"monument_weathered",.025)
-            if crest or abs(mid)>13 or i in (4,6,14,16):
+            if crest:
+                crown_panel(side,a,b,pale,damp)
+            elif abs(mid)>13 or i in (4,6,14,16):
                 run(f"Solid parapet field {side:+}/{i+1:02}",a,b,yo+.046,yi-.046,.18,crown-.11,pale,.026)
-                if crest:
-                    run(f"Crown relief {side:+}",a+.29,b-.29,*sorted((side*2.18,side*2.24)),.35,.79,pale,.039)
             else:
                 count = 2 if b-a<1.65 else 3
                 pitch = (b-a)/count
                 for j in range(count):
-                    pier(f"Open parapet baluster {side:+}/{i+1:02}.{j+1}",a+(j+.5)*pitch,
-                         side*2.025,.87,pale)
-            run(f"Parapet coping {side:+}/{i+1:02}",a,b,yo-.037,yi+.037,crown-.19,crown,pale,.038)
+                    scar = .82 if (i*7+j+side)%11 in (0,3) else 0
+                    profile = ((.23,1),(.30,.93),(.39,.66),(.55,.78),(.65,.71),(.76,.95),(.83,.95))
+                    if i%3==0:
+                        profile = ((.23,1),(.33,1),(.40,.72),(.54,.61),(.66,.76),(.75,1),(.83,1))
+                    column(f"{'Spalled' if scar else 'Dressed'} baluster {side:+}/{i+1:02}.{j+1}",
+                           a+(j+.5)*pitch,side*2.037,1,.155+.026*(i%2),.145,profile,pale,scar)
+            run(f"Recessed damp under coping {side:+}/{i+1:02}",a,b,yo-.012,yi+.012,
+                crown-.185,crown-.131,damp,.011)
+            run(f"Parapet coping {side:+}/{i+1:02}",a,b,yo-.037,yi+.037,crown-.137,crown,pale,.033)
+            if i%3==side%3:
+                for q,(u,v) in enumerate(((.03,.10),(.16,.25),(.78,.82))):
+                    x0,x1=a+(b-a)*u,a+(b-a)*v
+                    run(f"Drip stain on head joint {side:+}/{i+1:02}/{q}",x0,x1,
+                        *sorted((side*2.208,side*2.219)),crown-.25-.03*(q%2),crown-.15,damp,.007)
     for ob in vrlib.source_objects():
         ob.location.z += .008
+    bpy.context.scene["vr_closeup_base"] = (-16.40,-.15,1.15,222,22,18.8)

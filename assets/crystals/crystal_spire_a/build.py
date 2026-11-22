@@ -2,6 +2,7 @@
 import math
 import random
 
+import bmesh
 import bpy
 from mathutils import Matrix, Vector
 
@@ -53,96 +54,112 @@ def fissure_bank(name, outline, surface, fall, phase):
                 ring.append((cx+radius*(x-cx)+offset*fall+joint,cy+radius*(y-cy)+offset*.28,
                              elevation))
             rings.append(ring)
-        ob = mesh(f"{name} / offset bed {j+1}",rings,"canyon_layered" if j%3!=1 else "monument_white",.017)
+        ob = mesh(f"{name} / offset bed {j+1}",rings,"monument_white",.017)
         ob.data.materials.append(vrmat.get("monument_weathered"))
         for face in ob.data.polygons[1:len(outline)+1]:
             face.material_index = 1
 
 
 def mineral_finish(variant):
-    key = "Violet / axial inclusions " + str(variant)
-    existing = bpy.data.materials.get(key)
-    if existing:
-        return existing
+    key = f"Violet / opaque chalcedony facet {variant}"
+    if bpy.data.materials.get(key):
+        return bpy.data.materials[key]
     mat = vrmat.get("violet_crystal").copy()
     mat.name = key
     nodes, links = mat.node_tree.nodes, mat.node_tree.links
     bsdf = nodes["Principled BSDF"]
-    for name in ("Base Color","Normal","Emission Strength"):
-        socket = bsdf.inputs[name]
-        for link in list(socket.links):
-            links.remove(link)
-    bsdf.inputs["Roughness"].default_value = .31+.02*variant
-    bsdf.inputs["Coat Weight"].default_value = .18
-    bsdf.inputs["IOR"].default_value = 1.49
-    bsdf.inputs["Emission Strength"].default_value = .065
+    for node in list(nodes):
+        if node.type not in {"BSDF_PRINCIPLED", "OUTPUT_MATERIAL"}:
+            nodes.remove(node)
+    bsdf.inputs["Roughness"].default_value = (.34,.29,.26,.32,.27,.31)[variant]
+    bsdf.inputs["Coat Weight"].default_value = .055
+    bsdf.inputs["Specular IOR Level"].default_value = .31
     coord = nodes.new("ShaderNodeTexCoord").outputs["Object"]
+    attr = nodes.new("ShaderNodeAttribute")
+    attr.attribute_name = "inclusions"
 
-    def scale(vector, factors):
-        op = nodes.new("ShaderNodeVectorMath")
-        op.operation = "MULTIPLY"
-        links.new(vector,op.inputs[0])
-        op.inputs[1].default_value = factors
-        return op.outputs[0]
+    def scalar(operation, a, b):
+        node = nodes.new("ShaderNodeMath")
+        node.operation = operation
+        for socket,value in zip(node.inputs,(a,b)):
+            if isinstance(value,(float,int)):
+                socket.default_value = value
+            else:
+                links.new(value,socket)
+        return node.outputs[0]
 
-    def remap(source, a, b, colors):
-        r = nodes.new("ShaderNodeValToRGB")
-        for k,(position,color) in enumerate(zip((a,b),colors)):
-            r.color_ramp.elements[k].position = position
-            r.color_ramp.elements[k].color = color
-        links.new(source,r.inputs[0])
-        return r.outputs[0]
-
-    cells = nodes.new("ShaderNodeTexVoronoi")
-    cells.inputs["Scale"].default_value = 1.8
-    links.new(scale(coord,(3.4,3.4,.23)),cells.inputs["Vector"])
-    veins = nodes.new("ShaderNodeTexNoise")
-    veins.inputs["Scale"].default_value = 1
-    links.new(scale(coord,(16,16,.28)),veins.inputs["Vector"])
-    bands = nodes.new("ShaderNodeTexWave")
-    bands.bands_direction = "Z"
-    bands.wave_profile = "TRI"
-    bands.inputs["Scale"].default_value = .265
-    bands.inputs["Distortion"].default_value = .25
-    links.new(coord,bands.inputs["Vector"])
-    pal = vrmat.load_palette()
-    warm = (.91,1.0,1.08)[variant]
-    def violet(name, exposure):
-        r,g,b = pal[name]["linear_rgb"]
-        return (r*1.48*warm*exposure,g*.91*exposure,b*.89*exposure,1)
-
-    body = remap(cells.outputs["Distance"],.18,.76,
-                 (violet("violet_body",1.02),violet("violet_shadow",1.06)))
-    for field, weight, low in ((veins.outputs["Fac"],.32,.59),(bands.outputs["Fac"],.39,.67)):
-        mix = nodes.new("ShaderNodeMixRGB")
-        mix.blend_type = "MULTIPLY"
-        mix.inputs[0].default_value = weight
-        links.new(body,mix.inputs[1])
-        links.new(remap(field,.15,.73,((low,low*.97,low,1),(1,1,1,1))),mix.inputs[2])
-        body = mix.outputs[0]
-    links.new(body,bsdf.inputs["Base Color"])
-    links.new(body,bsdf.inputs["Emission Color"])
+    grain = nodes.new("ShaderNodeTexNoise")
+    grain.inputs["Scale"].default_value = 14
+    links.new(coord,grain.inputs["Vector"])
+    field = scalar("ADD",attr.outputs["Fac"],scalar("MULTIPLY",grain.outputs["Fac"],.11))
+    palette = vrmat.load_palette()
+    r,g,b = palette["violet_body"]["linear_rgb"]
+    gain = (.20,.49,.76,.31,.60,.39)[variant]
+    dark = (r*gain*1.26,g*gain*.80,b*gain*.76,1)
+    band = (r*(gain*.72+.34)*1.48,g*(gain*.70+.38),b*(gain*.63+.26)*.85,1)
+    color = nodes.new("ShaderNodeValToRGB")
+    color.color_ramp.elements[0].position = .09
+    color.color_ramp.elements[0].color = dark
+    color.color_ramp.elements[1].position = .94
+    color.color_ramp.elements[1].color = band
+    links.new(field,color.inputs[0])
+    links.new(color.outputs["Color"],bsdf.inputs["Base Color"])
+    links.new(color.outputs["Color"],bsdf.inputs["Emission Color"])
+    bsdf.inputs["Emission Strength"].default_value = .025
     return mat
 
 
-def cleft_material():
-    key = "Violet / buried fissure glow"
+def cleft_material(edge):
+    key = "Violet / healed fracture" if edge else "Violet / mineral seam"
     if bpy.data.materials.get(key):
         return bpy.data.materials[key]
-    mat = mineral_finish(1).copy()
+    mat = mineral_finish(0).copy()
     mat.name = key
     nt = mat.node_tree
     bsdf = nt.nodes["Principled BSDF"]
     for name in ("Base Color","Emission Color"):
         socket = bsdf.inputs[name]
         nt.links.remove(socket.links[0])
-    bsdf.inputs["Base Color"].default_value = (.31,.077,.50,1)
-    bsdf.inputs["Emission Color"].default_value = (.63,.15,.79,1)
-    bsdf.inputs["Emission Strength"].default_value = .57
+    bsdf.inputs["Base Color"].default_value = (.039,.009,.066,1) if edge else (.28,.067,.38,1)
+    bsdf.inputs["Emission Color"].default_value = (.63,.16,.73,1)
+    bsdf.inputs["Emission Strength"].default_value = .0 if edge else .51
     return mat
 
 
-def prismatic_growth(name, base, height, radius, lean, phase, rng, outline_kind=0):
+def fissures(name, rotation, rings, radius, sections, sides, phase):
+    corners = len(rings[0])
+    verts, faces, tones = [], [], []
+    for i,side in enumerate(sides):
+        right = (side+1)%corners
+        a,b = rings[sections[i]][side],rings[sections[i]][right]
+        c,d = rings[sections[i]+1][side],rings[sections[i]+1][right]
+        normal = (b-a).cross(c-a).normalized()
+        start = len(verts)
+        for j in range(23):
+            t = j/22
+            s = .13+.77*t
+            w = .22+.52*t+.19*math.sin(math.pi*t)+.035*math.sin(t*23+phase)
+            width = (.011+.055*math.sin(math.pi*t))*(.82+.18*math.cos(t*31))
+            for shift in (-1,-.38,.38,1):
+                u = w+width*shift
+                verts.append(a.lerp(b,u).lerp(c.lerp(d,u),s)+normal*radius*.003)
+            if j:
+                k = start+j*4
+                for m in range(3):
+                    faces.append((k-4+m,k-3+m,k+1+m,k+m))
+                    tones.append(int(m!=1))
+    data = bpy.data.meshes.new(name+" fracture mineralization")
+    data.from_pydata(verts,[],faces)
+    data.update()
+    data.materials.append(cleft_material(False))
+    data.materials.append(cleft_material(True))
+    for poly,tone in zip(data.polygons,tones):
+        poly.material_index = tone
+    fissure = vrlib.link_to_source(bpy.data.objects.new(data.name,data))
+    fissure.matrix_world = rotation
+
+
+def prismatic_growth(name, base, height, radius, lean, phase, rng, outline_kind=0, broken=False):
     axis = Vector((*lean,1)).normalized()
     u = Vector((0,1,0)).cross(axis).normalized()
     v = axis.cross(u)
@@ -150,71 +167,75 @@ def prismatic_growth(name, base, height, radius, lean, phase, rng, outline_kind=
     rotation.translation = Vector(base)
     corners = 4 if outline_kind==2 else 6
     profile = [Vector((radius*math.cos(phase+i*math.tau/corners),
-                       radius*math.sin(phase+i*math.tau/corners)*(.59 if outline_kind else .85),0))
+                       radius*math.sin(phase+i*math.tau/corners)*(.63 if outline_kind else .88),0))
                for i in range(corners)]
-    widths=(1.0,1.12,.74)
-    irregularity=rng.uniform(.89,1.17)
-    levels = ((0,.76,0,0),(.08,1,0,0),(.235,1,0,0),(.243,1.034,0,0),
-              (.263,1.034,0,0),(.277,.955,.022,0),(.43,.955,.022,0),
-              (.432,.997,.005,0),(.453,.997,.005,0),(.466,.887,.058,0),
-              (.575,.887,.058,0),(.582,.925,.049,0),(.601,.925,.049,0),
-              (.621,.855,.064,0),(.743,.855,.064,0),
-              (.815,.855,.064,.85),(.907,.41,.18,.33))
+    first = rng.uniform(.22,.40)
+    second = rng.uniform(.49,.66)
+    shift = rng.choice((-1,1))
+    levels = (
+        (0,.80,0,0),(.085,1,0,0),
+        (first,1,0,.013),(first+.032,.90,.048*shift,.013),
+        (second,.90,.048*shift,.019),(second+.048,.76,-.027*shift,.019),
+        (.78,.76,-.027*shift,.037),(.89,.51,.08,.026))
     rings = []
-    pinch = rng.randrange(corners)
-    for k,(f,s,drift,termination) in enumerate(levels):
-        ring = []
-        for i,p in enumerate(profile):
-            spread=1+(s-1)*widths[outline_kind]
-            variation=math.sin(i*1.8+phase)*.014*math.sin(math.pi*f) if 1<k<15 else 0
-            axial=f+(irregularity-1)*f*(1-f)*.73+variation
-            q=p*spread+Vector((radius*drift,0,height*(axial+termination*.069*math.sin(i*1.53+phase))))
-            if i==pinch and k in (10,11,12):
-                q.x-=p.x*.115
-                q.y-=p.y*.115
-            ring.append(q)
+    for k,(f,s,drift,rake) in enumerate(levels):
+        ring = [p*s+Vector((radius*drift,0,height*(f+rake*math.sin(i*math.tau/corners+phase))))
+                for i,p in enumerate(profile)]
         rings.append(ring)
-    rings.append([Vector((radius*.23,-radius*.035,height))])
-    ob = mesh(name,rings,mineral_finish(1),min(.004,radius*.014))
+    if broken:
+        rings.append([p*.33+Vector((radius*.18,-radius*.08,
+                      height*(.97+.035*math.cos(i*math.tau/corners+phase))))
+                      for i,p in enumerate(profile)])
+    else:
+        rings.append([Vector((radius*.27,-radius*.035,height))])
+    ob = mesh(name,rings,mineral_finish(0),min(.005,radius*.016))
     ob.matrix_world = rotation
-    for tone in (0,2):
+    for tone in range(1,6):
         ob.data.materials.append(mineral_finish(tone))
-    for f in ob.data.polygons:
-        if 0<f.index<len(ob.data.polygons)-1:
-            col,row=(f.index-1)%corners,(f.index-1)//corners
-            f.material_index = (2,0,1,0,1,2)[col] if row not in (2,4,6,8,10,12) else 2
+    for poly in ob.data.polygons[1:]:
+        row,col = divmod(poly.index-1,corners)
+        poly.material_index = ((col*5+int(phase*2))%6 if row<6 else
+                               (col*3+row+int(phase*3))%6)
+        if broken and row == len(rings)-1:
+            poly.material_index = 4
 
-    if radius<.20:
-        return
-    for side,k in ((0,1),(corners-2,6),(corners-1,10)):
-        def face_point(t,w):
-            row = min(len(rings)-2,int(t))
-            local = t-row
-            right=(side+1)%corners
-            p=rings[row][side].lerp(rings[row][right],w)
-            q=rings[row+1][side].lerp(rings[row+1][right],w)
-            normal=(rings[row][right]-rings[row][side]).cross(rings[row+1][side]-rings[row][side]).normalized()
-            return p.lerp(q,local)+normal*radius*.004
-        verts, faces = [], []
-        for j in range(15):
-            q = j/14
-            t = k+q*3.85
-            w=.37+.13*math.sin(3.6*q+side)+.049*math.sin(27*q+side)
-            taper=.003+.019*math.sin(math.pi*q)
-            verts.extend((face_point(t,w-taper),face_point(t,w+taper)))
-            if j:
-                a=j*2
-                faces.append((a-2,a-1,a+1,a))
-        data=bpy.data.meshes.new(name+" cleft")
-        data.from_pydata(verts,[],faces)
-        data.update()
-        data.materials.append(cleft_material())
-        fissure=vrlib.link_to_source(bpy.data.objects.new(name+" / faint mineral fissure",data))
-        fissure.matrix_world=rotation
+    # An opaque section of the growth volume: oblique shells narrow into the stone at each end.
+    # A mesh attribute keeps their buried, curved silhouettes independent of the outer growth steps.
+    if height>=.34:
+        mesh_data = ob.data
+        bm = bmesh.new()
+        bm.from_mesh(mesh_data)
+        bmesh.ops.subdivide_edges(bm,edges=list(bm.edges),cuts=11 if radius>=.2 else 4,
+                                  use_grid_fill=True)
+        layer = bm.verts.layers.float.new("inclusions")
+        pools = [(rng.uniform(.24,.35),.011,.42), (rng.uniform(.44,.55),.028,.86),
+                 (rng.uniform(.65,.76),.020,.66),(.91,.014,.32)]
+        for vertex in bm.verts:
+            x,y,z = vertex.co
+            ax = z/height
+            across = (x*.81+y*.55)/radius
+            depth = (x*-.55+y*.81)/radius
+            envelope = max(.0,1.05-across*across*.92)
+            field = 0
+            for center,width,gain in pools:
+                dist = abs(ax-center-depth*.064-across*across*.058)
+                field = max(field,gain*envelope*max(0,1-dist/(width*(.35+.65*envelope))))
+            vertex[layer] = field
+        bm.to_mesh(mesh_data)
+        bm.free()
+        mesh_data.update()
+
+    if radius>=.20:
+        target = math.radians(68)
+        camera = Vector((math.cos(target),math.sin(target),.23))
+        face_order = sorted(range(corners),key=lambda i:camera.dot(rotation.to_3x3() @
+                            (profile[i]+profile[(i+1)%corners]).normalized()),reverse=True)
+        fissures(name,rotation,rings,radius,(1,3,5),(face_order[0],face_order[1],face_order[0]),phase)
 
 
 def blade(name, base, width, height, lean, roll, rng):
-    prismatic_growth(name,base,height,width,lean,roll,rng,int(width<.70))
+    prismatic_growth(name,base,height,width,lean,roll,rng,int(width<.70),
+                     name in {"Main spire","Broken secondary blade","Back seam tongue"})
 
 
 def talus(rng, index, x, y, r, h, z):
@@ -225,7 +246,7 @@ def talus(rng, index, x, y, r, h, z):
     rings = [[(x+r*(s*outline[i]*math.cos(a+yaw)+shear*f), y+r*width*s*outline[i]*math.sin(a+yaw),
                max(-.051,z+(f+.30*f*math.sin(a+yaw))*h)) for i,a in enumerate(angles)]
              for f,s in ((-.12,.75),(.10,1),(.42,.995),(.49,.86),(.54,.94),(.85,.91),(1,.67))]
-    mesh(f"Fault scree {index:02}",rings,("canyon_layered","monument_white","monument_weathered")[index%3],
+    mesh(f"Fault scree {index:02}",rings,("monument_white","monument_white","monument_weathered")[index%3],
          min(.021,r*.07))
 
 
@@ -273,3 +294,4 @@ def build():
     yaw = Matrix.Rotation(math.radians(-48),4,"Z")
     for ob in vrlib.source_objects():
         ob.matrix_world = yaw @ ob.matrix_world
+    bpy.context.scene["vr_closeup_upper"] = (.42,-.67,5.66,65,8,8.42)
