@@ -4,8 +4,8 @@
   "title": "Tidebone Crossing",
   "description": "Three closed limestone vaults, each formed by two tapered limbs meeting at the crown, stand on fractured stone footings.",
   "target_size_m": [
+    126,
     121,
-    119,
     80
   ],
   "lod_triangles": [
@@ -14,7 +14,7 @@
     3100
   ],
   "texture_size": 2048,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-ac377e3f64b249c4a59d5943f70f2061",
   "review": {
     "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
