@@ -1,11 +1,11 @@
-"""Tidebone Crossing: two limestone vaults rising from fractured bedrock."""
+"""Tidebone Crossing: the eroded remains of a limestone ribcage."""
 
 import math
 import random
 
 import bmesh
 import bpy
-from mathutils import Vector
+from mathutils import Matrix, Vector
 
 import vrlib
 import vrmat
@@ -42,7 +42,7 @@ def loft(name, rings, mat, smooth=True):
     return obj
 
 
-def pale_stone(name, i, root=False):
+def pale_stone(name, i):
     mat = vrmat.get("monument_white").copy()
     mat.name = name
     nodes, links = mat.node_tree.nodes, mat.node_tree.links
@@ -50,13 +50,20 @@ def pale_stone(name, i, root=False):
     source = bsdf.inputs["Base Color"].links[0].from_socket
     base = vrmat.load_palette()["monument_white"]["linear_rgb"]
     hue = math.sin(i * 2.12)
-    tone = (.81 if root else .92) + .017 * (i % 9)
-    tint = tuple(v * tone * s for v, s in zip(base, (1+.041*hue, 1-.010*hue, 1-.067*hue)))
+    tone = .70 + .033 * (i % 11)
+    tint = tuple(v * tone * s for v, s in zip(base, (1+.052*hue, 1-.015*hue, 1-.087*hue)))
     mix = nodes.new("ShaderNodeMixRGB")
-    mix.inputs[0].default_value = .56 if root else .76
+    mix.inputs[0].default_value = .76
     mix.inputs[2].default_value = (*tint, 1)
     links.new(source, mix.inputs[1])
-    links.new(mix.outputs[0], bsdf.inputs["Base Color"])
+    dirt = nodes.new("ShaderNodeAttribute")
+    dirt.attribute_name = "Runnel"
+    mineral = nodes.new("ShaderNodeMixRGB")
+    links.new(dirt.outputs["Fac"], mineral.inputs[0])
+    links.new(mix.outputs[0], mineral.inputs[1])
+    mud = vrmat.load_palette()["stone_weathered"]["linear_rgb"]
+    mineral.inputs[2].default_value = (*(v*.38 for v in mud), 1)
+    links.new(mineral.outputs[0], bsdf.inputs["Base Color"])
     bsdf.inputs["Specular IOR Level"].default_value = .24
     return mat
 
@@ -96,79 +103,91 @@ def smoothstep(t):
     return t*t*(3-2*t)
 
 
-def vault(name, spine, width, depth, stones, mortar, rng, free=False):
-    stations = [0, .079, .165, .251, .343, .435, .532, .647, .769, .878, .945, 1]
-    stations = [v + rng.uniform(-.020, .020) if i not in (0, len(stations)-1) else v
-                for i, v in enumerate(stations)]
-    across = Vector((0, 1, 0)) if name != "Tributary vault" else Vector((-.91, .415, 0))
-    twist = rng.uniform(0, math.tau)
-    n = 112
+def vault(name, spine, width, depth, stones, mortar, rng, broken, tunnel_at=None):
+    stations = [0, .30+rng.uniform(-.036,.036), .55+rng.uniform(-.043,.043),
+                .76+rng.uniform(-.033,.033), 1]
+    phase = rng.uniform(0, math.tau)
+    n = 144
+    flutes = [(math.tau*j/9+rng.uniform(-.18,.18), rng.uniform(.065,.208),
+               rng.uniform(.11,.35), rng.uniform(0, math.tau)) for j in range(9)]
+    scars = [(rng.uniform(lo+.018,hi-.018), math.tau*j/4+rng.uniform(-.34,.34),
+              rng.uniform(.012,.022), rng.uniform(.12,.23), rng.uniform(.095,.18), j%3==0)
+             for lo,hi in zip(stations,stations[1:]) for j in range(4)]
+    shelves = [(rng.uniform(.014,.22), rng.uniform(0, math.tau), rng.uniform(.19,.53),
+                rng.uniform(-.15,.15), rng.uniform(.05,.14)) for _ in range(16)]
 
-    def section(t, inset, wear, phase=0):
+    def section(t, inset=0):
         centre, tangent = spine(t)
-        normal = tangent.cross(across).normalized()
+        normal = tangent.cross(Vector((0,1,0))).normalized()
         side = normal.cross(tangent).normalized()
-        flare = (1-smoothstep(t/.22)) + ((smoothstep((t-.78)/.22)) if not free else 0)
-        taper = (1 - .30*t) if free else (1 - .25*math.sin(math.pi*t)**2)
-        end = math.sqrt(max(.000004, 1-smoothstep((t-.87)/.13)**2)) if free else 1
-        a = (width*taper + flare*.94) * end
-        b = (depth*taper + flare*.69) * end
-        curve = .076 * math.sin(math.pi*t) * math.sin(twist + math.tau*t)
-        ring = []
+        foot = math.exp(-t/.091)
+        a = width*(1-.65*t)**1.10 + width*.92*foot
+        b = depth*(1-.54*t)**1.08 + depth*(1.02+.34*math.sin(phase))*foot
+        tip = math.sqrt(max(.00035, 1-smoothstep((t-.909)/.091)**2)) if not broken else 1
+        ring, stain = [], []
         for j in range(n):
-            angle = j*math.tau/n
-            k = angle + curve
-            outer, lateral = math.cos(k), math.sin(k)
-            # Long flutes following the same angular phase through every bed.
-            flute = sum(math.exp(-(math.remainder(k-c, math.tau)/s)**2)
-                        for c, s in ((.92,.18), (1.48,.21), (2.26,.19), (3.96,.18), (4.95,.23), (5.51,.17)))
-            shape = 1 + .082*math.cos(3*k+.33) + .057*math.cos(5*k-.35) - .146*flute
-            grain = wear * (math.sin(4*k+phase)*math.cos(2*k-phase) + .41*math.sin(11*k+phase))
-            nr = math.copysign(abs(outer)**.82, outer) * a
-            sr = math.copysign(abs(lateral)**.86, lateral) * b
-            ring.append(centre + (normal*nr + side*sr)*(shape-inset+grain))
-        return ring
+            k = math.tau*j/n + .12*math.sin(phase+3*t)
+            channel, dirt = 0, 0
+            for c, w, amount, seed in flutes:
+                axis = c + .063*math.sin(12*t+seed) + .042*math.sin(27*t+seed)
+                g = math.exp(-(math.remainder(k-axis,math.tau)/w)**2)
+                flow = .44 + .56*math.sin(8*t+seed)**2
+                channel += g*amount*(.61+.39*foot)*flow
+                wet = (.39+.61*math.sin(11*t+seed)**4) * (.40 + .60*foot)
+                dirt = max(dirt, g**2 * wet * (2.5*amount))
+            for z, c, length, breadth, amount, crack in scars:
+                u = (t-z)/length
+                if abs(u) > 1.2:
+                    continue
+                drift = (.067*math.sin(4*u) if crack else .052*u)
+                v = math.remainder(k-c-drift,math.tau)/(breadth*(.47 if crack else 1))
+                erosion = max(0, 1-u*u-v*v)**1.4
+                channel += erosion*amount*(1.22 if crack else 1)
+                dirt = max(dirt, erosion*.54)
+            for z, c, breadth, slope, drop in shelves:
+                v = math.remainder(k-c, math.tau)/breadth
+                u = t-z-slope*v*breadth
+                if abs(v) < 1 and -.012 < u < .036:
+                    shelf = (1-v*v)**1.7*smoothstep((u+.012)/.013)*(1-smoothstep(u/.036))
+                    channel += drop*shelf
+                    dirt = max(dirt, shelf*.49)
+            buttress = foot*(.16*math.cos(3*k+phase)+.16*math.cos(5*k-phase))
+            foliation = (.025+.025*foot)*math.sin(9*k+31*t+phase)+.023*math.sin(17*k-66*t)
+            foliation += (.012+.019*foot)*math.sin(27*k+77*t+phase)*math.sin(19*t+3*k)
+            gully = .058 * math.sin(3*k+phase) * math.cos(34*t+1.9*math.sin(k))
+            scale = (1 + buttress + .104*math.cos(3*k-.7) + foliation + gully - channel - inset)*tip
+            nr = math.copysign(abs(math.cos(k))**.80, math.cos(k)) * a
+            sr = math.copysign(abs(math.sin(k))**.87, math.sin(k)) * b
+            point = centre + scale*(normal*nr + side*sr)
+            point.z = max(-.054, point.z)
+            ring.append(point)
+            stain.append(min(.72, dirt + .42*foot**2*max(0,math.sin(7*k+phase))))
+        return ring, stain
 
+    cutter = through_passage(*tunnel_at) if tunnel_at else None
     for i, (lo, hi) in enumerate(zip(stations, stations[1:])):
-        phase = rng.uniform(0, math.tau)
-        gap = .00024 if not free else .00041
-        a, b = lo + (gap if i else 0), hi - (gap if hi < 1 else 0)
-        steps = max(8, math.ceil((b-a)*315))
-        rings = []
-        for j in range(steps+1):
-            u = j / steps
-            t = a + (b-a)*u
-            rounded = .0030 * (1 - smoothstep(min(u,1-u)*51))
-            local_wear = .0048 * math.sin(math.pi*u)**2
-            rings.append(section(t, rounded, local_wear, phase))
-        obj = loft(f"{name} | bed {i+1:02}", rings, rng.choice(stones))
-        if i in (0, 1, 8) or (free and i == 10):
-            u = rng.uniform(.10,.78)
-            t = a + (b-a)*u
-            middle, tangent = spine(t)
-            az = rng.choice((17,37,66,91)) + rng.randint(-4,4)
-            edge = section(t, 0, 0)[az]
-            normal = (edge - middle).normalized()
-            centre = edge - normal * rng.uniform(.09,.27)
-            spall(obj, centre, normal, tangent, rng)
+        a, b = lo + (.00048 if i else 0), hi - (.00048 if hi < 1 else 0)
+        steps = math.ceil(238*(b-a))
+        samples = [section(a+(b-a)*j/steps, .004*(1-smoothstep(min(j,steps-j)/1.4)))
+                   for j in range(steps+1)]
+        obj = loft(f"{name} | limestone reach {i+1}", [ring for ring, _ in samples],
+                   stones[(rng.randrange(len(stones)) + 3*i) % len(stones)])
+        attribute = obj.data.attributes.new("Runnel", "FLOAT", "POINT")
+        attribute.data.foreach_set("value", [m for _, masks in samples for m in masks])
+        if cutter and not i:
+            carve(obj, cutter)
+        if broken and hi == 1:
+            p, tangent = spine(.992)
+            edge, _ = section(.977)
+            across = (edge[23]-p).normalized()
+            cut_plane(obj, p, tangent + across*rng.uniform(.58,.92))
+            bevel = obj.modifiers.new("Rounded broken crest", "BEVEL")
+            bevel.width, bevel.segments, bevel.angle_limit = .10, 3, .56
         if hi < 1:
-            loft(f"{name} | recessed lime bed {i+1:02}",
-                 [section(hi + k*gap, .014, 0) for k in (-1.5, -.7, 0, .7, 1.5)], mortar)
-
-
-def rock_ring(x, y, ax, ay, z, fac, phase, bedding_offset=0):
-    ring = []
-    for j in range(104):
-        a = math.tau * j / 104
-        zlayer = .18 * math.sin(a*2+phase) + .26 * math.cos(a*3-phase)
-        cliff = .058 * math.cos(5*a+phase) + .028 * math.sin(11*a-phase)
-        cleft = sum(d * math.exp(-(math.remainder(a-c, math.tau)/w)**2)
-                    for c, d, w in ((phase,.115,.095),(phase+2.6,.17,.12),(phase-1.8,.14,.076)))
-        stratified = .033 * math.sin(13*a + z*.76) + .022 * math.cos(19*a - z*1.4)
-        scale = fac * (1 + cliff - cleft + stratified)
-        ring.append((x + ax*scale*math.cos(a), y + ay*scale*math.sin(a),
-                     max(-.054, z + bedding_offset + zlayer*smoothstep((z-.1)/1.9))))
-    return ring
+            loft(f"{name} | recessed bed {i+1}",
+                 [section(hi+d,.016)[0] for d in (-.00078,0,.00078)], mortar)
+    if cutter:
+        bpy.data.objects.remove(cutter, do_unlink=True)
 
 
 def cut_plane(obj, point, normal):
@@ -189,24 +208,6 @@ def cut_plane(obj, point, normal):
     bm.free()
 
 
-def spall(obj, centre, normal, tangent, rng):
-    lateral = tangent.cross(normal).normalized()
-    rings = []
-    for length, radius, depth in ((-.71,.18,.06),(-.35,.84,-.09),
-                                  (.18,1,-.16),(.62,.42,.04),(.81,.11,.12)):
-        row = []
-        for i in range(9):
-            a = i*math.tau/9
-            row.append(centre + tangent*length +
-                       lateral*(.44*radius*math.cos(a)) +
-                       normal*(depth + .49*radius*math.sin(a) + rng.uniform(-.034,.034)))
-        rings.append(row)
-    cutter = loft("Temporary spall tool", rings, vrmat.get("forest_soil"), smooth=False)
-    carve(obj, cutter)
-    bpy.data.objects.remove(cutter, do_unlink=True)
-    obj.data.set_sharp_from_angle(angle=.63)
-
-
 def through_passage(x, y):
     shape = [(x-1.79,-.058), (x+1.79,-.058), (x+1.79,2.21)]
     shape.extend((x + 1.79*math.cos(t*math.pi/48), 2.21+1.79*math.sin(t*math.pi/48))
@@ -216,51 +217,10 @@ def through_passage(x, y):
 
 
 def carve(obj, cutter):
-    mod = obj.modifiers.new("Carved passage", "BOOLEAN")
+    mod = obj.modifiers.new("Erosion cut", "BOOLEAN")
     mod.object, mod.operation, mod.solver = cutter, "DIFFERENCE", "EXACT"
     with bpy.context.temp_override(object=obj, active_object=obj):
         bpy.ops.object.modifier_apply(modifier=mod.name)
-
-
-def outcrop(name, x, y, ax, ay, h, stones, mortar, rng, tunnel=False, lean=(1, 0)):
-    phase = rng.uniform(0, math.tau)
-    zlevels = [0, .065, .159, .226, .341, .481, .556, .713, .851, 1]
-    steps = [h*v + (rng.uniform(-.34, .34) if 0 < i < len(zlevels)-1 else -.054 if not i else 0)
-             for i, v in enumerate(zlevels)]
-    cutter = through_passage(x-.5, y) if tunnel else None
-    for i, (low, high) in enumerate(zip(steps, steps[1:])):
-        flake = rng.uniform(.012, .061)
-        forming = rng.uniform(.96, 1.045)
-
-        def section(z, f, scale=forming):
-            u = max(0, z/h)
-            fac = (1 - .65*u**.79) * scale * f
-            return rock_ring(x + lean[0]*u, y + lean[1]*u, ax, ay, z, fac, phase)
-
-        if i:
-            bed = loft(f"{name} | silty bedding {i:02}",
-                       [section(low + d, .885, 1) for d in (-.19,-.05,.05,.16)], mortar)
-            if cutter and low < 4.35:
-                carve(bed, cutter)
-        layers = ((0,.955),(.052,1),(.17,1+flake),(.32,1.025),(.58,1.01),
-                  (.77,.987),(.94,.968),(1,.935))
-        rings = [section((low+.023 if i else low) + (high-low-.048)*t, f) for t, f in layers]
-        mat = vrmat.get("monument_weathered") if i < 2 else rng.choice(stones)
-        stone = loft(f"{name} | broken limestone bank {i+1:02}", rings, mat)
-        if i < len(steps)-2:
-            a = phase + rng.uniform(-math.pi, math.pi)
-            z = low + (high-low)*.63
-            u = max(0, z/h)
-            fac = (1 - .65*u**.79) * forming * rng.uniform(.81,.89)
-            cut_plane(stone, (x+lean[0]*u+ax*fac*math.cos(a), y+lean[1]*u+ay*fac*math.sin(a), z),
-                      (math.cos(a), math.sin(a), rng.uniform(.25,.80)))
-        if cutter and low < 4.35:
-            carve(stone, cutter)
-        stone.data.set_sharp_from_angle(angle=.59)
-        bevel = stone.modifiers.new("Softened exposed fractures", "BEVEL")
-        bevel.width, bevel.segments, bevel.angle_limit = .065, 3, .39
-    if cutter:
-        bpy.data.objects.remove(cutter, do_unlink=True)
 
 
 def scree(name, x, y, z, size, stone, rng):
@@ -293,7 +253,7 @@ def apron(x, y, ax, ay, stones, rng, tunnel=False):
 
     def surface(u, a):
         edge = 1 + .088*math.sin(3*a+phase) + .043*math.cos(7*a-phase)
-        raise_by = (.95 + .25 * math.sin(4*a+phase))*(1-u)**1.33
+        raise_by = (1.65 + .65 * math.sin(4*a+phase))*(1-u)**1.25
         px = x+ax*edge*u*math.cos(a)
         if tunnel:
             raise_by *= .055 + .945*smoothstep((abs(px-(x-.5))-1.63)/1.1)
@@ -309,11 +269,12 @@ def apron(x, y, ax, ay, stones, rng, tunnel=False):
                   solid=False, smooth=True)
     ground.data.materials.append(soil)
     for poly in ground.data.polygons:
-        a = (poly.index-1)*math.tau/n
-        if poly.index == 0 or math.sin(5*a+phase)+.63*math.cos(9*a-phase) > 1:
+        row,j = divmod(poly.index-1,n)
+        a = j*math.tau/n
+        if poly.index == 0 or math.sin(5*a+phase+.84*row)+.72*math.cos(9*a-phase-.39*row) > 1:
             poly.material_index = 1
     blades, faces = [], []
-    for _ in range(13):
+    for _ in range(18):
         a0, u0 = rng.uniform(0,math.tau), rng.uniform(.65,.89)
         for i in range(rng.randint(9, 18)):
             a, u = a0 + rng.uniform(-.16,.16), min(.96, u0 + rng.uniform(-.10,.10))
@@ -321,11 +282,11 @@ def apron(x, y, ax, ay, stones, rng, tunnel=False):
             if tunnel and abs(px-(x-.5)) < 2.03:
                 continue
             if i % 4 == 0:
-                scree("Weathered foot rubble", px, py, pz-.026, rng.uniform(.22,.93),
+                scree("Weathered foot rubble", px, py, pz-.026, rng.uniform(.32,1.55),
                       rng.choice(stones) if i%8 else vrmat.get("monument_weathered"), rng)
             for _ in range(rng.randint(4, 10)):
                 xx, yy = px + rng.uniform(-.22,.22), py + rng.uniform(-.22,.22)
-                h, w, ta = rng.uniform(.14,.58), rng.uniform(.02,.077), rng.uniform(0, math.tau)
+                h, w, ta = rng.uniform(.23,.72), rng.uniform(.029,.087), rng.uniform(0, math.tau)
                 dx, dy = math.cos(ta), math.sin(ta)
                 start = len(blades)
                 base = max(-.054,pz-.052)
@@ -376,35 +337,35 @@ def passage_lining(x, y, stones, mortar, rng):
                 bevel = obj.modifiers.new("Eroded passage arrises", "BEVEL")
                 bevel.width, bevel.segments, bevel.angle_limit = .045, 3, .25
 
-    for i in range(14):
-        front = y-10.77+i*1.55
+    for i in range(9):
+        front = y-7.07+i*1.55
         back = front+1.55
         shell("Lining bed", front, back, 1.624, 2.02, mortar)
         shell(f"Limestone lining bay {i+1:02}", front+.018, back-.018, 1.57, 1.99, rng.choice(stones), .006)
 
 
 def build():
-    rng = random.Random(410903)
     stone = [pale_stone(f"Rib limestone | bed {i:02}", i) for i in range(13)]
-    root = [pale_stone(f"Root limestone | layer {i:02}", i+3, root=True) for i in range(11)]
     mortar = bedding()
-    main = path((-44,-8,3.0),(-43,-11,48),(-25,-13,77.4),
-                (1,-8,77.5),(27,-3,77.6),(52,-5,49),(44,-5,3.0))
-    branch = path((-22,-41,2.8),(-29,-37,35),(-15,-19,60.5),
-                  (-4,4,63),(7,27,65.5),(11,43,36),(19,47,2.8))
-    relic = path((47,2.0,3.1),(58,1.5,22),(52,13,38),(35,17,46))
-    vault("High tide vault", main, 3.25, 2.63, stone, mortar, rng)
-    vault("Tributary vault", branch, 2.6, 2.14, stone, mortar, rng)
-    vault("Broken seaward rib", relic, 2.65, 2.11, stone, mortar, rng, free=True)
-    for name,x,y,ax,ay,h,tunnel,lean in (
-        ("Inner headland",-44,-8,10.6,10.3,16.8,False,(2,-1)),
-        ("Passage bedrock",45,-2,12.9,11.7,18.7,True,(2,-.8)),
-        ("Upstream root",-22,-41,8.0,8.6,12.2,False,(-1.5,1.4)),
-        ("Downstream root",19,47,8.8,9.5,14.6,False,(-1.9,-1.8)),
-        ("Seaward root",50,4,7.8,8.3,12.7,False,(3,0)),
-    ):
-        outcrop(name, x, y, ax, ay, h, root, mortar, rng, tunnel, lean)
-        apron(x, y, ax*1.29, ay*1.34, root, rng, tunnel)
+    for i,(row,height,reach,broken) in enumerate((
+        (-45,48,18,True),(-27,65,36,False),(-9,78,47,False),
+        (9,79,51,False),(27,70,43,False),(45,49,25,True),
+    )):
+        rng = random.Random(410903 + 209*i)
+        x = -21 + rng.uniform(-4.1,4.1)
+        y = row + rng.uniform(-1.7,1.7)
+        drift = rng.uniform(-7.5,7.5)
+        width, depth = rng.uniform(3.75,5.1), rng.uniform(2.65,3.37)
+        crest = x+reach
+        spine = path((x,y,-.054),(x,y,height*.62),
+                     (crest-reach*rng.uniform(.48,.65), y+drift*.26, height),
+                     (crest,y+drift,height*(.92 if broken else .991)))
+        tunnel = (x-.5,y) if i == 0 else None
+        vault(f"Rib {i+1:02}", spine, width, depth, stone, mortar, rng, broken, tunnel)
+        apron(x, y, width*2.88, depth*3.65, stone, rng, bool(tunnel))
         if tunnel:
-            passage_lining(x-.50, y, root, mortar, rng)
-            passage_floor(x-.50, y, root, rng)
+            passage_lining(*tunnel, stone, mortar, rng)
+            passage_floor(*tunnel, stone, rng)
+    rotation = Matrix.Rotation(math.radians(-36), 3, "Z")
+    for obj in vrlib.source_objects():
+        obj.data.transform(rotation.to_4x4())

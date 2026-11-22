@@ -2,11 +2,11 @@
   "id": "rib_arch_a",
   "category": "monuments",
   "title": "Tidebone Crossing",
-  "description": "Two crossing limestone vaults and a broken rib climb out of fractured, silt-bedded limestone roots.",
+  "description": "Six tapered, eroded limestone ribs arc in sequence above flared buttress roots and a small paved passage.",
   "target_size_m": [
-    114,
-    123,
-    81
+    102,
+    86,
+    80
   ],
   "lod_triangles": [
     30000,
