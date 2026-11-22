@@ -32,6 +32,28 @@ def link_mesh(name, verts, faces, material):
 
 def materials():
     stone=stone_material("rock_boulder_b_Paler_Referenzkalk")
+    nt=stone.node_tree
+    bsdf=nt.nodes["Principled BSDF"]
+    original=bsdf.inputs["Base Color"].links[0].from_socket
+    ao=nt.nodes.new("ShaderNodeAmbientOcclusion")
+    ao.inputs["Distance"].default_value=.16
+    dirt=nt.nodes.new("ShaderNodeMixRGB")
+    dirt.blend_type="MULTIPLY"
+    dirt.inputs[0].default_value=.32
+    nt.links.new(original,dirt.inputs[1])
+    nt.links.new(ao.outputs["Color"],dirt.inputs[2])
+    grain=nt.nodes.new("ShaderNodeTexNoise")
+    grain.inputs["Scale"].default_value=72
+    speckle=nt.nodes.new("ShaderNodeMath")
+    speckle.operation="GREATER_THAN"
+    speckle.inputs[1].default_value=.72
+    nt.links.new(grain.outputs["Fac"],speckle.inputs[0])
+    lichen=nt.nodes.new("ShaderNodeMixRGB")
+    nt.links.new(speckle.outputs[0],lichen.inputs[0])
+    nt.links.new(dirt.outputs[0],lichen.inputs[1])
+    palette=vrmat.load_palette()
+    lichen.inputs[2].default_value=tuple(.72*a+.28*b for a,b in zip(palette["canyon_chalk"]["linear_rgb"],palette["moss"]["linear_rgb"]))+(1,)
+    nt.links.new(lichen.outputs[0],bsdf.inputs["Base Color"])
     moss=stone.copy()
     moss.name="rock_boulder_b_Olivpolster"
     nt=moss.node_tree
@@ -75,86 +97,128 @@ def cut_plane(bm, point, normal):
 
 
 
-def moss_shell(body, material, name="Angewachsene_Moosschale", coverage=.7, thickness=.024):
-    if not body.data.polygons:
+def moss_shell(body, material, name="Angewachsene_Moosschale", coverage=.24, thickness=.022, min_height=.85, normal_z=.60):
+    mesh = body.data
+    normals = [v.normal.copy() for v in mesh.vertices]
+    adjacent = [set() for v in mesh.vertices]
+    for edge in mesh.edges:
+        a, b = edge.vertices
+        adjacent[a].add(b)
+        adjacent[b].add(a)
+    for _ in range(4):
+        normals = [(normals[i]+sum((normals[j] for j in neighbors), Vector())).normalized()
+                   for i, neighbors in enumerate(adjacent)]
+    candidates = [f for f in mesh.polygons if f.center.z > min_height
+                  and sum(normals[i].z for i in f.vertices)/len(f.vertices) > normal_z]
+    if not candidates:
         raise RuntimeError("No upward north-side faces for moss")
-    tree=BVHTree.FromObject(body,bpy.context.evaluated_depsgraph_get())
-    low,high=vrlib.world_bounds([body])
-    rng=random.Random(SEED+590)
-    candidates=[]
-    for _ in range(600):
-        x,y=rng.uniform(low.x,high.x),rng.uniform(max(-.05,low.y),high.y)
-        result=tree.ray_cast(Vector((x,y,high.z+1)),Vector((0,0,-1)))
-        p,n=result[:2]
-        if p is None or p.z<.85 or n.z<.68:
-            continue
+    tree=world_tree(body)
+    def field(p):
         heights=[]
-        for i in range(8):
-            angle=math.tau*i/8
-            hit=tree.ray_cast(p+Vector((.13*math.cos(angle),.13*math.sin(angle),1)),Vector((0,0,-1)))[0]
+        for dx,dy in ((.12,0),(-.12,0),(0,.12),(0,-.12)):
+            hit=tree.ray_cast(p+Vector((dx,dy,.5)),Vector((0,0,-1)))[0]
             if hit is not None:
                 heights.append(hit.z)
-        if len(heights)==8:
-            score=sum(heights)/8-p.z
-            if score>.001:
-                candidates.append((score,p.copy(),n.copy(),rng.uniform(.14,.23),rng.uniform(0,math.tau)))
-    candidates.sort(key=lambda row:row[0],reverse=True)
-    verts,faces,edges=[],[],[]
-    chosen=[]
-    rings,count=12,48
-    for score,centre,normal,radius,phase in candidates:
-        if len(chosen)>=6:
+        hollow=max(0,sum(heights)/len(heights)-p.z) if heights else 0
+        return (.65*n3(p.x*5,p.y*8,p.z*3)+.22*n3(p.x*17,p.y*13,p.z*10)
+                +.55*smooth((p.y-.05)/.7)+min(.45,hollow*10))
+    ranked = sorted(candidates, key=lambda f: field(f.center), reverse=True)
+    target = sum(f.area for f in candidates)*coverage
+    chosen, area = [], 0
+    for face in ranked:
+        chosen.append(face)
+        area += face.area
+        if area >= target:
             break
-        if any((centre-other).length<radius+other_radius+.025 for other,other_radius in chosen):
-            continue
-        points=[centre.copy()]
-        valid=True
-        for row in range(1,rings+1):
-            t=row/rings
-            for j in range(count):
-                angle=math.tau*j/count
-                r=radius*t*(1+.12*math.sin(angle*3+phase)+.07*math.sin(angle*7-phase))
-                x,y=centre.x+r*math.cos(angle),centre.y+r*math.sin(angle)*.83
-                result=tree.ray_cast(Vector((x,y,high.z+1)),Vector((0,0,-1)))
-                p,n=result[:2]
-                plane=centre.z-(normal.x*(x-centre.x)+normal.y*(y-centre.y))/normal.z
-                if p is None or n.z<.35 or abs(p.z-plane)>.14:
-                    valid=False
-                    break
-                points.append(p.copy())
-            if not valid:
-                break
-        if not valid:
-            continue
-        start=len(verts)
-        weights=[0]+[row/rings for row in range(1,rings+1) for j in range(count)]
-        for p,t in zip(points,weights):
-            h=.00015+feather((1-t)/.35)*(thickness+.004*noise.noise(p*25)+.0007*noise.noise(p*120))
-            verts.append(p+Vector((0,0,h)))
-            edges.append(feather((t-.32)/.68))
-        n=len(points)
-        verts.extend(p-Vector((0,0,.002)) for p in points)
-        edges.extend(feather((t-.32)/.68) for t in weights)
-        top=[(0,1+j,1+(j+1)%count) for j in range(count)]
-        for row in range(rings-1):
-            a,b=1+row*count,1+(row+1)*count
-            top.extend((a+j,b+j,b+(j+1)%count,a+(j+1)%count) for j in range(count))
-        faces.extend(tuple(start+i for i in f) for f in top)
-        faces.extend(tuple(start+n+i for i in reversed(f)) for f in top)
-        outer=1+(rings-1)*count
-        faces.extend((start+outer+j,start+outer+(j+1)%count,
-                      start+n+outer+(j+1)%count,start+n+outer+j) for j in range(count))
-        chosen.append((centre,radius))
-    if len(chosen)<2:
-        raise RuntimeError("No broad sheltered hollows for moss cushions")
-    obj=link_mesh(name,verts,faces,material)
+    edge_faces={}
+    for index,face in enumerate(chosen):
+        ids=list(face.vertices)
+        for a,b in zip(ids,ids[1:]+ids[:1]):
+            edge_faces.setdefault(tuple(sorted((a,b))),[]).append(index)
+    adjacent_faces=[set() for face in chosen]
+    for linked in edge_faces.values():
+        for index in linked:
+            adjacent_faces[index].update(linked)
+    pending=set(range(len(chosen)))
+    kept=[]
+    patch_count=0
+    while pending:
+        component={pending.pop()}
+        frontier=set(component)
+        while frontier:
+            frontier={j for i in frontier for j in adjacent_faces[i]}&pending
+            pending-=frontier
+            component|=frontier
+        if sum(chosen[i].area for i in component)>.012:
+            kept.extend(chosen[i] for i in sorted(component))
+            patch_count+=1
+    chosen=kept
+    if not chosen:
+        raise RuntimeError("No broad moss patches")
+    incident = {}
+    for fi, face in enumerate(chosen):
+        for i in face.vertices:
+            incident.setdefault(i, set()).add(fi)
+    used, mapping = [], {}
+    for i, pending in incident.items():
+        while pending:
+            component = {pending.pop()}
+            frontier = component.copy()
+            while frontier:
+                linked = {j for a in frontier for j in pending
+                          if len(set(chosen[a].vertices) & set(chosen[j].vertices)) > 1}
+                pending -= linked
+                component |= linked
+                frontier = linked
+            index = len(used)
+            used.append(i)
+            for fi in component:
+                mapping[fi, i] = index
+    top_faces = [tuple(mapping[fi, i] for i in f.vertices) for fi, f in enumerate(chosen)]
+    edges = {}
+    neighbors = {i: set() for i in range(len(used))}
+    for face in top_faces:
+        ids = list(face)
+        for a, b in zip(ids, ids[1:]+ids[:1]):
+            edge = tuple(sorted((a, b)))
+            edges[edge] = edges.get(edge, 0)+1
+            neighbors[a].add(b)
+            neighbors[b].add(a)
+    boundary = {i for edge, count in edges.items() if count == 1 for i in edge}
+    distance = {i: 0 for i in boundary}
+    frontier = boundary
+    for step in range(1, 9):
+        frontier = {j for i in frontier for j in neighbors[i] if j not in distance}
+        distance.update({i: step for i in frontier})
+    verts = []
+    for j, i in enumerate(used):
+        v = mesh.vertices[i]
+        p = v.co.copy()
+        taper = smooth(min(1, distance.get(j, 9)/6))
+        clump = -.009+.009*smooth(noise.noise(p*16)+.5)+.001*noise.noise(p*90)
+        verts.append(p+normals[i]*(.0004+taper*(thickness+clump)))
+    verts.extend(mesh.vertices[i].co-normals[i]*.004 for i in used)
+    n = len(used)
+    faces = top_faces + [tuple(n+i for i in reversed(f)) for f in top_faces]
+    for (a, b), count in edges.items():
+        if count == 1:
+            faces.append((a, b, b+n, a+n))
+    obj = link_mesh(name, verts, faces, material)
     transfer_stone_attributes(body,obj)
-    edge=obj.data.attributes.new("moss_edge","FLOAT","POINT")
-    edge.data.foreach_set("value",edges)
+    edge_attribute=obj.data.attributes.new("moss_edge","FLOAT","POINT")
+    for j in range(len(verts)):
+        edge_attribute.data[j].value=1-smooth(min(1,distance.get(j%n,9)/6))
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
+    bm.to_mesh(obj.data)
+    bm.free()
     for face in obj.data.polygons:
-        face.use_smooth=True
-    obj["moss_patch_count"]=len(chosen)
+        face.use_smooth = True
+    print("MOSS_SURFACE_COVERAGE", round(area/sum(f.area for f in candidates)*100, 1))
+    obj["moss_patch_count"]=patch_count
     obj["moss_lee_only"]=True
+    obj["moss_growth"]="surface hollows and lee-edge noise field"
     return obj
 
 def smooth(v):
@@ -661,6 +725,34 @@ def feather(value):
 
 def weather_faces(body):
     mesh=body.data
+    if not mesh.vertices:
+        raise ValueError("No rock surface to weather")
+    bm=bmesh.new()
+    bm.from_mesh(mesh)
+    bmesh.ops.triangulate(bm,faces=list(bm.faces))
+    for _ in range(8):
+        long_edges=[edge for edge in bm.edges if edge.calc_length()>.038]
+        if not long_edges:
+            break
+        bmesh.ops.subdivide_edges(bm,edges=long_edges,cuts=1,use_grid_fill=True)
+    pending=set(bm.faces)
+    components=[]
+    while pending:
+        component={pending.pop()}
+        frontier=component.copy()
+        while frontier:
+            frontier={neighbor for face in frontier for edge in face.edges if edge.is_manifold
+                      for neighbor in edge.link_faces}&pending
+            pending-=frontier
+            component|=frontier
+        components.append(component)
+    surface=max(components,key=lambda group:sum(face.calc_area() for face in group))
+    bmesh.ops.delete(bm,geom=[face for face in bm.faces if face not in surface],context="FACES")
+    bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces))
+    bm.to_mesh(mesh)
+    bm.free()
+    mesh.update()
+    mesh.set_sharp_from_angle(angle=math.radians(16))
     sharp=mesh.attributes.get("sharp_edge")
     adjacent=[set() for vertex in mesh.vertices]
     boundary=set()
@@ -681,18 +773,26 @@ def weather_faces(body):
     for vertex,normal in zip(mesh.vertices,normals):
         p=vertex.co.copy()
         dip=p.z+.16*p.x-.075*p.y
-        value=noise.noise(Vector((p.x*2.5,p.y*2.5,dip*3.5))+Vector((3,7,11)))
-        q=(value+1)*5
-        fraction=q-math.floor(q)
-        stepped=(math.floor(q)+feather((fraction-.3)/.4))/5-1
-        bed=.018*max(0,math.sin(dip*math.tau/.34+.25*noise.noise(p*2)))**3
-        bed*=feather((noise.noise(p*2+Vector((4,8,2)))+.3)*2)
-        amount=(.025*stepped+bed)*feather(distances.get(vertex.index,4)/4)
+        cell_distances,sites=noise.voronoi(p*4.2+Vector((3,7,11)))
+        weights=[math.exp(-(d-cell_distances[0])/.10) for d in cell_distances[:3]]
+        stepped=sum(weight*noise.cell(sites[k]) for k,weight in enumerate(weights))/sum(weights)
+        bed=.010*max(0,math.sin(dip*math.tau/.34+.25*noise.noise(p*2)))**3
+        bed*=feather((noise.noise(p*2+Vector((4,8,2)))-.18)*4)
+        distance=distances.get(vertex.index,4)
+        ripple=.012*math.sin(p.dot(Vector((4,7,3)))*math.tau+1.5*noise.noise(p*4))
+        ripple*=feather((noise.noise(p*1.7)-.28)*5)
+        chip=.020*feather((noise.noise(p*23)-.10)*3)*(1-feather(distance/4))
+        amount=(.035*stepped+bed+ripple+.004*noise.noise(p*17))*feather(distance/2)-chip
         amount*=feather((p.z+.035)/.15)
         vertex.co+=normal*amount
         attribute.data[vertex.index].value=amount
         offsets.append(amount)
     mesh.update()
+    tones=mesh.color_attributes["stone_tones"]
+    for vertex,normal in zip(mesh.vertices,normals):
+        gain=.93+.10*normal.x-.07*normal.y+.05*noise.noise(vertex.co*1.2)
+        color=tones.data[vertex.index].color
+        tones.data[vertex.index].color=tuple(c*gain for c in color[:3])+(1,)
     body["medium_relief_range_m"]=(min(offsets),max(offsets))
 
 
@@ -761,6 +861,7 @@ def build_asset():
     cut_cleft(body,(-.6,.8,0),2.3)
     body["fissure_count"]=2
     body["cleft_method"]="tapered Boolean V-grooves"
+    weather_faces(body)
     moss_shell(body,moss)
     normal=Vector(body["split_normal"])
     outward=Vector((normal.x,normal.y,0)).normalized()

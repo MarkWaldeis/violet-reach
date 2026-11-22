@@ -63,11 +63,12 @@ assert len(main.data.vertices)>10000
 if asset=="rock_boulder_b":
     assert 2.8<size.x<3.5 and 1.4<size.z<1.75 and size.x>size.z*1.7,size
     assert min(max(value.color[:3]) for value in main.data.color_attributes["stone_tones"].data)>.04
-    planar={}
-    for face in main.data.polygons:
-        normal=tuple(round(v,2) for v in face.normal)
-        planar[normal]=planar.get(normal,0)+face.area
-    assert sum(area>.20 for area in planar.values())>=2,planar
+    relief=[v.value for v in main.data.attributes["weather_relief"].data]
+    assert .025<max(relief)-min(relief)<.11,(min(relief),max(relief))
+    assert max(abs(v) for v in relief)<.055
+    assert sum(abs(v)>.01 for v in relief)>1000
+    assert any(n.type=="AMBIENT_OCCLUSION" for n in main.data.materials[0].node_tree.nodes)
+    print("B_FACE_RELIEF_M:",round(min(relief),4),round(max(relief),4))
     assert main["fissure_count"]==2
     block=next(obj for obj in stones if obj.get("replacement_kind"))
     points=np.array([tuple(v.co) for v in block.data.vertices])
@@ -85,6 +86,14 @@ if asset=="rock_boulder_b":
         builder.moss_shell(empty,None)
         raise AssertionError("Empty moss surface accepted")
     except RuntimeError:
+        pass
+    finally:
+        bpy.data.objects.remove(empty,do_unlink=True)
+    empty=bpy.data.objects.new("empty_weather_test",bpy.data.meshes.new("empty_weather_test"))
+    try:
+        builder.weather_faces(empty)
+        raise AssertionError("Empty weathering surface accepted")
+    except ValueError:
         pass
     finally:
         bpy.data.objects.remove(empty,do_unlink=True)

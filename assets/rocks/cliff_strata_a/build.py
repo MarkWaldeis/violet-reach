@@ -758,6 +758,8 @@ def finish():
 def wall_surface(donor):
     heights=strata_heights(45)
     rng=random.Random(SEED+412)
+    setbacks=[rng.uniform(.55,.62) for _ in heights[1:-1]]
+    setbacks[len(setbacks)//2]=2.0
     joints=[]
     for band,(a,b) in enumerate(zip(heights,heights[1:])):
         for k in range(rng.randint(2,5)):
@@ -780,23 +782,27 @@ def wall_surface(donor):
         q=Vector((math.sin(phase)*3,math.cos(phase)*3,z*.24))
         coarse=n3(q.x+SEED*.013,q.y,q.z)
         chip=noise.voronoi(q*2.7)[0]
-        relief=.045*n3(q.x*5.75,q.y*5.75,q.z*5.75+SEED*.013)
-        relief-=.025*(1-smooth((chip[1]-chip[0])/.25))
+        distances,sites=noise.voronoi(q*2.3+Vector((SEED*.013,2,7)))
+        weights=[math.exp(-(d-distances[0])/.055) for d in distances[:3]]
+        facets=sum(w*noise.cell(sites[j]) for j,w in enumerate(weights))/sum(weights)
+        relief=.15*facets+.085*n3(q.x*8,q.y*8,q.z*8+SEED*.013)
+        relief-=.08*(1-smooth((chip[1]-chip[0])/.16))*smooth(n3(q.x*13,q.y*13,q.z*13)+.5)
         warp=z+.55*math.sin(phase*2+z*.12)+.23*math.sin(phase*5-z*.20)
         band=next((j for j,b in enumerate(heights[1:]) if warp<b),len(heights)-2)
         a,b=heights[band:band+2]
         f=(warp-a)/(b-a)
-        continuity=smooth((math.sin(phase*(1+band%3)+band*2.17)+.30)/.85)
-        lip=(.55+1.05*continuity)*continuity
-        bench=lip*(smooth((f-.62)/.12)-smooth((f-.85)/.10))
-        under=-.22*continuity*math.exp(-((f-.50)/.12)**2)
-        front=4.35+.48*coarse+relief+bench+under
+        retreat=sum((step+.05*math.sin(phase*2+j*1.71))*smooth((warp-edge+.09)/.18)
+                    for j,(edge,step) in enumerate(zip(heights[1:-1],setbacks)))
+        under=-.24*math.exp(-((f-.90)/.06)**2)
+        lip=.12*math.exp(-((f-.98)/.025)**2)
+        broken_edge=-.15*smooth((n3(q.x*17,q.y*17,band+SEED*.01)+.2)*2)*math.exp(-((f-.98)/.06)**2)
+        front=5.2-retreat+.25*coarse+relief+under+lip+broken_edge+.18*f*math.sin(band*2.7)
         for centre,start,end,width,depth,seed in joints:
             path=centre+.58*math.sin(z*.23+seed)+.19*math.sin(z*.71-seed)
             window=smooth((z-start)/.65)*(1-smooth((z-end)/.65))
             width*=.65+.35*math.sin(z*.53+seed)**2
             front-=depth*window*max(0,1-abs(x-path)/width)*math.sin(math.pi*u)**2
-        back=-4.25-.47*n3(q.x+31,q.y-17,q.z*.7)-.75*relief-.55*bench
+        back=-5.65-.40*n3(q.x+31,q.y-17,q.z*.7)-1.3*relief
         y=front*(1-t)+back*t
         z+=h*(1-h)*.10*n3(q.x*.7,q.y*.7+t*4,z*.5)
         return (x,y,z)
@@ -843,6 +849,9 @@ def wall_surface(donor):
     obj["front_steps"]=nx
     obj["joint_count"]=len(joints)
     obj["closed_rock_back"]=True
+    obj["stratum_setbacks_m"]=setbacks
+    obj["bench_construction"]="integrated setbacks"
+    obj["back_shelves"]=False
     obj["landmark_mode"]="wall"
     return obj
 

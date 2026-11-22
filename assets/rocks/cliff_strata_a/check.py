@@ -101,6 +101,10 @@ elif asset in ("cliff_strata_a","rock_pillar_a"):
                 error=max(error,abs(b.x-a.x-40),abs(a.y-b.y),abs(a.z-b.z))
         assert error<.0001,error
         assert main["closed_rock_back"] and main["joint_count"]>=20
+        assert main["bench_construction"]=="integrated setbacks" and not main["back_shelves"]
+        setbacks=main["stratum_setbacks_m"]
+        assert all(.5<=v<=3 for v in setbacks) and sum(setbacks)>6,setbacks
+        print("CLIFF_STRATUM_SETBACKS_M:",tuple(round(v,3) for v in setbacks))
         points=np.array([tuple(v.co) for v in main.data.vertices])
         assert np.std(points[points[:,1]<-3,1])>.10
         side=points[points[:,0]>19.5]

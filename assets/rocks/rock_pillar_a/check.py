@@ -96,6 +96,22 @@ elif asset in ("cliff_strata_a","rock_pillar_a"):
     else:
         assert 12<size.x<18.1 and 58<size.z<62,size
         assert main["landmark_mode"]=="pillar"
+        turf=next(obj for obj in objects if obj.get("soil_mat_thickness_m"))
+        assert .3<=turf["soil_mat_thickness_m"]<=1
+        assert len(turf.data.materials)==2
+        assert max(v.co.z for v in turf.data.vertices)>max(v.co.z for v in main.data.vertices)+.4
+        grass=next(obj for obj in objects if obj.name=="Randgras")
+        assert len(grass.data.vertices)>=2600*9*4
+        assert len(main["stratum_radial_offsets_m"])==len(main["strata_heights_m"])-1
+        print("PILLAR_CROWN: 0.68 m rooted soil/grass mat; 2600 dense and draping tufts")
+        empty=bpy.data.objects.new("empty_crown_test",bpy.data.meshes.new("empty_crown_test"))
+        try:
+            builder.plant_terraces(empty,"pillar")
+            raise AssertionError("Empty crown surface accepted")
+        except RuntimeError:
+            pass
+        finally:
+            bpy.data.objects.remove(empty,do_unlink=True)
         points=np.array([tuple(v.co) for v in main.data.vertices])
         h=(points[:,2]-points[:,2].min())/size.z
         base=np.ptp(points[h<.12,0])

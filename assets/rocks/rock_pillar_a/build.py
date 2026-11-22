@@ -474,7 +474,10 @@ def grass_tufts(points, material, seed):
             width=rng.uniform(.018,.038)
             side=Vector((math.cos(angle)*width,math.sin(angle)*width,0))
             n=len(verts)
-            verts.extend((p-side,p+side,p+Vector((.002,-.002,.001)),p+Vector((rng.uniform(-.07,.07),rng.uniform(-.07,.07),rng.uniform(.55,1.15) if ASSET=="rock_pillar_a" else rng.uniform(.38,.78)))))
+            tip=Vector((rng.uniform(-.13,.13),rng.uniform(-.13,.13),rng.uniform(.65,1.25)))
+            if p.x*p.x/64+p.y*p.y/49>.40 and rng.random()<.38:
+                tip=Vector((p.x,p.y,0)).normalized()*rng.uniform(.45,.95)+Vector((0,0,rng.uniform(-.30,.35)))
+            verts.extend((p-side,p+side,p+Vector((.002,-.002,.001)),p+tip))
             faces.extend(((n,n+2,n+1),(n,n+1,n+3),(n+1,n+2,n+3),(n+2,n,n+3)))
     return link_mesh("Randgras",verts,faces,material)
 
@@ -589,7 +592,7 @@ def turf_shell(body, material, name="Angewachsene_Moosschale", coverage=.35, thi
     for j, i in enumerate(used):
         v = mesh.vertices[i]
         p = v.co.copy()
-        taper = min(1, distance.get(j, 9)/3)
+        taper = .45+.55*min(1, distance.get(j, 9)/3)
         clump = .0035*noise.noise(p*30)+.0008*noise.noise(p*155)
         verts.append(p+normals[i]*(.0004+taper*(thickness+clump)))
     verts.extend(mesh.vertices[i].co-normals[i]*.004 for i in used)
@@ -661,9 +664,7 @@ def grass_material():
     blend=nt.nodes.new("ShaderNodeMixRGB")
     nt.links.new(edge.outputs["Fac"],blend.inputs[0])
     nt.links.new(original,blend.inputs[1])
-    root=nt.nodes.new("ShaderNodeAttribute")
-    root.attribute_name="stone_tones"
-    nt.links.new(root.outputs["Color"],blend.inputs[2])
+    blend.inputs[2].default_value=tuple(v*1.10 for v in vrmat.load_palette()["grass_green"]["linear_rgb"])+(1,)
     nt.links.new(blend.outputs[0],bsdf.inputs["Base Color"])
     return mat
 
@@ -675,6 +676,7 @@ def pillar_surface(donor):
     tree=world_tree(donor)
     low,high=vrlib.world_bounds([donor])
     verts=[]
+    radial_steps=[-.60,-.15,-.85,.20,-.65,-1.10,-.30,.15,-.70,-.25,.30,-.30,.10,.20,.10,.0,.0,.0]
     for j in range(rows+1):
         h=j/rows
         z=h*height-.035
@@ -695,14 +697,20 @@ def pillar_surface(donor):
             a,b=heights[band:band+2]
             dip=z+.45*math.sin(angle*2+band*.7)
             t=(dip-a)/(b-a)
-            continuity=smooth((math.sin(angle+band*1.72)+.45)/.85)
-            strength=.70 if band%4 in (0,2) else .10
-            lip=-continuity*strength*(smooth((t-.14)/.055)-smooth((t-.84)/.075))
+            previous=radial_steps[max(0,band-1)]
+            current=radial_steps[band]
+            transition=smooth((dip-a+.09)/.18)
+            lip=previous+(current-previous)*transition
+            lip+=.12*math.sin(angle*3+band*1.72)
+            lip-=.20*math.exp(-((t-.92)/.045)**2)
             u,v,w=math.cos(angle)*3,math.sin(angle)*3,z*.18
-            distances=noise.voronoi(Vector((u*2.1+SEED*.013,v*2.7,w*2.5)))[0]
+            distances,sites=noise.voronoi(Vector((u*2.1+SEED*.013,v*2.7,w*2.5)))
             chip=1-smooth((distances[1]-distances[0])/.29)
             medium=n3(u*5.75,v*5.75,w*5.75+SEED*.013)
-            relief=.035*medium-.12*chip*smooth(.24+1.25*medium)
+            weights=[math.exp(-(d-distances[0])/.055) for d in distances[:3]]
+            facets=sum(weight*noise.cell(sites[k]) for k,weight in enumerate(weights))/sum(weights)
+            relief=.16*medium+.26*facets-.12*chip*smooth(.24+1.25*medium)
+            relief+=.055*n3(u*17,v*17,z*5)
             p+=radial*(lip+relief)*smooth(h/.04)
             p.x*=1+.14*math.sin(angle+1.5)*math.sin(h*7+.4)
             p.y*=1+.09*math.sin(angle*2-h*11)
@@ -761,20 +769,33 @@ def pillar_surface(donor):
     body.data.set_sharp_from_angle(angle=math.radians(35))
     body["strata_heights_m"]=heights
     body["landmark_mode"]="pillar"
+    body["stratum_radial_offsets_m"]=radial_steps[:len(heights)-1]
     bpy.data.objects.remove(donor,do_unlink=True)
     return body
 
 def plant_terraces(body, mode):
     bpy.context.view_layer.update()
     material=grass_material()
-    threshold=body.dimensions.z-2.0 if mode=="pillar" else 1.2
-    turf=turf_shell(body,material,"Grasige_Terrassen",coverage=.98,
-                    thickness=.16 if mode=="pillar" else .12,min_height=threshold,
+    threshold=body.dimensions.z-.40 if mode=="pillar" else 1.2
+    turf=turf_shell(body,material,"Grasige_Terrassen",coverage=1.0,
+                    thickness=.68 if mode=="pillar" else .12,min_height=threshold,
                     normal_z=-.12 if mode=="pillar" else .48)
+    soil=vrmat.get("dirt_path").copy()
+    soil.name=ASSET+"_Durchwurzelte_Kappenerde"
+    soil_bsdf=soil.node_tree.nodes["Principled BSDF"]
+    for link in list(soil_bsdf.inputs["Base Color"].links):
+        soil.node_tree.links.remove(link)
+    palette=vrmat.load_palette()
+    soil_bsdf.inputs["Base Color"].default_value=tuple(.72*a+.28*b for a,b in zip(palette["soil"]["linear_rgb"],palette["path_sand"]["linear_rgb"]))+(1,)
+    turf.data.materials.append(soil)
+    for face in turf.data.polygons:
+        if face.normal.z<.25:
+            face.material_index=1
+    turf["soil_mat_thickness_m"]=.68
     bpy.context.view_layer.update()
     faces=[f for f in turf.data.polygons if f.normal.z>.30 and f.center.z>threshold]
     rng=random.Random(SEED+71)
-    points=[turf.matrix_world@f.center for f in rng.sample(faces,min(900,len(faces)))]
+    points=[turf.matrix_world@f.center for f in rng.choices(faces,weights=[f.area for f in faces],k=2600)]
     grass_tufts(points,material,SEED+71)
 
 
