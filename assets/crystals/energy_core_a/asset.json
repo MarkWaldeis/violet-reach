@@ -1,0 +1,20 @@
+{
+  "id": "energy_core_a",
+  "category": "crystals",
+  "title": "Violet Seed Sanctuary",
+  "description": "A double-terminated violet energy seed levitating just above four fractured chalk-limestone cradle stones. Its bright central heart fades to dark violet facet edges; reference: ref_07_violet_crater.",
+  "target_size_m": [
+    20,
+    22,
+    19.3
+  ],
+  "lod_triangles": [
+    18800,
+    6900,
+    2100
+  ],
+  "texture_size": 4096,
+  "status": "blender_review",
+  "builder": "devin-79c81cd3e9c64cc49f913648e628a347",
+  "review": null
+}
