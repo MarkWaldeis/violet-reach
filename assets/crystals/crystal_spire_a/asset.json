@@ -14,8 +14,22 @@
     1150
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-79c81cd3e9c64cc49f913648e628a347",
-  "review": null,
-  "review_rounds": 1
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 7,
+      "material": 7,
+      "scale": 8,
+      "style": 7,
+      "defects": 7
+    },
+    "notes": "Round 2: rejected, one round left. Fixed: the spire now leans and tapers, with 2-3 intergrown secondary prisms and growth shoulders; dark growth bands and light veins are present; the sugar-cube ring is replaced by a limestone outcrop with a soil pocket (sheet turns, hero). Still failing: (1) form_detail 7: the main prism is a soft column with rounded, bevel-smoothed arrises and near-flat faces, and the shoulders are even rings like telescoping sleeves; the tip is a rounded pencil-end, not a broken termination (closeup_upper, turn_155). Compared with the approved crystal_violet_cluster_a, there are no crisp facet planes or termination faces. (2) material 7: the violet is flat and matte; the dark bands are soft horizontal smears and the veins are thin wiggly light lines drawn on the surface, with no depth or inner glow; a pale specular triangle shows at the main shoulder (closeup, turn_155). (3) style 7: reads as a purple candle or rubber obelisk rather than a mineral. (4) defects 7: the outcrop blocks are large clean pale boxes with soft edges and no weathering; the soil pocket is a flat disc with evenly spaced moss dots like polka dots; one loose cube block stands apart next to the figure (turn_155); pebbles are evenly scattered (closeup_base). Fix: sharpen the arrises (smaller bevel, no smooth shading across facets), vary facet widths and add a real broken termination with a conchoidal break; make the shoulders irregular and partial instead of full rings; use the cluster_a material depth (dark core, internal facet bands, veins inside the body) with a little more gloss; weather and split the outcrop blocks and merge the loose cube into it; break up the soil edge and cluster the moss in cracks.",
+    "round": 2,
+    "source_sha256": "a3b924b6ef425b059e6dffc08b27b5f20af713843ddd4004b33e533cf8fe56d2",
+    "sheet_sha256": "232ef237a7a54f8a92096feccf6c3f37ab815e74c6097baf82297103491d7bb4"
+  },
+  "review_rounds": 2
 }
