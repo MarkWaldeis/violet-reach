@@ -39,8 +39,8 @@
   ],
   "export": {
     "file": "export/gate_white_a.glb",
-    "bytes": 4050624,
-    "sha256": "269343164815e23c51e4fc439526e06342933bb6455f973dfd508651661bb815",
+    "bytes": 5881392,
+    "sha256": "922615bf8b45e21e351256b7fe651901fa8960a375298ac6407fa8034ed83382",
     "source_sha256": "68737665b691275d2fb184b85c6a6a271056bfa51bf3162d6931b357a31cc917",
     "sheet_sha256": "dc6a59ae9d6da6d33cb06f4b9a385d9d2c23b9a6b4b7124b2685d5870bec8bce",
     "lod_triangles": [
@@ -49,5 +49,6 @@
       2500
     ],
     "texture_size": 2048
-  }
+  },
+  "texture_format": "ktx2"
 }

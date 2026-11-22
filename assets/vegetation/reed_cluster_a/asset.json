@@ -39,8 +39,8 @@
   ],
   "export": {
     "file": "export/reed_cluster_a.glb",
-    "bytes": 1046108,
-    "sha256": "c28fa881024402a4505edc2c670d10dbc5bff7bd2cdee951ac52c8ecd5d0e169",
+    "bytes": 2166416,
+    "sha256": "5c0a6352522f97a00f40e7408a5581b8e749d97cb4f0c7f02e5283cf47de9cb0",
     "source_sha256": "193159eb97e46fb65e535afb083b2d67e708bcacc709924eb50fbe981fb4ca99",
     "sheet_sha256": "41a16c943569a30ca3548b13c2fc29383a06209383aaf5fc07ccbf90e7ee6c11",
     "lod_triangles": [
@@ -49,5 +49,6 @@
       600
     ],
     "texture_size": 1024
-  }
+  },
+  "texture_format": "ktx2"
 }

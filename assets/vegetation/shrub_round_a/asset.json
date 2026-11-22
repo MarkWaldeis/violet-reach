@@ -39,8 +39,8 @@
   ],
   "export": {
     "file": "export/shrub_round_a.glb",
-    "bytes": 1520656,
-    "sha256": "5688199fd44e00a90af49db3af6fa0829ab1434f6b1d99a41bb40e39140811f1",
+    "bytes": 3086624,
+    "sha256": "f9de757623f4e6a1ec180006b86e3f372ae3127c89e7eb595b335956e078a2d8",
     "source_sha256": "1c52aacee94ba6c47398f39309614aab74263938be46f4e86f7ab4b244e719c1",
     "sheet_sha256": "30af8159dc715054a212821f5facd8bcfd1cebdc539d1496d605e3ea3d2fb209",
     "lod_triangles": [
@@ -49,5 +49,6 @@
       1200
     ],
     "texture_size": 1024
-  }
+  },
+  "texture_format": "ktx2"
 }

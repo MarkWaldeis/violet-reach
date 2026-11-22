@@ -39,8 +39,8 @@
   ],
   "export": {
     "file": "export/lake_shore_a.glb",
-    "bytes": 3825952,
-    "sha256": "5fa742f9909396add1241397eb4ddc6202d4b34d5ee022a1f0a759212c2370e9",
+    "bytes": 5120352,
+    "sha256": "9f7031e1017b2e49979c70d917eacbf7bdb9ce83b91e8672f2c78f4d347626d1",
     "source_sha256": "32afd73456563dc46b0783d6c612c9a4a2ca728cd45740cbcb43b59f5fad8a1b",
     "sheet_sha256": "e81f688f323bfe6af1368924e8d0df34b5b7d2e5062a9a434972e59da9c21fea",
     "lod_triangles": [
@@ -49,5 +49,6 @@
       2800
     ],
     "texture_size": 2048
-  }
+  },
+  "texture_format": "ktx2"
 }

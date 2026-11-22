@@ -39,8 +39,8 @@
   ],
   "export": {
     "file": "export/fern_cluster_a.glb",
-    "bytes": 1489400,
-    "sha256": "7040523f8be6c71ea86347c0a0009fc6245d8918bb8f1789b0e690d770ad8b85",
+    "bytes": 2776896,
+    "sha256": "7949f2a14fc61d9ede7d2cebb30514521e5c7b20acb2ee9812637d93c5e90333",
     "source_sha256": "5498a5d6afc9001d630c74113283665e94fe2c7cc4a4820b9419e214496e6649",
     "sheet_sha256": "fa4aac1d20fec6ae96ee06417c222ec2c432957d9dcec5ff24aebb38aaa8350f",
     "lod_triangles": [
@@ -49,5 +49,6 @@
       1000
     ],
     "texture_size": 1024
-  }
+  },
+  "texture_format": "ktx2"
 }

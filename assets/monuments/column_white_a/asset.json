@@ -45,8 +45,8 @@
   ],
   "export": {
     "file": "export/column_white_a.glb",
-    "bytes": 3337468,
-    "sha256": "34f8dfb1521fa7ed92a6d4540f9227b14ec5f924e755073a533e12799081c9e2",
+    "bytes": 5570592,
+    "sha256": "1b91a3b5ff4154e5777d149738155749b2b77127b0a23573ca8513fa648dce40",
     "source_sha256": "40f00c4405d46565fac69fa078e30a693d3c9f51d802d0da13701eacaf5ce6bb",
     "sheet_sha256": "f8fc36499c71eb25f3f12a8abba23783ff960667eec85c3a72323590f4f400f0",
     "lod_triangles": [
@@ -55,5 +55,6 @@
       1900
     ],
     "texture_size": 2048
-  }
+  },
+  "texture_format": "ktx2"
 }

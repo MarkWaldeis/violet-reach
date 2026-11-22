@@ -39,8 +39,8 @@
   ],
   "export": {
     "file": "export/crystal_spire_a.glb",
-    "bytes": 2452032,
-    "sha256": "62462ac15d5d888eca329d030b80befffbc58d8864d937fd1111901964b34bd7",
+    "bytes": 4716752,
+    "sha256": "c6d8829591b66b7b61a31d09f54c419ccfada34ff786675f4566acfd99df169a",
     "source_sha256": "37bf0f20c444b77664a09754cbd560ff0f9bf0548f1c12542e3ce265cc5a5550",
     "sheet_sha256": "a8397dfa687fb655cf9cf24a6329b0dca2acfe16fce554ba0649eeb543769b8f",
     "lod_triangles": [
@@ -49,5 +49,6 @@
       1150
     ],
     "texture_size": 2048
-  }
+  },
+  "texture_format": "ktx2"
 }

@@ -39,8 +39,8 @@
   ],
   "export": {
     "file": "export/stair_terrace_a.glb",
-    "bytes": 4181124,
-    "sha256": "42d61153fb7a8415e2c865f081c4ead4fe5c07e9b5ceb16f5aa08af9321fa2f2",
+    "bytes": 8144844,
+    "sha256": "ab14c0cc00d0be067ead2b7739bedb050f34bb5506feab5d2aa7831e3dfb5475",
     "source_sha256": "e2543561211b980d87d7c4c6d078a55a3b1766cbe3ac0c822206858284936449",
     "sheet_sha256": "bbee391b8fbe2ad07a4a1867a7ce9f94787975046124f53dcd668ca5ade9203d",
     "lod_triangles": [
@@ -49,5 +49,6 @@
       2400
     ],
     "texture_size": 4096
-  }
+  },
+  "texture_format": "ktx2"
 }

@@ -39,8 +39,8 @@
   ],
   "export": {
     "file": "export/crystal_violet_cluster_a.glb",
-    "bytes": 3316836,
-    "sha256": "5b0a87175b0387fcf3ee999a945b8b332c885a2cac97dafbc005666fa41c6163",
+    "bytes": 5589544,
+    "sha256": "ba5bba1b20ebffc91d31bbd9fe0039b2ec60bd95c783f9f7192250b2ccf3c2e9",
     "source_sha256": "17020b6360bb72455fceb4918ed42ac7c387faad018551de1d2c851e13ebd03d",
     "sheet_sha256": "51064c16c5262262a1a64c178d77dce3387ac0a22ef7c5b99579066fb5c50066",
     "lod_triangles": [
@@ -49,5 +49,6 @@
       2000
     ],
     "texture_size": 2048
-  }
+  },
+  "texture_format": "ktx2"
 }

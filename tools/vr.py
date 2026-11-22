@@ -328,6 +328,128 @@ def cmd_export(a):
     print(f"{a.id}: exported {meta['export']['bytes'] / 1e6:.2f} MB")
 
 
+def _glb_webp_to_png(src_glb, dst_glb):
+    """Rewrite embedded image/webp images in a GLB to image/png for gltf-transform ktx encoding."""
+    import io
+    from PIL import Image
+
+    blob = Path(src_glb).read_bytes()
+    magic, version, _ = struct.unpack("<4sII", blob[:12])
+    if magic != b"glTF" or version != 2:
+        raise ValueError(f"{src_glb}: not a glTF 2.0 binary")
+    pos = 12
+    gltf_json, bin_chunk = None, bytearray()
+    while pos + 8 <= len(blob):
+        clen, ctype = struct.unpack("<II", blob[pos:pos + 8])
+        pos += 8
+        cdata = blob[pos:pos + clen]
+        pos += clen
+        if ctype == 0x4E4F534A:  # JSON
+            gltf_json = json.loads(cdata.decode("utf-8"))
+        elif ctype == 0x004E4942:  # BIN
+            bin_chunk = bytearray(cdata)
+    if gltf_json is None:
+        raise ValueError(f"{src_glb}: missing JSON chunk")
+
+    for tex in gltf_json.get("textures", []):
+        ext = tex.get("extensions") or {}
+        if "EXT_texture_webp" in ext:
+            if "source" not in tex and "source" in ext["EXT_texture_webp"]:
+                tex["source"] = ext["EXT_texture_webp"]["source"]
+            ext.pop("EXT_texture_webp", None)
+            if not ext:
+                tex.pop("extensions", None)
+    for key in ("extensionsUsed", "extensionsRequired"):
+        if key in gltf_json:
+            gltf_json[key] = [e for e in gltf_json[key] if e != "EXT_texture_webp"]
+            if not gltf_json[key]:
+                gltf_json.pop(key, None)
+
+    bvs = gltf_json.get("bufferViews", [])
+    for img in gltf_json.get("images", []):
+        if img.get("mimeType") != "image/webp" or "bufferView" not in img:
+            continue
+        bv = bvs[img["bufferView"]]
+        off = bv.get("byteOffset", 0)
+        raw = bytes(bin_chunk[off:off + bv["byteLength"]])
+        buf = io.BytesIO()
+        Image.open(io.BytesIO(raw)).save(buf, format="PNG")
+        png_bytes = buf.getvalue()
+        while len(bin_chunk) % 4 != 0:
+            bin_chunk.append(0)
+        new_off = len(bin_chunk)
+        bin_chunk.extend(png_bytes)
+        bv["byteOffset"] = new_off
+        bv["byteLength"] = len(png_bytes)
+        img["mimeType"] = "image/png"
+    while len(bin_chunk) % 4 != 0:
+        bin_chunk.append(0)
+    if gltf_json.get("buffers"):
+        gltf_json["buffers"][0]["byteLength"] = len(bin_chunk)
+
+    jbytes = bytearray(json.dumps(gltf_json, separators=(",", ":"), ensure_ascii=False).encode("utf-8"))
+    while len(jbytes) % 4 != 0:
+        jbytes.append(0x20)
+    total = 12 + 8 + len(jbytes) + 8 + len(bin_chunk)
+    out = bytearray()
+    out.extend(struct.pack("<4sII", b"glTF", 2, total))
+    out.extend(struct.pack("<II", len(jbytes), 0x4E4F534A))
+    out.extend(jbytes)
+    out.extend(struct.pack("<II", len(bin_chunk), 0x004E4942))
+    out.extend(bin_chunk)
+    Path(dst_glb).write_bytes(bytes(out))
+
+
+def _repack_one_ktx2(d):
+    meta = load(d)
+    asset_id = meta["id"]
+    if meta.get("status") not in {"exported", "in_game"} or not meta.get("export"):
+        raise SystemExit(f"{asset_id}: must already be exported before KTX2 repack")
+    src_glb = export_path(d)
+    if not matches_glb(src_glb, meta["export"]):
+        raise SystemExit(f"{asset_id}: exported GLB missing or hash mismatch before repack")
+    _ensure_ktx_path()
+    gltf = [shutil.which("npx") or "npx", "--no-install", "gltf-transform"]
+    web = os.path.join(ROOT, "web")
+    with tempfile.TemporaryDirectory(dir=d) as work:
+        as_png = os.path.join(work, "png.glb")
+        step1 = os.path.join(work, "step1.glb")
+        step2 = os.path.join(work, "step2.glb")
+        packed = os.path.join(work, "packed.glb")
+        _glb_webp_to_png(src_glb, as_png)
+        if meta.get("category") == "vegetation":
+            # Keep crisp alpha cutout edges on leaves via UASTC baseColor + normal
+            subprocess.run(gltf + ["uastc", as_png, step1, "--slots", "{baseColorTexture,normalTexture}"], cwd=web, check=True)
+            subprocess.run(gltf + ["etc1s", step1, step2, "--slots", "{metallicRoughnessTexture,occlusionTexture,emissiveTexture}"], cwd=web, check=True)
+        else:
+            subprocess.run(gltf + ["etc1s", as_png, step1, "--slots", "{baseColorTexture,metallicRoughnessTexture,occlusionTexture,emissiveTexture}"], cwd=web, check=True)
+            subprocess.run(gltf + ["uastc", step1, step2, "--slots", "normalTexture"], cwd=web, check=True)
+        subprocess.run(gltf + ["meshopt", step2, packed], cwd=web, check=True)
+        os.replace(packed, str(src_glb))
+    meta["texture_format"] = "ktx2"
+    meta["export"]["bytes"] = os.path.getsize(src_glb)
+    meta["export"]["sha256"] = sha256(str(src_glb))
+    save(d, meta)
+    print(f"{asset_id}: repacked to KTX2 ({meta['export']['bytes'] / 1e6:.2f} MB)")
+
+
+def cmd_repack_ktx2(a):
+    targets = []
+    if a.all_legacy:
+        for d in asset_dirs():
+            meta = load(d)
+            if meta.get("status") in {"exported", "in_game"} and meta.get("texture_format", "webp") == "webp":
+                targets.append(d)
+    elif a.ids:
+        targets = [find(asset_id) for asset_id in a.ids]
+    else:
+        raise SystemExit("Specify asset id(s) or --all-legacy")
+    for d in targets:
+        _repack_one_ktx2(d)
+    sync_web()
+    print(f"repacked {len(targets)} asset(s) to KTX2 and synced web/public/assets")
+
+
 def export_path(asset_dir):
     return Path(asset_dir) / "export" / (Path(asset_dir).name + ".glb")
 
@@ -467,6 +589,10 @@ def main():
     s.add_argument("--scores", required=True); s.add_argument("--notes"); s.set_defaults(fn=cmd_review)
     s = sub.add_parser("export"); s.add_argument("id"); s.set_defaults(fn=cmd_export)
     sub.add_parser("check").set_defaults(fn=cmd_check)
+    r = sub.add_parser("repack-ktx2", help="Bestehende WebP-GLBs ohne Neu-Bake nach KTX2 umpacken")
+    r.add_argument("ids", nargs="*")
+    r.add_argument("--all-legacy", action="store_true")
+    r.set_defaults(fn=cmd_repack_ktx2)
     sub.add_parser("swatches", help="Materialmuster mit Cycles/CPU rendern").set_defaults(fn=cmd_swatches)
     args = p.parse_args()
     args.fn(args)

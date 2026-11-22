@@ -39,8 +39,8 @@
   ],
   "export": {
     "file": "export/bridge_arch_a.glb",
-    "bytes": 3806124,
-    "sha256": "9ebac882ef3e6b288948e425a8c41679e53c0549769c6e21640e43a82d6384ad",
+    "bytes": 4929480,
+    "sha256": "6f254c15ea8d93a2971c43061b2813984997c1ab80f2ef02defd5cc9f68f6125",
     "source_sha256": "079e0a669262bd1dccd8eba573109faf47fac9b6c0075ea03460b72e0fab9c7f",
     "sheet_sha256": "ffc27ac3b3d9f88872f5c2691ff56acc23d3fca086d07a3db5673d65ccf66fe7",
     "lod_triangles": [
@@ -49,5 +49,6 @@
       3100
     ],
     "texture_size": 2048
-  }
+  },
+  "texture_format": "ktx2"
 }
