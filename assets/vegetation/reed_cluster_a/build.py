@@ -147,7 +147,8 @@ def build():
             leaf_angle = angle+j*2.39996+rng.uniform(-.35, .35)
             outward = Vector((math.cos(leaf_angle), math.sin(leaf_angle), 0))
             length = rng.uniform(.40,.75)*(1-.25*t0)
-            points = [root+outward*(length*t**1.25)+UP*(length*(1.3*t-1.45*t*t)) for t in [k/7 for k in range(8)]]
+            droop = min(.15, max(0, (root.z+.015)/length))
+            points = [root+outward*(length*t**1.25)+UP*(length*(1.3*t-(1.3+droop)*t*t)) for t in [k/7 for k in range(8)]]
             blade(mesh, points, rng.uniform(.014,.025), UP.cross(outward), i%9 == 0, .25, i%3 == 0)
         if i in plumes and not broken:
             top = stem(1)
