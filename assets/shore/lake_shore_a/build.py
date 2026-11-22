@@ -36,7 +36,7 @@ def scale(a, factor):
 
 
 def waterline(x):
-    return .66*(x/HALF)**2 + .27*math.sin(.39*x+.78) - .19*math.sin(.82*x-.45) + .073*math.sin(1.4*x)
+    return .86*(x/HALF)**2 + .36*math.sin(.39*x+.78) - .25*math.sin(.82*x-.45) + .081*math.sin(1.4*x)
 
 
 def turf_line(x):
@@ -115,14 +115,15 @@ def sand_color(p, x, d):
     q = d - turf_line(x)
     silt = n3(x*1.03, d*.74, 18)
     warp = .18*n3(x*.48, d*1.8, 20) + .09*n3(x*1.7, d*3, 14)
-    wet = 1 - smooth((d-.06+warp)/(.72+.18*math.sin(.76*x)+.13*silt))
+    wet = 1 - smooth((d-.46+warp)/(.75+.21*math.sin(.76*x)+.24*silt))
     fine = .10*n3(x*3.4, d*4.1, 6)
     dry = scale(blend(p["soil"], p["path_sand"], smooth(.76 + .34*silt + fine)), .96)
-    soaked = scale(blend(p["soil"], p["path_sand"], .14+.12*silt), .54)
+    soaked = scale(blend(p["soil"], p["path_sand"], .14+.19*silt), .65)
     color = blend(dry, soaked, wet)
     scarp = smooth((q+.27+warp)/.32)
     turf = smooth((q-.33+.42*silt+warp)/.54)
-    top = scale(blend(p["moss"], p["grass_green"], smooth(.78+.64*silt)), 1.41)
+    moss = n3(x*2.6, d*3.3, 27)
+    top = scale(blend(p["moss"], p["grass_green"], smooth(.59+.64*silt+.66*moss)), 1.30 + .38*moss)
     earth = scale(p["soil"], .74+.37*silt)
     bands = .95 + .10*math.sin(23*q + 2.2*n3(x*.85, d*1.2, 6))
     return blend(blend(color, scale(earth, bands), scarp), top, turf), wet
@@ -161,9 +162,32 @@ def shore_ground(p):
         m.faces.append((i, offset+j, offset+k, perimeter[k]))
     # The perimeter is concave alongshore; tessellate the underside n-gon in Blender.
     m.faces.append(tuple(reversed(range(offset, len(m.verts)))))
-    ground = socket_material("dirt_path", "Shinglewake | sand, capillary fringe and turf",
-                             "bank_tones", .93, "ground_moisture", (.84, .40))
-    m.object("Continuous sandy shelf and undercut bank", (ground,), "bank_tones", "ground_moisture")
+    ground = socket_material("dirt_path", "Shinglewake | sand and capillary fringe",
+                             "bank_tones", .94, "ground_moisture", (.84, .31))
+    nodes, links = ground.node_tree.nodes, ground.node_tree.links
+    coords = next(n for n in nodes if n.type == "TEX_COORD")
+    grains = nodes.new("ShaderNodeTexNoise")
+    grains.inputs["Scale"].default_value = 27
+    grains.inputs["Detail"].default_value = 2.6
+    links.new(coords.outputs["Object"], grains.inputs["Vector"])
+    shade = nodes.new("ShaderNodeMapRange")
+    shade.inputs["To Min"].default_value = .67
+    shade.inputs["To Max"].default_value = 1.21
+    links.new(grains.outputs["Fac"], shade.inputs["Value"])
+    bsdf = nodes["Principled BSDF"]
+    color = bsdf.inputs["Base Color"]
+    mineral = nodes.new("ShaderNodeMixRGB")
+    mineral.blend_type = "MULTIPLY"
+    mineral.inputs[0].default_value = 1
+    links.new(color.links[0].from_socket, mineral.inputs[1])
+    links.new(shade.outputs["Result"], mineral.inputs[2])
+    links.new(mineral.outputs[0], color)
+    turf = socket_material("grass_ground", "Shinglewake | living ground cover", "bank_tones", .83)
+    shore = m.object("Continuous sandy shelf and undercut bank", (ground, turf), "bank_tones", "ground_moisture")
+    for poly in shore.data.polygons[:nx*nd]:
+        x, y, _ = poly.center
+        if y - waterline(x) > turf_line(x) + .64 + .16*n3(x*1.7, 7, 24):
+            poly.material_index = 1
 
 
 def ico(level):
@@ -181,34 +205,48 @@ def eased_min(a, b, radius):
     return min(a, b) - gap*gap/(4*radius)
 
 
-def cobble(m, p, template, x, d, r, flat, rng):
+def cobble(m, p, template, x, d, r, flat, rng, form=None):
     coords, faces = template
     offset = len(m.verts)
     a = rng.uniform(0, math.tau)
     ca, sa = math.cos(a), math.sin(a)
     seed = rng.uniform(25, 825)
-    elongation = rng.uniform(.43, .94)
+    form = rng.choice(("split", "slab", "worn")) if form is None else form
+    elongation = rng.uniform(.50, .85) if form != "worn" else rng.uniform(.76, 1.02)
     weather = rng.random()
-    z0 = bank(x, d) + r*flat*rng.uniform(.16, .43)
+    ground = bank(x, d)
+    z0 = ground + r*flat*rng.uniform(.06, .36)
     y = waterline(x)+d
-    # Rounded cleavage faces, chipped where the larger Voronoi joints reach the surface.
     cuts = []
-    for _ in range(rng.randint(5, 9)):
-        theta = rng.uniform(0, math.tau)
-        rise = rng.uniform(-.64, .86)
+    strike = rng.uniform(0, math.tau)
+    count = rng.randint(4, 6)
+    for j in range(count):
+        theta = strike + j*math.tau/count + rng.uniform(-.26,.26)
+        rise = rng.uniform(-.27, .29)
         axy = math.sqrt(1-rise*rise)
-        cuts.append((math.cos(theta)*axy, math.sin(theta)*axy, rise, rng.uniform(.62, .96)))
-    lean = rng.uniform(-.37, .39)
+        setback = rng.uniform(.55, .73) if form != "worn" else rng.uniform(.91, .99)
+        cuts.append((math.cos(theta)*axy, math.sin(theta)*axy, rise, setback))
+    if form == "slab":
+        flat *= .75
+        cuts.extend(((.14, -.12, .98, rng.uniform(.36,.49)), (-.52,.36,.77,.56),
+                     (.63, .69, .33, rng.uniform(.51,.68))))
+    elif form == "split":
+        cuts.extend(((.32, .34, .88, rng.uniform(.55,.68)), (-.54,-.37,.75,.61),
+                     (-.05, .66, .75, rng.uniform(.52,.72))))
+    lean = rng.uniform(-.20, .20)
     kind = rng.random()
     if kind < .29:
-        body = scale(p["shore_wet"], rng.uniform(.42, .68))
-    elif kind < .55:
-        body = blend(p["canyon_strata"], p["sandstone"], rng.uniform(.01, .42))
-    elif kind < .86:
-        body = blend(p["shore_wet"], p["canyon_strata"], rng.uniform(.11, .60))
+        body = blend(scale(p["shore_wet"], .57), p["canyon_strata"], .18)
+    elif kind < .53:
+        body = blend(p["soil"], p["sandstone"], rng.uniform(.48, .86))
+    elif kind < .75:
+        body = blend(p["shore_wet"], p["canyon_strata"], rng.uniform(.61, .83))
     else:
         body = blend(p["canyon_strata"], p["canyon_chalk"], rng.uniform(.15, .56))
-    halo = .043 + .186*smooth((.74-d)/.96)
+    if form == "slab":
+        body = blend(body, p["canyon_strata"], .28)
+    halo = .033 + .096*smooth((.74-d)/.96)
+    floor = max(BOTTOM+.0005, ground-.25*r*flat)
     lichen_prop = rng.uniform(.14, .40) if d > .48 else .045
     for u, v, w in coords:
         seam = noise.voronoi(Vector((u*(1.6+weather)+seed, v*2.7, w*(2.1+.8*weather))))[0]
@@ -216,29 +254,28 @@ def cobble(m, p, template, x, d, r, flat, rng):
         coarse = n3(2.1*u, 2.1*v+seed, 2.1*w)
         medium = n3(5.75*u, 5.75*v, 5.75*w+seed)
         fine = n3(15*u+seed, 15*v, 15*w)
-        radial = 1
+        radial = 1 + (.13 if form == "worn" else .09)*coarse
         for nx, ny, nz, upper in cuts:
             dot = nx*u+ny*v+nz*w
-            if dot > .60:
-                radial = eased_min(radial, upper/dot, .083)
-        lamina = math.sin((14+5*weather)*(w+.25*u-.13*v) + 2.1*coarse)
+            if dot > .28:
+                radial = eased_min(radial, upper/dot, .035 if form != "worn" else .095)
+        lamina = math.sin((19+7*weather)*(w+.22*u-.14*v) + .76*coarse)
         breakout = smooth(.44 + 1.25*medium - .43*weather)
-        radial *= (1 + .205*coarse + (.035+.034*weather)*medium + .018*fine
-                   - .079*chip*breakout + .021*lamina*smooth((.83-kind)*1.6))
+        radial *= (1 + (.026+.016*weather)*medium + .013*fine
+                   - .043*chip*breakout + (.019 if form == "slab" else .010)*lamina)
         u1, v1 = (u*radial + lean*w*.48)*r, v*radial*r*elongation
         px, py = x+ca*u1-sa*v1, y+sa*u1+ca*v1
         z = z0 + r*flat*(w*radial + lean*u*.41)
         # Turn the bottom into a small bedding contact, not another ellipsoid pole.
-        floor = max(BOTTOM+.0005, bank(x, d)-.19*r*flat)
         z = floor + .013*r*flat + max(0, z-floor)
         m.verts.append((px, py, z))
         water_z = halo + .049*n3(5*u+seed, 4*v, 2*w)*min(1, r*2)
         wet = max(.0, (1-smooth((z-water_z)/max(.022, r*.14))) * smooth((1.18-d)/.83))
         m.factors.append(wet)
         # Pale mineral on fresh edges, warmer lichen only where elevation and aspect allow.
-        marl = .032*n3(u*3.7, v*3.7, w*12+seed) + (1-chip)*.012
-        marl += .044*smooth((lamina-.83)/.17)*smooth(.60+medium)
-        mid = scale(body, .65 + .26*weather + .27*coarse + .22*medium)
+        marl = .021*n3(u*3.7, v*3.7, w*12+seed) + (1-chip)*.009
+        marl += (.057 if form == "slab" else .028)*smooth((lamina-.81)/.19)*smooth(.60+medium)
+        mid = scale(body, .83 + .24*weather + .23*coarse + .17*medium)
         stained = blend(mid, p["grass_dry"], smooth((w+.3)/1.2)*smooth(.52+1.6*medium)*lichen_prop)
         dry = tuple(max(.009, rgb+marl) for rgb in stained)
         wet_rgb = scale(blend(dry, p["shore_wet"], .33), .37+.14*coarse)
@@ -258,36 +295,35 @@ def stones(p, rng):
         (7.62, .92, .61, .68), (8.38, .41, .72, .38), (8.74, 1.29, .41, .63),
         (8.24, 4.15, .46, .51), (-7.87, 4.66, .36, .56),
     )
-    for x, d, r, flat in anchors:
-        cobble(m, p, high, x, d, r, flat, rng)
+    forms = ("split", "worn", "slab", "split", "slab", "slab", "split", "worn", "slab",
+             "split", "worn", "split", "worn", "slab", "worn", "slab", "split", "worn", "slab")
+    for (x, d, r, flat), form in zip(anchors, forms, strict=True):
+        cobble(m, p, high, x, d, r, flat, rng, form)
     clusters = (
-        (-8.27, .43, .97, .62, 76), (-5.24, .04, .56, .31, 31),
-        (-1.87, .26, .83, .58, 99), (.42, .51, .51, .48, 45),
-        (4.71, .19, .96, .54, 85), (8.31, .53, .75, .73, 83),
-        (-3.81, 3.02, .75, .67, 45), (2.73, 3.39, .56, .69, 58),
-        (7.43, 3.62, .55, .50, 39),
+        (-8.17, .39, .66, .25, 155), (-5.14, .04, .59, .17, 69),
+        (-1.94, .22, .68, .29, 160), (.42, .31, .48, .20, 66),
+        (4.77, .27, .68, .32, 165), (8.37, .48, .63, .28, 161),
+        (-3.91, 3.04, .48, .26, 71), (2.54, 3.19, .44, .29, 83),
+        (8.08, 4.15, .29, .19, 48), (-7.86, 4.57, .23, .23, 36),
     )
     accepted = []
     for cx, cd, sx, sd, count in clusters:
-        rotation = rng.uniform(-.79, .79)
+        rotation = rng.uniform(-.31, .31)
         ca, sa = math.cos(rotation), math.sin(rotation)
         for _ in range(count):
             gx, gy = rng.gauss(0, sx), rng.gauss(0, sd)
+            if (gx/sx)**2 + (gy/sd)**2 > 3.5:
+                continue
             x, d = cx+ca*gx-sa*gy, cd+sa*gx+ca*gy
             if abs(x) > HALF-.55 or not -.43 < d < 5.5:
                 continue
-            r = .034 + .18*rng.random()**3.5
-            if any(math.hypot(x-bx, d-bd) < .72*br for bx, bd, br, _ in anchors):
+            r = .037 + .21*rng.random()**3.1
+            if any(math.hypot(x-bx, d-bd) < .50*br for bx, bd, br, _ in anchors):
                 continue
             if any((x-px)**2+(d-pd)**2 < (.65*(r+pr))**2 for px, pd, pr in accepted):
                 continue
             accepted.append((x, d, r))
             cobble(m, p, middle if r > .095 else small, x, d, r, rng.uniform(.31, .77), rng)
-    # Sparse sand grains in the open stretches keep the shingle pockets discontinuous.
-    for _ in range(98):
-        x, d = rng.uniform(-9.9, 9.9), rng.uniform(.36, 4.5)
-        r = rng.uniform(.014, .052)
-        cobble(m, p, small, x, d, r, rng.uniform(.46, .76), rng)
     mat = socket_material("river_stones", "Shinglewake | weathered cobbles with soaked bases",
                           "stone_tones", .96, "stone_saturation", (.69, .23))
     m.object("Distinct glacial cobbles and sorted shingle", (mat,), "stone_tones", "stone_saturation")
@@ -338,25 +374,27 @@ def vegetation(p, rng):
         (-2.5,1.32,.66,.42,78), (-.76,.55,.68,.35,64), (.8,1.36,.79,.42,66),
         (2.1,.63,.71,.34,77), (4.3,1.19,.71,.43,91), (5.8,.80,.76,.40,78),
         (8.07,.87,.88,.49,113), (9.23,1.39,.44,.29,60),
-    ):
-        for _ in range(count):
+      ):
+        for _ in range(count*3):
             x = cx + rng.gauss(0, wx)
             d = turf_line(x) + q + rng.gauss(0, wd)
             if abs(x) > HALF-.75 or not .26 < d-turf_line(x) or d > BANK_LENGTH-.89:
                 continue
-            if n3(x*.63, d*1.1, 4.8) < -.31:
+            if n3(x*.83, d*1.3, 4.8) < -.46:
                 continue
             y = waterline(x)+d
-            length = rng.uniform(.075,.225) * (.46+.67*smooth((d-turf_line(x))/.91))
-            tone = blend(p["grass_green"], p["grass_dry"], rng.random()**1.5)
-            if rng.random() < .16:
-                tone = blend(tone, p["path_sand"], rng.uniform(.26, .53))
-            for _ in range(rng.randint(3, 7)):
-                gx, gy = x+rng.uniform(-.034,.034), y+rng.uniform(-.034,.034)
+            dry_clump = n3(x*.85, d*1.4, 24) < -.17
+            length = rng.uniform(.068,.28) * (.61+.57*smooth((d-turf_line(x))/.91))
+            tone = blend(p["grass_green"], p["grass_dry"], rng.random()**2.5)
+            if dry_clump:
+                length *= 1.45
+                tone = blend(p["grass_dry"], p["path_sand"], rng.uniform(.18, .46))
+            for _ in range(rng.randint(6, 10)):
+                gx, gy = x+rng.uniform(-.059,.059), y+rng.uniform(-.059,.059)
                 z = bank(gx, gy-waterline(gx))-.011
                 h = length*rng.uniform(.44,1.34)
-                grass_blade(grass, gx, gy, z, h, rng.uniform(.004, .012), rng.uniform(0, math.tau),
-                            h*rng.uniform(.35,.85), rng.uniform(.12,.42), tone)
+                grass_blade(grass, gx, gy, z, h, rng.uniform(.003,.010) if dry_clump else rng.uniform(.006,.018),
+                            rng.uniform(0, math.tau), h*rng.uniform(.39,1.02), rng.uniform(.12,.44), tone)
     for cx in (-5.43, -.44, 2.12, 6.21, 8.90):
         for _ in range(rng.randint(7, 14)):
             x = cx+rng.uniform(-.46,.46)
@@ -398,17 +436,18 @@ def review_lake(p):
             color = blend(deep, shallow_tint, suspended)
             # Thin broken capillary line and one fainter wash just lakeward of it.
             ridge = d+.045 - .023*n3(x*3.7, d*1.4, 20) - .01*math.sin(3.4*x)
-            foam = math.exp(-(ridge/.040)**2) * smooth(.42 + n3(x*1.03, d*.85, 23)*1.12)
+            foam = math.exp(-(ridge/.045)**2) * smooth(.73 + n3(x*1.01, d*.85, 23)*1.18)
             wake = math.exp(-((d+.31-.038*math.sin(x*1.28))/.042)**2) * smooth(.19 + .92*n3(x*.72, 7, 15))
             pale = blend(p["haze"], p["cloud_cream"], .56)
-            m.colors.append(blend(color, pale, min(.70, .64*foam+.19*wake)))
+            m.colors.append(blend(color, pale, min(.78, .76*foam+.19*wake)))
+            m.factors.append(smooth((d+.59)/.35)*(.84-.72*foam))
             if i and j:
                 k = i*(nd+1)+j
                 m.faces.append((k-nd-2, k-1, k, k-nd-1))
     mat = socket_material("water_opaque", "Review only | lake, shallows and broken wash", "lake_tone", .94)
     nodes, links = mat.node_tree.nodes, mat.node_tree.links
     bsdf = nodes["Principled BSDF"]
-    bsdf.inputs["Specular IOR Level"].default_value = .28
+    bsdf.inputs["Specular IOR Level"].default_value = .23
     tex = nodes.new("ShaderNodeTexCoord")
     spread = nodes.new("ShaderNodeVectorMath")
     spread.operation = "MULTIPLY"
@@ -425,7 +464,14 @@ def review_lake(p):
     links.new(normal.links[0].from_socket, bump.inputs["Normal"])
     links.new(rolls.outputs["Fac"], bump.inputs["Height"])
     links.new(bump.outputs["Normal"], normal)
-    m.object("Review only | calm blue-green lake at Z=0", (mat,), "lake_tone", source=False)
+    opacity = nodes.new("ShaderNodeAttribute")
+    opacity.attribute_name = "shoal_visibility"
+    invert = nodes.new("ShaderNodeMath")
+    invert.operation = "SUBTRACT"
+    invert.inputs[0].default_value = 1
+    links.new(opacity.outputs["Fac"], invert.inputs[1])
+    links.new(invert.outputs[0], bsdf.inputs["Alpha"])
+    m.object("Review only | calm blue-green lake at Z=0", (mat,), "lake_tone", "shoal_visibility", source=False)
 
 
 def build():

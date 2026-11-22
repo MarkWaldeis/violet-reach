@@ -21,12 +21,9 @@ PROFILE = (
 )
 # Depth, thickness, projection in metres, azimuth, lateral extent.
 BEDS = (
-    (.041, .023, 5.8, .5, 2.0), (.106, .046, 8.4, 1.1, 1.5),
-    (.168, .018, 3.7, -1.5, 1.3), (.224, .050, 10.5, -1.0, 1.8),
-    (.272, .022, 4.4, 2.2, 1.4), (.349, .038, 8.2, .3, 1.45),
-    (.405, .016, 2.7, 2.2, 1.45), (.487, .056, 7.5, 2.8, 1.6),
-    (.591, .027, 5.5, -.8, 1.3), (.665, .061, 7.1, .7, 1.2),
-    (.796, .034, 4.7, -2.5, 1.6),
+    (.075, .101, 10.8, -.3, 2.6), (.241, .093, 12.6, -1.32, 2.25),
+    (.405, .101, 10.5, 1.8, 2.22), (.572, .084, 8.1, -2.42, 2.0),
+    (.733, .088, 6.4, -.88, 1.9),
 )
 # Fault grooves split the beds into uneven promontories, rather than closed rings.
 FAULTS = (
@@ -71,10 +68,36 @@ def tint(material, attribute, strength, name):
     color = nodes.new("ShaderNodeAttribute")
     color.attribute_name = attribute
     blend = nodes.new("ShaderNodeMixRGB")
+    if material == "grass_ground":
+        blend.blend_type = "MULTIPLY"
     blend.inputs[0].default_value = strength
-    links.new(socket.links[0].from_socket, blend.inputs[1])
-    links.new(color.outputs["Color"], blend.inputs[2])
-    links.new(blend.outputs[0], socket)
+    base = socket.links[0].from_socket
+    if material == "grass_ground":
+        links.new(color.outputs["Color"], blend.inputs[1])
+        links.new(base, blend.inputs[2])
+    else:
+        links.new(base, blend.inputs[1])
+        links.new(color.outputs["Color"], blend.inputs[2])
+    result = blend.outputs[0]
+    if material in {"grass_ground", "canyon_layered"}:
+        coords = next(n for n in nodes if n.type == "TEX_COORD")
+        grain = nodes.new("ShaderNodeTexNoise")
+        grain.inputs["Scale"].default_value = 1.55 if material == "grass_ground" else .96
+        grain.inputs["Detail"].default_value = 3.4
+        links.new(coords.outputs["Object"], grain.inputs["Vector"])
+        shade = nodes.new("ShaderNodeMapRange")
+        shade.inputs["From Min"].default_value = .29
+        shade.inputs["From Max"].default_value = .71
+        shade.inputs["To Min"].default_value = .58 if material == "grass_ground" else .73
+        shade.inputs["To Max"].default_value = 1.26 if material == "grass_ground" else 1.15
+        links.new(grain.outputs["Fac"], shade.inputs["Value"])
+        mottling = nodes.new("ShaderNodeMixRGB")
+        mottling.blend_type = "MULTIPLY"
+        mottling.inputs[0].default_value = 1
+        links.new(result, mottling.inputs[1])
+        links.new(shade.outputs["Result"], mottling.inputs[2])
+        result = mottling.outputs[0]
+    links.new(result, socket)
     return mat
 
 
@@ -133,13 +156,13 @@ def summit(x, y):
 
 
 def bed_color(p, lith, cavity, x, y, z):
-    patina = n3(x/8, y/7, z/13)
-    veins = n3(x/2.8, y/2.8, z/1.1)
-    oxidized = mix(p["canyon_strata"], p["sandstone"], smooth(.31 + .71*patina))
-    dry = mix(oxidized, p["canyon_chalk"], smooth(.38 + 1.1*lith + .51*patina))
-    dark = mix(p["canyon_strata"], p["shore_wet"], .77)
-    tone = mix(dry, dark, min(.83, cavity*.72 + smooth(-patina*2.5)*.51))
-    return tuple(v * (.90 + .43 * veins) for v in tone)
+    patina = n3(x/14, y/13, z/16)
+    veins = n3(x/3.7, y/3.7, z/.84)
+    limestone = mix(p["canyon_strata"], p["sandstone"], .22 + .19*patina)
+    dry = mix(limestone, p["canyon_chalk"], smooth(.36 + lith + .20*patina))
+    shaded = mix(p["canyon_strata"], p["soil"], .51)
+    tone = mix(dry, shaded, min(.74, cavity*.70))
+    return tuple(v * (1 + .24 * veins) for v in tone)
 
 
 def profile(t):
@@ -150,6 +173,10 @@ def profile(t):
     return 0
 
 
+def lip(q):
+    return smooth((q+.07)/.22) * (1-.23*smooth((q-.35)/.56)) * (1-smooth((q-.91)/.18))
+
+
 def face(p, edge, a, t):
     ex, ey = edge
     u = profile(t)
@@ -158,47 +185,71 @@ def face(p, edge, a, t):
     x, y = ex*u + tx, ey*u + ty
     z = TOP*(1-t) + KEEL*t + (summit(ex, ey) - TOP)*(1-t)**2
     # Bed tilt, gentle undulation, interruptions and breakouts at the faults.
-    bed_z = t + (.066*x - .045*y + 3.2*n3(x/65, y/51, 3))/(TOP-KEEL)
+    bed_z = t + (.026*x - .020*y + 2.1*n3(x/57, y/51, 3))/(TOP-KEEL)
+    bed_z += .015*math.sin(3*a+.4)*smooth(t/.12)
     ramp = smooth(t/.04) * smooth((1-t)/.14)
-    ridge, lith, groove = 0, 0, 0
-    for level, width, height, centre, spread in BEDS:
-        q = (bed_z-level)/width
-        if -.38 < q < 1.28:
-            emergence = math.exp(-.8*(angle_delta(a, centre)/spread)**2)
-            pinch = .49 + .51*smooth(.65 + n3(x/23, y/20, level*41))
-            shelf = smooth((q+.38)/.32) * (1 - smooth((q-.18)/1.1))
-            ridge += height * shelf * pinch * emergence
-            lith += .78 * shelf * emergence - .43 * smooth((q-.57)/.68)
+    ridge, lith, cavity, groove = 0, 0, 0, 0
+    for i, (level, width, height, centre, spread) in enumerate(BEDS):
+        offset = .009*math.sin(4*a + i*2.3) + .013*n3(x/24, y/21, i+4)
+        offset += .003*n3(x/5, y/5, i+7)
+        q = (bed_z-level+offset)/width
+        if -.23 < q < 1.36:
+            emergence = .44 + .56*math.exp(-.9*(angle_delta(a, centre)/spread)**2)
+            pinch = .54 + .46*smooth(.69 + 1.9*n3(x/23, y/20, level*41))
+            shelf = lip(q)
+            chip = smooth(.5+1.6*n3(x/6, y/6, i*11)) * smooth(.44 + 1.8*n3(x/14, y/13, i*7))
+            bedding = math.sin(39*q + 4.2*n3(x/22, y/20, i) + .65*n3(x/6, y/5, i))
+            rim = .82*chip*math.exp(-((q-.94)/.23)**2) + .15*bedding*shelf*chip
+            ridge += height * shelf * pinch * emergence - rim
+            lith += (.52, .27, .45, .14, .32)[i]*shelf + .31*math.exp(-((q-.12)/.24)**2)
+            cavity += .56*math.exp(-((q-1.10)/.17)**2)
     for bearing, width, depth, lean in FAULTS:
-        fault = angle_delta(a, bearing + lean*t + .043*math.sin(31*t+bearing))
-        groove += depth * math.exp(-.68*(fault/width)**2) * (.51+.49*smooth(.5+1.1*n3(t*5, bearing, 26)))
+        fault = angle_delta(a, bearing + .65*lean*t + .012*math.sin(21*t+bearing))
+        groove += depth * max(0, 1-abs(fault)/(1.6*width)) * (.58+.42*smooth(.5+n3(t*5, bearing, 26)))
     cells = voronoi_seam(x/16, y/15, z/34)
     rifts = 1 - smooth(cells/.20)
-    wet = rifts*.40 + groove/18
+    wet = cavity + rifts*.18 + groove/19
     spur = 0
     for direction, level, weight, spread in ((-.62, .43, 9.8, .34), (1.34, .57, 15, .44),
                                              (2.86, .35, 11, .41), (-2.38, .72, 12, .48)):
         az = angle_delta(a, direction - .43*t)
-        spur += weight * math.exp(-(az/spread)**2 - ((t-level)/.188)**2)
-    displacement = ridge + spur - groove - 4.2*rifts
-    displacement += 5.5*n3(x/14, y/14, z/27) + 1.9*n3(x/5.5, y/5.5, z/6.8)
+        spur += .62*weight * math.exp(-(az/spread)**2 - ((t-level)/.188)**2)
+    displacement = ridge + spur - groove - .88*rifts
+    displacement += 1.4*n3(x/14, y/14, z/27) + .51*n3(x/5.5, y/5.5, z/6.8)
     chips = voronoi_seam(x/4.4, y/4.1, z/5.9)
     broken = smooth((.13-chips)/.13) * smooth(.62 + 1.6*n3(x/8, y/8, z/9))
-    displacement += 1.02*n3(x/2.1, y/2.1, z/2.1) + .35*n3(x*.89, y*.89, z*.89) - 1.15*broken
+    displacement += .39*n3(x/2.1, y/2.1, z/2.1) + .16*n3(x*.89, y*.89, z*.89) - .53*broken
+    for bearing, reach, anchor, slope in ((-2.5, .24, .23, -.23), (-1.79, .24, .36, .19),
+                                         (-.80, .27, .63, -.12), (.48, .20, .29, .34),
+                                         (1.54, .26, .41, -.17), (2.52, .19, .67, .30)):
+        normal = bearing + slope*(t-anchor)
+        delta = angle_delta(a, normal)
+        if abs(delta) < reach:
+            bx, by = footprint(normal)
+            ca, sa = math.cos(normal), math.sin(normal)
+            plane = u*(bx*ca+by*sa) + ridge - 6.9*math.exp(-((t-anchor)/.36)**2)
+            cut = ((x-tx)*ca+(y-ty)*sa-plane)/math.cos(delta)
+            displacement -= max(0, displacement+cut)*smooth((reach-abs(delta))/.070)
+    soil_depth = (.014 + .005*math.sin(8*a-.3) + .005*n3(ex/17, ey/17, 7))
+    soil = 1-smooth((t-soil_depth)/.005)
+    displacement = displacement*(1-soil) + (.7 + 2.1*n3(ex/18, ey/18, t*70))*soil
     x += math.cos(a)*displacement*ramp
     y += math.sin(a)*displacement*ramp
-    return (x, y, z), bed_color(p, lith, wet+.43*broken, x, y, z)
+    rock = bed_color(p, lith, wet+.25*broken, x, y, z)
+    earth = mix(p["bark"], p["soil"], .59 + .36*n3(x/2.6, y/2.6, z*1.8))
+    return (x, y, z), mix(rock, earth, soil)
 
 
 def turf_color(p, x, y, r):
     scatter = n3(x/10, y/11, 26)
     slope = n3(x/26, y/23, 17)
     grain = n3(x/2.6, y/2.6, 11)
-    bare = smooth((scatter + .4*slope + .19*grain - .1)*2.55 + smooth((r-.77)/.23)*.63)
-    grit = mix(p["soil"], p["canyon_strata"], .46)
-    turf = mix(p["moss"], p["grass_green"], smooth(.65 + 1.25*slope))
-    turf = mix(turf, p["grass_dry"], smooth(.39 + .8*scatter))
-    return tuple(v*(1.22+.24*grain) for v in mix(turf, grit, bare))
+    bare = .64*smooth((scatter + .27*slope + .27*grain - .14)*3.1)
+    bare += .23*smooth((r-.93)/.07)
+    grit = mix(p["soil"], p["canyon_strata"], .22)
+    turf = mix(p["moss"], p["grass_green"], smooth(.80 + .69*slope))
+    turf = mix(turf, p["grass_dry"], .27*smooth(.48 + .9*scatter))
+    return tuple(v*(1.93+.34*grain) for v in mix(turf, grit, bare))
 
 
 def massif(p):
@@ -233,8 +284,8 @@ def massif(p):
             grass.colors.append(turf_color(p, x, y, r))
             k = (j+1) % N
             grass.faces.append((row+j, row+k, row+k-N, row+j-N) if i > 1 else (0, row+j, row+k))
-    rock_mat = tint("canyon_layered", "lithology", .88, "Driftward | limestone, seams and mineral patina")
-    turf_mat = tint("grass_ground", "meadow", .86, "Driftward | turf, exposed soil and dry hummocks")
+    rock_mat = tint("canyon_layered", "lithology", .80, "Driftward | limestone, seams and mineral patina")
+    turf_mat = tint("grass_ground", "meadow", .45, "Driftward | turf, exposed soil and dry hummocks")
     # One watertight core, with a separate material on the summit faces.
     offset = len(rock.verts)
     rock.verts.extend(grass.verts[:-N])
@@ -254,11 +305,17 @@ def massif(p):
     return rock_mat
 
 
-def outcrop(mesh, p, centre, dims, rng, sides, rings, yaw, taper, tilt, cleavage=0):
+def outcrop(mesh, p, centre, dims, rng, sides, rings, yaw, taper, tilt, cleavage=0, turf=False):
     seed = rng.uniform(21, 900)
     ca, sa = math.cos(yaw), math.sin(yaw)
     dx, dy, dz = dims
     phase = rng.uniform(0, math.tau)
+    planes = []
+    for i in range(5):
+        a = phase + i*math.tau/5 + rng.uniform(-.24, .24)
+        planes.append((math.cos(a), math.sin(a), rng.uniform(-.25, .37), rng.uniform(.48, .75)))
+    cap = .69 if turf else .85
+    cap_color = mix(p["grass_green"], p["moss"], .28)
 
     def sample(i, j):
         t = (i+1) / (rings+1)
@@ -266,26 +323,28 @@ def outcrop(mesh, p, centre, dims, rng, sides, rings, yaw, taper, tilt, cleavage
         a = j*math.tau/sides
         u, v, w = math.sin(lat)*math.cos(a), math.sin(lat)*math.sin(a), math.cos(lat)
         joint = voronoi_seam(u*2.2+seed, v*2.2, w*1.4)
-        erode = 1 - smooth(joint/.31)
-        bedding = math.sin((18 + 5*math.sin(phase))*(w+.14*u) + 1.8*n3(u*2, v*2+seed, w))
-        r = (1 + .27*n3(u*2+seed, v*2, w*2) + .11*n3(u*5, v*5+seed, w*5)
-             + .039*n3(u*12, v*12, w*12+seed) - .16*erode + (.092-.055*cleavage)*bedding
-             + .12*math.cos(3*a+phase)*math.sin(lat)) * (1 + taper*w)
-        normal = u*math.cos(phase)+v*math.sin(phase)
-        plane = .88 + .24*w - .27*cleavage
-        if normal > .2:
-            limit = plane/normal
-            c = max(0, .08-abs(limit-r))
-            r = min(r, limit) - c*c/.32
+        erode = 1 - smooth(joint/.25)
+        bedding = sum(lip((level-w-.16*u+.042*v)/.29) for level in (.63, .11, -.48))
+        r = (1 + .09*n3(u*2+seed, v*2, w*2)) * (1 + taper*w)
+        for px, py, lean, setback in planes:
+            dot = px*u + py*v + lean*w
+            if dot > .25:
+                r = min(r, (setback + .24*(1-cleavage))/dot)
+        r *= (1 + .13*bedding + .022*n3(u*5, v*5+seed, w*5) - .025*erode
+              + .012*n3(u*11, v*11, w*11+seed))
         x, y = r*u*dx + tilt*w*dx, r*v*dy
-        z = dz*(w + .10*n3(4*u, 4*v, 4*w+seed)*math.sin(lat))
+        z = dz*(min(w, cap+.13*u-.08*v) + .028*n3(4*u, 4*v, 4*w+seed)*math.sin(lat))
         pos = (centre[0]+ca*x-sa*y, centre[1]+sa*x+ca*y, centre[2]+z)
-        color = bed_color(p, bedding*.52, erode*.64, *pos)
+        color = bed_color(p, bedding*.61, erode*.32, *pos)
+        if turf and w > cap-.12:
+            earth = mix(p["soil"], color, 1-smooth((w-cap+.12)/.08))
+            color = mix(earth, cap_color, smooth((w-cap+.035)/.08))
         return pos, color
 
     def pole(sign):
         x = sign * tilt*dx
-        return (centre[0]+ca*x, centre[1]+sa*x, centre[2]+sign*dz), p["canyon_strata"]
+        color = cap_color if sign > 0 and turf else p["canyon_strata"]
+        return (centre[0]+ca*x, centre[1]+sa*x, centre[2]+(cap if sign > 0 else -1)*dz), color
 
     mesh.rings(rings, sides, sample, pole(1), pole(-1))
 
@@ -347,12 +406,23 @@ def tree(wood, leaves, p, x, y, height, rng):
             canopy(leaves, p, end.lerp(top, .35)+Vector((.27, 0, crown*.63)), crown*.45, rng)
 
 
+def blade(mesh, x, y, z, h, w, az, outward):
+    dx, dy = math.cos(az)*w, math.sin(az)*w
+    bx, by = outward
+    i = len(mesh.verts)
+    mesh.verts.extend(((x-dx, y-dy, z), (x+dx, y+dy, z),
+                       (x+.41*bx-dx*.48, y+.41*by-dy*.48, z+h*.63),
+                       (x+.41*bx+dx*.48, y+.41*by+dy*.48, z+h*.63),
+                       (x+bx, y+by, z+h)))
+    mesh.faces.extend(((i, i+1, i+3, i+2), (i+2, i+3, i+4)))
+
+
 def cover(p, rng, stone_mat):
     wood, leaves, floaters, rubble, blades = Mesh(), Mesh(), Mesh(), Mesh(), Mesh()
-    for x, y, h in ((-70, 21, 8), (-58, 29, 10), (-58, 13, 7), (-42, 22, 9),
-                    (-31, 11, 6.5), (-45, -2, 6), (35, -30, 8), (46, -22, 10.5),
-                    (62, -20, 7), (43, -11, 7), (85, 13, 6.5), (76, 24, 7.2),
-                    (54, 30, 6.2), (9, 49, 8.4), (21, 44, 6.3)):
+    for x, y, h in ((-73, 22, 8), (-63, 27, 10), (-63, 13, 7), (-51, 22, 9),
+                    (-52, 9, 6.5), (-32, -37, 8), (-47, -43, 10.5), (-56, -31, 7),
+                    (-45, -29, 7), (65, 13, 6.5), (76, 19, 10.2), (79, 9, 7.2),
+                    (61, 23, 6.2), (59, 14, 8.4), (86, 23, 6.3)):
         tree(wood, leaves, p, x, y, h, rng)
     for x, y, sx, sy in ((-56, 15, 16, 12), (51, -21, 14, 12), (-3, -35, 18, 12),
                          (3, 43, 21, 8), (82, 13, 14, 11), (-88, -22, 14, 13)):
@@ -365,7 +435,7 @@ def cover(p, rng, stone_mat):
             r = rng.uniform(.30, 2.3)**1.25
             outcrop(rubble, p, (a, b, summit(a, b)-.21*r), (r, r*.73, r*.68),
                     rng, 24, 16, rng.uniform(0, math.tau), -.24, rng.uniform(-.3, .3))
-        for _ in range(110):
+        for _ in range(430):
             a, b = x+rng.uniform(-1.4*sx, 1.4*sx), y+rng.uniform(-1.4*sy, 1.4*sy)
             if ((a/RX)**2+(b/RY)**2)**.5 > .76:
                 continue
@@ -374,21 +444,28 @@ def cover(p, rng, stone_mat):
                 z = summit(x0, y0)-.05
                 h, w = rng.uniform(.22, .73), rng.uniform(.027, .077)
                 phase = rng.uniform(0, math.tau)
-                dx, dy = math.cos(phase)*w, math.sin(phase)*w
-                i = len(blades.verts)
-                blades.verts.extend(((x0-dx, y0-dy, z), (x0+dx, y0+dy, z),
-                                    (x0+.25*h-dx*.48, y0+.03*h-dy*.48, z+h*.64),
-                                    (x0+.25*h+dx*.48, y0+.03*h+dy*.48, z+h*.64),
-                                    (x0+.48*h, y0+.08*h, z+h)))
-                blades.faces.extend(((i, i+1, i+3, i+2), (i+2, i+3, i+4)))
+                blade(blades, x0, y0, z, h, w, phase, (.48*h, .08*h))
+
+    for i in range(740):
+        a = i*math.tau/740 + rng.uniform(-.008, .008)
+        ex, ey = footprint(a)
+        if rng.random() > .35 + .64*smooth(.57 + n3(ex/7, ey/7, 12)):
+            continue
+        for _ in range(rng.randint(5, 12)):
+            r = rng.uniform(.988, .998)
+            x, y = r*ex+rng.uniform(-.35, .35), r*ey+rng.uniform(-.35, .35)
+            h = rng.uniform(.21, .89)
+            extension = rng.uniform(.22, 1.22)
+            blade(blades, x, y, summit(x, y)-.12, h, rng.uniform(.032, .10),
+                  rng.uniform(0, math.tau), (extension*math.cos(a), extension*math.sin(a)))
 
     # Several coherent slips cling to the cliff; the detached pieces share its bedding.
-    for a, depth, sx, sy, sz in ((-.83, .34, 16, 10, 24), (.20, .33, 12, 10, 17),
-                                 (1.47, .47, 10, 9, 22), (-2.44, .32, 15, 14, 26),
-                                 (2.78, .20, 16, 9, 16), (-1.44, .64, 9, 8, 21)):
+    for a, depth, sx, sy, sz in ((-.83, .34, 15, 9, 17), (.20, .33, 12, 10, 12),
+                                 (1.47, .47, 10, 9, 14), (-2.44, .32, 15, 14, 18),
+                                 (2.78, .20, 13, 7, 11), (-1.44, .64, 7, 7, 16)):
         pt, _ = face(p, footprint(a), a, depth)
         centre = (pt[0]-5*math.cos(a), pt[1]-5*math.sin(a), pt[2]+3)
-        outcrop(rubble, p, centre, (sx, sy, sz), rng, 80, 55, a-.2, .41, .58)
+        outcrop(rubble, p, centre, (sx, sy, sz), rng, 80, 55, a-.2, .41, .58, .82)
 
     for centre, dims, yaw, taper, tilt, cleavage in (
         ((-147, 16, 113), (15, 12, 26), .63, .29, -.45, .78),
@@ -398,15 +475,16 @@ def cover(p, rng, stone_mat):
         ((-39, -77, 73), (5.8, 4.3, 12.5), -.67, .23, .46, .75),
         ((67, 13, 29), (6.2, 2.7, 6.5), -.18, .52, -.37, .88),
     ):
-        outcrop(floaters, p, centre, dims, rng, 80, 65, yaw, taper, tilt, cleavage)
+        outcrop(floaters, p, centre, dims, rng, 80, 65, yaw, taper, tilt, cleavage, turf=dims[0]>12)
 
-    for bearing, width, length in ((.30, .17, 11), (-.33, .13, 17), (1.83, .11, 12), (-2.58, .14, 14)):
+    for bearing, width, length in ((.30, .17, 11), (-.33, .13, 12), (1.83, .11, 12),
+                                   (-2.58, .14, 10), (-2.03, .19, 13), (-1.56, .14, 9)):
         for _ in range(rng.randint(4, 7)):
             a = bearing + rng.uniform(-width, width)
-            depth = rng.uniform(.014, .045)
+            depth = rng.uniform(.006, .013)
             start_xyz, _ = face(p, footprint(a), a, depth)
             length_i = rng.uniform(.36, 1.0)*length
-            radius = rng.uniform(.18, .42)
+            radius = rng.uniform(.21, .44)
             path = []
             for i in range(10):
                 t = i/9
@@ -442,5 +520,5 @@ def build():
     ex, ey = -36, -44
     scene["vr_review_figure"] = (ex, ey, summit(ex, ey)-.03)
     scene["vr_review_turn"] = (0, 0, 89, 247, 12, 530)
-    scene["vr_closeup_upper"] = (-45, -52, 144, -116, 29, 126)
-    scene["vr_closeup_base"] = (8, -5, 53, -118, -6, 180)
+    scene["vr_closeup_upper"] = (-41, -51, 146, -112, 28, 104)
+    scene["vr_closeup_base"] = (8, -5, 58, -118, -5, 170)

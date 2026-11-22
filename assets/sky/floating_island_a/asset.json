@@ -14,22 +14,8 @@
     2600
   ],
   "texture_size": 2048,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-4076f9d9c7794015bd813c73729bed6b",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 8,
-      "form_detail": 7,
-      "material": 7,
-      "scale": 8,
-      "style": 7,
-      "defects": 7
-    },
-    "notes": "Round 1 (new build). Big step up from the old island: asymmetric, clearly tapered underside, ledges, a summit with trees, bushes and rocks, floating fragments, and the figure is readable on top. Defects: (1) form_detail: the whole cliff is one uniform layer of lumpy noise displacement (closeup_base reads like melted wax or a brain), with no hard rock strata, flat bedding planes or sharp fracture faces; build 3-5 thick, distinct horizontal strata with crisp overhanging lips and a few vertical faults, and keep the noise only as secondary detail. (2) material: the grass top in closeup.jpg is a blurry, smeared low-resolution texture with large grey blotches, and the cliffs get bluish-grey camouflage mottling in the cooler turns; use the library grass_ground/rock materials at metre-scale coordinates and vary the rock by stratum (lighter caps, darker damp undersides). (3) style/defects: no soil or root layer at the rim, so the grass ends in a knife-cut edge over the cliff; add a 1-3 m dark soil band with roots and grass tufts hanging over the edge. The trees sit in a thin line along the back edge; group them in 2-3 clumps with air between, per STYLE.md. The floating fragments are lumpy potatoes; give them the same strata as the main body, with grass or soil tops on the larger ones.",
-    "round": 1,
-    "source_sha256": "75eebc65ae174d147b2a7b8b06dbc5022fb1965c2df94efe4537423e1e615a43",
-    "sheet_sha256": "1892c20f1a63e6e198fcfa634b19839fd8d10d816ff62163b24f03f70e8146a7"
-  },
+  "review": null,
   "review_rounds": 1
 }
