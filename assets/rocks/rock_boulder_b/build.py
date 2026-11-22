@@ -43,7 +43,10 @@ def materials():
     nt.links.new(original,dirt.inputs[1])
     nt.links.new(ao.outputs["Color"],dirt.inputs[2])
     grain=nt.nodes.new("ShaderNodeTexNoise")
+    grain.name="MetricLichen"
     grain.inputs["Scale"].default_value=72
+    coordinates=nt.nodes.new("ShaderNodeNewGeometry")
+    nt.links.new(coordinates.outputs["Position"],grain.inputs["Vector"])
     speckle=nt.nodes.new("ShaderNodeMath")
     speckle.operation="GREATER_THAN"
     speckle.inputs[1].default_value=.72

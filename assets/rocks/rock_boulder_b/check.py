@@ -68,6 +68,9 @@ if asset=="rock_boulder_b":
     assert max(abs(v) for v in relief)<.055
     assert sum(abs(v)>.01 for v in relief)>1000
     assert any(n.type=="AMBIENT_OCCLUSION" for n in main.data.materials[0].node_tree.nodes)
+    lichen=main.data.materials[0].node_tree.nodes["MetricLichen"]
+    coordinates=lichen.inputs["Vector"].links[0]
+    assert coordinates.from_node.type=="NEW_GEOMETRY" and coordinates.from_socket.name=="Position"
     print("B_FACE_RELIEF_M:",round(min(relief),4),round(max(relief),4))
     assert main["fissure_count"]==2
     block=next(obj for obj in stones if obj.get("replacement_kind"))
