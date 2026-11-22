@@ -22,28 +22,72 @@ def limestone(name):
     palette = vrmat.load_palette()
     white = palette["monument_white"]["linear_rgb"]
     patina = palette["stone_weathered"]["linear_rgb"]
+    coords = next(n for n in nodes if n.type == "TEX_COORD").outputs["Object"]
+    grain_scale = 1
+
+    def noise(scale, detail):
+        node = nodes.new("ShaderNodeTexNoise")
+        node.inputs["Scale"].default_value = scale
+        node.inputs["Detail"].default_value = detail
+        links.new(coords, node.inputs["Vector"])
+        return node.outputs["Fac"]
+
+    def ramp(source, lo, hi, low, high):
+        node = nodes.new("ShaderNodeValToRGB")
+        for stop, position, color in zip(node.color_ramp.elements, (lo, hi), (low, high)):
+            stop.position = position
+            stop.color = (*(color if isinstance(color, tuple) else (color,) * 3), 1)
+        links.new(source, node.inputs["Fac"])
+        return node.outputs["Color"]
+
+    def mix(factor, first, second, blend="MIX"):
+        node = nodes.new("ShaderNodeMixRGB")
+        node.blend_type = blend
+        if isinstance(factor, (int, float)):
+            node.inputs["Fac"].default_value = factor
+        else:
+            links.new(factor, node.inputs["Fac"])
+        for value, socket in zip((first, second), ("Color1", "Color2")):
+            if isinstance(value, tuple):
+                node.inputs[socket].default_value = (*value, 1)
+            else:
+                links.new(value, node.inputs[socket])
+        return node.outputs["Color"]
+
+    cool = tuple(c * k for c, k in zip(white, (.94, .974, 1.020)))
+    cream = tuple(c * k for c, k in zip(white, (1.005, .965, .895)))
+    temperature = noise(.34 * grain_scale, 2)
+    tone = ramp(temperature, .15, .86, cool, cream)
+    random_tint = nodes.new("ShaderNodeObjectInfo").outputs["Random"]
+    tone = mix(.24, tone, ramp(random_tint, 0, 1, cream, cool))
+
     pores = next(n for n in nodes if n.type == "TEX_VORONOI")
-    pores.inputs["Scale"].default_value = 32
-    grain = nodes.new("ShaderNodeValToRGB")
-    grain.color_ramp.elements[0].position = .11
-    grain.color_ramp.elements[0].color = (*(v * .74 for v in white), 1)
-    grain.color_ramp.elements[1].position = .34
-    grain.color_ramp.elements[1].color = (*white, 1)
-    links.new(pores.outputs["Distance"], grain.inputs["Fac"])
+    pores.inputs["Scale"].default_value = 27 * grain_scale
+    grain = noise(13 * grain_scale, 2)
+    pits = ramp(pores.outputs["Distance"], .12, .31, .36, 1)
+    deposits = ramp(grain, .23, .79, .80, 1)
+    tone = mix(.72, tone, mix(.54, deposits, pits, "MULTIPLY"), "MULTIPLY")
+
     ao = nodes.new("ShaderNodeAmbientOcclusion")
-    ao.inputs["Distance"].default_value = .31 if weathered else .14
-    tone = nodes.new("ShaderNodeMixRGB")
-    strength = .68 if weathered else .34
-    tone.inputs["Color1"].default_value = (*(a * (1-strength) + b * strength for a, b in zip(white, patina)), 1)
-    links.new(ao.outputs["AO"], tone.inputs["Fac"])
-    links.new(grain.outputs["Color"], tone.inputs["Color2"])
-    links.new(tone.outputs["Color"], surface.inputs["Base Color"])
-    bump = surface.inputs["Normal"].links[0].from_node
-    bump.inputs["Strength"].default_value = .67
-    bump.inputs["Distance"].default_value = .021
-    roughness = surface.inputs["Roughness"].links[0].from_node
-    roughness.inputs["To Min"].default_value = .77
-    roughness.inputs["To Max"].default_value = .94
+    ao.samples = 6
+    ao.inputs["Distance"].default_value = (.36 if weathered else .19) / grain_scale
+    strength = .68 if weathered else .36
+    grime = tuple(a * (1-strength) + b * strength for a, b in zip(white, patina))
+    links.new(mix(ao.outputs["AO"], grime, tone), surface.inputs["Base Color"])
+    links.new(ramp(grain, .22, .79, .65, .96), surface.inputs["Roughness"])
+    surface.inputs["Specular IOR Level"].default_value = .29
+
+    def bump(height, depth, strength):
+        node = nodes.new("ShaderNodeBump")
+        node.inputs["Distance"].default_value = depth / grain_scale
+        node.inputs["Strength"].default_value = strength
+        links.new(height, node.inputs["Height"])
+        return node
+
+    sand = bump(noise(69 * grain_scale, 2), .006, .58)
+    etch = bump(mix(.78, grain, pits, "MULTIPLY"), .035, .8)
+    links.new(sand.outputs["Normal"], etch.inputs["Normal"])
+    links.new(etch.outputs["Normal"], surface.inputs["Normal"])
     return mat
 
 
@@ -55,7 +99,7 @@ def turn_stone(name, profile, rng, stone, fluted=False, wear=.01, sides=288,
         for i in range(sides):
             theta = i * math.tau / sides
             pitch = i * frequency / sides
-            slot = abs(pitch - round(pitch)) / .34
+            slot = abs(pitch - round(pitch)) / .36
             hollow = math.sqrt(max(0, 1 - slot * slot))
             surface = (.52 * math.sin(7 * theta + z * .82) +
                        .3 * math.sin(17 * theta - z) + .18 * math.sin(37 * theta + z * 2.2))
@@ -67,7 +111,7 @@ def turn_stone(name, profile, rng, stone, fluted=False, wear=.01, sides=288,
                 a = abs(math.remainder(theta - chip, math.tau))
                 loss = max(0, 1 - abs(a - .035 * (len(profile)-1-j)) / .255)
                 r -= .15 * loss * (j - len(profile) + 4) / 3
-                ring_z -= (.081 * loss if j == len(profile) - 1 else 0)
+                ring_z -= (.05 * loss if j == len(profile) - 1 else 0)
             r += rng.uniform(-wear * .08, wear * .08)
             vertices.append((shift[0] + r * math.cos(theta), shift[1] + r * math.sin(theta), ring_z))
     faces = [tuple(reversed(range(sides)))]
@@ -100,8 +144,8 @@ def build():
                 (1.02, 1.90, 0), (1.12, 1.85, 0), (1.24, 1.87, 0),
                 (1.32, 1.94, 0), (1.41, 1.88, 0), (1.48, 1.75, 0)], rng, old, wear=.027)
     heights = (1.46, 3.01, 5.46, 7.66, 9.14, 12.03, 13.81, 16.15, 17.0)
-    turn_stone("Recessed bed of drum joints", [(1.4, 1.49, 0), (8, 1.32, 0),
-                                                 (17.05, .98, 0)], rng, old, sides=64)
+    turn_stone("Recessed bed of drum joints", [(1.4, 1.32, 0), (8, 1.24, 0),
+                                                 (16.6, .78, 0), (17.05, .91, 0)], rng, old, sides=64)
     for i, (lo, hi) in enumerate(zip(heights, heights[1:])):
         rings = []
         rows = (0, .015, .047, .09, .14, .22, .32, .45, .56, .68, .78, .88, .93, .97, .987, 1)
@@ -109,22 +153,22 @@ def build():
             z = lo + .01 + (hi - lo - .026) * u
             t = (z - 1.46) / 15.55
             r = 1.68 - .61 * t + .105 * math.sin(t * math.pi)
-            flute = .177 * math.sin(math.pi * min(1, t * 11, (1 - t) * 13) / 2)
+            flute = .275 * math.sin(math.pi * min(1, t * 11, (1 - t) * 13) / 2)
             if j in (0, len(rows) - 1):
                 r -= .017
             rings.append((z, r, flute))
         turn_stone(f"Shaft drum {i + 1}", rings, rng, white,
                    fluted=True, wear=.006, shift=(.023 * math.sin(i * 2), .025 * math.cos(i * 1.3)),
-                   chip={1: -.4, 4: 1.64, 6: -2.2}.get(i))
+                   chip=(.74, -.4, 2.12, -1.3, 1.64, -.1, -2.2, 2.75)[i])
 
     turn_stone("Neck and double astragal",
                [(16.95, 1.035, 0), (16.98, 1.15, 0), (17.035, 1.17, 0),
                 (17.09, 1.11, 0), (17.132, 1.11, 0), (17.16, 1.19, 0),
                 (17.223, 1.19, 0), (17.25, 1.12, 0)], rng, white, wear=.006)
     turn_stone("Eight folded stone brackets",
-               [(17.23, 1.09, 0), (17.30, 1.13, 0), (17.43, 1.19, 0), (17.55, 1.26, 0),
-                (17.69, 1.40, 0), (17.81, 1.51, 0), (17.90, 1.57, 0)], rng, white,
-               wear=.006, petals=.18)
+               [(17.23, 1.11, 0), (17.30, 1.17, 0), (17.43, 1.28, 0), (17.55, 1.42, 0),
+                (17.69, 1.59, 0), (17.81, 1.71, 0), (17.90, 1.77, 0)], rng, white,
+               wear=.012, petals=.27)
     turn_stone("Twice-stepped octagonal abacus",
-               [(17.86, 1.55, 0), (17.89, 1.62, 0), (17.94, 1.62, 0), (17.97, 1.77, 0),
-                (18.11, 1.77, 0), (18.15, 1.68, 0)], rng, white, wear=.008, sides=8)
+               [(17.86, 1.83, 0), (17.89, 1.93, 0), (17.98, 1.93, 0), (18.04, 2.08, 0),
+                (18.22, 2.08, 0), (18.29, 1.98, 0)], rng, white, wear=.012, sides=8)

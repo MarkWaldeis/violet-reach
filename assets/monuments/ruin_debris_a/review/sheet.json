@@ -1,5 +1,5 @@
 {
-  "triangles": 35694,
+  "triangles": 36170,
   "size_m": [
     8.053,
     5.582,
@@ -7,7 +7,7 @@
   ],
   "objects": 33,
   "samples": 64,
-  "render_seconds": 637.4,
+  "render_seconds": 559.2,
   "blender": "5.3.0",
   "tiles": [
     "turn_020",
@@ -23,6 +23,6 @@
     "wire",
     "clay"
   ],
-  "source_sha256": "0ddcaa45d5493a8f16ac5081f8aca1a109559067699c2537315891670b0d7978",
-  "sheet_sha256": "8d317624cb606755f5913c5e3753d221e8aa1730f0bbc78625ad83e897de82d4"
+  "source_sha256": "53d18456da2685d8196df76b4d8eca07896459c8f8ba695c735dd3f5c21f3d5e",
+  "sheet_sha256": "b9caa3384d0a7ecc8713503d27a8db34216274ee81ae1cbcb9be54411229bdaa"
 }

@@ -23,28 +23,72 @@ def limestone(name):
     palette = vrmat.load_palette()
     white = palette["monument_white"]["linear_rgb"]
     patina = palette["stone_weathered"]["linear_rgb"]
+    coords = next(n for n in nodes if n.type == "TEX_COORD").outputs["Object"]
+    grain_scale = .30
+
+    def noise(scale, detail):
+        node = nodes.new("ShaderNodeTexNoise")
+        node.inputs["Scale"].default_value = scale
+        node.inputs["Detail"].default_value = detail
+        links.new(coords, node.inputs["Vector"])
+        return node.outputs["Fac"]
+
+    def ramp(source, lo, hi, low, high):
+        node = nodes.new("ShaderNodeValToRGB")
+        for stop, position, color in zip(node.color_ramp.elements, (lo, hi), (low, high)):
+            stop.position = position
+            stop.color = (*(color if isinstance(color, tuple) else (color,) * 3), 1)
+        links.new(source, node.inputs["Fac"])
+        return node.outputs["Color"]
+
+    def mix(factor, first, second, blend="MIX"):
+        node = nodes.new("ShaderNodeMixRGB")
+        node.blend_type = blend
+        if isinstance(factor, (int, float)):
+            node.inputs["Fac"].default_value = factor
+        else:
+            links.new(factor, node.inputs["Fac"])
+        for value, socket in zip((first, second), ("Color1", "Color2")):
+            if isinstance(value, tuple):
+                node.inputs[socket].default_value = (*value, 1)
+            else:
+                links.new(value, node.inputs[socket])
+        return node.outputs["Color"]
+
+    cool = tuple(c * k for c, k in zip(white, (.94, .974, 1.020)))
+    cream = tuple(c * k for c, k in zip(white, (1.005, .965, .895)))
+    temperature = noise(.34 * grain_scale, 2)
+    tone = ramp(temperature, .15, .86, cool, cream)
+    random_tint = nodes.new("ShaderNodeObjectInfo").outputs["Random"]
+    tone = mix(.24, tone, ramp(random_tint, 0, 1, cream, cool))
+
     pores = next(n for n in nodes if n.type == "TEX_VORONOI")
-    pores.inputs["Scale"].default_value = 32
-    grain = nodes.new("ShaderNodeValToRGB")
-    grain.color_ramp.elements[0].position = .11
-    grain.color_ramp.elements[0].color = (*(v * .74 for v in white), 1)
-    grain.color_ramp.elements[1].position = .34
-    grain.color_ramp.elements[1].color = (*white, 1)
-    links.new(pores.outputs["Distance"], grain.inputs["Fac"])
+    pores.inputs["Scale"].default_value = 27 * grain_scale
+    grain = noise(13 * grain_scale, 2)
+    pits = ramp(pores.outputs["Distance"], .12, .31, .36, 1)
+    deposits = ramp(grain, .23, .79, .80, 1)
+    tone = mix(.72, tone, mix(.54, deposits, pits, "MULTIPLY"), "MULTIPLY")
+
     ao = nodes.new("ShaderNodeAmbientOcclusion")
-    ao.inputs["Distance"].default_value = .31 if weathered else .14
-    tone = nodes.new("ShaderNodeMixRGB")
-    strength = .68 if weathered else .34
-    tone.inputs["Color1"].default_value = (*(a * (1-strength) + b * strength for a, b in zip(white, patina)), 1)
-    links.new(ao.outputs["AO"], tone.inputs["Fac"])
-    links.new(grain.outputs["Color"], tone.inputs["Color2"])
-    links.new(tone.outputs["Color"], surface.inputs["Base Color"])
-    bump = surface.inputs["Normal"].links[0].from_node
-    bump.inputs["Strength"].default_value = .67
-    bump.inputs["Distance"].default_value = .021
-    roughness = surface.inputs["Roughness"].links[0].from_node
-    roughness.inputs["To Min"].default_value = .77
-    roughness.inputs["To Max"].default_value = .94
+    ao.samples = 6
+    ao.inputs["Distance"].default_value = (.36 if weathered else .19) / grain_scale
+    strength = .68 if weathered else .36
+    grime = tuple(a * (1-strength) + b * strength for a, b in zip(white, patina))
+    links.new(mix(ao.outputs["AO"], grime, tone), surface.inputs["Base Color"])
+    links.new(ramp(grain, .22, .79, .65, .96), surface.inputs["Roughness"])
+    surface.inputs["Specular IOR Level"].default_value = .29
+
+    def bump(height, depth, strength):
+        node = nodes.new("ShaderNodeBump")
+        node.inputs["Distance"].default_value = depth / grain_scale
+        node.inputs["Strength"].default_value = strength
+        links.new(height, node.inputs["Height"])
+        return node
+
+    sand = bump(noise(69 * grain_scale, 2), .006, .58)
+    etch = bump(mix(.78, grain, pits, "MULTIPLY"), .035, .8)
+    links.new(sand.outputs["Normal"], etch.inputs["Normal"])
+    links.new(etch.outputs["Normal"], surface.inputs["Normal"])
     return mat
 
 
@@ -92,8 +136,11 @@ def sail(index, x, y, height, reach, fan, width, depth, rng):
             3.75 + height * math.sin(turn * t),
         ))
 
-    def sweep(name, start, end, rings, bed, stone, worn):
+    def sweep(name, start, end, rings, bed, stone):
         vertices = []
+        notch = rng.randrange(len(PROFILE)) if not bed else 0
+        spall = rng.uniform(.1, .22) if not bed else 0
+        skew = rng.uniform(-.001, .001) if not bed else 0
         for progress, flare in rings:
             t = start + (end - start) * progress
             point = spine(t)
@@ -102,15 +149,20 @@ def sail(index, x, y, height, reach, fan, width, depth, rng):
             flank = Vector((math.sin(roll), math.cos(roll), 0))
             normal = tangent.cross(flank).normalized()
             flank = normal.cross(tangent)
-            taper = 1 - .44 * t ** 1.35 - .12 * t ** 4 + .12 * math.exp(-((t-.970)/.053)**4)
+            taper = 1 - .37 * t ** 1.35 - .13 * t ** 4 + .08 * math.exp(-((t-.970)/.053)**4)
+            blade = 1 + .34 * min(1, t / .14) - .15 * t ** 4
             w, d = ((.69, .55) if bed else (1, 1))
             for k, (a, b) in enumerate(PROFILE):
                 chip = 1
-                if worn and (progress < .08 or progress > .92):
-                    chip -= .095 * max(0, math.sin(k * .88 + index + start * 50)) ** 5
                 if not bed:
-                    chip += .0027 * math.sin(k * 1.9 + progress * 47 + start * 94)
-                vertices.append(point + (a * width * w * flank + b * depth * d * normal)
+                    distance = abs(math.remainder(k - notch, len(PROFILE)))
+                    chip -= spall * max(0, 1 - distance / 2.4) * max(0, 1 - progress / .16)
+                    distance = abs(math.remainder(k - notch - 8, len(PROFILE)))
+                    chip -= spall * .65 * max(0, 1 - distance / 1.7) * max(0, (progress - .86) / .14)
+                if not bed:
+                    chip += .009 * math.sin(k * 1.9 + progress * 17 + start * 94)
+                vertices.append(point + tangent * skew * height * a
+                                + (a * width * blade * w * flank + b * depth * d * normal)
                                 * (taper * flare * chip))
         n = len(PROFILE)
         faces = [tuple(reversed(range(n)))]
@@ -125,21 +177,22 @@ def sail(index, x, y, height, reach, fan, width, depth, rng):
         obj.data.set_sharp_from_angle(angle=math.radians(28))
 
     sweep(f"Sail {index} recessed bed", 0, .995, [(j / 140, 1) for j in range(141)],
-          True, "monument_weathered", False)
+          True, "monument_weathered")
     start = 0
     course = 0
     while start < 1:
-        end = start + rng.uniform(.064, .112) + .124 * start
-        if end > .90:
+        end = start + rng.uniform(.052, .126) + .095 * start
+        if end > .92:
             end = 1
-        gap = rng.uniform(.0008, .0019)
-        crown = 1.035 if end == 1 else rng.uniform(.994, 1.012)
-        rings = [(j / 22, crown if j not in (0, 22) else crown - .019) for j in range(23)]
-        rings[1] = (.009, crown)
-        rings[-2] = (.991, crown)
+        gap = rng.uniform(.0016, .0025)
+        crown = 1.035 if end == 1 else rng.uniform(.96, 1.07)
+        shoulder = rng.uniform(.015, .045)
+        rings = [(j / 22, crown + shoulder * abs(2*j/22-1) ** 2) for j in range(23)]
+        rings[0] = (0, crown + shoulder - .035)
+        rings[-1] = (1, crown + shoulder - .035)
         sweep(f"Sail {index} dressed course {course:02}", start + (gap if start else 0),
               end - (gap if end < 1 else 0), rings, False,
-              "monument_white", course % 3 != index % 3)
+              "monument_white")
         start = end
         course += 1
 

@@ -24,28 +24,72 @@ def limestone(name):
     palette = vrmat.load_palette()
     white = palette["monument_white"]["linear_rgb"]
     patina = palette["stone_weathered"]["linear_rgb"]
+    coords = next(n for n in nodes if n.type == "TEX_COORD").outputs["Object"]
+    grain_scale = 1
+
+    def noise(scale, detail):
+        node = nodes.new("ShaderNodeTexNoise")
+        node.inputs["Scale"].default_value = scale
+        node.inputs["Detail"].default_value = detail
+        links.new(coords, node.inputs["Vector"])
+        return node.outputs["Fac"]
+
+    def ramp(source, lo, hi, low, high):
+        node = nodes.new("ShaderNodeValToRGB")
+        for stop, position, color in zip(node.color_ramp.elements, (lo, hi), (low, high)):
+            stop.position = position
+            stop.color = (*(color if isinstance(color, tuple) else (color,) * 3), 1)
+        links.new(source, node.inputs["Fac"])
+        return node.outputs["Color"]
+
+    def mix(factor, first, second, blend="MIX"):
+        node = nodes.new("ShaderNodeMixRGB")
+        node.blend_type = blend
+        if isinstance(factor, (int, float)):
+            node.inputs["Fac"].default_value = factor
+        else:
+            links.new(factor, node.inputs["Fac"])
+        for value, socket in zip((first, second), ("Color1", "Color2")):
+            if isinstance(value, tuple):
+                node.inputs[socket].default_value = (*value, 1)
+            else:
+                links.new(value, node.inputs[socket])
+        return node.outputs["Color"]
+
+    cool = tuple(c * k for c, k in zip(white, (.94, .974, 1.020)))
+    cream = tuple(c * k for c, k in zip(white, (1.005, .965, .895)))
+    temperature = noise(.34 * grain_scale, 2)
+    tone = ramp(temperature, .15, .86, cool, cream)
+    random_tint = nodes.new("ShaderNodeObjectInfo").outputs["Random"]
+    tone = mix(.24, tone, ramp(random_tint, 0, 1, cream, cool))
+
     pores = next(n for n in nodes if n.type == "TEX_VORONOI")
-    pores.inputs["Scale"].default_value = 32
-    grain = nodes.new("ShaderNodeValToRGB")
-    grain.color_ramp.elements[0].position = .11
-    grain.color_ramp.elements[0].color = (*(v * .74 for v in white), 1)
-    grain.color_ramp.elements[1].position = .34
-    grain.color_ramp.elements[1].color = (*white, 1)
-    links.new(pores.outputs["Distance"], grain.inputs["Fac"])
+    pores.inputs["Scale"].default_value = 27 * grain_scale
+    grain = noise(13 * grain_scale, 2)
+    pits = ramp(pores.outputs["Distance"], .12, .31, .36, 1)
+    deposits = ramp(grain, .23, .79, .80, 1)
+    tone = mix(.72, tone, mix(.54, deposits, pits, "MULTIPLY"), "MULTIPLY")
+
     ao = nodes.new("ShaderNodeAmbientOcclusion")
-    ao.inputs["Distance"].default_value = .31 if weathered else .14
-    tone = nodes.new("ShaderNodeMixRGB")
-    strength = .68 if weathered else .34
-    tone.inputs["Color1"].default_value = (*(a * (1-strength) + b * strength for a, b in zip(white, patina)), 1)
-    links.new(ao.outputs["AO"], tone.inputs["Fac"])
-    links.new(grain.outputs["Color"], tone.inputs["Color2"])
-    links.new(tone.outputs["Color"], surface.inputs["Base Color"])
-    bump = surface.inputs["Normal"].links[0].from_node
-    bump.inputs["Strength"].default_value = .67
-    bump.inputs["Distance"].default_value = .021
-    roughness = surface.inputs["Roughness"].links[0].from_node
-    roughness.inputs["To Min"].default_value = .77
-    roughness.inputs["To Max"].default_value = .94
+    ao.samples = 6
+    ao.inputs["Distance"].default_value = (.36 if weathered else .19) / grain_scale
+    strength = .68 if weathered else .36
+    grime = tuple(a * (1-strength) + b * strength for a, b in zip(white, patina))
+    links.new(mix(ao.outputs["AO"], grime, tone), surface.inputs["Base Color"])
+    links.new(ramp(grain, .22, .79, .65, .96), surface.inputs["Roughness"])
+    surface.inputs["Specular IOR Level"].default_value = .29
+
+    def bump(height, depth, strength):
+        node = nodes.new("ShaderNodeBump")
+        node.inputs["Distance"].default_value = depth / grain_scale
+        node.inputs["Strength"].default_value = strength
+        links.new(height, node.inputs["Height"])
+        return node
+
+    sand = bump(noise(69 * grain_scale, 2), .006, .58)
+    etch = bump(mix(.78, grain, pits, "MULTIPLY"), .035, .8)
+    links.new(sand.outputs["Normal"], etch.inputs["Normal"])
+    links.new(etch.outputs["Normal"], surface.inputs["Normal"])
     return mat
 
 
@@ -85,16 +129,17 @@ def drum(name, position, rotation, r, h, cracked, rng):
             a = math.tau * j / n
             phase = j * 12 / n
             slot = abs(phase-round(phase))/.345
-            flutes = .128 * math.sqrt(max(0,1-slot*slot)) if cracked else 0
+            flute_run = min(1, .18 + 5.8*t, .17 + 3.8*(1-t))
+            flutes = .128 * math.sqrt(max(0,1-slot*slot)) * flute_run if cracked else 0
             radius = r * (1 - .055 * t) - flutes
             radius += .003 * math.cos(17 * a - t * 5)
             if not cracked:
                 radius += r * (.15 if .13 <= t <= .24 else .09 if .78 <= t <= .88 else 0)
             radius -= (.025 * r if k in (0, rows - 1) else 0)
-            if cracked and k >= rows-3:
+            if k >= rows-3:
                 for center, depth, arc in ((.57,.21,.34), (2.61,.11,.19), (4.09,.27,.63)):
                     off = abs(math.remainder(a-center,math.tau))
-                    radius -= depth * max(0,1-off/arc) * (k-rows+4)/3
+                    radius -= depth * max(0,1-off/arc) * (k-rows+4)/3 * (1 if cracked else .42)
             z = h * (t - .5) + (fault(radius*math.cos(a),radius*math.sin(a)) * t if cracked else 0)
             vertices.append((radius * math.cos(a), radius * math.sin(a), z))
     for i in range(rows - 1):
@@ -136,10 +181,14 @@ def rubble(name, position, dims, rng, dressed, lift=-.025):
     w, d, h = (a / 2 for a in dims)
     vertices = []
     shape = ((-.87,-1),(.71,-1),(1,-.81),(1,.68),(.73,1),(-.85,1),(-1,.83),(-1,-.88))
+    notch = int(abs(position[0]*21 + position[1]*15)) % len(shape)
     for j, z in enumerate((-h, -.92*h, .66*h, h)):
-        for a, b in shape:
+        for i, (a, b) in enumerate(shape):
             f = (.97,1,1.04 if dressed else 1,.96 if dressed else 1)[j]
             cut = (.28*max(0, a+.51*b) - .24*max(0,-b-a)) if j>1 else 0
+            if j == 3 and i == notch:
+                f -= .14
+                cut -= .22
             vertices.append((w*(f*a + rng.uniform(-.016,.016)+(.12*max(0,b) if j>1 else 0)),
                              d*(f*b + rng.uniform(-.018,.018)),
                              z + h*(cut + (rng.uniform(-.12,.12) if j==3 else 0))))
