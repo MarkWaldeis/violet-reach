@@ -14,7 +14,22 @@
     840
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-79c81cd3e9c64cc49f913648e628a347",
-  "review": null
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 7,
+      "material": 7,
+      "scale": 8,
+      "style": 7,
+      "defects": 7
+    },
+    "notes": "Round 1: rejected. Good: main body with smaller counterweights, fractured limestone base with buried feet and loose chips, vrmat violet_crystal now used, scale fine. Failing: (1) material/style 7: every crystal is one even blue-purple with a soft bottom-to-top gradient; no dark core, no inner growth bands, no bright veins or faintly glowing cracks as STYLE.md Kristalle requires, so violet dominates each whole face (hero, closeup). (2) form_detail 7: faces are clean flat planes with sharp perfect tips; no growth lines, steps, chipped tips or broken stubs (closeup_upper). (3) defects 7: the moss is flat bright green paint patches on top of the base with hard edges (closeup_base). Fix: make the dark core read through the faces with 2-3 inner bands per crystal and narrow bright veins along the c-axis; add growth steps and one or two chipped or broken tips; replace the moss decals with olive tufts in crevices.",
+    "round": 1,
+    "source_sha256": "3dff6d0a2f2cd1c6e8aa56574c8172a29b44164489e201d7dc4322bb8b46a13e",
+    "sheet_sha256": "0e9d194288e52420cea5329c2cc39bb5cb9592f244a7272ea7c7d3a2f0b8c48e"
+  },
+  "review_rounds": 1
 }

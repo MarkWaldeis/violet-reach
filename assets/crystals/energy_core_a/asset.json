@@ -14,7 +14,22 @@
     2100
   ],
   "texture_size": 4096,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-79c81cd3e9c64cc49f913648e628a347",
-  "review": null
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 6,
+      "material": 6,
+      "scale": 8,
+      "style": 6,
+      "defects": 6
+    },
+    "notes": "Round 1: rejected. Failing: (1) material/style 6: the seed is a smooth low-poly gem with one soft horizontal glow band across its middle; STYLE.md asks violet_energy for mostly emissive saturated flowing filaments with narrow bright cores on a dark violet ground, and there are none (hero, closeup_upper). (2) form_detail 6: large flat triangle facets with no fracture, growth or energy structure; it floats with no visible link to the stones. (3) defects 6: one top facet renders as a blown-out flat white triangle (turn_245, closeup_upper); the standing stones are clean pale rounded blocks like soap, and they stand on a flat brown soil disc with a hard rim, scattered with white pebble dots (closeup_base). Fix: give the seed several emissive filaments that wrap and flow over a dark violet body with narrow bright cores; break its outline with fractured facets; add faint energy threads or a glow link down to the stone ring; fix the white facet; weather and lean the menhirs and bury their feet; blend the soil disc into ground and grass.",
+    "round": 1,
+    "source_sha256": "194dc59ad9af6a865a481f3349ccb1b2e1a3feaa8f5662834ecf7fff60bd5a75",
+    "sheet_sha256": "ebb6f2525445135851ac1e1803efec2e95e5eb4ad6f7d16f515e1c99f77c6fe9"
+  },
+  "review_rounds": 1
 }
