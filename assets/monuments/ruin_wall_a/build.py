@@ -6,7 +6,6 @@ import random
 import bmesh
 import bpy
 from mathutils import Euler, Matrix, Vector
-from vrcolumn import limestone, limestone_library
 import vrlib
 import vrmat
 
@@ -25,8 +24,102 @@ def mesh(name, vertices, faces, materials=(), smooth=False, indices=()):
     return obj
 
 
-def stone_library(prefix):
-    return limestone_library(prefix, base=1.18, runoff=(3.7, 6.2))
+def limestone(name, tone, *, mortar=False, fracture=False):
+    material = vrmat.get("monument_white").copy()
+    material.name = name
+    nodes, links = material.node_tree.nodes, material.node_tree.links
+    surface = nodes["Principled BSDF"]
+    palette = vrmat.load_palette()
+    cream = palette["monument_white"]["linear_rgb"]
+    weathered = palette["stone_weathered"]["linear_rgb"]
+    shadow = palette["monument_shadow"]["linear_rgb"]
+    soil = palette["soil"]["linear_rgb"]
+    moss = tuple(palette["moss"]["linear_rgb"])
+    coords = next(n for n in nodes if n.type == "TEX_COORD").outputs["Object"]
+
+    def noise(scale, detail=2, vector=coords):
+        node = nodes.new("ShaderNodeTexNoise")
+        node.inputs["Scale"].default_value = scale
+        node.inputs["Detail"].default_value = detail
+        links.new(vector, node.inputs["Vector"])
+        return node.outputs["Fac"]
+
+    def ramp(source, low, high, a=(0, 0, 0), b=(1, 1, 1)):
+        node = nodes.new("ShaderNodeValToRGB")
+        node.color_ramp.interpolation = "EASE"
+        for stop, pos, color in zip(node.color_ramp.elements, (low, high), (a, b)):
+            stop.position, stop.color = pos, (*color, 1)
+        links.new(source, node.inputs["Fac"])
+        return node.outputs["Color"]
+
+    def mix(factor, a, b):
+        node = nodes.new("ShaderNodeMixRGB")
+        if isinstance(factor, float):
+            node.inputs[0].default_value = factor
+        else:
+            links.new(factor, node.inputs[0])
+        for socket, val in zip(node.inputs[1:3], (a, b)):
+            if isinstance(val, tuple):
+                socket.default_value = (*val, 1)
+            else:
+                links.new(val, socket)
+        return node.outputs["Color"]
+
+    def attr(name):
+        node = nodes.new("ShaderNodeAttribute")
+        node.attribute_name = name
+        return node.outputs["Fac"]
+
+    if mortar:
+        umber = tuple(0.39 * a + 0.61 * b for a, b in zip(shadow, soil))
+        lime = tuple(0.39 * a + 0.46 * b for a, b in zip(weathered, soil))
+        color = ramp(noise(6.8, 3), 0.21, 0.79, umber, lime)
+    else:
+        cool = tuple(c * t * k for c, t, k in zip(cream, tone, (0.88, 0.94, 1.065)))
+        pale = tuple(c * t * k for c, t, k in zip(cream, tone, (1.035, 1.001, 0.945)))
+        variation = ramp(noise(0.87, 3), 0.23, 0.79, cool, pale)
+        random = nodes.new("ShaderNodeObjectInfo").outputs["Random"]
+        color = mix(0.27, variation, ramp(random, 0, 1, cool, pale))
+        ao = nodes.new("ShaderNodeAmbientOcclusion")
+        ao.samples = 4
+        ao.inputs["Distance"].default_value = 0.19
+        seam = tuple(0.73 * a + 0.27 * b for a, b in zip(shadow, weathered))
+        color = mix(ao.outputs["AO"], seam, color)
+        ochre = tuple(
+            0.41 * a + 0.59 * b for a, b in zip(weathered, (0.096, 0.058, 0.030))
+        )
+        contact = ramp(noise(8.0), 0.25, 0.75, (0.50,) * 3, (0.96,) * 3)
+        color = mix(attr("patina"), color, mix(contact, color, ochre))
+
+        stretch = nodes.new("ShaderNodeVectorMath")
+        stretch.operation = "MULTIPLY"
+        stretch.inputs[1].default_value = (5.2, 5.2, 0.38)
+        links.new(coords, stretch.inputs[0])
+        runoff = ramp(
+            noise(1, 3, stretch.outputs["Vector"]), 0.44, 0.74, (0,) * 3, (0.82,) * 3
+        )
+        color = mix(attr("coping_runoff"), color, mix(runoff, color, ochre))
+        geom = nodes.new("ShaderNodeNewGeometry")
+        axis = nodes.new("ShaderNodeSeparateXYZ")
+        links.new(geom.outputs["Normal"], axis.inputs[0])
+        up = ramp(axis.outputs["Z"], 0.43, 0.95)
+        colonies = ramp(noise(3.7, 3), 0.52, 0.73)
+        lichen = tuple(0.79 * a + 0.21 * b for a, b in zip(moss, weathered))
+        growth = mix(ramp(noise(25, 2), 0.28, 0.73), lichen, moss)
+        color = mix(up, color, mix(colonies, color, growth))
+
+    links.new(color, surface.inputs["Base Color"])
+    links.new(
+        ramp(noise(8), 0.16, 0.86, (0.76,) * 3, (0.94,) * 3),
+        surface.inputs["Roughness"],
+    )
+    surface.inputs["Specular IOR Level"].default_value = 0.27
+    bump = nodes.new("ShaderNodeBump")
+    bump.inputs["Distance"].default_value = 0.021 if fracture or mortar else 0.010
+    bump.inputs["Strength"].default_value = 0.38 if fracture or mortar else 0.29
+    links.new(noise(13 if fracture or mortar else 10), bump.inputs["Height"])
+    links.new(bump.outputs["Normal"], surface.inputs["Normal"])
+    return material
 
 
 def accent(prefix, key, color_key, scale, blend):
@@ -183,480 +276,465 @@ def fit_arrises():
     bm.free()
 
 
-def stone_block(
+def ashlar(
     name,
-    dims,
-    position,
-    material,
+    bounds,
     rng,
+    material,
     *,
-    azimuth=0,
-    tilt=(0, 0),
-    broken=False,
-    foot=None,
-    fracture=None,
-    spalled=False,
+    wear=0.025,
+    chip=0.0,
+    break_side=0,
+    split=None,
+    coping=None,
+    yaw=0.0,
+    tilt=(0.0, 0.0),
+    ground=None,
 ):
-    """Clip a real solid with independent cut planes; retain broad dressed faces."""
-    w, d, h = (v / 2 for v in dims)
-    bm = bmesh.new()
-    bmesh.ops.create_cube(bm, size=2)
-    for v in bm.verts:
-        v.co.x *= w
-        v.co.y *= d
-        v.co.z *= h
-    planes = []
-    if broken:
-        for _ in range(rng.randint(2, 4)):
-            sx, sy, sz = (rng.choice((-1, 1)) for _ in range(3))
-            planes.append(
-                (
-                    (
-                        sx * w * rng.uniform(0.68, 0.98),
-                        sy * d * rng.uniform(0.78, 1.02),
-                        sz * h * rng.uniform(0.63, 0.95),
-                    ),
-                    (
-                        sx * rng.uniform(0.36, 1.1),
-                        sy * rng.uniform(0.65, 1.48),
-                        sz * rng.uniform(0.5, 1.44),
-                    ),
-                    True,
-                )
-            )
-    for sz in (1, -1) if spalled else (1,):
-        sx, sy = rng.choice((-1, 1)), rng.choice((-1, 1))
-        planes.append(
+    x0, x1, y0, y1, bottom, top = bounds
+    cx, cy, cz = (x0 + x1) / 2, (y0 + y1) / 2, (bottom + top) / 2
+    w, d, h = (x1 - x0) / 2, (y1 - y0) / 2, (top - bottom) / 2
+    wear = min(wear, w / 9, d / 9, h / 5)
+    bevel_width = 0.51 * wear
+    chamfer = min(wear * 1.9, h * 0.44)
+    outline = (
+        (-w + chamfer, -d),
+        (w - chamfer, -d),
+        (w, -d + chamfer),
+        (w, d - chamfer),
+        (w - chamfer, d),
+        (-w + chamfer, d),
+        (-w, d - chamfer),
+        (-w, -d + chamfer),
+    )
+    corners = [
+        (x + rng.uniform(-0.5, 0.5) * wear, y + rng.uniform(-0.5, 0.5) * wear)
+        for x, y in outline
+    ]
+    notch = rng.randrange(8)
+    n = len(corners)
+    vertices = [(x, y, -h) for x, y in corners]
+    vertices += [
+        (
+            x + rng.uniform(-0.31, 0.31) * wear - (0.065 * x if i == notch else 0),
+            y + rng.uniform(-0.37, 0.37) * wear - (0.081 * y if i == notch else 0),
+            h - (max(chip, min(0.080, wear * 1.26)) if i == notch else 0),
+        )
+        for i, (x, y) in enumerate(corners)
+    ]
+    faces = [tuple(reversed(range(n)))]
+    faces += [(i, (i + 1) % n, (i + 1) % n + n, i + n) for i in range(n)]
+    faces.append(tuple(range(n, 2 * n)))
+    obj = mesh(name, vertices, faces, (material,))
+    if break_side:
+        obj.data.materials.append(split)
+        sign = break_side
+        edge = rng.uniform(0.40, 0.77)
+        slope_y, slope_z = rng.uniform(-0.44, 0.44), rng.uniform(-0.62, 0.48)
+        if abs(slope_z) < 0.25:
+            slope_z = math.copysign(0.29, slope_z)
+        front = rng.choice((-1, 1))
+        cut = [
+            ((sign * w * edge, 0, 0), (sign, slope_y, slope_z)),
             (
-                (sx * w * rng.uniform(0.80, 0.96), sy * d * 0.93, sz * h * 0.87),
-                (sx * 0.54, sy * 0.86, sz),
-                True,
-            )
-        )
-    if fracture:
-        planes.extend(fracture)
-    for point, normal, fresh in planes:
-        out = bmesh.ops.bisect_plane(
-            bm,
-            geom=[*bm.verts, *bm.edges, *bm.faces],
-            dist=0.00001,
-            plane_co=point,
-            plane_no=normal,
-            clear_outer=True,
-        )
-        edges = [
-            e
-            for e in out["geom_cut"]
-            if isinstance(e, bmesh.types.BMEdge) and e.is_valid and e.is_boundary
+                (sign * w * (edge - 0.12), front * d * 0.71, h * 0.53),
+                (sign * 0.69, front * 0.68, 0.74),
+            ),
+            (
+                (sign * w * (edge - 0.042), -front * d * 0.78, -h * 0.62),
+                (sign * 0.78, -front * 0.38, -0.61),
+            ),
         ]
-        if edges:
-            result = bmesh.ops.holes_fill(bm, edges=edges, sides=0)
-            for f in result["faces"]:
-                f.material_index = int(fresh and isinstance(material, tuple))
-    bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
-    matrix = Euler((*tilt, azimuth)).to_matrix()
-    for v in bm.verts:
-        v.co = matrix @ v.co
-    floor = min(v.co.z for v in bm.verts)
-    dz = foot - floor if foot is not None else max(position[2], -0.048 - floor)
-    for v in bm.verts:
-        v.co += Vector((*position[:2], dz))
-    data = bpy.data.meshes.new(name)
-    bm.to_mesh(data)
-    bm.free()
-    data.update()
-    obj = vrlib.link_to_source(bpy.data.objects.new(name, data))
-    for mat in material if isinstance(material, tuple) else (material,):
-        data.materials.append(mat)
-    for face in data.polygons:
-        face.use_smooth = face.material_index == 0
-    round_arrises(obj, min(0.065, min(w, d, h) * 0.23))
-    return obj
+        bm = bmesh.new()
+        bm.from_mesh(obj.data)
+        for point, normal in cut:
+            result = bmesh.ops.bisect_plane(
+                bm,
+                geom=[*bm.verts, *bm.edges, *bm.faces],
+                dist=0.00003,
+                plane_co=point,
+                plane_no=normal,
+                clear_outer=True,
+            )
+            edge_ring = [
+                e
+                for e in result["geom_cut"]
+                if isinstance(e, bmesh.types.BMEdge) and e.is_valid and e.is_boundary
+            ]
+            if edge_ring:
+                for face in bmesh.ops.holes_fill(bm, edges=edge_ring, sides=0)["faces"]:
+                    face.material_index = 1
+        bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
+        bm.to_mesh(obj.data)
+        bm.free()
 
-
-def round_arrises(obj, radius):
+    turn = Euler((*tilt, yaw)).to_matrix()
+    transformed = [turn @ v.co for v in obj.data.vertices]
+    low = min(v.z for v in transformed)
+    cz = max(cz, -0.052 + bevel_width - low) if ground is None else ground - low
+    for vert, point in zip(obj.data.vertices, transformed):
+        vert.co = point + Vector((cx, cy, cz))
+    obj.data.update()
     bevel = obj.modifiers.new("Worn arrises", "BEVEL")
-    bevel.width, bevel.segments = radius, 3
-    bevel.limit_method, bevel.angle_limit = "ANGLE", math.radians(18)
+    bevel.width, bevel.segments = bevel_width, 2
+    bevel.limit_method, bevel.angle_limit = "ANGLE", math.radians(20)
     bevel.harden_normals = True
     weld = obj.modifiers.new("Remove coincident bevel vertices", "WELD")
-    weld.merge_threshold = 0.00005
-    normal = obj.modifiers.new("Preserve flats", "WEIGHTED_NORMAL")
-    normal.keep_sharp = True
+    weld.merge_threshold = 0.000035
+    obj.modifiers.new("Dressed face normals", "WEIGHTED_NORMAL")
+    patina = obj.data.attributes.new("patina", "FLOAT", "POINT")
+    patina.data.foreach_set(
+        "value",
+        [
+            max(
+                0,
+                min(
+                    0.94,
+                    (
+                        1.33
+                        + 0.24 * math.sin(1.9 * v.co.x)
+                        + 0.12 * math.sin(3.4 * v.co.x + 2.1 * v.co.y)
+                        - v.co.z
+                    )
+                    / 1.18,
+                ),
+            )
+            for v in obj.data.vertices
+        ],
+    )
+    if coping is not None:
+        runoff = obj.data.attributes.new("coping_runoff", "FLOAT", "POINT")
+        runoff.data.foreach_set(
+            "value",
+            [
+                max(0, min(0.87, 0.87 - (coping - v.co.z) / 1.40))
+                for v in obj.data.vertices
+            ],
+        )
 
 
-COURSES = (
-    (-0.038, 0.81, ((-8.35, -1.66, 5), (-1.60, 0.49, 2), (0.97, 7.69, 5))),
-    (0.81, 1.62, ((-8.03, -1.51, 5), (1.18, 7.31, 4))),
-    (1.62, 2.68, ((-7.94, -2.10, 4), (2.44, 7.09, 4))),
-    (2.68, 3.46, ((-8.06, -2.89, 4), (3.17, 6.91, 3))),
-    (3.46, 4.31, ((-7.82, -3.00, 4), (3.60, 4.36, 1), (4.71, 6.87, 2))),
-    (4.31, 4.90, ((-7.69, -3.82, 3), (5.39, 6.91, 1))),
-    (4.90, 5.76, ((-7.55, -6.22, 1), (-5.74, -4.09, 2))),
-    (5.76, 6.76, ((-7.34, -6.53, 1),)),
+LEVELS = (-0.035, 0.73, 1.59, 2.47, 3.29, 4.18, 4.95, 5.85, 6.68)
+LEFT = (
+    (-7.88, -0.62, 5),
+    (-7.77, -0.94, 5),
+    (-7.90, -1.44, 4),
+    (-7.68, -2.30, 4),
+    (-7.49, -3.02, 3),
+    (-7.61, -3.86, 3),
+    (-7.42, -4.45, 2),
+    (-6.84, -5.68, 1),
+)
+RIGHT = (
+    (0.76, 7.56, 5),
+    (1.28, 7.70, 4),
+    (2.30, 7.58, 4),
+    (2.75, 7.43, 3),
+    (3.98, 7.29, 2),
+    (5.05, 6.22, 1),
 )
 
 
-def stone_run(lo, hi, count, rng):
-    step = (hi - lo) / count
-    bounds = (
-        [lo]
-        + [lo + step * i + rng.uniform(-0.31, 0.31) * step for i in range(1, count)]
-        + [hi]
-    )
-    return zip(bounds, bounds[1:])
+def stone_cuts(lo, hi, count, rng):
+    widths = [rng.uniform(0.76, 1.27) for _ in range(count)]
+    scale = (hi - lo) / sum(widths)
+    return [lo] + [lo + scale * sum(widths[: i + 1]) for i in range(count - 1)] + [hi]
 
 
-def core_stone(x, y, z, radius, tone, rng):
-    bm = bmesh.new()
-    for latitude in (-0.67, 0.13, 0.69):
-        phase = rng.uniform(0, math.tau)
-        for k in range(5):
-            azimuth = phase + (k + rng.uniform(-0.22, 0.22)) * math.tau / 5
-            r = radius * math.sqrt(1 - latitude**2) * rng.uniform(0.71, 1.20)
-            bm.verts.new(
-                (
-                    x + r * math.cos(azimuth),
-                    y + r * math.sin(azimuth),
-                    z + radius * (latitude + rng.uniform(-0.27, 0.27)),
+def lime_matrix(lo, hi, base, top, y, side, mortar):
+    rng = random.Random(repr((lo, hi, y, base)))
+    nx, nz = max(3, math.ceil((hi - lo) / 0.13)), 7
+    coords, faces = [], []
+    stride = nx + 1
+    jitter = min(0.043, 0.29 * (hi - lo) / nx)
+    for j in range(nz + 1):
+        v = j / nz
+        for i in range(stride):
+            u = i / nx
+            x = lo + u * (hi - lo) + rng.uniform(-jitter, jitter)
+            z = base - 0.019 + v * (top - base - 0.021) + rng.uniform(-0.043, 0.027)
+            setback = 0.058 + rng.uniform(-0.061, 0.058)
+            if i in (0, nx) or j in (0, nz):
+                setback += rng.uniform(0.035, 0.105)
+            coords.append((x, y - side * setback, max(-0.050, z)))
+            if i and j:
+                a = j * stride + i
+                faces.extend(
+                    ((a, a - 1, a - stride), (a - 1, a - stride - 1, a - stride))
                 )
-            )
-    bmesh.ops.convex_hull(bm, input=list(bm.verts))
-    bmesh.ops.delete(
-        bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS"
-    )
+
+    border = list(range(stride))
+    border += [j * stride + nx for j in range(1, nz + 1)]
+    border += [nz * stride + i for i in range(nx - 1, -1, -1)]
+    border += [j * stride for j in range(nz - 1, 0, -1)]
+    back = len(coords)
+    coords.extend((coords[i][0], y - side * 0.39, coords[i][2]) for i in border)
+    for k, a in enumerate(border):
+        j = (k + 1) % len(border)
+        faces.append((a, border[j], back + j, back + k))
+    faces.append(tuple(range(back, len(coords))))
+    obj = mesh("Eroded lime matrix around chinking", coords, faces, (mortar,))
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
     bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
-    name = "Broken angular rubble set in lime mortar"
-    data = bpy.data.meshes.new(name)
-    bm.to_mesh(data)
+    bm.to_mesh(obj.data)
     bm.free()
-    data.materials.append(tone)
-    obj = vrlib.link_to_source(bpy.data.objects.new(name, data))
-    round_arrises(obj, radius * 0.075)
 
 
-def broken_heart(a, b, bottom, top, face_y, tones, rng):
-    centres = []
-    for j in range(48):
-        radius = rng.uniform(0.066, 0.28) * (1.44 if j < 5 else 1)
-        x = rng.uniform(a + radius * 0.52, b - radius * 0.52)
-        z = rng.uniform(bottom + 0.09, top - 0.06)
-        if any(
-            math.hypot(x - px, 1.16 * (z - pz)) < 0.73 * (radius + pr)
-            for px, pz, pr in centres
-        ):
-            continue
-        centres.append((x, z, radius))
-        core_stone(
-            x,
-            face_y + rng.uniform(-0.095, 0.025),
-            z,
-            radius,
-            tones[rng.choice((0, 3, 4, 7, 9))],
+def expose_core(lo, hi, base, top, y, side, beds, fracture, mortar, rng):
+    width = hi - lo
+    course = top - base
+    lime_matrix(lo, hi, base, top, y, side, mortar)
+    for band in range(3):
+        z = base + (band + rng.uniform(0.30, 0.58)) * course / 3
+        count = max(2, round(width / rng.uniform(0.13, 0.29)))
+        cuts = stone_cuts(lo, hi, count, rng)
+        for a, b in zip(cuts, cuts[1:]):
+            r = (b - a) * rng.uniform(0.34, 0.69)
+            t = course * rng.uniform(0.047, 0.171)
+            x = (a + b) / 2 + rng.uniform(-0.044, 0.044)
+            stone_z = z + rng.uniform(-0.093, 0.091)
+            cy = y + side * rng.uniform(-0.076, -0.014)
+            depth = r * rng.uniform(0.73, 1.22)
+            ashlar(
+                "Angular limestone chinking in lime mortar",
+                (x - r, x + r, cy - depth, cy + depth, stone_z - t, stone_z + t),
+                rng,
+                rng.choice(beds),
+                wear=0.012,
+                chip=t * 0.18,
+                break_side=rng.choice((-1, 1)),
+                split=fracture,
+                yaw=rng.uniform(-0.75, 0.75),
+                tilt=(rng.uniform(-0.49, 0.49), rng.uniform(-0.31, 0.31)),
+            )
+
+
+def make_remnant(runs, breach, beds, mortar, fracture, rng):
+    front_rng = random.Random(rng.randrange(1 << 30))
+    for row, (lo, hi, count) in enumerate(runs):
+        bottom, top = LEVELS[row : row + 2]
+        x0, x1 = lo + 0.066, hi - 0.066
+        core_y = 0.565 if row == 0 else 0.505
+        ashlar(
+            "Continuous recessed lime and stone hearting",
+            (x0, x1, -core_y, core_y, bottom, top - 0.075),
             rng,
+            mortar,
+            wear=0.026,
+            chip=(top - bottom) * 0.18,
+            break_side=breach if row else 0,
+            split=mortar,
         )
-
-
-def remnant(tones, mortar, fracture, rng):
-    bed_rng = random.Random(410238)
-    for row, (bottom, top, runs) in enumerate(COURSES):
-        height = top - bottom
-        for run_index, (lo, hi, count) in enumerate(runs):
-            drive = 0.032 * row
-            # Recessed bedding stays within each surviving run. It never bridges the breach.
-            core_h = height + 0.018 if row < 5 else height * 0.67
-            core_z = bottom + core_h / 2 - 0.009
-            stone_block(
-                "Rubble heart · lime-bound packing",
-                (hi - lo - min(0.24, 0.46 * (hi - lo)), 1.58 - 2 * drive, core_h),
-                ((lo + hi) / 2, -0.06, core_z),
+        for side in (-1, 1):
+            cuts = stone_cuts(lo, hi, count, rng)
+            face_y = 0.84 if row == 0 else 0.75
+            y0, y1 = sorted((side * 0.39, side * face_y))
+            backing = side * (face_y - 0.074)
+            m0, m1 = sorted((side * 0.36, backing))
+            ashlar(
+                "Recessed mortar bearing",
+                (lo + 0.081, hi - 0.081, m0, m1, bottom - 0.033, bottom + 0.040),
+                rng,
                 mortar,
-                rng,
-                broken=row >= 4,
-                tilt=(0.02, -0.12 if row >= 4 else 0),
+                wear=0.009,
             )
-            for side in (-1, 1):
-                cuts = list(stone_run(lo, hi, count, rng))
-                if row < 4:
-                    for j, (a, b) in enumerate(cuts):
-                        if j > 0:
-                            stone_block(
-                                "Recessed vertical lime joint",
-                                (0.12, 0.30, height - 0.05),
-                                (a, side * (0.79 - drive), bottom + height / 2),
-                                mortar,
-                                bed_rng,
-                            )
-                    stone_block(
-                        "Recessed horizontal lime bed",
-                        (hi - lo - 0.10, 0.28, 0.070),
-                        ((lo + hi) / 2, side * (0.83 - drive), bottom + 0.025),
+            exposed = (side == 1 and row in (2, 4)) or (side == -1 and row == 3)
+            for i, (a, b) in enumerate(zip(cuts, cuts[1:])):
+                end = i == (len(cuts) - 2 if breach == 1 else 0)
+                span = b - a
+                if exposed and end:
+                    pocket = rng.uniform(0.48, 0.67) * span
+                    inner = b - pocket if breach == 1 else a + pocket
+                    void = (inner, b) if breach == 1 else (a, inner)
+                    expose_core(
+                        void[0],
+                        void[1],
+                        bottom,
+                        top,
+                        side * (core_y - 0.035),
+                        side,
+                        beds[1:4],
+                        fracture,
                         mortar,
-                        bed_rng,
-                        tilt=(0.015, -0.011 if row > 0 else 0),
+                        front_rng,
                     )
-                for j, (a, b) in enumerate(cuts):
-                    edge = (j == len(cuts) - 1 and hi < 0) or (j == 0 and lo > 0)
-                    crown = row >= 6 or (row >= 3 and lo > 0)
-                    front = side > 0
-                    width = b - a - 0.041
-                    y = side * (0.76 - drive) + rng.uniform(-0.064, 0.054)
-                    if front and (
-                        (row == 4 and run_index == 0 and j == 2)
-                        or (row == 3 and run_index == 1 and j == 0)
-                        or (row == 2 and run_index == 0 and edge)
-                    ):
-                        broken_heart(
-                            a - 0.03, b + 0.04, bottom, top, 0.76, tones, bed_rng
-                        )
-                        continue
-                    if (
-                        crown
-                        and row in (4, 5, 6)
-                        and (j + row + (side == 1)) % 4 == 0
-                        and count > 1
-                    ):
-                        continue
-                    if row == 0:
-                        y += side * 0.11
-                    if crown or edge:
-                        y += side * rng.uniform(-0.17, 0.26)
-                    depth = rng.uniform(0.63, 0.83)
-                    if edge and row > 0:
-                        depth = rng.uniform(0.69, 0.88)
-                    shift = rng.uniform(-0.028, 0.028)
-                    if edge and row in (2, 4, 6):
-                        shift += (-0.07 if lo > 0 else 0.07) * rng.random()
-                    x = (a + b) / 2 + shift
-                    varied_h = height - rng.uniform(0.013, 0.031)
-                    if crown:
-                        varied_h *= rng.uniform(0.67, 1.02)
-                        width *= rng.uniform(0.68, 1.12)
-                        x += rng.uniform(-0.19, 0.19)
-                    elif row >= 2 and (j + row + (side == 1)) % 3 == 0:
-                        x += rng.uniform(-0.10, 0.10)
-                        y += side * rng.uniform(-0.11, 0.10)
-                    force = []
-                    if edge:
-                        sign = 1 if hi < 0 else -1
-                        force.append(
-                            (
-                                (
-                                    sign * width * rng.uniform(0.28, 0.45),
-                                    side * depth * 0.26,
-                                    varied_h * 0.22,
-                                ),
-                                (sign, side * 0.31, 0.40 + rng.random() * 0.79),
-                                True,
-                            )
-                        )
-                    if crown:
-                        rise = rng.choice((-1, 1))
-                        force.append(
-                            (
-                                (
-                                    rise * width * 0.14,
-                                    side * depth * 0.10,
-                                    varied_h * rng.uniform(0.29, 0.46),
-                                ),
-                                (rise * 0.65, side * 0.40, 1),
-                                True,
-                            )
-                        )
-                    if row >= 2 and (crown or edge or (j + row) % 3 == 0):
-                        sign = rng.choice((-1, 1))
-                        force.append(
-                            (
-                                (
-                                    sign * width * 0.35,
-                                    side * depth * 0.28,
-                                    varied_h * 0.18,
-                                ),
-                                (sign * 0.79, side * 0.52, rng.uniform(0.25, 1)),
-                                True,
-                            )
-                        )
-                    block_z = bottom + varied_h / 2 + rng.uniform(0.002, 0.014)
-                    if row in (0, 1) and front and -4.9 < x < -2.6:
-                        y += 0.075
-                    if row == 2 and j == 1 and front:
-                        for sign in (-1, 1):
-                            stone_block(
-                                "Dislocated half of fissured ashlar",
-                                (width, depth, varied_h),
-                                (x + sign * 0.017, y + sign * 0.042, block_z),
-                                (tones[8], fracture),
-                                rng,
-                                fracture=[
-                                    (
-                                        (-sign * 0.020, 0, 0),
-                                        (sign, sign * 0.24, sign * 0.55),
-                                        True,
-                                    )
-                                ],
-                                spalled=True,
-                            )
-                        continue
-                    stone_block(
-                        f"Ashlar · bed {row+1}, run {run_index+1}, face {side:+}, block {j+1}",
-                        (width, depth, varied_h),
-                        (x, y, block_z),
-                        (rng.choice(tones), fracture),
+                    a, b = (a, inner - 0.026) if breach == 1 else (inner + 0.026, b)
+
+                lit = side == 1 and (row >= len(runs) - 2 or end)
+                chipped_side = breach if end and row >= 1 else 0
+                if row >= len(runs) - 2 and not chipped_side and rng.random() < 0.50:
+                    chipped_side = -breach
+                bed_top = top - 0.028
+                if row == len(runs) - 1:
+                    bed_top -= rng.uniform(0.04, 0.23)
+                if i != 0 and not (exposed and end and breach == -1):
+                    ashlar(
+                        "Recessed head joint",
+                        (a - 0.055, a + 0.055, m0, m1, bottom + 0.002, top - 0.018),
                         rng,
-                        azimuth=(
-                            rng.uniform(-0.17, 0.17)
-                            if crown
-                            else rng.uniform(-0.09, 0.09)
-                        ),
-                        tilt=(
-                            (
-                                rng.uniform(-0.13, 0.13)
-                                if crown
-                                else rng.uniform(-0.025, 0.025)
-                            ),
-                            rng.uniform(-0.21, 0.21) if crown or edge else 0,
-                        ),
-                        broken=crown or edge or (row > 1 and (j + row) % 2 == 1),
-                        fracture=force,
-                        spalled=rng.random() < 0.42,
+                        mortar,
+                        wear=0.009,
                     )
-            if row >= 2 and (hi < 0 or lo > 0):
-                x = hi - 0.18 if hi < 0 else lo + 0.14
-                for j in range(3):
-                    py = 0.34 - j * 0.42 + rng.uniform(-0.08, 0.08)
-                    stone_block(
-                        "Exposed split header",
-                        (
-                            rng.uniform(0.35, 0.66),
-                            rng.uniform(0.32, 0.48),
-                            height * 0.83,
-                        ),
-                        (x + rng.uniform(-0.11, 0.12), py, bottom + height * 0.40),
-                        (rng.choice(tones), fracture),
-                        rng,
-                        tilt=(0.07, -0.09),
-                        azimuth=rng.uniform(-0.3, 0.3),
-                        broken=True,
-                    )
-    for x, y, z, w, d, h, az in (
-        (-7.57, 0.44, 5.59, 1.38, 0.90, 1.06, -0.33),
-        (-4.19, -0.25, 5.09, 1.04, 0.79, 0.91, 0.22),
-        (5.89, 0.32, 4.63, 1.66, 0.91, 0.95, -0.16),
-        (-2.09, 0.38, 1.39, 1.37, 0.85, 1.02, -0.16),
-        (-1.27, 0.88, 0.48, 1.36, 1.02, 0.94, -0.29),
-        (0.34, 0.44, 0.35, 0.99, 1.17, 0.66, 0.27),
-        (1.66, -0.13, 1.40, 1.42, 0.82, 0.93, 0.12),
-    ):
-        stone_block(
-            "Slipped or crushed course end",
-            (w, d, h),
-            (x, y, z),
-            (rng.choice(tones), fracture),
-            rng,
-            azimuth=az,
-            tilt=(0.07, rng.uniform(-0.17, 0.17)),
-            broken=True,
-        )
+                ashlar(
+                    "Chipped ashlar" if chipped_side else "Dressed ashlar",
+                    (a + 0.022, b - 0.022, y0, y1, bottom + 0.028, bed_top),
+                    rng,
+                    rng.choice(beds),
+                    wear=rng.uniform(0.018, 0.035),
+                    chip=rng.uniform(0.052, 0.18) if lit else 0,
+                    break_side=chipped_side,
+                    split=fracture,
+                    coping=top if lit else None,
+                    yaw=(
+                        rng.uniform(-0.042, 0.042)
+                        if row < 4
+                        else rng.uniform(-0.17, 0.17)
+                    ),
+                    tilt=(
+                        (rng.uniform(-0.032, 0.032), rng.uniform(-0.027, 0.027))
+                        if row < 4
+                        else (rng.uniform(-0.14, 0.14), rng.uniform(-0.13, 0.15))
+                    ),
+                )
+            if row and (side == 1 or row == len(runs) - 1):
+                edge = hi if breach == 1 else lo
+                reach = front_rng.uniform(0.17, 0.42)
+                expose_core(
+                    edge - reach if breach == 1 else edge - 0.03,
+                    edge + 0.03 if breach == 1 else edge + reach,
+                    bottom,
+                    top,
+                    side * (core_y - 0.17),
+                    side,
+                    beds[1:4],
+                    fracture,
+                    mortar,
+                    front_rng,
+                )
+        if row >= 4:
+            lip = hi - 0.55 if breach == 1 else lo + 0.55
+            for _ in range(5):
+                x = lip + front_rng.uniform(-0.45, 0.45)
+                y = front_rng.uniform(-0.37, 0.37)
+                size = front_rng.uniform(0.13, 0.46)
+                ashlar(
+                    "Exposed crown rubble set in lime",
+                    (
+                        x - size / 2,
+                        x + size / 2,
+                        y - size * 0.46,
+                        y + size * 0.46,
+                        top - 0.36,
+                        top - 0.36 + size,
+                    ),
+                    front_rng,
+                    front_rng.choice(beds[1:]),
+                    wear=0.017,
+                    break_side=breach,
+                    split=fracture,
+                    yaw=front_rng.uniform(-1, 1),
+                    tilt=(front_rng.uniform(-0.3, 0.3), front_rng.uniform(-0.3, 0.3)),
+                )
 
 
-def fallen_masonry(tones, fracture, rng):
-    # The collapse fans out from the central gap; sparse heavy stones carry farther.
-    boulders = (
-        (-2.55, 1.57, 1.54, 1.04, 0.84, -0.2),
-        (-1.17, 1.81, 1.72, 1.17, 1.02, 0.36),
-        (0.19, 1.47, 1.26, 0.84, 0.78, -0.29),
-        (0.92, 2.44, 1.74, 1.21, 0.83, 0.58),
-        (-2.84, 2.72, 1.19, 0.83, 0.69, 0.24),
-        (-0.72, 3.39, 1.51, 0.77, 0.62, -0.43),
-        (0.73, 3.92, 1.28, 0.81, 0.57, 0.71),
-        (2.16, 3.13, 1.03, 0.79, 0.63, -0.61),
-        (-3.99, 1.81, 0.97, 0.86, 0.63, 0.14),
-        (-0.36, -1.95, 1.52, 0.96, 0.84, -0.21),
-        (1.44, -1.60, 1.28, 0.90, 0.69, 0.41),
-        (-2.14, -1.64, 1.68, 0.85, 0.85, 0.21),
-        (-7.67, 1.86, 1.36, 1.04, 0.61, 0.33),
-        (7.07, 0.96, 1.34, 1.19, 0.77, 0.21),
-        (3.02, 1.91, 1.24, 0.64, 0.58, -0.33),
-        (-1.79, 3.22, 1.63, 0.76, 0.25, 0.77),
-        (1.58, 4.15, 1.39, 0.47, 0.29, -0.51),
-        (0.55, -2.22, 1.46, 0.51, 0.32, 0.72),
+def fallen_stone(label, x, y, w, d, h, rng, beds, fracture):
+    ashlar(
+        label,
+        (x - w / 2, x + w / 2, y - d / 2, y + d / 2, -0.023, h - 0.023),
+        rng,
+        rng.choice(beds),
+        wear=0.023,
+        chip=h * rng.uniform(0.055, 0.17),
+        break_side=rng.choice((-1, 1)),
+        split=fracture,
+        yaw=rng.uniform(-math.pi, math.pi),
+        tilt=(rng.uniform(-0.30, 0.30), rng.uniform(-0.30, 0.30)),
+        ground=-0.03,
     )
-    for x, y, w, d, h, az in boulders:
-        stone_block(
-            "Fallen split ashlar",
-            (w, d, h),
-            (x, y, 0),
-            (rng.choice(tones), fracture),
-            rng,
-            azimuth=az,
-            tilt=(rng.uniform(-0.29, 0.29), rng.uniform(-0.28, 0.32)),
-            broken=True,
-            foot=-0.042,
-        )
-    for cx, cy, dx, dy, count in (
-        (-0.89, 2.18, 0.91, 0.78, 33),
-        (1.08, 3.08, 1.08, 0.74, 30),
-        (-2.91, 3.22, 0.51, 0.59, 18),
-        (-7.76, 1.62, 0.52, 0.40, 17),
-        (0.02, -1.66, 1.31, 0.42, 31),
-        (4.98, 1.36, 0.67, 0.53, 17),
-    ):
-        for _ in range(count):
-            x, y = cx + rng.gauss(0, dx * 0.74), cy + rng.gauss(0, dy * 0.74)
-            size = rng.uniform(0.088, 0.73) ** 1.36
-            stone_block(
-                "Limestone splinter",
-                (
-                    size * rng.uniform(1, 1.7),
-                    size * rng.uniform(0.59, 1.2),
-                    size * rng.uniform(0.30, 0.93),
-                ),
-                (x, y, 0),
-                (rng.choice(tones), fracture),
-                rng,
-                azimuth=rng.uniform(-math.pi, math.pi),
-                tilt=(rng.uniform(-0.35, 0.30), rng.uniform(-0.24, 0.44)),
-                broken=True,
-                foot=-0.021,
-            )
 
 
 def build():
-    rng = random.Random(59187)
-    tones = stone_library("Floodmark retaining wall")
-    mortar = accent(
-        "Wall · earth and aged lime bedding",
-        "monument_weathered",
-        "stone_weathered",
-        0.52,
-        0.88,
+    rng = random.Random(247186)
+    recipes = (
+        (1.04, 1.01, 0.95),
+        (0.83, 0.89, 0.94),
+        (0.79, 0.76, 0.69),
+        (0.95, 0.91, 0.86),
+        (0.88, 0.92, 1.00),
+        (1.01, 0.98, 0.91),
+        (0.84, 0.78, 0.72),
     )
+    beds = [
+        limestone(f"Floodmark · ashlar bed {i}", value)
+        for i, value in enumerate(recipes)
+    ]
+    mortar = limestone("Floodmark · recessed lime and grit", (1, 1, 1), mortar=True)
     fracture = limestone(
-        "Wall · exposed split beds", 0.90, 0.035, base=1.18, runoff=(3.7, 6.2)
+        "Floodmark · split ochre limestone", (0.71, 0.67, 0.58), fracture=True
     )
+    make_remnant(LEFT, 1, beds, mortar, fracture, rng)
+    make_remnant(RIGHT, -1, beds, mortar, fracture, rng)
+    for x, y, w, d, h in (
+        (-2.85, 0.95, 1.32, 0.82, 0.61),
+        (-1.93, 1.58, 1.62, 0.84, 0.65),
+        (-0.34, 0.45, 1.70, 0.88, 0.69),
+        (0.62, 0.93, 1.82, 1.05, 0.78),
+        (-1.15, 2.57, 1.59, 0.98, 0.62),
+        (0.22, 2.45, 1.35, 1.02, 0.51),
+        (1.49, 1.72, 1.42, 0.91, 0.69),
+        (2.65, 1.03, 1.27, 0.90, 0.67),
+        (-0.87, -0.94, 1.25, 0.84, 0.64),
+        (0.83, -1.28, 1.52, 0.83, 0.71),
+        (-7.13, 0.88, 1.28, 0.74, 0.56),
+        (5.91, 1.31, 1.19, 0.71, 0.56),
+        (1.95, 2.98, 1.46, 0.79, 0.56),
+        (-2.31, 3.36, 1.13, 0.88, 0.54),
+        (-0.72, 3.92, 1.44, 0.76, 0.45),
+        (0.96, 3.64, 0.99, 0.72, 0.48),
+    ):
+        fallen_stone("Displaced broken ashlar", x, y, w, d, h, rng, beds, fracture)
+    for center, count in (
+        ((-0.73, 2.70), 45),
+        ((1.25, 1.75), 27),
+        ((-5.2, 0.81), 18),
+        ((5.65, 0.91), 18),
+        ((0.5, -1.2), 17),
+    ):
+        for _ in range(count):
+            x, y = (rng.gauss(c, sigma) for c, sigma in zip(center, (0.95, 0.55)))
+            size = rng.uniform(0.13, 0.52)
+            fallen_stone(
+                "Weathered collapse scree",
+                x,
+                y,
+                size,
+                size * rng.uniform(0.63, 1.2),
+                size * rng.uniform(0.46, 0.80),
+                rng,
+                beds,
+                fracture,
+            )
+
     ground = ground_materials("Floodmark collapse fan")
-    remnant(tones, mortar, fracture, rng)
-    fallen_masonry(tones, fracture, rng)
     for x, y, rx, ry, h, blades in (
-        (-7.35, 1.04, 1.86, 0.86, 0.24, 130),
-        (-5.3, 1.13, 1.36, 0.70, 0.18, 196),
-        (-3.26, 1.05, 1.37, 1.21, 0.28, 185),
-        (-1.9, 2.11, 1.23, 1.44, 0.43, 233),
-        (-0.26, 1.53, 1.58, 1.07, 0.42, 240),
-        (0.76, 3.15, 1.34, 1.67, 0.24, 217),
-        (-2.16, 3.21, 1.31, 0.74, 0.16, 90),
-        (2.62, 1.07, 1.69, 1.16, 0.34, 239),
-        (5.51, 1.07, 1.63, 0.82, 0.28, 190),
-        (6.77, 0.42, 0.93, 1.26, 0.23, 112),
-        (-6.61, -1.05, 2.44, 0.82, 0.43, 170),
-        (-3.79, -1.16, 1.30, 0.96, 0.32, 170),
-        (-1.22, -1.11, 1.65, 1.18, 0.30, 217),
-        (1.61, -1.20, 1.63, 0.77, 0.34, 216),
-        (4.46, -1.10, 1.65, 0.78, 0.44, 206),
-        (6.28, -0.92, 1.14, 0.89, 0.26, 175),
+        (-7.21, 0.77, 1.58, 0.78, 0.26, 146),
+        (-5.21, 0.76, 1.65, 0.88, 0.29, 176),
+        (-3.16, 0.93, 1.31, 1.19, 0.33, 139),
+        (-2.41, 2.00, 1.32, 1.33, 0.32, 205),
+        (-0.49, 2.42, 1.68, 1.32, 0.38, 231),
+        (1.10, 2.96, 1.54, 1.35, 0.34, 177),
+        (2.24, 0.85, 1.60, 1.06, 0.37, 186),
+        (4.29, 0.88, 1.51, 0.77, 0.22, 142),
+        (6.51, 0.88, 1.59, 0.73, 0.29, 135),
+        (-6.1, -0.91, 2.16, 0.71, 0.33, 183),
+        (-3.72, -1.02, 1.54, 1.05, 0.24, 144),
+        (-1.29, -0.89, 1.49, 0.84, 0.41, 150),
+        (1.20, -1.06, 1.50, 1.08, 0.43, 199),
+        (3.74, -0.92, 1.59, 0.75, 0.31, 159),
+        (6.08, -0.91, 2.16, 0.69, 0.30, 174),
     ):
         turf(x, y, rx, ry, h, rng, ground, blades=blades)
-    transform = Matrix.Rotation(math.radians(-59), 4, "Z")
+    transform = Matrix.Rotation(math.radians(-54), 4, "Z")
     for obj in vrlib.source_objects():
         obj.data.transform(transform)
     fit_arrises()

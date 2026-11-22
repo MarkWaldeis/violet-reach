@@ -14,23 +14,9 @@
     2400
   ],
   "texture_size": 4096,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-10557958564a4a9894cdbd6bc867cb9f",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 8,
-      "form_detail": 7,
-      "material": 6,
-      "scale": 8,
-      "style": 7,
-      "defects": 7
-    },
-    "notes": "Round 3 (final). Fixed: a rubble core now shows in the broken courses. Still failing: every block is a clean white box with soft rounded edges, so the wall reads as soap or ice cubes (hero, closeup_upper); the rubble core is small rounded polyhedra with no mortar between them; the broken top blocks are smooth faceted wedges without fracture planes or secondary chips; weathering is only sparse grey smudges (closeup_base). Fix: crisp arrises with local chips, large-plane fracture faces with secondary chips on broken blocks, a dark lime mortar matrix around the rubble core, local grime at the foot and joints, and lichen on the weathered tops.",
-    "round": 3,
-    "source_sha256": "6c8b5c2f3622ec1b767807109b0f75babed57bece3721a7a21717226e259e550",
-    "sheet_sha256": "9537e38f5989f818638547dadf439b990fb826ced844a0b5c1e225615abf7b3e"
-  },
+  "review": null,
   "references": [
     "art/reference/ref_01_white_monuments_sky.jpg",
     "art/reference/ref_03_canyon_cliffs.jpg",

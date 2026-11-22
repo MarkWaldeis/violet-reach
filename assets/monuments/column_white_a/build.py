@@ -13,7 +13,6 @@ from vrcolumn import (
     SHAFT_LEVELS,
     flute,
     fracture_planes,
-    limestone_library,
     shaft_radius,
     survey_base,
     survey_capital,
@@ -37,8 +36,130 @@ def mesh(name, vertices, faces, materials=(), smooth=False, indices=()):
     return obj
 
 
-def stone_library(prefix):
-    return limestone_library(prefix, base=2.55, runoff=(10.6, 16.4), flute_lichen=0.92)
+def survey_limestone(name, value, *, torus=False):
+    mat = vrmat.get("monument_white").copy()
+    mat.name = name
+    nodes, links = mat.node_tree.nodes, mat.node_tree.links
+    surface = nodes["Principled BSDF"]
+    palette = vrmat.load_palette()
+    cream = palette["monument_white"]["linear_rgb"]
+    seam = palette["stone_weathered"]["linear_rgb"]
+    shade = palette["monument_shadow"]["linear_rgb"]
+    coords = next(n for n in nodes if n.type == "TEX_COORD").outputs["Object"]
+    axes = nodes.new("ShaderNodeSeparateXYZ")
+    links.new(coords, axes.inputs[0])
+    x, y, z = (axes.outputs[c] for c in "XYZ")
+
+    def scalar(op, a, b=0.0):
+        node = nodes.new("ShaderNodeMath")
+        node.operation = op
+        for socket, v in zip(node.inputs, (a, b)):
+            if isinstance(v, (int, float)):
+                socket.default_value = v
+            else:
+                links.new(v, socket)
+        return node.outputs[0]
+
+    def ramp(v, lo, hi, a=0.0, b=1.0):
+        node = nodes.new("ShaderNodeMapRange")
+        node.interpolation_type = "SMOOTHSTEP"
+        for key, value in zip(
+            ("From Min", "From Max", "To Min", "To Max"), (lo, hi, a, b)
+        ):
+            node.inputs[key].default_value = value
+        links.new(v, node.inputs["Value"])
+        return node.outputs[0]
+
+    def noise(scale, detail, vector=coords):
+        node = nodes.new("ShaderNodeTexNoise")
+        node.inputs["Scale"].default_value = scale
+        node.inputs["Detail"].default_value = detail
+        links.new(vector, node.inputs["Vector"])
+        return node.outputs["Fac"]
+
+    def mix(factor, a, b):
+        node = nodes.new("ShaderNodeMixRGB")
+        if isinstance(factor, (float, int)):
+            node.inputs[0].default_value = factor
+        else:
+            links.new(factor, node.inputs[0])
+        for socket, val in zip(node.inputs[1:3], (a, b)):
+            if isinstance(val, tuple):
+                socket.default_value = (*val, 1)
+            else:
+                links.new(val, socket)
+        return node.outputs["Color"]
+
+    local_value = value * (0.73 if torus else 1.0)
+    cool = tuple(c * k * local_value for c, k in zip(cream, (0.91, 0.95, 1.025)))
+    pale = tuple(c * k * local_value for c, k in zip(cream, (1.035, 1.001, 0.945)))
+    random_tone = nodes.new("ShaderNodeObjectInfo").outputs["Random"]
+    tone = mix(
+        0.18,
+        mix(ramp(noise(0.87, 3), 0.23, 0.79), cool, pale),
+        mix(random_tone, cool, pale),
+    )
+    ao = nodes.new("ShaderNodeAmbientOcclusion")
+    ao.samples = 4
+    ao.inputs["Distance"].default_value = 0.16
+    joints = tuple(0.72 * a + 0.28 * b for a, b in zip(shade, seam))
+    tone = mix(ao.outputs["AO"], joints, tone)
+    recess = nodes.new("ShaderNodeAttribute")
+    recess.attribute_name = "survey_recess"
+    channels = ramp(recess.outputs["Fac"], 0.15, 0.92)
+    tone = mix(scalar("MULTIPLY", channels, 0.29), tone, joints)
+
+    damp_height = scalar("ADD", z, scalar("MULTIPLY", noise(1.25, 2), 0.16))
+    damp = ramp(damp_height, 0.18, 2.35, 0.83, 0)
+    mineral = tuple(0.23 * a + 0.77 * b for a, b in zip(seam, (0.096, 0.058, 0.030)))
+    tone = mix(damp, tone, mineral)
+
+    direction = nodes.new("ShaderNodeVectorMath")
+    direction.operation = "MULTIPLY"
+    direction.inputs[1].default_value = (4.6, 4.6, 0.34 if torus else 0.102)
+    links.new(coords, direction.inputs[0])
+    streaks = ramp(noise(1, 3, direction.outputs["Vector"]), 0.47, 0.71)
+    face = ramp(y, -0.52, 1.02, 0.63, 1.0)
+    if torus:
+        under = ramp(z, 1.12, 1.36, 0.70, 0)
+    else:
+        under_cap = ramp(z, 12.5, 16.3, 0, 0.92)
+        under_torus = ramp(z, 0.12, 0.84, 0, 0.65)
+        under = scalar("MAXIMUM", under_cap, under_torus)
+    runoff = nodes.new("ShaderNodeMixRGB")
+    runoff.blend_type = "MULTIPLY"
+    runoff.inputs[2].default_value = (0.55, 0.49, 0.42, 1)
+    links.new(
+        scalar("MULTIPLY", streaks, scalar("MULTIPLY", under, face)), runoff.inputs[0]
+    )
+    links.new(tone, runoff.inputs[1])
+    tone = runoff.outputs["Color"]
+
+    if not torus:
+        plinth_x = ramp(scalar("ABSOLUTE", x), 1.35, 2.17)
+        plinth_y = ramp(scalar("ABSOLUTE", y), 1.35, 2.17)
+        corners = scalar(
+            "MULTIPLY", scalar("MINIMUM", plinth_x, plinth_y), ramp(z, 0.64, 1.12, 1, 0)
+        )
+        azimuth = scalar("ARCTAN2", y, x)
+        flute_zone = ramp(scalar("COSINE", scalar("MULTIPLY", azimuth, 20)), 0.31, 0.92)
+        shaft_zone = scalar("MULTIPLY", ramp(z, 1.76, 2.03), ramp(z, 4.6, 5.9, 1, 0))
+        lower = scalar("MULTIPLY", flute_zone, shaft_zone)
+        host = scalar("MAXIMUM", corners, lower)
+        cluster = ramp(noise(2.77, 2), 0.515, 0.65)
+        edges = ramp(noise(29.0, 2), 0.25, 0.71, 0.54, 0.96)
+        growth = scalar("MULTIPLY", host, scalar("MULTIPLY", cluster, edges))
+        moss = tuple(palette["moss"]["linear_rgb"])
+        lichen = tuple(0.78 * a + 0.22 * b for a, b in zip(moss, seam))
+        tone = mix(growth, tone, mix(ramp(noise(6.4, 1), 0.33, 0.67), moss, lichen))
+
+    links.new(tone, surface.inputs["Base Color"])
+    links.new(ramp(noise(8, 2), 0.16, 0.86, 0.76, 0.92), surface.inputs["Roughness"])
+    surface.inputs["Specular IOR Level"].default_value = 0.27
+    bump = surface.inputs["Normal"].links[0].from_node
+    bump.inputs["Strength"].default_value = 0.23
+    bump.inputs["Distance"].default_value = 0.008
+    return mat
 
 
 def accent(prefix, key, color_key, scale, blend):
@@ -560,7 +681,11 @@ def footing(tones, mortar, fracture, rng):
             mortar,
             rng,
         )
-    survey_base(moulding, blend_curve, tones[3])
+    survey_base(
+        moulding,
+        blend_curve,
+        survey_limestone("Survey Column · damp torus", 0.97, torus=True),
+    )
 
 
 def capital(tones, fracture):
@@ -577,9 +702,14 @@ def capital(tones, fracture):
 
 def build():
     rng = random.Random(483039)
-    tones = stone_library("Survey Column")
+    tones = [
+        survey_limestone(f"Survey Column · bed {i:02}", value)
+        for i, value in enumerate(
+            (0.91, 0.97, 1.02, 0.94, 0.86, 1.0, 1.05, 0.83, 0.95, 0.88), 1
+        )
+    ]
     mortar = accent(
-        "Compressed lime and grit", "monument_weathered", "stone_weathered", 0.39, 0.88
+        "Compressed lime and grit", "monument_weathered", "stone_weathered", 0.32, 0.93
     )
     fracture = accent(
         "Old limestone fracture", "monument_white", "monument_white", 0.87, 0.61
