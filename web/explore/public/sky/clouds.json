@@ -1,0 +1,300 @@
+{
+ "version": 1,
+ "generator": "tools/sky/clouds.py (Blender 5.2 Cycles CPU, Principled Volume, anisotropy 0.35)",
+ "atlas_size": [
+  4096,
+  2048
+ ],
+ "grid": [
+  4,
+  2
+ ],
+ "cell_size": 1024,
+ "files": {
+  "lightA": "clouds_lightA.webp",
+  "lightB": "clouds_lightB.webp"
+ },
+ "channels": {
+  "lightA": {
+   "R": "+X Licht von rechts",
+   "G": "+Y Licht von oben",
+   "B": "+Z Licht von vorn (Kameraseite)",
+   "A": "Deckung (1 - Transmission), linear"
+  },
+  "lightB": {
+   "R": "-X Licht von links",
+   "G": "-Y Licht von unten",
+   "B": "-Z Licht von hinten (Durchlicht)",
+   "A": "Umgebungslicht (gleichmaessiger weisser Himmel), linear, vormultipliziert"
+  }
+ },
+ "color_space": {
+  "RGB": "sRGB-kodiert (Textur als SRGBColorSpace laden -> linear)",
+  "A": "linear (nicht dekodieren)"
+ },
+ "premultiplied": true,
+ "light_scale_note": "Lichtkanaele: gemessene Strahldichte * light_scale (Sonne 1.0 -> 99.9-Perzentil des hellsten Kanals = 1.0). Ambient: Strahldichte * amb_scale.",
+ "light_scale": 1.6299649477005005,
+ "amb_scale": 1.0429892539978027,
+ "sun_strength_render": 3.0,
+ "baseline_note": "baseline_v: Zeile der flachen Wolkenunterseite in Zellkoordinaten (0 = Zelloberkante, 1 = Zellunterkante).",
+ "units_note": "extent_units: Breite (x), Tiefe, Hoehe in Wolkeneinheiten; suggested_width_m nimmt 1 Einheit = 100 m an.",
+ "clouds": [
+  {
+   "name": "cumulus_a",
+   "index": 0,
+   "cell_px": [
+    0,
+    0,
+    1024,
+    1024
+   ],
+   "cell_uv": [
+    0.0,
+    0.0,
+    0.25,
+    0.5
+   ],
+   "content_px": [
+    20,
+    213,
+    1004,
+    811
+   ],
+   "aspect": 1.649,
+   "baseline_v": 0.7864,
+   "baseline_px": 805.3,
+   "extent_units": [
+    6.117,
+    4.048,
+    3.709
+   ],
+   "cell_size_units": 6.362,
+   "suggested_width_m": 612
+  },
+  {
+   "name": "congestus",
+   "index": 1,
+   "cell_px": [
+    1024,
+    0,
+    1024,
+    1024
+   ],
+   "cell_uv": [
+    0.25,
+    0.0,
+    0.5,
+    0.5
+   ],
+   "content_px": [
+    1044,
+    46,
+    2028,
+    978
+   ],
+   "aspect": 1.0565,
+   "baseline_v": 0.948,
+   "baseline_px": 970.7,
+   "extent_units": [
+    6.585,
+    4.75,
+    6.233
+   ],
+   "cell_size_units": 6.848,
+   "suggested_width_m": 658
+  },
+  {
+   "name": "humilis",
+   "index": 2,
+   "cell_px": [
+    2048,
+    0,
+    1024,
+    1024
+   ],
+   "cell_uv": [
+    0.5,
+    0.0,
+    0.75,
+    0.5
+   ],
+   "content_px": [
+    2068,
+    281,
+    3052,
+    743
+   ],
+   "aspect": 2.1273,
+   "baseline_v": 0.722,
+   "baseline_px": 739.3,
+   "extent_units": [
+    3.978,
+    2.561,
+    1.87
+   ],
+   "cell_size_units": 4.137,
+   "suggested_width_m": 398
+  },
+  {
+   "name": "cumulus_twin",
+   "index": 3,
+   "cell_px": [
+    3072,
+    0,
+    1024,
+    1024
+   ],
+   "cell_uv": [
+    0.75,
+    0.0,
+    1.0,
+    0.5
+   ],
+   "content_px": [
+    3092,
+    279,
+    4076,
+    745
+   ],
+   "aspect": 2.1154,
+   "baseline_v": 0.723,
+   "baseline_px": 740.4,
+   "extent_units": [
+    8.635,
+    4.736,
+    4.082
+   ],
+   "cell_size_units": 8.98,
+   "suggested_width_m": 864
+  },
+  {
+   "name": "cumulus_lean",
+   "index": 4,
+   "cell_px": [
+    0,
+    1024,
+    1024,
+    1024
+   ],
+   "cell_uv": [
+    0.0,
+    0.5,
+    0.25,
+    1.0
+   ],
+   "content_px": [
+    20,
+    1227,
+    1004,
+    1845
+   ],
+   "aspect": 1.5931,
+   "baseline_v": 0.7986,
+   "baseline_px": 1841.8,
+   "extent_units": [
+    6.067,
+    3.864,
+    3.808
+   ],
+   "cell_size_units": 6.309,
+   "suggested_width_m": 607
+  },
+  {
+   "name": "cumulus_round",
+   "index": 5,
+   "cell_px": [
+    1024,
+    1024,
+    1024,
+    1024
+   ],
+   "cell_uv": [
+    0.25,
+    0.5,
+    0.5,
+    1.0
+   ],
+   "content_px": [
+    1044,
+    1268,
+    2028,
+    1804
+   ],
+   "aspect": 1.8353,
+   "baseline_v": 0.7566,
+   "baseline_px": 1798.8,
+   "extent_units": [
+    6.812,
+    4.367,
+    3.712
+   ],
+   "cell_size_units": 7.084,
+   "suggested_width_m": 681
+  },
+  {
+   "name": "bank_wide",
+   "index": 6,
+   "cell_px": [
+    2048,
+    1024,
+    1024,
+    1024
+   ],
+   "cell_uv": [
+    0.5,
+    0.5,
+    0.75,
+    1.0
+   ],
+   "content_px": [
+    2068,
+    1473,
+    3052,
+    1599
+   ],
+   "aspect": 7.8571,
+   "baseline_v": 0.5593,
+   "baseline_px": 1596.7,
+   "extent_units": [
+    16.741,
+    4.908,
+    2.131
+   ],
+   "cell_size_units": 17.411,
+   "suggested_width_m": 1674
+  },
+  {
+   "name": "bank_domes",
+   "index": 7,
+   "cell_px": [
+    3072,
+    1024,
+    1024,
+    1024
+   ],
+   "cell_uv": [
+    0.75,
+    0.5,
+    1.0,
+    1.0
+   ],
+   "content_px": [
+    3092,
+    1437,
+    4076,
+    1635
+   ],
+   "aspect": 4.9659,
+   "baseline_v": 0.5957,
+   "baseline_px": 1634.0,
+   "extent_units": [
+    13.779,
+    3.847,
+    2.775
+   ],
+   "cell_size_units": 14.331,
+   "suggested_width_m": 1378
+  }
+ ]
+}
