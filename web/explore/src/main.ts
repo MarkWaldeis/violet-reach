@@ -1,8 +1,14 @@
 import "./style.css";
-import { AgXToneMapping, PerspectiveCamera, Scene, WebGPUCoordinateSystem, WebGPURenderer } from "three/webgpu";
-import { setupAtmosphere, terrainMaterial } from "./atmosphere.ts";
+import { AgXToneMapping, PCFShadowMap, PerspectiveCamera, Scene, SRGBColorSpace, WebGPUCoordinateSystem, WebGPURenderer } from "three/webgpu";
+import { setupAtmosphere } from "./atmosphere.ts";
+import { terrainMaterial } from "./ground-material.ts";
 import { Navigation } from "./navigation.ts";
 import { TerrainStream } from "./terrain-stream.ts";
+import { readJSON, type Slice } from "./slice.ts";
+import { sliceAssets } from "./slice-content.ts";
+import { selectWater, type Hydrology } from "./hydrology.ts";
+import { surfaceData } from "./surface-data.ts";
+import { waterSurface } from "./water.ts";
 
 const stage = document.querySelector<HTMLElement>("#stage")!;
 const status = document.querySelector<HTMLElement>("#status")!;
@@ -33,6 +39,9 @@ async function main() {
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
   renderer.toneMapping = AgXToneMapping;
   renderer.toneMappingExposure = 1.1;
+  renderer.outputColorSpace = SRGBColorSpace;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = PCFShadowMap;
   const canvas = renderer.domElement;
   canvas.tabIndex = 0;
   canvas.setAttribute("aria-label", "3D-Gelände, steuerbar per Tastatur und Maus");
@@ -40,12 +49,32 @@ async function main() {
   rendererLabel.textContent = backend;
 
   const scene = new Scene();
-  const sky = setupAtmosphere(scene);
+  const atmosphere = setupAtmosphere(scene);
   const camera = new PerspectiveCamera(57, 1, 0.25, 10000);
-  const manifest = params.get("terrain") ?? "./demo-terrain/manifest.json";
-  terrainLabel.textContent = params.has("terrain") ? "Höhenkartenvorschau" : "Testlandschaft";
-  const terrain = await TerrainStream.open(new URL(manifest, location.href), terrainMaterial());
+  let slice: Slice | undefined;
+  if (!params.has("demo") && !params.has("terrain")) {
+    const response = await fetch(new URL("./slice.json", location.href));
+    if (response.ok) slice = await response.json() as Slice;
+    else if (response.status !== 404) throw new Error(`slice.json: HTTP ${response.status}`);
+  }
+  const manifest = params.get("terrain") ?? (slice ? "./terrain/manifest.json" : "./demo-terrain/manifest.json");
+  terrainLabel.textContent = slice ? "Spiegelsee · Phase-2-Ausschnitt" : params.has("terrain") ? "Höhenkartenvorschau" : "Testlandschaft";
+  const groundMaterial = terrainMaterial();
+  const terrain = await TerrainStream.open(new URL(manifest, location.href), groundMaterial);
   scene.add(terrain.group);
+  if (slice) {
+    status.textContent = "Ausschnitt und freigegebene Objekte werden geladen …";
+    terrain.manifest.spawn = slice.spawn[params.has("walk") ? "walk" : "fly"];
+    await terrain.preloadSlice(slice.bounds);
+    const region = selectWater(await readJSON<Hydrology>("./hydrology.json"), slice.bounds);
+    status.textContent = "Ufer werden zur Laufzeit geformt …";
+    await terrain.shapeBanks(region);
+    const surface = await surfaceData(region, slice, terrain);
+    groundMaterial.copy(terrainMaterial(surface));
+    scene.add(waterSurface(region, surface));
+  }
+  const assets = slice ? await sliceAssets(slice, terrain, params) : undefined;
+  if (assets) scene.add(assets.group);
   const nav = new Navigation(camera, terrain.manifest, (x, z) => terrain.heightAt(x, z));
   const { position } = camera;
   let ready = false;
@@ -56,6 +85,7 @@ async function main() {
     renderer.setSize(clientWidth, Math.max(1, clientHeight));
     camera.aspect = clientWidth / Math.max(1, clientHeight);
     camera.updateProjectionMatrix();
+    atmosphere.resize();
   }
   new ResizeObserver(resize).observe(stage);
   resize();
@@ -124,7 +154,7 @@ async function main() {
     last = now;
     terrain.update(position.x, position.z, now);
     if (!ready && !failed) {
-      ready = nav.liftToSpawnHeight();
+      ready = nav.liftToSpawnHeight(params.has("walk"));
       if (ready) {
         status.hidden = true;
         reset.disabled = toggle.disabled = false;
@@ -134,7 +164,7 @@ async function main() {
       }
     }
     if (ready) nav.update(dt);
-    sky.position.copy(position);
+    assets?.update(camera, stage.clientHeight, now);
     renderer.render(scene, camera);
     frames++;
 
@@ -154,6 +184,10 @@ async function main() {
     const fps = frames * 1000 / (now - hudAt);
     const info = renderer.info.render;
     telemetry.textContent = `${fmt(fps)} FPS · ${fmt(info.triangles)} Dreiecke · ${fmt(info.drawCalls)} Draws\nLOD 0–3: ${lods.join(" / ")} · ${loaded}/${total} Kacheln`;
+    if (assets) {
+      const stats = assets.stats;
+      telemetry.textContent += `\n${stats.assets} Assets · Instanz-LOD: ${stats.lods.join(" / ")}\n${stats.lods.reduce((a, b) => a + b, 0)}/${fmt(stats.total)} Instanzen · ${stats.visibleChunks}/${stats.chunks} Chunks`;
+    }
     streamStatus.textContent = missing ? `${missing} Kacheln nicht verfügbar` : loaded < total ? "Kacheln werden geladen" : "Gelände geladen";
     streamStatus.dataset.state = missing ? "error" : loaded < total ? "loading" : "ready";
     hudAt = now;

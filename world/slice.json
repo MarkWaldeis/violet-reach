@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "bounds": {"minX": -100, "minZ": 1100, "maxX": 900, "maxZ": 2100},
+  "centre": {"x": 400, "z": 1600},
+  "paths": [
+    {"width": 2.4, "polyline": [[350,1360],[385,1375],[420,1390],[450,1400],[455,1420],[445,1440],[440,1460]]}
+  ],
+  "spawn": {
+    "fly": {"x": 200, "z": 1200, "yaw": -2.5},
+    "walk": {"x": 350, "z": 1360, "yaw": -1.3734}
+  },
+  "justification": "Nordwestufer des Spiegelsees: Weißfall- und Dornbachmündung, rund 38 % Seefläche und ein bis 314 m hoher Rücken als gestaffelte Silhouette.",
+  "measurements": {
+    "lake_fraction": 0.38,
+    "land_fraction": 0.62,
+    "visible_lake_fraction": 0.3625,
+    "min_height": 163.2993545836075,
+    "max_height": 314.1479496620663,
+    "relief": 150.8485950784588,
+    "river_length_m": {"Weißfall": 813.77, "Dornbach": 711.65},
+    "method": "Lake outline occupancy at 10 m cell centres (shore envelope); visible lake additionally requires nearest R16 height below water_y 180. Height extrema at all 2 m R16 samples; river centrelines clipped to bounds."
+  }
+}

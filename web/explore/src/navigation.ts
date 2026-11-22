@@ -37,11 +37,13 @@ export class Navigation {
     this.#applyLook();
   }
 
-  liftToSpawnHeight() {
+  liftToSpawnHeight(walk = false) {
     const p = this.#camera.position;
     const ground = this.#ground(p.x, p.z);
     if (ground === undefined) return false;
-    p.y = ground + this.#spawnClearance();
+    p.y = ground + (walk ? EYE_HEIGHT : this.#spawnClearance());
+    this.mode = walk ? "walk" : "fly";
+    if (walk) { this.#pitch = -0.03; this.#applyLook(); }
     return true;
   }
 

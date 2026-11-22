@@ -94,8 +94,32 @@ def shipping_checks(root):
 
         placements.write_text('{"placements":[{"asset":"rogue"}]}')
         yield expect("unregistered placement is refused", check_output(), "placements.json")
-        placements.write_text('{"placements":[{"asset":"thing"}]}')
+        placements.write_text('{"placements":[{"asset":"thing","x":0,"z":0,"yaw":0,"scale":1}]}')
         yield expect("gated placement passes", check_output(), None)
+
+        scatter = {"asset": "thing", "scatter": {"seed": 42, "count": 2000,
+                   "rect": {"minX": 0, "minZ": 0, "maxX": 100, "maxZ": 100},
+                   "min_spacing": 1, "max_slope": 35, "min_height_above_water": 1,
+                   "max_height_above_water": 100, "scale": [0.8, 1.2], "align_to_slope": True}}
+        placements.write_text(json.dumps({"placements": [scatter]}))
+        yield expect("gated scatter passes", check_output(), None)
+        scatter["asset"] = "rogue"
+        placements.write_text(json.dumps({"placements": [scatter]}))
+        yield expect("scatter cannot bypass asset gate", check_output(), "has not passed")
+        scatter["asset"] = "thing"
+        for key, value in [("count", -1), ("seed", True), ("scale", [2, 1]), ("max_slope", 91),
+                           ("min_spacing", float("nan")), ("rect", {})]:
+            broken = json.loads(json.dumps(scatter))
+            broken["scatter"][key] = value
+            yield expect(f"invalid scatter {key} refused", vr.placement_problems({"placements": [broken]}), "invalid")
+        polygon = json.loads(json.dumps(scatter))
+        del polygon["scatter"]["rect"]
+        polygon["scatter"]["polygon"] = [[0, 0], [100, 0], [0, 100]]
+        yield expect("polygon scatter passes", vr.placement_problems({"placements": [polygon]}), None)
+        yield expect("empty placements pass", vr.placement_problems({"placements": []}), None)
+        for document in ({}, {"placements": {}}, {"placements": [None]}, {"placements": [{"asset": "thing"}]}):
+            yield expect("malformed placements refused", vr.placement_problems(document), "expected" if "placements" not in document or isinstance(document["placements"], dict) else "invalid")
+        placements.write_text('{"placements":[]}')
 
         meta["texture_size"] *= 2
         vr.save(d, meta)

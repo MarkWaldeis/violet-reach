@@ -3,7 +3,10 @@ import {
   chooseLOD, decodeTile, parseManifest, sampleTile, selectTiles, tileKey, worldTile,
   type HeightTile, type TerrainManifest, type TileCoords,
 } from "./heightfield.ts";
-import { buildTerrainMesh, lodStride } from "./terrain-mesh.ts";
+import { buildTerrainMesh, lodStride, stitchedHeight } from "./terrain-mesh.ts";
+import { type Bounds } from "./slice.ts";
+import { relaxBankTiles } from "./runtime-banks.ts";
+import type { WaterRegion } from "./hydrology.ts";
 
 const FETCH_LIMIT = 4;
 const ACTIVE_LIMIT = 180;
@@ -29,6 +32,8 @@ export class TerrainStream {
   #active = new Map<string, Tile>();
   #inFlight = 0;
   #last = { x: Infinity, z: Infinity };
+  #slice?: Bounds;
+  #pinned = new Map<string, HeightTile>();
 
   constructor(manifest: TerrainManifest, url: URL, material: Material) {
     this.manifest = manifest;
@@ -42,14 +47,64 @@ export class TerrainStream {
     return new TerrainStream(parseManifest(await response.json()), new URL(response.url || url.href), material);
   }
 
+  async preloadSlice(bounds: Bounds) {
+    this.#slice = bounds;
+    await this.preloadHeights(bounds);
+  }
+
+  async preloadHeights(bounds: Bounds) {
+    const m = this.manifest;
+    const from = worldTile(m, bounds.minX, bounds.minZ), to = worldTile(m, bounds.maxX, bounds.maxZ);
+    const pending: TileCoords[] = [];
+    for (let z = from.z; z <= to.z; z++) for (let x = from.x; x <= to.x; x++) pending.push({ x, z });
+    await Promise.all(Array.from({ length: FETCH_LIMIT }, async () => {
+      for (let coords = pending.shift(); coords; coords = pending.shift()) {
+        const key = tileKey(coords);
+        if (this.#pinned.has(key)) continue;
+        const response = await fetch(new URL(`${key}.r16`, this.#url));
+        if (!response.ok) throw new Error(`Slice-Kachel ${key}: HTTP ${response.status}`);
+        this.#pinned.set(key, decodeTile(await response.arrayBuffer(), m));
+      }
+    }));
+  }
+
+  async shapeBanks(region: WaterRegion) {
+    if (this.#active.size) throw new Error("Uferformung muss vor dem Geländeaufbau erfolgen");
+    const b = region.bounds;
+    await this.preloadHeights({ minX: b.minX - 128, minZ: b.minZ - 128, maxX: b.maxX + 128, maxZ: b.maxZ + 128 });
+    this.#pinned = relaxBankTiles(this.manifest, this.#pinned, region);
+  }
+
+  fullHeightAt(x: number, z: number): number | undefined {
+    const m = this.manifest;
+    const coords = worldTile(m, x, z), key = tileKey(coords);
+    const data = this.#pinned.get(key) ?? this.#active.get(key)?.data;
+    if (!data) return undefined;
+    return sampleTile(data, m.samples, 1, (x - m.originX) / m.tileSize - coords.x, (z - m.originZ) / m.tileSize - coords.z);
+  }
+
   update(x: number, z: number, now: number) {
     if (Math.hypot(x - this.#last.x, z - this.#last.z) >= Math.min(24, this.manifest.tileSize / 2)) {
       this.#last = { x, z };
       const wanted = new Map<string, Tile>();
-      for (const { coords, distance } of selectTiles(this.manifest, x, z).slice(0, ACTIVE_LIMIT)) {
+      const candidates = selectTiles(this.manifest, x, z, this.#slice ? 8000 : undefined);
+      for (const key of this.#pinned.keys()) {
+        if (!candidates.some((t) => tileKey(t.coords) === key)) {
+          const [tx, tz] = key.split("_").map(Number);
+          candidates.push({ coords: { x: tx, z: tz }, distance: Math.hypot(tx * this.manifest.tileSize + this.manifest.originX - x, tz * this.manifest.tileSize + this.manifest.originZ - z) });
+        }
+      }
+      candidates.sort((a, b) => Number(this.#pinned.has(tileKey(b.coords))) - Number(this.#pinned.has(tileKey(a.coords))) || a.distance - b.distance);
+      for (const { coords, distance } of candidates.slice(0, this.#slice ? 256 : ACTIVE_LIMIT)) {
         const key = tileKey(coords);
-        const tile = this.#active.get(key) ?? { coords, attempts: 0, retryAt: 0, wantedLOD: 0 };
-        tile.wantedLOD = chooseLOD(distance, tile.lod);
+        const tile = this.#active.get(key) ?? { coords, attempts: 0, retryAt: 0, wantedLOD: 0, data: this.#pinned.get(key) };
+        const inSlice = this.#slice && coords.x * this.manifest.tileSize + this.manifest.originX < this.#slice.maxX &&
+          (coords.x + 1) * this.manifest.tileSize + this.manifest.originX > this.#slice.minX &&
+          coords.z * this.manifest.tileSize + this.manifest.originZ < this.#slice.maxZ &&
+          (coords.z + 1) * this.manifest.tileSize + this.manifest.originZ > this.#slice.minZ;
+        tile.wantedLOD = this.#slice && !inSlice
+          ? this.#pinned.has(key) ? Math.max(1, chooseLOD(distance, tile.lod)) : 3
+          : chooseLOD(distance, tile.lod);
         wanted.set(key, tile);
       }
       for (const [key, tile] of this.#active) {
@@ -77,6 +132,10 @@ export class TerrainStream {
     const tile = this.#active.get(tileKey(coords));
     if (!tile?.data || tile.lod === undefined) return undefined;
     const u = (x - m.originX) / m.tileSize - coords.x, v = (z - m.originZ) / m.tileSize - coords.z;
+    if (tile.mesh) {
+      const edge = stitchedHeight(tile.mesh.geometry, u * m.tileSize, v * m.tileSize);
+      if (edge !== undefined) return edge;
+    }
     return sampleTile(tile.data, m.samples, lodStride(m, tile.lod), u, v);
   }
 
@@ -98,6 +157,7 @@ export class TerrainStream {
   dispose() {
     for (const tile of this.#active.values()) this.#remove(tile);
     this.#active.clear();
+    this.#pinned.clear();
     this.#last = { x: Infinity, z: Infinity };
   }
 
@@ -117,6 +177,7 @@ export class TerrainStream {
       tile.mesh.geometry = geometry;
     } else {
       tile.mesh = new Mesh(geometry, this.#material);
+      tile.mesh.receiveShadow = tile.mesh.castShadow = true;
       tile.mesh.position.set(m.originX + tile.coords.x * m.tileSize, 0, m.originZ + tile.coords.z * m.tileSize);
       this.group.add(tile.mesh);
     }
