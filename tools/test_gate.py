@@ -182,6 +182,26 @@ def main():
         baseline = vr.source_hash(d)
         with patch.object(vr, "sha256", side_effect=lambda p: "changed" if str(p).endswith("vrcolumn.py") else real_sha256(p)):
             results.append(expect("comments and strings do not opt into vrcolumn", [] if vr.source_hash(d) == baseline else ["changed"], None))
+        for statement in ("import vrmeshy", "import vrmeshy as meshy", "from vrmeshy import load_raw", "from tools.blender import vrmeshy"):
+            Path(d, "build.py").write_text(statement + "\ndef build(): pass\n")
+            baseline = vr.source_hash(d)
+            with patch.object(vr, "sha256", side_effect=lambda p: "changed" if str(p).endswith("vrmeshy.py") else real_sha256(p)):
+                results.append(expect(statement + " includes meshy helper hash", ["changed"] if vr.source_hash(d) != baseline else [], "changed"))
+        Path(d, "build.py").write_text('# import vrmeshy\nTEXT = "vrmeshy"\n')
+        baseline = vr.source_hash(d)
+        with patch.object(vr, "sha256", side_effect=lambda p: "changed" if str(p).endswith("vrmeshy.py") else real_sha256(p)):
+            results.append(expect("comments and strings do not opt into vrmeshy", [] if vr.source_hash(d) == baseline else ["changed"], None))
+        Path(d, "build.py").write_text("def build(): pass\n")
+        Path(d, "meshy.json").write_text('{"asset":"thing","model":{"sha256":"a"}}\n')
+        baseline = vr.source_hash(d)
+        Path(d, "meshy.json").write_text('{"asset":"thing","model":{"sha256":"b"}}\n')
+        results.append(expect("edited meshy.json changes the source hash", ["changed"] if vr.source_hash(d) != baseline else [], "changed"))
+        Path(d, "meshy.json").unlink()
+        plain = vr.source_hash(d)
+        Path(d, "meshy.json").write_text('{"asset":"thing","model":{"sha256":"a"}}\n')
+        results.append(expect("meshy.json enters the source hash", ["changed"] if vr.source_hash(d) != plain else [], "changed"))
+        Path(d, "meshy.json").unlink()
+        results.append(expect("hash without meshy.json is the plain source hash", [] if vr.source_hash(d) == plain else ["changed"], None))
     colors = vrmat.load_palette()
     results.append(expect("all material colors match sRGB and linear palette", [] if colors else ["empty"], None))
     results.append(expect("ochre accent remains in palette without an inlay material",

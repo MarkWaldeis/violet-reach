@@ -72,6 +72,9 @@ def sha256(path):
 def source_hash(asset_dir):
     inputs = [os.path.join(asset_dir, "build.py")]
     inputs += [os.path.join(BLENDER_TOOLS, name) for name in ("run_build.py", "vrlib.py")]
+    meshy_meta = os.path.join(asset_dir, "meshy.json")
+    if os.path.isfile(meshy_meta):
+        inputs.append(meshy_meta)
     tree = ast.parse(Path(inputs[0]).read_text(encoding="utf-8-sig"))
     imports = set()
     for node in ast.walk(tree):
@@ -79,6 +82,8 @@ def source_hash(asset_dir):
             imports.update(alias.name.split(".")[-1] for alias in node.names)
         if isinstance(node, ast.ImportFrom) and node.module:
             imports.add(node.module.split(".")[-1])
+    if "vrmeshy" in imports:
+        inputs.append(os.path.join(BLENDER_TOOLS, "vrmeshy.py"))
     if "vrmat" in imports or "vrcolumn" in imports:
         inputs += [os.path.join(BLENDER_TOOLS, "vrmat.py"), os.path.join(ROOT, "art", "palette.json")]
     if "vrcolumn" in imports:
@@ -132,8 +137,26 @@ def gate_problems(asset_dir, meta):
     return problems + sheet_problems(asset_dir)
 
 
+def _default_blender():
+    exe = os.environ.get("BLENDER")
+    if exe:
+        return exe
+    if shutil.which("blender"):
+        return "blender"
+    win_default = r"C:\Program Files\Blender Foundation\Blender 5.2\blender.exe"
+    return win_default if os.path.isfile(win_default) else "blender"
+
+
+def _ensure_ktx_path():
+    if shutil.which("ktx"):
+        return
+    ktx_bin = os.path.join(os.path.expanduser("~"), "AppData", "Local", "Programs", "KTX-Software", "bin")
+    if os.path.isdir(ktx_bin):
+        os.environ["PATH"] = os.environ.get("PATH", "") + os.pathsep + ktx_bin
+
+
 def blender(args, blend=None):
-    exe = os.environ.get("BLENDER", "blender")
+    exe = _default_blender()
     # `blender -b <file>` hangs on this machine (Blender 5.2); start from the factory
     # scene and let open_blend.py load the file before the work script runs.
     cmd = [exe, "-b", "--factory-startup", "--python-exit-code", "1"]
@@ -265,16 +288,29 @@ def cmd_export(a):
         raise SystemExit(f"{a.id} has not passed the Blender gate:\n  - " + "\n  - ".join(problems))
     digest = source_hash(d)
     out = os.path.join(d, "export", a.id + ".glb")
-    gltf = ["npx", "--no-install", "gltf-transform"]
+    gltf = [shutil.which("npx") or "npx", "--no-install", "gltf-transform"]
     web = os.path.join(ROOT, "web")
+    texture_format = meta.get("texture_format", "webp")
+    if texture_format not in {"webp", "ktx2"}:
+        raise SystemExit(f"{a.id}: unknown texture_format '{texture_format}'")
+    if texture_format == "ktx2":
+        _ensure_ktx_path()
     with tempfile.TemporaryDirectory(dir=d) as work:
         scene = os.path.join(work, a.id + ".blend")
         build_source(d, scene)
         blender(["--python", os.path.join(BLENDER_TOOLS, "export_asset.py"), "--", d, work], blend=scene)
         raw = os.path.join(work, a.id + ".raw.glb")
-        tmp = os.path.join(work, "webp.glb")
+        tmp = os.path.join(work, "tex.glb")
         packed = os.path.join(work, "packed.glb")
-        subprocess.run(gltf + ["webp", raw, tmp, "--quality", "92"], cwd=web, check=True)
+        if texture_format == "ktx2":
+            # KTX-Software cannot read WebP, so encode straight from the PNG raw.
+            etc1s = os.path.join(work, "etc1s.glb")
+            subprocess.run(gltf + ["etc1s", raw, etc1s, "--slots",
+                                   "{baseColorTexture,metallicRoughnessTexture,occlusionTexture,emissiveTexture}"],
+                           cwd=web, check=True)
+            subprocess.run(gltf + ["uastc", etc1s, tmp, "--slots", "normalTexture"], cwd=web, check=True)
+        else:
+            subprocess.run(gltf + ["webp", raw, tmp, "--quality", "92"], cwd=web, check=True)
         subprocess.run(gltf + ["meshopt", tmp, packed], cwd=web, check=True)
         if gate_problems(d, load(d)) or load(d) != meta or source_hash(d) != digest:
             raise SystemExit("source, sheet or approval changed during export; retry")
@@ -324,8 +360,11 @@ def export_problems(asset_dir, meta):
 
 
 def manifest_entry(meta):
-    return {"id": meta["id"], "category": meta["category"], "title": meta["title"],
-            "file": meta["id"] + ".glb", "size_m": meta["size_m"], "bytes": meta["export"]["bytes"]}
+    entry = {"id": meta["id"], "category": meta["category"], "title": meta["title"],
+             "file": meta["id"] + ".glb", "size_m": meta["size_m"], "bytes": meta["export"]["bytes"]}
+    if meta.get("material_class"):
+        entry["material_class"] = meta["material_class"]
+    return entry
 
 
 def sync_web():

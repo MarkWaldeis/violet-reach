@@ -32,7 +32,7 @@ def select_only(objs, active):
     bpy.context.view_layer.objects.active = active
 
 
-def decimate(obj, target):
+def decimate(obj, target, preserve_uvs=False):
     select_only([obj], obj)
     lo, hi = vrlib.world_bounds([obj])
     detail_size = max(hi - lo) * 0.045
@@ -76,7 +76,58 @@ def decimate(obj, target):
     modifier = obj.modifiers.new("dec", "DECIMATE")
     modifier.ratio = min(1.0, target / max(1, vrlib.triangle_count([obj])))
     modifier.use_collapse_triangulate = True
+    if preserve_uvs:
+        modifier.delimit = {"UV"}
     bpy.ops.object.modifier_apply(modifier=modifier.name)
+
+
+def meshy_finish(obj, tex):
+    """Class B export: keep the Meshy UVs and textures, no re-bake.
+
+    Scales every texture down to the texture budget and makes sure an occlusion
+    map exists — either the imported one or a cheap AO bake onto the Meshy UVs.
+    Returns the emission strength for the export receipt.
+    """
+    for mat in obj.data.materials:
+        if not mat or not mat.node_tree:
+            continue
+        for node in mat.node_tree.nodes:
+            img = node.image if node.type == "TEX_IMAGE" else None
+            if img and max(img.size) > tex:
+                w, h = img.size
+                factor = tex / max(w, h)
+                img.scale(max(1, round(w * factor)), max(1, round(h * factor)))
+    has_occlusion = any(
+        node.type == "GROUP" and node.node_tree and "glTF" in node.node_tree.name
+        for mat in obj.data.materials if mat and mat.node_tree for node in mat.node_tree.nodes)
+    if not has_occlusion:
+        img = bpy.data.images.new(f"{asset_id}_occlusion", tex, tex, alpha=False)
+        img.colorspace_settings.name = "Non-Color"
+        group = bpy.data.node_groups.new("glTF Material Output", "ShaderNodeTree")
+        group.interface.new_socket("Occlusion", in_out="INPUT", socket_type="NodeSocketFloat")
+        nodes = []
+        for mat in obj.data.materials:
+            if not mat or not mat.node_tree:
+                continue
+            node = mat.node_tree.nodes.new("ShaderNodeTexImage")
+            node.image = img
+            mat.node_tree.nodes.active = node
+            nodes.append((mat, node))
+        select_only([obj], obj)
+        bpy.ops.object.bake(type="AO", use_selected_to_active=False, margin=8)
+        for mat, node in nodes:
+            mat.node_tree.nodes.remove(node)
+            tex_node = mat.node_tree.nodes.new("ShaderNodeTexImage")
+            tex_node.image = img
+            occ = mat.node_tree.nodes.new("ShaderNodeGroup")
+            occ.node_tree = group
+            mat.node_tree.links.new(tex_node.outputs["Color"], occ.inputs["Occlusion"])
+    strength = 0.0
+    for mat in obj.data.materials:
+        bsdf = mat.node_tree.nodes.get("Principled BSDF") if mat and mat.node_tree else None
+        if bsdf is not None and bsdf.inputs["Emission Color"].is_linked:
+            strength = max(strength, float(bsdf.inputs["Emission Strength"].default_value))
+    return strength
 
 
 sources = vrlib.source_objects()
@@ -101,110 +152,116 @@ bmesh.ops.remove_doubles(mesh, verts=list(mesh.verts), dist=1e-6)
 mesh.to_mesh(lod0.data)
 lod0.data.update()
 mesh.free()
-decimate(lod0, lod_tris[0])
+meshy_b = meta.get("meshy_class") == "B"
+decimate(lod0, lod_tris[0], preserve_uvs=meshy_b)
 source_materials = list(lod0.data.materials)
-has_canopy = asset_id in {"tree_broadleaf_a", "tree_broadleaf_b"} and mark_canopy(lod0, source_materials)
-bpy.ops.object.mode_set(mode="EDIT")
-bpy.ops.mesh.select_all(action="SELECT")
-bpy.ops.uv.smart_project(angle_limit=math.radians(66), island_margin=0.003)
-bpy.ops.object.mode_set(mode="OBJECT")
-for poly in lod0.data.polygons:
-    poly.use_smooth = True
-lod0.data.set_sharp_from_angle(angle=math.radians(38))
-# The source is high-poly but also faceted; baking object-space detail needs a small cage.
-lo, hi = vrlib.world_bounds([lod0])
-extrusion = max(hi - lo) * 0.012
+if meshy_b:
+    has_canopy = False
+    emission_strength = meshy_finish(lod0, tex)
+    images = {}
+else:
+    has_canopy = asset_id in {"tree_broadleaf_a", "tree_broadleaf_b"} and mark_canopy(lod0, source_materials)
+    bpy.ops.object.mode_set(mode="EDIT")
+    bpy.ops.mesh.select_all(action="SELECT")
+    bpy.ops.uv.smart_project(angle_limit=math.radians(66), island_margin=0.003)
+    bpy.ops.object.mode_set(mode="OBJECT")
+    for poly in lod0.data.polygons:
+        poly.use_smooth = True
+    lod0.data.set_sharp_from_angle(angle=math.radians(38))
+    # The source is high-poly but also faceted; baking object-space detail needs a small cage.
+    lo, hi = vrlib.world_bounds([lod0])
+    extrusion = max(hi - lo) * 0.012
 
-images = {}
-source_indices = [p.material_index for p in lod0.data.polygons]
-
-
-def bake(name, bake_type, colorspace, project=True, **kw):
-    img = bpy.data.images.new(f"{asset_id}_{name}", tex, tex, alpha=False, float_buffer=(name == "emission"))
-    img.colorspace_settings.name = colorspace
-    if not project:
-        lod0.data.materials.clear()
-        for mat in source_materials:
-            lod0.data.materials.append(mat.copy())
-        for poly, index in zip(lod0.data.polygons, source_indices):
-            poly.material_index = index
-    nodes = []
-    for mat in lod0.data.materials:
-        node = mat.node_tree.nodes.new("ShaderNodeTexImage")
-        node.image = img
-        mat.node_tree.nodes.active = node
-        nodes.append((mat, node))
-    select_only(sources + [lod0] if project else [lod0], lod0)
-    bpy.ops.object.bake(type=bake_type, use_selected_to_active=project, cage_extrusion=extrusion,
-                        max_ray_distance=extrusion * 4, margin=8, **kw)
-    for mat, node in nodes:
-        mat.node_tree.nodes.remove(node)
-    if not project:
-        lod0.data.materials.clear()
-        lod0.data.materials.append(bake_mat)
-        for poly in lod0.data.polygons:
-            poly.material_index = 0
-    images[name] = img
+    images = {}
+    source_indices = [p.material_index for p in lod0.data.polygons]
 
 
-bake_mat = bpy.data.materials.new(asset_id + "_bake")
-bake_mat.use_nodes = True
-lod0.data.materials.clear()
-lod0.data.materials.append(bake_mat)
-for poly in lod0.data.polygons:
-    poly.material_index = 0
-
-project_materials = meta.get("category") != "vegetation"
-bake("basecolor", "DIFFUSE", "sRGB", project=project_materials, pass_filter={"COLOR"})
-bake("normal", "NORMAL", "Non-Color")
-bake("roughness", "ROUGHNESS", "Non-Color", project=project_materials)
-bake("emission", "EMIT", "sRGB", project=project_materials)
-scene.cycles.samples = 64
-bake("occlusion", "AO", "Non-Color")
-
-# Emission is baked in scene-linear and can exceed 1; store it normalised and keep the gain as strength.
-px = np.empty(tex * tex * 4, dtype=np.float32)
-images["emission"].pixels.foreach_get(px)
-peak = float(np.percentile(px.reshape(-1, 4)[:, :3].max(axis=1), 99.9))
-emission_strength = max(peak, 1e-4)
-px = px.reshape(-1, 4)
-px[:, :3] = np.clip(px[:, :3] / emission_strength, 0, 1)
-images["emission"].pixels.foreach_set(px.ravel())
-
-for name, img in images.items():
-    img.filepath_raw = os.path.join(export_dir, f".{asset_id}_{name}.png")
-    img.file_format = "PNG"
-    img.save()
-
-# Game material: plain image textures that the glTF exporter understands.
-mat = bpy.data.materials.new(asset_id)
-mat.use_nodes = True
-nt = mat.node_tree
-bsdf = nt.nodes["Principled BSDF"]
+    def bake(name, bake_type, colorspace, project=True, **kw):
+        img = bpy.data.images.new(f"{asset_id}_{name}", tex, tex, alpha=False, float_buffer=(name == "emission"))
+        img.colorspace_settings.name = colorspace
+        if not project:
+            lod0.data.materials.clear()
+            for mat in source_materials:
+                lod0.data.materials.append(mat.copy())
+            for poly, index in zip(lod0.data.polygons, source_indices):
+                poly.material_index = index
+        nodes = []
+        for mat in lod0.data.materials:
+            node = mat.node_tree.nodes.new("ShaderNodeTexImage")
+            node.image = img
+            mat.node_tree.nodes.active = node
+            nodes.append((mat, node))
+        select_only(sources + [lod0] if project else [lod0], lod0)
+        bpy.ops.object.bake(type=bake_type, use_selected_to_active=project, cage_extrusion=extrusion,
+                            max_ray_distance=extrusion * 4, margin=8, **kw)
+        for mat, node in nodes:
+            mat.node_tree.nodes.remove(node)
+        if not project:
+            lod0.data.materials.clear()
+            lod0.data.materials.append(bake_mat)
+            for poly in lod0.data.polygons:
+                poly.material_index = 0
+        images[name] = img
 
 
-def tex_node(name):
-    n = nt.nodes.new("ShaderNodeTexImage")
-    n.image = images[name]
-    return n
+    bake_mat = bpy.data.materials.new(asset_id + "_bake")
+    bake_mat.use_nodes = True
+    lod0.data.materials.clear()
+    lod0.data.materials.append(bake_mat)
+    for poly in lod0.data.polygons:
+        poly.material_index = 0
+
+    project_materials = meta.get("category") != "vegetation"
+    bake("basecolor", "DIFFUSE", "sRGB", project=project_materials, pass_filter={"COLOR"})
+    bake("normal", "NORMAL", "Non-Color")
+    bake("roughness", "ROUGHNESS", "Non-Color", project=project_materials)
+    bake("emission", "EMIT", "sRGB", project=project_materials)
+    scene.cycles.samples = 64
+    bake("occlusion", "AO", "Non-Color")
+
+    # Emission is baked in scene-linear and can exceed 1; store it normalised and keep the gain as strength.
+    px = np.empty(tex * tex * 4, dtype=np.float32)
+    images["emission"].pixels.foreach_get(px)
+    peak = float(np.percentile(px.reshape(-1, 4)[:, :3].max(axis=1), 99.9))
+    emission_strength = max(peak, 1e-4)
+    px = px.reshape(-1, 4)
+    px[:, :3] = np.clip(px[:, :3] / emission_strength, 0, 1)
+    images["emission"].pixels.foreach_set(px.ravel())
+
+    for name, img in images.items():
+        img.filepath_raw = os.path.join(export_dir, f".{asset_id}_{name}.png")
+        img.file_format = "PNG"
+        img.save()
+
+    # Game material: plain image textures that the glTF exporter understands.
+    mat = bpy.data.materials.new(asset_id)
+    mat.use_nodes = True
+    nt = mat.node_tree
+    bsdf = nt.nodes["Principled BSDF"]
 
 
-nt.links.new(tex_node("basecolor").outputs["Color"], bsdf.inputs["Base Color"])
-nt.links.new(tex_node("roughness").outputs["Color"], bsdf.inputs["Roughness"])
-normal_map = nt.nodes.new("ShaderNodeNormalMap")
-nt.links.new(tex_node("normal").outputs["Color"], normal_map.inputs["Color"])
-nt.links.new(normal_map.outputs["Normal"], bsdf.inputs["Normal"])
-nt.links.new(tex_node("emission").outputs["Color"], bsdf.inputs["Emission Color"])
-bsdf.inputs["Emission Strength"].default_value = emission_strength
-bsdf.inputs["Metallic"].default_value = 0.0
-# The exporter reads ambient occlusion from a group node with this exact name.
-group = bpy.data.node_groups.new("glTF Material Output", "ShaderNodeTree")
-group.interface.new_socket("Occlusion", in_out="INPUT", socket_type="NodeSocketFloat")
-occ = nt.nodes.new("ShaderNodeGroup")
-occ.node_tree = group
-nt.links.new(tex_node("occlusion").outputs["Color"], occ.inputs["Occlusion"])
-lod0.data.materials.clear()
-lod0.data.materials.append(mat)
+    def tex_node(name):
+        n = nt.nodes.new("ShaderNodeTexImage")
+        n.image = images[name]
+        return n
+
+
+    nt.links.new(tex_node("basecolor").outputs["Color"], bsdf.inputs["Base Color"])
+    nt.links.new(tex_node("roughness").outputs["Color"], bsdf.inputs["Roughness"])
+    normal_map = nt.nodes.new("ShaderNodeNormalMap")
+    nt.links.new(tex_node("normal").outputs["Color"], normal_map.inputs["Color"])
+    nt.links.new(normal_map.outputs["Normal"], bsdf.inputs["Normal"])
+    nt.links.new(tex_node("emission").outputs["Color"], bsdf.inputs["Emission Color"])
+    bsdf.inputs["Emission Strength"].default_value = emission_strength
+    bsdf.inputs["Metallic"].default_value = 0.0
+    # The exporter reads ambient occlusion from a group node with this exact name.
+    group = bpy.data.node_groups.new("glTF Material Output", "ShaderNodeTree")
+    group.interface.new_socket("Occlusion", in_out="INPUT", socket_type="NodeSocketFloat")
+    occ = nt.nodes.new("ShaderNodeGroup")
+    occ.node_tree = group
+    nt.links.new(tex_node("occlusion").outputs["Color"], occ.inputs["Occlusion"])
+    lod0.data.materials.clear()
+    lod0.data.materials.append(mat)
 
 lods = [lod0]
 for i, target in enumerate(lod_tris[1:], start=1):
@@ -216,10 +273,12 @@ for i, target in enumerate(lod_tris[1:], start=1):
     lod.name = f"{asset_id}_LOD{i}"
     scene.collection.objects.link(lod)
     select_only([lod], lod)
-    colour = bpy.data.images.get(source.get("canopy_albedo", "")) or images["basecolor"]
-    occlusion = bpy.data.images.get(source.get("canopy_occlusion", "")) or images["occlusion"]
+    colour = occlusion = None
+    if has_canopy:
+        colour = bpy.data.images.get(source.get("canopy_albedo", "")) or images["basecolor"]
+        occlusion = bpy.data.images.get(source.get("canopy_occlusion", "")) or images["occlusion"]
     if not has_canopy or not simplify_canopy(lod, target, decimate, colour, tex, planes=1 if i == 1 else 3, occlusion=occlusion):
-        decimate(lod, target)
+        decimate(lod, target, preserve_uvs=meshy_b)
     lods.append(lod)
 
 select_only(lods, lod0)

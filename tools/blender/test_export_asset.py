@@ -72,3 +72,175 @@ with tempfile.TemporaryDirectory() as folder:
     assert result["images"]["normal"].colorspace_settings.name == "Non-Color"
     assert (asset / "leaf.raw.glb").is_file()
 print("PASS: disconnected thin leaf welds into bounded LODs; both source colours bake without black face centres")
+
+# ---- class B: a prepared Meshy raw model exports without a re-bake ----
+import hashlib
+import os
+import shutil
+import struct
+import subprocess
+
+import vrmeshy
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def wire_image(mat, image, socket, channel=None):
+    node = mat.node_tree.nodes.new("ShaderNodeTexImage")
+    node.image = image
+    if channel:
+        sep = mat.node_tree.nodes.new("ShaderNodeSeparateColor")
+        mat.node_tree.links.new(node.outputs["Color"], sep.inputs["Color"])
+        mat.node_tree.links.new(sep.outputs[channel], socket)
+    else:
+        mat.node_tree.links.new(node.outputs["Color"], socket)
+    return node
+
+
+def small_image(name, size, fn):
+    img = bpy.data.images.new(name, size, size, alpha=True)
+    px = [fn(x / (size - 1), y / (size - 1)) for y in range(size) for x in range(size)]
+    img.pixels = [c for p in px for c in p]
+    return img
+
+
+with tempfile.TemporaryDirectory() as work:
+    lib = Path(work) / "library"
+    model_dir = lib / "meshy_rock" / "model" / "B-t1"
+    model_dir.mkdir(parents=True)
+    asset = Path(work) / "assets" / "props" / "meshy_rock"
+    asset.mkdir(parents=True)
+
+    # A fake "Meshy" GLB: UV unwrapped blob + loose chip, with real image textures.
+    for obj in list(bpy.data.objects):
+        bpy.data.objects.remove(obj, do_unlink=True)
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=64, ring_count=48, radius=1, location=(5, 5, 3))
+    blob = bpy.context.object
+    bpy.ops.mesh.primitive_cube_add(size=0.04, location=(5, 5, 5.6))
+    chip = bpy.context.object
+    bpy.ops.object.select_all(action="SELECT")
+    bpy.context.view_layer.objects.active = blob
+    bpy.ops.object.join()
+    mat = bpy.data.materials.new("meshy_mat")
+    mat.use_nodes = True
+    bsdf = mat.node_tree.nodes["Principled BSDF"]
+    basecolor = small_image("meshy_basecolor", 128,
+                            lambda u, v: ((u * 8) % 1 > 0.5, (v * 8) % 1 > 0.5, 0.6, 1.0))
+    orm = small_image("meshy_orm", 64, lambda u, v: (0.0, 0.3, 0.9, 1.0))
+    normal_img = small_image("meshy_normal", 64, lambda u, v: (0.5, 0.5, 1.0, 1.0))
+    orm.colorspace_settings.name = normal_img.colorspace_settings.name = "Non-Color"
+    wire_image(mat, basecolor, bsdf.inputs["Base Color"])
+    wire_image(mat, orm, bsdf.inputs["Roughness"], "Green")
+    wire_image(mat, orm, bsdf.inputs["Metallic"], "Blue")
+    nmap = mat.node_tree.nodes.new("ShaderNodeNormalMap")
+    nimg = mat.node_tree.nodes.new("ShaderNodeTexImage")
+    nimg.image = normal_img
+    mat.node_tree.links.new(nimg.outputs["Color"], nmap.inputs["Color"])
+    mat.node_tree.links.new(nmap.outputs["Normal"], bsdf.inputs["Normal"])
+    blob.data.materials.append(mat)
+    bpy.ops.object.select_all(action="SELECT")
+    glb = model_dir / "model.glb"
+    bpy.ops.export_scene.gltf(filepath=str(glb), use_selection=True, export_apply=True, export_yup=True)
+
+    meta = {"asset": "meshy_rock", "class": "B",
+            "image": {"ai_model": "nano-banana-2-lite", "prompt": "test", "task_id": "t1",
+                      "file": "meshy_rock/image/chosen.png", "sha256": "0" * 64},
+            "model": {"resource": "image-to-3d", "model_type": "smart-topology", "task_id": "t2",
+                      "file": "meshy_rock/model/B-t1/model.glb",
+                      "sha256": hashlib.sha256(glb.read_bytes()).hexdigest()},
+            "credits": 15}
+    (asset / "asset.json").write_text(json.dumps(
+        {"id": "meshy_rock", "category": "props", "texture_size": 64,
+         "lod_triangles": [400, 100, 25], "meshy_class": "B", "material_class": "rock_chalk",
+         "texture_format": "ktx2"}))
+    (asset / "meshy.json").write_text(json.dumps(meta))
+    os.environ["VR_MESHY_DIR"] = str(lib)
+
+    # Wrong hash aborts before touching the library file.
+    bad = json.loads(json.dumps(meta))
+    bad["model"]["sha256"] = "f" * 64
+    (asset / "meshy.json").write_text(json.dumps(bad))
+    try:
+        vrmeshy.load_raw(str(asset))
+        raise AssertionError("tampered sha256 was accepted")
+    except SystemExit as exc:
+        assert "sha256" in str(exc), exc
+    (asset / "meshy.json").write_text(json.dumps(meta))
+
+    for obj in list(bpy.data.objects):
+        bpy.data.objects.remove(obj, do_unlink=True)
+    objs = vrmeshy.load_raw(str(asset))
+    assert objs and all(o.type == "MESH" for o in objs)
+    loose = vrmeshy.drop_loose(objs, min_fraction=0.01)
+    assert loose > 0, "the detached chip should be dropped"
+    vrmeshy.fix_normals(objs)
+    vrmeshy.normalize(objs, size_m=(1.5, 1.5, 1.5), yaw_deg=30)
+    lo, hi = vrlib.world_bounds(objs)
+    assert abs(lo.z) < 1e-4 and max(hi - lo) <= 1.5 + 1e-4, (tuple(lo), tuple(hi))
+    assert abs((lo.x + hi.x) / 2) < 1e-3 and abs((lo.y + hi.y) / 2) < 1e-3, (tuple(lo), tuple(hi))
+    vrmeshy.burial_skirt(objs, depth=0.2)
+    lo, hi = vrlib.world_bounds(objs)
+    assert abs(lo.z + 0.2) < 1e-4, lo.z
+
+    # clamp_material replaces the metal link and lifts textured roughness to >= 0.6.
+    clamped = vrmeshy.clamp_material(objs, roughness_min=0.6)
+    mats = [m for m in objs[0].data.materials if m and m.node_tree]
+    b = mats[0].node_tree.nodes["Principled BSDF"]
+    assert not b.inputs["Metallic"].is_linked and b.inputs["Metallic"].default_value == 0.0
+    assert clamped, "the ORM texture should have been re-baked with a clamp"
+    rough_img = next(iter(clamped.values()))
+    g = np.array(rough_img.pixels[:]).reshape(-1, 4)[:, 1]
+    assert g.min() >= 0.6 - 1e-4, g.min()
+
+    # grade + delight produce new images and never touch the source texture.
+    graded = vrmeshy.grade_basecolor(objs, "#E04848", strength=1.0)
+    assert graded and all("_graded" in i.name for i in graded.values())
+    delit = vrmeshy.delight_basecolor(objs, radius_frac=0.25)
+    assert delit and all("_delit" in i.name for i in delit.values())
+
+    vrmeshy.link_source(objs)
+    assert objs[0] in vrlib.source_objects()
+
+    sys.argv = ["blender", "--", str(asset), str(asset)]
+    result = runpy.run_path(str(ROOT / "tools" / "blender" / "export_asset.py"))
+    counts = [vrlib.triangle_count([o]) for o in result["lods"]]
+    assert all(0 < count <= target * 2 for count, target in zip(counts, (400, 100, 25))), counts
+    assert counts[0] <= 800 and counts[-1] < counts[0], counts
+
+    # Class B keeps the imported UVs and the raw textures — no bake names appear.
+    lod0 = result["lod0"]
+    mats = [m for m in lod0.data.materials if m and m.node_tree]
+    assert len(mats) == 1
+    texs = [n.image.name for n in mats[0].node_tree.nodes if n.type == "TEX_IMAGE"]
+    assert any(name.startswith("meshy_basecolor") for name in texs), texs
+    assert not any(name == "meshy_rock_basecolor" for name in texs), texs
+    bc = bpy.data.images[next(name for name in texs if name.startswith("meshy_basecolor"))]
+    assert tuple(bc.size) == (64, 64), bc.size
+    px = np.array(bc.pixels[:]).reshape(64, 64, 4)
+    assert abs(px[:, :4, 0].mean() - px[:, 4:8, 0].mean()) > 0.05, \
+        "the checker detail must survive — this is the raw texture"
+    occ = [n for n in mats[0].node_tree.nodes if n.type == "GROUP" and n.node_tree and "glTF" in n.node_tree.name]
+    assert occ, "class B still needs an occlusion socket for the exporter"
+    assert result["emission_strength"] == 0.0
+
+    raw = asset / "meshy_rock.raw.glb"
+    assert raw.is_file()
+    if not shutil.which("ktx"):
+        ktx_bin = os.path.join(os.path.expanduser("~"), "AppData", "Local", "Programs", "KTX-Software", "bin")
+        if os.path.isdir(ktx_bin):
+            os.environ["PATH"] = os.environ.get("PATH", "") + os.pathsep + ktx_bin
+    npx = shutil.which("npx") or "npx"
+    web = ROOT / "web"
+    tmp, packed = asset / "tex.glb", asset / "packed.glb"
+    subprocess.run([npx, "--no-install", "gltf-transform", "etc1s", str(raw), str(tmp),
+                    "--slots", "{baseColorTexture,metallicRoughnessTexture,occlusionTexture,emissiveTexture}"],
+                   cwd=web, check=True)
+    subprocess.run([npx, "--no-install", "gltf-transform", "uastc", str(tmp), str(packed),
+                    "--slots", "normalTexture"], cwd=web, check=True)
+    blob = packed.read_bytes()
+    doc = json.loads(blob[20:20 + struct.unpack("<I", blob[12:16])[0]])
+    assert all(i["mimeType"] == "image/ktx2" for i in doc["images"]), doc["images"]
+    assert "KHR_texture_basisu" in doc["extensionsUsed"], doc["extensionsUsed"]
+
+print("PASS: class B exports prepared Meshy UVs+textures (no bake), clamps materials, "
+      "aborts on sha mismatch and encodes KTX2")
