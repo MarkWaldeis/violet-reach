@@ -14,8 +14,22 @@
     1000
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-376742566d344b90aa5a22ec7e9cc164",
-  "review": null,
-  "review_rounds": 2
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 7,
+      "material": 7,
+      "scale": 8,
+      "style": 7,
+      "defects": 7
+    },
+    "notes": "Round 3 (last): rejected. Fixed: the talus is now graded all round (large toe blocks, smaller fragments and modelled gravel upslope, no bare side), and the dimple pattern and slate-grey stones are gone (sheet turns, closeup_base). Still failing: (1) form_detail 7: every stone is a smooth, soft-edged wedge with a few large flat facets and rounded edges, like putty or clay; no sharp break edges, conchoidal scars or chipped corners (closeup, closeup_base foreground). (2) material/style 7: all stones are one even taupe-grey with only faint smeared streaks, not the pale broken chalk of STYLE.md, and the bed between them is a smooth, stained sand cone rather than gravel and fines (closeup_base centre). (3) defects 7: several toe blocks interpenetrate each other with no contact detail, and the edge grass is barely visible. Fix: give the stones crisp fracture edges with secondary chips and spalled faces; use the pale chalk material with per-stone tone variation and darker undersides; replace the smooth sand with grit and small fragments filling the gaps; separate or seat the toe blocks against each other; show tufts of edge grass at the foot.",
+    "round": 3,
+    "source_sha256": "8b4a1dabd58c2b4e8a150ed0ee81c0948e4ca9b7a0769c8d21fa17f2d8f3282f",
+    "sheet_sha256": "3ec28a8909478a55be461db658710fd8f4c806ee522d3a52b6890f219882c2fe"
+  },
+  "review_rounds": 3
 }
