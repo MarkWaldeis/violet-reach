@@ -15,7 +15,8 @@ def limestone(name):
     mat = bpy.data.materials.get(local_name)
     if mat is not None:
         return mat
-    mat = vrmat.get(name).copy()
+    source = {"paving": "monument_white", "paving_joint": "monument_weathered", "terrain_skirt": "grass_ground"}
+    mat = vrmat.get(source.get(name, name)).copy()
     mat.name = local_name
     nodes, links = mat.node_tree.nodes, mat.node_tree.links
     surface = nodes["Principled BSDF"]
@@ -53,6 +54,33 @@ def limestone(name):
                 links.new(value, socket)
         return node.outputs["Color"]
 
+    if name == "terrain_skirt":
+        coverage = nodes.new("ShaderNodeAttribute")
+        coverage.attribute_name = "turf_coverage"
+        green = surface.inputs["Base Color"].links[0].from_socket
+        soil = tuple(palette["soil"]["linear_rgb"])
+        links.new(mix(coverage.outputs["Fac"], soil, green), surface.inputs["Base Color"])
+        return mat
+
+    if name in ("paving", "paving_joint"):
+        if name == "paving":
+            tint = nodes.new("ShaderNodeAttribute")
+            tint.attribute_name = "paving_tint"
+            slate = tuple(c*k for c,k in zip(cream, (.73, .81, .89)))
+            ivory = tuple(c*k for c,k in zip(cream, (1.06, 1.02, .93)))
+            links.new(ramp(tint.outputs["Fac"], 0, 1, (slate, ivory)), surface.inputs["Base Color"])
+        else:
+            for link in list(surface.inputs["Base Color"].links):
+                links.remove(link)
+            surface.inputs["Base Color"].default_value = (
+                *(a*.68+b*.32 for a,b in zip(seam, palette["soil"]["linear_rgb"])), 1)
+        for socket in (surface.inputs["Normal"], surface.inputs["Roughness"]):
+            for link in list(socket.links):
+                links.remove(link)
+        surface.inputs["Roughness"].default_value = .84
+        surface.inputs["Specular IOR Level"].default_value = .25
+        return mat
+
     variation = noise(.87, 3)
     tone = ramp(variation, .23, .79, (cool, pale))
     random_tone = nodes.new("ShaderNodeObjectInfo").outputs["Random"]
@@ -87,26 +115,24 @@ def limestone(name):
     return mat
 
 
-def tread_mesh(bounds, chip, damaged_edge, sink):
+def tread_mesh(bounds, chip, chip_site, damaged_edge, sink):
     x0, x1, y0, y1, bottom, top = bounds
     depth = y1-y0
     min_surface_z = bottom+.035
-    site = .18+.63*abs(math.sin(17*y0+5*x0))
     samples = sorted({*(j/64 for j in range(65)),
-                      *(v for v in (site-.105,site,site+.105) if abs(64*v-round(64*v))>.14)})
+                      *(v for v in (chip_site-.105,chip_site,chip_site+.105) if chip and abs(64*v-round(64*v))>.14)})
     vertices = []
     for v in samples:
         x = x0+(x1-x0)*v
         lane = math.exp(-((x-.14-.17*math.sin(y0))/1.48)**2)
-        edge_loss = chip * max(0, 1-abs(v-site)/.105)
+        edge_loss = chip * max(0, 1-((v-chip_site)/.105)**2)**2
         radius = .045+.032*lane
         nose = radius/depth
         surface=[]
         for j in range(25):
             t=1-(1-nose)*j/24
             dip=.10*lane*math.sin(math.pi*(1-t)/1.49)**2
-            noise=lane*(.005*math.sin(12*x+7*t+y0)+.0016*math.sin(31*x+21*t))
-            surface.append((t,top-dip+noise-edge_loss*max(0,1-t/.42)*.49))
+            surface.append((t,top-dip-edge_loss*max(0,1-t/.32)*.32))
         for j in range(1,11):
             angle=math.pi*j/20
             t=nose*(1-math.sin(angle))
@@ -127,11 +153,12 @@ def tread_mesh(bounds, chip, damaged_edge, sink):
     return vertices, faces, n
 
 
-def ashlar(name, bounds, rng, stone, wear=.022, chip=0, coping_z=None):
+def ashlar(name, bounds, rng, stone, wear=.022, chip=0, coping_z=None, tint=None):
     x0, x1, y0, y1, z0, z1 = bounds
     bevel_width = wear*.51
     z0 = max(-.059 + bevel_width, z0)
-    chip = max(chip, min(.026 + .012*abs(math.sin(4*x0 + 7*y0 + 13*z0)), (z1-z0)*.19))
+    if stone != "paving":
+        chip = max(chip, min(.026 + .012*abs(math.sin(4*x0 + 7*y0 + 13*z0)), (z1-z0)*.19))
     chamfer = min(wear * 1.9, (z1 - z0) * .22)
     footprint = [(x0 + chamfer, y0), (x1 - chamfer, y0), (x1, y0 + chamfer),
                  (x1, y1 - chamfer), (x1 - chamfer, y1), (x0 + chamfer, y1),
@@ -144,19 +171,21 @@ def ashlar(name, bounds, rng, stone, wear=.022, chip=0, coping_z=None):
     vertices += [(x + rng.uniform(-wear, wear)*.31 + (.07*(x0+x1-2*x) if i == notch else 0),
                   y + rng.uniform(-wear, wear)*.37 + (.07*(y0+y1-2*y) if i == notch else 0),
                   z1 - (chip if i == notch else 0)) for i,(x, y) in enumerate(corners)]
+    if stone == "paving" and not chip:
+        vertices[n+notch] = (*corners[notch], z1)
     faces = [tuple(reversed(range(n)))]
     for i in range(n):
         a, b = i, (i+1)%n
         faces.append((a,b,b+n,a+n))
     faces.append(tuple(range(n,len(vertices))))
-    obj = masonry(name, vertices, faces, stone, coping_z)
+    obj = masonry(name, vertices, faces, stone, coping_z, tint=tint)
     bevel = obj.modifiers.new("Soft quarry edges", "BEVEL")
     bevel.width, bevel.segments = bevel_width, 2
     bevel.limit_method, bevel.angle_limit = "ANGLE", math.radians(20)
     obj.modifiers.new("Dressed face normals", "WEIGHTED_NORMAL")
 
 
-def masonry(name, vertices, faces, stone, coping_z=None):
+def masonry(name, vertices, faces, stone, coping_z=None, tint=None):
     mesh = bpy.data.meshes.new(name)
     mesh.from_pydata([(-y, x, z) for x, y, z in vertices], [], faces)
     mesh.update()
@@ -166,11 +195,88 @@ def masonry(name, vertices, faces, stone, coping_z=None):
     if coping_z is not None:
         runoff = mesh.attributes.new("coping_runoff", "FLOAT", "POINT")
         runoff.data.foreach_set("value", [max(0, min(1, 1-(coping_z-z)/1.68)) for _,_,z in vertices])
+    if tint is not None:
+        tone = mesh.attributes.new("paving_tint", "FLOAT", "POINT")
+        tone.data.foreach_set("value", [tint]*len(vertices))
     return obj
+
+
+def grass_tuft(name, x, y, z, height, count, rng, spread=.036):
+    for blade in range(count):
+        vertices = []
+        angle = rng.uniform(0, math.tau)
+        dx,dy = math.cos(angle),math.sin(angle)
+        h = height*rng.uniform(.48, 1)
+        root_x,root_y = x+rng.uniform(-spread,spread),y+rng.uniform(-spread,spread)
+        width = .7+.3*min(1,height/.2)
+        for dz,lean,w in ((-.025,0,.010),(h*.56,h*.26,.018),(h,h*.67,.002)):
+            px,py = root_x+lean*dx,root_y+lean*dy
+            w *= width
+            vertices.extend(((px+w*dx,py+w*dy,z+dz),(px-w*dy,py+w*dx,z+dz),
+                             (px-.62*w*dx+.74*w*dy,py-.62*w*dy-.74*w*dx,z+dz)))
+        faces = [(2,1,0),(6,7,8)]
+        faces.extend((k*3+i,k*3+(i+1)%3,(k+1)*3+(i+1)%3,(k+1)*3+i)
+                     for k in range(2) for i in range(3))
+        masonry(f"{name} blade {blade+1}", vertices, faces, "grass_ground")
+
+
+def terrain_skirt(start, back):
+    rng = random.Random(82510)
+    flank = ((3.74,start+.15),(4.61,start+.60),(4.72,start+2.55),(5.20,start+3.2),
+             (5.42,start+5.43),(5.68,start+8.1),(5.75,start+11.3),
+             (5.99,start+14.4),(6.16,start+17.6),(5.92,back+.42))
+    outline = ((-3.30,start+.13), (0,start+.05),(3.30,start+.13), *flank,
+               (4.79,back+.57),(1.75,back+.61),(-1.61,back+.65),(-4.87,back+.64),
+               *((-x,y) for x,y in reversed(flank)))
+    samples = []
+    for (x,y),(next_x,next_y) in zip(outline, outline[1:]+outline[:1]):
+        segments = max(1, math.ceil(math.hypot(next_x-x,next_y-y)/.22))
+        samples.extend((x+(next_x-x)*i/segments,y+(next_y-y)*i/segments) for i in range(segments))
+    n = len(samples)
+    vertices, coverage = [], []
+    contacts = []
+    for i,(x,y) in enumerate(samples):
+        distance = math.hypot(x,y)
+        dx,dy = x/distance,y/distance
+        front = y < start+.45 and abs(x)<3.4
+        bank = .088 if front else .238
+        width = .81+.19*math.sin(i*.18)+.10*math.cos(i*.39)
+        patch = .53+.30*math.sin(i*.22)+.16*math.cos(i*.57)
+        high = bank*(.88+.29*math.sin(i*.37)+.13*math.cos(i*.78))
+        bands = ((-.46,high,.26),(-.11,high*.96,.78),(.25,high*.68,.94),
+                 (.65,high*.34,.74),(1.08,-.013,.29),(1.08,-.055,0),(-.46,-.055,0))
+        for offset,z,turf in bands:
+            vertices.append((x+dx*offset*width,y+dy*offset*width,z))
+            coverage.append(max(0,min(1,turf*(.27+patch))))
+        if not front:
+            contacts.append(vertices[-5])
+    bands = len(vertices)//n
+    faces = [(i*bands+j,i*bands+(j+1)%bands,((i+1)%n)*bands+(j+1)%bands,((i+1)%n)*bands+j)
+             for i in range(n) for j in range(bands)]
+    skirt = masonry("Scalloped soil and turf skirt", vertices, faces, "terrain_skirt")
+    blend = skirt.data.attributes.new("turf_coverage", "FLOAT", "POINT")
+    blend.data.foreach_set("value", coverage)
+    for face in skirt.data.polygons:
+        face.use_smooth = face.index%bands<4
+    for i in range(2,len(contacts)-2,4):
+        x,y,z = contacts[i]
+        if rng.random()<.61:
+            grass_tuft(f"Skirt grass tuft {i}", x,y,z-.035,rng.uniform(.21,.38),rng.randrange(5,13),rng)
+        else:
+            w,d = rng.uniform(.09,.24),rng.uniform(.09,.21)
+            mossy = rng.random()<.48
+            ashlar(f"Skirt {'mossy' if mossy else 'limestone'} rubble {i}",
+                   (x-w,x+w,y-d,y+d,z-.082,z+rng.uniform(.04,.14)),rng,
+                   "mossy_rock" if mossy else "monument_weathered",.027,chip=.054)
+            if mossy:
+                offset_x,offset_y = x/math.hypot(x,y),y/math.hypot(x,y)
+                grass_tuft(f"Skirt moss cushion {i}", x-.24*offset_x,y-.24*offset_y,z+.008,
+                           rng.uniform(.067,.098),rng.randrange(12,19),rng,spread=.077)
 
 
 def build():
     rng = random.Random(251553)
+    wear_rng = random.Random(32809)
     white, old = "monument_white", "monument_weathered"
     rise = 6 / 34
     tread = .42
@@ -185,24 +291,27 @@ def build():
         if bed_top-bottom > .023:
             ashlar(f"{label} recessed bearing", (cuts[0]+.038,cuts[-1]-.038,
                                                 y0+.025,y1-.026,bottom,bed_top),
-                   rng,white,.013)
+                   rng,"paving_joint",.013)
         for k, (x0, x1) in enumerate(zip(cuts, cuts[1:])):
             name = f"{label} slab {k}"
+            tint = wear_rng.uniform(0, 1)
             if step is None:
-                ashlar(name, (x0+.008,x1-.008,y0,y1,top-.115,top), rng, white, .021 if worn else .013)
+                ashlar(name, (x0+.008,x1-.008,y0,y1,top-.115,top), rng, "paving",
+                       .034 if worn else .026, chip=.045 if wear_rng.random()<.13 else 0, tint=tint)
                 continue
             broken = (step, k) in ((2,0),(8,1),(14,2),(21,1),(29,0))
             sunken = (step, k) in ((5,0),(12,2),(25,0),(30,2))
             crack = x0+(x1-x0)*.64
             pieces = ((x0+.008, crack-.021, 1), (crack+.021, x1-.008, -1)) if broken else (
                 (x0+.008,x1-.008,0),)
+            chip = .092 if broken else wear_rng.uniform(.028,.052) if wear_rng.random()<.07 else 0
+            chip_site = wear_rng.uniform(.18,.82)
             for i, (left, right, edge) in enumerate(pieces):
                 drift = .057 if sunken or (broken and i == 1) else 0
                 sink = .021 if sunken or (broken and i == 1) else 0
-                chip = .138 if broken else .040+.077*abs(math.sin(step*2.8+k*1.7))
                 bounds = (left, right, y0+drift, y1, top-.191, top)
-                vertices, faces, n = tread_mesh(bounds, chip, edge, sink)
-                obj = masonry(f"{name} piece {i}" if broken else name, vertices, faces, white)
+                vertices, faces, n = tread_mesh(bounds, chip, chip_site, edge, sink)
+                obj = masonry(f"{name} piece {i}" if broken else name, vertices, faces, "paving", tint=tint)
                 for face in obj.data.polygons[1:-1]:
                     face.use_smooth = 2 <= (face.index-1)%n < n-1
                 obj.data.set_sharp_from_angle(angle=math.radians(36))
@@ -224,7 +333,7 @@ def build():
         course(f"Summit terrace bay {j}", (-5.26, -3.50, -1.72 + shift, .15 - shift, 2.05 + shift, 3.5, 5.26),
                y0, y1, 0, 6, j in (0, 4))
     ashlar("Pale summit joint bedding",(-5.26,5.26,upper_end,back,5.783,5.90),
-           rng,white,.01)
+           rng,"paving_joint",.01)
 
     # The broad retaining cheeks step back in plan, leaving the treads and upper terrace open.
     cheek = [
@@ -291,13 +400,7 @@ def build():
                    rng,white,.039,chip=.14 if (j+k)%5==0 else 0,coping_z=5.98)
         ashlar(f"Rear pilaster {j} head",(x-.57,x+.57,back-.24,back+.68,5.76,6.15),
                rng,white,.036,chip=.116 if j%2 else 0)
-    for seed,(x,y) in enumerate(((4.58,start+1.08),(5.10,start+4),(-5.39,lower_end-.14),
-                                  (-5.73,upper_end-.22),(-4.8,back+.71),(.73,back+.09),(2.63,back+.65))):
-        for i in range(12):
-            u,v = x+rng.uniform(-.15,.15), y+rng.uniform(-.22,.22)
-            ashlar(f"Foot joint moss cluster {seed} fragment {i}",
-                   (u,u+.12,v,v+.17,-.11,rng.uniform(.034,.12)),rng,
-                   "mossy_rock" if i%3 else "dirt_path",.009)
+    terrain_skirt(start, back)
     for i,(step,x) in enumerate(((2,-3.34),(7,3.35),(13,-3.35),(20,3.35),(26,3.34),(32,-3.36))):
         y=(start if step < 17 else upper_start)+(step%17)*tread+.028
         z=(step+1)*rise-.065

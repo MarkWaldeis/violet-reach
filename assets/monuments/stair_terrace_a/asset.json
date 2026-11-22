@@ -14,22 +14,8 @@
     2400
   ],
   "texture_size": 4096,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-501e5a510b5c43f2b6ce7952cf05094b",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 8,
-      "form_detail": 8,
-      "material": 7,
-      "scale": 8,
-      "style": 8,
-      "defects": 7
-    },
-    "notes": "Round 3 (final, rebuilt). Fixed: the back and sides now have pilasters and coursed masonry (turn tiles), the treads show chipped nosings and cracks (closeup.jpg), and there are a few plants in the joints. Still failing: (1) material: an evenly spaced pattern of small dark pits covers the whole stair and landing surface (hero.jpg), so the paving reads as perforated, not worn. Wear should concentrate in the centre of the treads and at the nosings. (2) defects: there is still no transition into the terrain; the whole block sits on the ground plane with a hard edge, with no embedded base, soil or grass (hero.jpg, turn tiles). (3) The stepped pilaster ends make the right flank a jagged stack of boxes. Fix: replace the uniform pit pattern with centred wear, bury the base, add soil and grass at the foot, and break one or two corners.",
-    "round": 3,
-    "source_sha256": "e7763840d7e3c4dee557526bfcfb964c72a39db5110af8233903c8ee1a7d7daf",
-    "sheet_sha256": "e297be532253ddb9fc46386b3f413adabff4f0016ba7c119e04e77bc72f4fd25"
-  },
+  "review": null,
   "review_rounds": 3
 }
