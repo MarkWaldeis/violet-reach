@@ -2,7 +2,7 @@
   "id": "shore_stones_a",
   "category": "rocks",
   "title": "Wassergerundete Ufersteine A",
-  "description": "Zwölf größere Ufersteine, 28 Kiesel und modellierter Feinkies aus unverändert kopierter lake_shore_a-Stein- und Materialfunktion. Ausschließlich wassergerundete worn-Formen in einer eng ausgewählten hellen Kalkstein-Tonfamilie; keine split- oder slab-Formen und keine rosa Platten. Das flache feuchte Kiesbett hat einen unregelmäßig ausgebuchteten Umriss. Jeder Stein ist teilweise eingebettet und besitzt einen weichen senkrechten Feuchteverlauf nur an seiner Basis: unten dunkler und glatter, oben hell und trocken. Keine scheibenförmige dunkle Feuchtemaske.",
+  "description": "Acht voneinander abgesetzte Ufersteine, 28 Kiesel und modellierter Feinkies in offen sichtbarem feuchtem Sand und Kies. Die freigegebene lake_shore_a-Geometrie mischt split-, slab- und worn-Formen; ausschließlich ihre geometrischen Rauschamplituden sind auf zwanzig Prozent reduziert, die Materialfunktion bleibt unverändert. Große glatte Bruchflächen, scharfe Kanten und dezentes Korn statt rundlicher Falten. Die Steinhöhe beträgt vierzig bis sechzig Prozent der Breite. Eng ausgewählte helle Kalkstein-Tonfamilie, teilweise eingebettete Basis mit weichem senkrechtem Feuchteverlauf und geringerer Rauheit. Unregelmäßig ausgebuchtetes flaches Kiesbett, keine dunkle Feuchtescheibe.",
   "target_size_m": [
     5,
     4,

@@ -1,4 +1,4 @@
-"""Pale lake-shore limestone; approved stone generator and shader copied verbatim."""
+"""Pale lake-shore limestone; donor geometry at 20% relief and unchanged shader."""
 import math
 import random
 
@@ -175,15 +175,15 @@ def cobble(m, p, template, x, d, r, flat, rng, form=None):
         coarse = n3(2.1*u, 2.1*v+seed, 2.1*w)
         medium = n3(5.75*u, 5.75*v, 5.75*w+seed)
         fine = n3(15*u+seed, 15*v, 15*w)
-        radial = 1 + (.13 if form == "worn" else .09)*coarse
+        radial = 1 + (.026 if form == "worn" else .018)*coarse
         for nx, ny, nz, upper in cuts:
             dot = nx*u+ny*v+nz*w
             if dot > .28:
                 radial = eased_min(radial, upper/dot, .035 if form != "worn" else .095)
         lamina = math.sin((19+7*weather)*(w+.22*u-.14*v) + .76*coarse)
         breakout = smooth(.44 + 1.25*medium - .43*weather)
-        radial *= (1 + (.026+.016*weather)*medium + .013*fine
-                   - .043*chip*breakout + (.019 if form == "slab" else .010)*lamina)
+        radial *= (1 + (.0052+.0032*weather)*medium + .0026*fine
+                   - .0086*chip*breakout + (.0038 if form == "slab" else .002)*lamina)
         u1, v1 = (u*radial + lean*w*.48)*r, v*radial*r*elongation
         px, py = x+ca*u1-sa*v1, y+sa*u1+ca*v1
         z = z0 + r*flat*(w*radial + lean*u*.41)
@@ -261,7 +261,7 @@ def finish():
     vrlib.use_cycles_cpu(bpy.context.scene, 32)
 
 
-def shore_stone(name, radius, flat, centre, seed, material, level=6, form="worn"):
+def shore_stone(name, radius, flat, centre, seed, material, level=6, form="split"):
     if radius <= 0 or flat <= 0 or level < 1:
         raise ValueError("Positive radius, flattening and subdivision level required")
     palette = {key:value["linear_rgb"] for key,value in vrmat.load_palette().items()}
@@ -285,6 +285,9 @@ def shore_stone(name, radius, flat, centre, seed, material, level=6, form="worn"
     cobble(mesh,palette,_TEMPLATES[level],0,3,radius,flat,random.Random(selected),form)
     lo = Vector(tuple(min(p[i] for p in mesh.verts) for i in range(3)))
     hi = Vector(tuple(max(p[i] for p in mesh.verts) for i in range(3)))
+    height_scale = flat*max(hi.x-lo.x,hi.y-lo.y)/(hi.z-lo.z)
+    mesh.verts = [(p[0],p[1],lo.z+(p[2]-lo.z)*height_scale) for p in mesh.verts]
+    hi.z = lo.z+(hi.z-lo.z)*height_scale
     middle = (lo+hi)*.5
     datum = centre[2] if len(centre)>2 else -.027
     offset = Vector((centre[0]-middle.x,centre[1]-middle.y,datum-lo.z))
@@ -305,6 +308,8 @@ def shore_stone(name, radius, flat, centre, seed, material, level=6, form="worn"
     obj["wet_gradient_height_m"] = wet_height
     obj["wet_base_z"] = datum
     obj["stone_form"] = form
+    obj["height_width_ratio"] = flat
+    obj["donor_displacement_multiplier"] = .2
     return obj
 
 
@@ -359,22 +364,25 @@ def build():
         if hit is None:
             raise ValueError("Stone is outside gravel bed")
         return (x,y,hit.z-min(.027,radius*.18))
-    anchors = ((-1.45,.6,.63),(-.25,1.10,.50),(1.1,.75,.70),(1.6,-.30,.43),
-               (.5,-.7,.57),(-.65,-.6,.67),(-1.65,-.65,.38),(.0,.3,.40),
-               (1.3,-1.15,.33),(-.4,-1.4,.33),(.5,1.5,.28),(-1.8,.0,.28))
+    anchors = ((-1.55,.7,.58,"split"),(-.1,1.05,.63,"split"),(1.45,.9,.52,"slab"),
+               (-1.55,-.9,.48,"worn"),(.1,-.65,.74,"split"),(1.55,-.65,.55,"split"),
+               (-.6,-1.4,.28,"worn"),(.75,-1.55,.25,"slab"))
     occupied = []
     large_trees = []
     large_centres = []
-    for i,(x,y,radius) in enumerate(anchors):
+    for i,(x,y,radius,form) in enumerate(anchors):
         for attempt in range(160):
             centre = (x,y) if attempt==0 else (x+rng.uniform(-.5,.5),y+rng.uniform(-.5,.5))
             if (centre[0]/2.3)**2+(centre[1]/1.85)**2>1:
                 continue
             if bed_tree.ray_cast(Vector((*centre,1)),Vector((0,0,-1)),2)[0] is None:
                 continue
-            obj = shore_stone("Uferstein_%02d"%i,radius,rng.uniform(.72,.92),seated(*centre,radius),
-                              SEED+100+i,stone,6,"worn")
+            obj = shore_stone("Uferstein_%02d"%i,radius,rng.uniform(.42,.56),seated(*centre,radius),
+                              SEED+100+i,stone,6,form)
             bounds = xy_bounds(obj)
+            if overlaps(bounds,occupied,.12):
+                bpy.data.objects.remove(obj,do_unlink=True)
+                continue
             tree = stone_tree(obj)
             midpoint = sum((v.co for v in obj.data.vertices),Vector())/len(obj.data.vertices)
             if not any(tree.overlap(other) or inside(other,midpoint) or inside(tree,p)
@@ -400,8 +408,8 @@ def build():
                 break
         else:
             continue
-        obj = shore_stone("Zwischenkiesel_%03d"%i,radius,rng.uniform(.72,.92),seated(x,y,radius),
-                          SEED+1000+i,stone,4 if i < 28 else 2)
+        obj = shore_stone("Zwischenkiesel_%03d"%i,radius,rng.uniform(.40,.60),seated(x,y,radius),
+                          SEED+1000+i,stone,4 if i < 28 else 2,"worn" if i%3==0 else "split")
         occupied.append(xy_bounds(obj))
         if i >= 28:
             gravel.append(obj)

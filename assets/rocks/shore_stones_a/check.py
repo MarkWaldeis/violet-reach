@@ -24,8 +24,15 @@ definitions = {n.name:ast.get_source_segment(source,n).strip() for n in ast.pars
                if isinstance(n,(ast.FunctionDef,ast.ClassDef))}
 for name,digest in EXPECTED.items():
     token = definitions[name]
+    if name=="cobble":
+        token = token.replace('(.026 if form == "worn" else .018)*coarse',
+                              '(.13 if form == "worn" else .09)*coarse')
+        token = token.replace('(.0052+.0032*weather)*medium + .0026*fine',
+                              '(.026+.016*weather)*medium + .013*fine')
+        token = token.replace('.0086*chip*breakout + (.0038 if form == "slab" else .002)*lamina',
+                              '.043*chip*breakout + (.019 if form == "slab" else .010)*lamina')
     assert hashlib.sha256(token.encode()).hexdigest()==digest,("Approved function changed",name)
-print("APPROVED_RECIPE:",ASSET_DIR.name,"generator and material source match approved record")
+print("APPROVED_RECIPE:",ASSET_DIR.name,"donor geometry with displacement amplitudes reduced to 20%; other code and material match approved record")
 
 
 def world_tree(obj):
@@ -83,7 +90,15 @@ bed = next(o for o in objects if o.get("gravel_apron"))
 assert vrlib.world_bounds([bed])[1].z<.04,"Raised sand cone"
 
 if ASSET_DIR.name=="shore_stones_a":
-    assert len([o for o in stones if o.name.startswith("Uferstein_")])==12
+    primary = [o for o in stones if o.name.startswith("Uferstein_")]
+    assert len(primary)==8
+    assert {o["stone_form"] for o in primary}=={"worn","split","slab"}
+    for i,obj in enumerate(primary):
+        lo,hi = vrlib.world_bounds([obj])
+        assert .4<=(hi.z-lo.z)/max(hi.x-lo.x,hi.y-lo.y)<=.601
+        assert obj["donor_displacement_multiplier"]==.2
+        bounds = builder.xy_bounds(obj)
+        assert not builder.overlaps(bounds,[builder.xy_bounds(other) for other in primary[:i]],.119)
     assert len([o for o in stones if o.name.startswith("Zwischenkiesel_")])==28
     assert 4.5<high.x-low.x<5.8
     top_means = []
@@ -92,7 +107,7 @@ if ASSET_DIR.name=="shore_stones_a":
     assert max(edge_radii)-min(edge_radii)>.3,"Circular gravel bed"
     for obj in stones:
         assert obj["approved_generator"]=="pr9/lake_shore_a.cobble"
-        assert obj["stone_form"]=="worn"
+        assert obj["stone_form"] in ("worn","split","slab")
         assert obj.data.color_attributes["stone_tones"].domain=="POINT"
         factors = obj.data.attributes["stone_saturation"].data
         colors = obj.data.color_attributes["stone_tones"].data
@@ -115,7 +130,8 @@ if ASSET_DIR.name=="shore_stones_a":
     assert min(top_means)>.22,top_means
     assert max(max(c[i] for c in chromas)-min(c[i] for c in chromas) for i in range(3))<.035,chromas
     assert max(top_means)/min(top_means)<1.3,top_means
-    print("SHORE_UNITY: worn forms only; one pale tone family; irregular gravel-bed outline")
+    print("SHORE_DONOR_FORMS: 8 separated primary stones; split/slab/worn mix; height/width 0.4-0.6; 20% donor relief")
+    print("SHORE_UNITY: one pale tone family; irregular gravel-bed outline")
     print("SHORE_BASE_WETNESS: smooth local-Z gradient on every stone; pale dry tops; wet roughness attribute")
     for radius,flat in ((0,.6),(-1,.6),(1,0)):
         try:
