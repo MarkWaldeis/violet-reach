@@ -80,18 +80,26 @@ def studio():
     b.inputs["Roughness"].default_value = 0.9
     ground.data.materials.append(gmat)
 
-    # 1.8 m figure for scale: body, head.
-    figure_xy = (centre.x, hi.y + 0.5)
-    bpy.ops.mesh.primitive_cylinder_add(radius=0.22, depth=1.5, location=(*figure_xy, 0.75))
-    body = bpy.context.object
+    figure_xy = scene.get("vr_review_figure", (centre.x, hi.y + 0.5))
+    objects = []
+    if "vr_review_figure" in scene:
+        x, y = figure_xy
+        for dx, dy, z, girth, depth in ((0,0,1.14,.24,.69),(-.12,0,.39,.095,.76),
+                                         (.12,0,.39,.095,.76),(-.31,0,1.07,.085,.64),
+                                         (.31,0,1.05,.085,.61)):
+            bpy.ops.mesh.primitive_cylinder_add(radius=girth, depth=depth, location=(x+dx,y+dy,z))
+            objects.append(bpy.context.object)
+    else:
+        bpy.ops.mesh.primitive_cylinder_add(radius=0.22, depth=1.5, location=(*figure_xy, 0.75))
+        objects.append(bpy.context.object)
     bpy.ops.mesh.primitive_uv_sphere_add(radius=0.15, location=(*figure_xy, 1.65))
-    head = bpy.context.object
+    objects.append(bpy.context.object)
     fmat = bpy.data.materials.new("vr_figure")
     fmat.use_nodes = True
     fmat.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0.9, 0.35, 0.05, 1)
-    for o in (body, head):
+    for o in objects:
         o.data.materials.append(fmat)
-    return [body, head]
+    return objects
 
 
 def override_material(kind):
@@ -137,9 +145,15 @@ def aim(azimuth_deg, elevation_deg, target, distance):
 fov = 2 * math.atan(min(cam_data.sensor_width, cam_data.sensor_width * TILE[1] / TILE[0] * 1.0) / (2 * cam_data.lens))
 full_distance = radius / math.sin(fov / 2)
 views = [("turn_%03d" % a, a, 14, centre, full_distance) for a in range(20, 380, 45)]
+if "vr_review_hero" in scene:
+    az, el, scale, z_offset = scene["vr_review_hero"]
+    views[0] = ("turn_%03d" % (az % 360), az, el, centre + Vector((0, 0, z_offset)), full_distance * scale)
 detail_target = Vector((centre.x, centre.y, lo.z + size.z * 0.62))
 views.append(("closeup_upper", 65, 8, detail_target, full_distance * 0.42))
 views.append(("closeup_base", 205, 22, Vector((centre.x, centre.y, lo.z + size.z * 0.16)), full_distance * 0.40))
+if "vr_review_base" in scene:
+    x, y, z, az, el, scale = scene["vr_review_base"]
+    views[9] = ("closeup_base", az, el, Vector((x, y, z)), full_distance * scale)
 
 if draft:
     views = [views[0], views[8], views[9]]

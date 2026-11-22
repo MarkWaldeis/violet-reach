@@ -15,6 +15,73 @@ SPRING = 15.4
 INNER = 12.2
 
 
+def weathering(mat):
+    nodes, links = mat.node_tree.nodes, mat.node_tree.links
+    surface = nodes["Principled BSDF"]
+    geom = nodes.new("ShaderNodeNewGeometry")
+    xyz = nodes.new("ShaderNodeSeparateXYZ")
+    links.new(geom.outputs["Position"], xyz.inputs[0])
+    normal = nodes.new("ShaderNodeSeparateXYZ")
+    links.new(geom.outputs["Normal"], normal.inputs[0])
+
+    def wire(value, socket):
+        if isinstance(value, (float, int, tuple)):
+            socket.default_value = value
+        else:
+            links.new(value, socket)
+
+    def op(mode, a, b=0):
+        node = nodes.new("ShaderNodeMath")
+        node.operation = mode
+        wire(a, node.inputs[0])
+        wire(b, node.inputs[1])
+        return node.outputs[0]
+
+    def ramp(value, lo, hi, start, end):
+        node = nodes.new("ShaderNodeMapRange")
+        node.interpolation_type = "SMOOTHERSTEP"
+        for socket, arg in zip(node.inputs, (value, lo, hi, start, end)):
+            wire(arg, socket)
+        return node.outputs[0]
+
+    def noise(stretch, detail):
+        vec = nodes.new("ShaderNodeVectorMath")
+        vec.operation = "MULTIPLY"
+        links.new(geom.outputs["Position"], vec.inputs[0])
+        vec.inputs[1].default_value = stretch
+        n = nodes.new("ShaderNodeTexNoise")
+        n.inputs["Scale"].default_value = 1
+        n.inputs["Detail"].default_value = detail
+        links.new(vec.outputs["Vector"], n.inputs["Vector"])
+        return n.outputs["Fac"]
+
+    def multiply_color(mask, tint):
+        mix = nodes.new("ShaderNodeMixRGB")
+        mix.blend_type = "MULTIPLY"
+        links.new(mask, mix.inputs[0])
+        links.new(surface.inputs["Base Color"].links[0].from_socket, mix.inputs[1])
+        mix.inputs[2].default_value = tint
+        links.new(mix.outputs[0], surface.inputs["Base Color"])
+
+    z, y = xyz.outputs["Z"], op("ABSOLUTE", xyz.outputs["Y"])
+    rain = ramp(noise((1.45, 2.6, .21), 2), .44, .71, 0, 1)
+    impost = op("MULTIPLY", ramp(z, 9.9, 13.0, 0, .58), ramp(z, 12.9, 13.9, 1, 0))
+    crown = op("MULTIPLY", ramp(y, .30, 2.3, 1, 0), ramp(z, 26.7, 31.5, 0, .70))
+    multiply_color(op("MULTIPLY", rain, op("MAXIMUM", impost, crown)), (.52, .48, .40, 1))
+
+    foot = op("MULTIPLY", ramp(y, 11.6, 12.5, 0, 1), ramp(z, .18, 2.35, 1, 0))
+    damp = op("MULTIPLY", foot, ramp(noise((1.43, 1.69, 2.6), 3), .33, .69, .24, .97))
+    multiply_color(damp, (.27, .35, .18, 1))
+
+    tread = op("MULTIPLY", ramp(y, 2.1, 6.6, .83, 0), ramp(z, .87, 1.13, 1, 0))
+    tread = op("MULTIPLY", tread, ramp(normal.outputs["Z"], .74, .98, 0, 1))
+    tread = op("MULTIPLY", tread, ramp(noise((.63, .35, 1.0), 2), .28, .73, .49, .98))
+    multiply_color(tread, (.57, .52, .44, 1))
+    rough = surface.inputs["Roughness"]
+    subtract = op("SUBTRACT", rough.links[0].from_socket, op("MULTIPLY", tread, .40))
+    links.new(subtract, rough)
+
+
 def finish():
     palette = vrmat.load_palette()
     cream = palette["monument_white"]["linear_rgb"]
@@ -25,9 +92,9 @@ def finish():
         nodes, links = mat.node_tree.nodes, mat.node_tree.links
         surface = nodes["Principled BSDF"]
         old_color = surface.inputs["Base Color"].links[0].from_socket
-        tone = .70 + .029 * i
+        tone = .65 + .035 * i
         warm = math.sin(1.93 * i)
-        color = tuple(c * tone * s for c, s in zip(cream, (1 + .062 * warm, 1, 1 - .116 * warm)))
+        color = tuple(c * tone * s for c, s in zip(cream, (1 + .080 * warm, 1, 1 - .147 * warm)))
         mix = nodes.new("ShaderNodeMixRGB")
         mix.inputs[0].default_value = .73
         mix.inputs[2].default_value = (*color, 1)
@@ -46,6 +113,7 @@ def finish():
         links.new(old_normal, relief.inputs["Normal"])
         links.new(grit.outputs["Fac"], relief.inputs["Height"])
         links.new(relief.outputs["Normal"], surface.inputs["Normal"])
+        weathering(mat)
         shades.append(mat)
     mortar = vrmat.get("monument_weathered").copy()
     mortar.name = "Recessed silty lime mortar"
@@ -54,10 +122,14 @@ def finish():
     multiply = mortar.node_tree.nodes.new("ShaderNodeMixRGB")
     multiply.blend_type = "MULTIPLY"
     multiply.inputs[0].default_value = 1
-    multiply.inputs[2].default_value = (.32, .31, .23, 1)
+    multiply.inputs[2].default_value = (.28, .29, .19, 1)
     mortar.node_tree.links.new(source, multiply.inputs[1])
     mortar.node_tree.links.new(multiply.outputs[0], surface.inputs["Base Color"])
-    return shades, mortar
+    weathering(mortar)
+    foot = vrmat.get("monument_weathered").copy()
+    foot.name = "Damp limestone plinths"
+    weathering(foot)
+    return shades, mortar, foot
 
 
 def mesh(name, verts, faces, mat, cuts=(), rounding=0, curved=False):
@@ -221,7 +293,7 @@ def cushion(sign, shades, rng):
     obj.data.set_sharp_from_angle(angle=.43)
 
 
-def pier(sign, shades, mortar, rng):
+def pier(sign, shades, mortar, foot, rng):
     def interval(a, b):
         return (a, b) if sign > 0 else (-b, -a)
 
@@ -245,7 +317,7 @@ def pier(sign, shades, mortar, rng):
             for k, (lo, hi) in enumerate(zip(cuts, cuts[1:])):
                 face_offset = rng.uniform(-.070, .059)
                 early = i < 2 or (i == 2 and rng.random() < .60)
-                stone = vrmat.get("monument_weathered") if early else rng.choice(shades)
+                stone = foot if early else rng.choice(shades)
                 ashlar(f"{label} ashlar {j * 2 + k + 1}", lo + (.037 if k else 0),
                        hi - (.037 if not k else 0), f + face_offset, g + face_offset,
                        z0 + (.022 if i else 0), z1 - .022, stone, rng,
@@ -368,10 +440,10 @@ def threshold(shades, mortar, rng):
 
 def build():
     rng = random.Random(87013)
-    shades, mortar = finish()
+    shades, mortar, foot = finish()
     threshold(shades, mortar, rng)
     threshold_verge(rng)
     for side in (-1, 1):
-        pier(side, shades, mortar, rng)
+        pier(side, shades, mortar, foot, rng)
         turf(side, shades, rng)
     arch(shades, mortar, rng)

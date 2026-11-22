@@ -2,10 +2,10 @@
   "id": "rib_arch_a",
   "category": "monuments",
   "title": "Tidebone Crossing",
-  "description": "Six tapered, eroded limestone ribs arc in sequence above flared buttress roots and a small paved passage.",
+  "description": "Three closed limestone vaults, each formed by two tapered limbs meeting at the crown, stand on fractured stone footings.",
   "target_size_m": [
-    102,
-    86,
+    106,
+    108,
     80
   ],
   "lod_triangles": [
@@ -14,22 +14,8 @@
     3100
   ],
   "texture_size": 2048,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-ac377e3f64b249c4a59d5943f70f2061",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 7,
-      "form_detail": 6,
-      "material": 6,
-      "scale": 7,
-      "style": 6,
-      "defects": 6
-    },
-    "notes": "Round 1 of the new budget, judged against the PR #6 round-3 notes. Fixed: the outlines are smooth now, with no stair-stepping and no hammerhead caps. New problems: the ribs no longer close into arches; they are six free-standing tusks in a row, each ending in a blunt rounded hook, so it reads as a row of tusks or claws, not a rib arch (hero.jpg, turn_200). Fix: pair the ribs so opposite ribs meet or overlap overhead as closed or nearly closed arches, as in the plan, and give the free ends a broken fracture face instead of a rounded knob. Root bodies: still smooth, soft drapery-like flares with vertical folds, like melted wax or cloth, not stone (closeup_base). Fix: a buttressed foot with hard fractured planes and a few large stone blocks set into the turf. Material: each rib changes tone abruptly at hard horizontal seam lines (beige above, blue-grey below), and the round dark pocks repeat along every rib (closeup_upper). Fix: one continuous ivory limestone with weathering graded towards the foot, no hard colour seams, varied pitting. Scale: at 80 m the figure is a dot in the hero; frame the hero closer, with the figure at a rib foot.",
-    "round": 1,
-    "source_sha256": "2b0a7bcd9b6ad9568aebdfdcf3a670b4b15f2f999a907bc9fc7f3d5a861afd5e",
-    "sheet_sha256": "0d0223ee4024b886a1756e2d0b1d06f45f46d86d2bb8fcf6420e9113f3811cc8"
-  },
+  "review": null,
   "review_rounds": 1
 }
