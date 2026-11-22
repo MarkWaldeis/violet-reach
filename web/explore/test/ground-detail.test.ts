@@ -38,6 +38,21 @@ test("detail textures are generated once with repeating, anisotropic mipmapped f
   }
 });
 
+test("grass retains dark clump gaps and bright blades, and path sand contains pebble contrast", () => {
+  const grass = groundDetailPixels("grass");
+  let dark = 0, bright = 0;
+  for (let i = 0; i < grass.length; i += 4) {
+    if (grass[i] < 75) dark++;
+    if (grass[i] > 180) bright++;
+  }
+  assert.ok(dark > 256 * 256 * 0.1);
+  assert.ok(bright > 256 * 256 * 0.01);
+  const sand = groundDetailPixels("sand");
+  let pebbles = 0;
+  for (let i = 0; i < sand.length; i += 4) if (sand[i] < 80 || sand[i] > 185) pebbles++;
+  assert.ok(pebbles > 256);
+});
+
 test("empty, oversized and invalid detail resolutions are rejected", () => {
   for (const size of [0, -1, 15, 2048, 16.5, NaN, Infinity]) {
     assert.throws(() => groundDetailPixels("grass", size), /Invalid ground detail size/);

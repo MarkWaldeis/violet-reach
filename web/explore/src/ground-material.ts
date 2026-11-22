@@ -86,9 +86,12 @@ export function terrainMaterial(surface?: SurfaceData) {
   const detail = smoothstep(30, 80, distance).oneMinus().mul(rockWeight.oneMinus());
   const midDetail = smoothstep(120, 500, distance).oneMinus().mul(smoothstep(0.8, 3, footprint).oneMinus());
   const tufts = mx_noise_float(planar.mul(vec2(0.8, 1.3))).mul(0.65).add(mx_noise_float(planar.mul(vec2(1.7, 0.95)).add(vec2(29, 83))).mul(0.35));
-  material.colorNode = ground.mul(mix(float(1), surfaceDetail.r.mul(2), detail)).mul(tufts.mul(0.12).mul(midDetail).add(1));
+  const detailedColor = ground.mul(mix(float(1), surfaceDetail.r.mul(2).sub(1).mul(1.5).add(1).max(0.15), detail)).mul(tufts.mul(0.12).mul(midDetail).add(1));
+  const debugDetail = typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("groundDetail");
+  material.colorNode = debugDetail === "albedo" ? vec3(surfaceDetail.r) : debugDetail === "normal" ? vec3(surfaceDetail.g, surfaceDetail.b, 0.5) : detailedColor;
+  if (debugDetail === "albedo" || debugDetail === "normal") material.emissiveNode = material.colorNode;
   const relief = vec3(surfaceDetail.g.mul(2).sub(1), 0, surfaceDetail.b.mul(2).sub(1));
-  const fineNormal = relief.sub(normal.mul(relief.dot(normal))).mul(detail.mul(0.65));
+  const fineNormal = relief.sub(normal.mul(relief.dot(normal))).mul(detail.mul(1.6));
   material.normalNode = transformNormalToView(normal.add(fineNormal).normalize());
   return material;
 }

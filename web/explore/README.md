@@ -90,6 +90,8 @@ Deterministisch einmal erzeugte 256²-Detailtexturen liefern Halmbüschel,
 Erdkiesel und feinen Sand samt Normalrelief. Sie wiederholen sich weltfest auf
 1,54 und gedrehten 0,73 m, mit Mipmaps und 16× anisotroper Filterung; die
 Materialgewichte steuern die Mischung, zwischen 30 und 80 m wird ausgeblendet.
+`?groundDetail=albedo` bzw. `?groundDetail=normal` zeigt die tatsächlich
+abgetasteten, materialgewichteten Texturkanäle für Nahdetail-Diagnosen.
 
 `CSMShadowNode` erzeugt drei weich überblendete 2048²-Kaskaden bis 1100 m.
 Der gleiche Node-Pfad funktioniert mit dem WebGPU- und WebGL2-Backend des
