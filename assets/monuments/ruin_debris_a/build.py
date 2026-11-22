@@ -9,6 +9,7 @@ import bmesh
 import bpy
 from mathutils import Euler, Matrix, Vector
 from mathutils.geometry import delaunay_2d_cdt
+from mathutils.noise import voronoi
 
 from vrcolumn import SHAFT_LEVELS, fracture_planes, shaft_radius
 import vrlib
@@ -47,78 +48,97 @@ def accent(prefix, key, color_key, scale, blend):
     return material
 
 
-def turf(cx, cy, rx, ry, height, rng, style, blades=130):
-    """An uneven, buried edge and clumped blade geometry, not a raised disc."""
+SOIL_LOBES = (
+    (-8.7, 0.05, 3.18, 2.58, 0.16),
+    (-7.16, 1.36, 2.51, 1.72, 0.12),
+    (-5.02, 0.69, 3.77, 1.35, 0.17),
+    (-3.28, -1.25, 2.31, 1.38, 0.13),
+    (-1.26, -0.42, 3.47, 1.98, 0.18),
+    (1.78, 0.95, 2.69, 1.55, 0.15),
+    (3.15, 0.12, 3.91, 2.04, 0.17),
+    (6.11, -0.62, 3.32, 2.72, 0.18),
+    (7.16, 1.68, 1.87, 0.89, 0.11),
+    (4.76, -2.73, 1.61, 0.72, 0.092),
+    (-6.16, -2.30, 0.95, 0.77, 0.10),
+    (0.57, -2.90, 1.51, 0.68, 0.092),
+    (8.54, -2.00, 1.09, 0.72, 0.089),
+)
+
+
+def soil_height(x, y):
+    relief = max(
+        h * max(0, 1 - ((x - cx) / rx) ** 2 - ((y - cy) / ry) ** 2) ** 1.25
+        for cx, cy, rx, ry, h in SOIL_LOBES
+    )
+    wash = 0.41 * math.sin(3.1 * x + 1.8 * y) + 0.35 * math.cos(4.7 * y - 0.52 * x)
+    wash += 0.24 * math.sin(5.2 * x + 6.1 * y)
+    return -0.052 + relief + min(relief, 0.041) * wash
+
+
+def turf(rng, style):
     soil, leaf, straw = style
-    n, rows = 48, 12
-    phase = rng.uniform(0, math.tau)
-
-    def point(t, a):
-        r = 1 + 0.13 * math.sin(3 * a + phase) + 0.07 * math.sin(5 * a - phase)
-        x, y = cx + rx * t * r * math.cos(a), cy + ry * t * r * math.sin(a)
-        relief = (1 - t * t) ** 1.35 * (
-            0.75
-            + 0.16 * math.cos(5 * t + 2 * a + phase)
-            + 0.10 * math.sin(10 * t - 3 * a)
-        )
-        z = -0.047 + (height + 0.047) * relief
-        return x, y, z
-
-    vs = [(cx, cy, height * 0.79)]
-    vs += [
-        point(j / rows, math.tau * i / n) for j in range(1, rows + 1) for i in range(n)
+    cols, rows = 116, 43
+    vs = [
+        (x, y, soil_height(x, y) if 0 < i < cols - 1 and 0 < j < rows - 1 else -0.052)
+        for j in range(rows)
+        for i in range(cols)
+        for y in [-3.9 + j * 0.185]
+        for x in [-0.61 + (i / (cols - 1) * 2 - 1) * (10.94 - 2 * (y / 3.9) ** 4)]
     ]
-    fs = [(0, 1 + i, 1 + (i + 1) % n) for i in range(n)]
-    for j in range(rows - 1):
-        for i in range(n):
-            a, b = j * n + i + 1, j * n + (i + 1) % n + 1
-            fs.append((a, a + n, b + n, b))
-    fs.append(tuple(range(rows * n, (rows - 1) * n, -1)))
-    # A continuous shader blend conceals the soil/grass transition at the edge.
-    ground = mesh("Turf over settled soil", vs, fs, (soil,), True)
+    fs = [
+        (j * cols + i, j * cols + i + 1, (j + 1) * cols + i + 1, (j + 1) * cols + i)
+        for j in range(rows - 1)
+        for i in range(cols - 1)
+    ]
+    border = list(range(cols))
+    border += [j * cols + cols - 1 for j in range(1, rows)]
+    border += [(rows - 1) * cols + i for i in range(cols - 2, -1, -1)]
+    border += [j * cols for j in range(rows - 2, 0, -1)]
+    back = len(vs)
+    vs.extend((vs[i][0], vs[i][1], -0.055) for i in border)
+    for j, a in enumerate(border):
+        k = (j + 1) % len(border)
+        fs.append((border[k], a, back + j, back + k))
+    fs.append(tuple(reversed(range(back, len(vs)))))
+    ground = mesh("Settled earth with washed-out edges", vs, fs, (soil,), True)
     mask = ground.data.color_attributes.new(
         name="turf_cover", type="FLOAT_COLOR", domain="POINT"
     )
-    for i, datum in enumerate(mask.data):
-        t = 0 if i == 0 else ((i - 1) // n + 1) / rows
-        x, y, _ = vs[i]
-        w = max(
-            0,
-            min(
-                1,
-                1.32
-                - 0.94 * t
-                + 0.26 * math.sin(8 * x + 2 * y)
-                + 0.28 * math.sin(5 * y - 3 * x),
-            ),
-        )
+    for (x, y, z), datum in zip(vs, mask.data):
+        patch = 0.25 * math.cos(2.6 * x + 1.3 * y) + 0.26 * math.sin(3.2 * y - 0.5 * x)
+        speckle = 0.13 * math.cos(7.3 * x + 4.8 * y)
+        w = max(0, min(1, 0.26 + 4.1 * z + patch + speckle))
         datum.color = (w, w, w, 1)
 
     verts, faces, indices = [], [], []
-    for _ in range(max(1, blades // 6)):
-        a, t = rng.uniform(0, math.tau), rng.uniform(0.44, 0.93)
-        for _ in range(rng.randint(5, 14)):
-            x, y, z = point(
-                min(0.96, max(0.05, t + rng.uniform(-0.11, 0.11))),
-                a + rng.uniform(-0.19, 0.19),
-            )
-            if z < 0.005:
+    for _ in range(460):
+        cx, cy, rx, ry, _ = rng.choice(SOIL_LOBES)
+        a, r = rng.uniform(0, math.tau), rng.uniform(0.17, 1.02)
+        cx += rx * math.cos(a) * r
+        cy += ry * math.sin(a) * r
+        if soil_height(cx, cy) < -0.042:
+            continue
+        dense = rng.random() < 0.34
+        for _ in range(rng.randint(12, 23) if dense else rng.randint(3, 9)):
+            x, y = cx + rng.gauss(0, 0.15), cy + rng.gauss(0, 0.13)
+            z = soil_height(x, y)
+            if z < -0.048:
                 continue
             direction = rng.uniform(0, math.tau)
             dx, dy = math.cos(direction), math.sin(direction)
-            h = rng.uniform(0.10, 0.30) * min(1.36, 0.78 + height)
-            lean, width = rng.uniform(0.20, 0.76) * h, rng.uniform(0.017, 0.044)
+            h = rng.uniform(0.088, 0.32) * (1.18 if dense else 0.72)
+            lean, width = rng.uniform(0.33, 0.81) * h, rng.uniform(0.012, 0.039)
             p = len(verts)
             for f, s in ((0, 1), (0.36, 0.82), (0.72, 0.44)):
                 verts.extend(
                     (
                         x + dx * lean * f * f + dy * width * s * k / 2,
                         y + dy * lean * f * f - dx * width * s * k / 2,
-                        z - 0.008 + h * f,
+                        z - 0.007 + h * f,
                     )
                     for k in (-1, 1)
                 )
-            verts.append((x + dx * lean, y + dy * lean, z + h - 0.01))
+            verts.append((x + dx * lean, y + dy * lean, z + h - 0.008))
             faces.extend(
                 (
                     (p, p + 1, p + 3, p + 2),
@@ -127,8 +147,7 @@ def turf(cx, cy, rx, ry, height, rng, style, blades=130):
                 )
             )
             indices.extend((int(rng.random() < 0.23),) * 3)
-    if faces:
-        mesh("Bent grass blades & dry tips", verts, faces, (leaf, straw), True, indices)
+    mesh("Bent grass blades & dry tips", verts, faces, (leaf, straw), True, indices)
 
 
 def ground_materials(prefix):
@@ -157,7 +176,7 @@ def ground_materials(prefix):
 
 
 def relief(bm, rng, material_index=1):
-    """Sculpt the ledges and granular surface of a split limestone bed."""
+    """Displace a bisect cap with smooth shell ripples and shallow Voronoi scars."""
     bm.normal_update()
     for face in list(bm.faces):
         if face.material_index != material_index or face.calc_area() < 0.067:
@@ -172,7 +191,7 @@ def relief(bm, rng, material_index=1):
         edges = list(zip(points, points[1:] + points[:1]))
         lo, hi = ([fn(p[k] for p in points) for k in range(2)] for fn in (min, max))
         dx, dy = hi[0] - lo[0], hi[1] - lo[1]
-        step = max(0.054, min(0.14, max(dx, dy) / 15))
+        step = max(0.043, min(0.091, max(dx, dy) / 27))
 
         def edge_distance(p):
             return min(
@@ -211,8 +230,9 @@ def relief(bm, rng, material_index=1):
         coords, _, pieces, ids, _, _ = delaunay_2d_cdt(
             points, [], [tuple(range(boundary))], 1, 1e-6
         )
-        amount = min(0.084, 0.12 * min(dx, dy))
+        amount = min(0.058, 0.090 * min(dx, dy))
         phi = rng.uniform(0, math.tau)
+        strike = Vector((lo[0] - 0.18 * dx, lo[1] + rng.uniform(0.20, 0.80) * dy))
         bmesh.ops.delete(bm, geom=[face], context="FACES_ONLY")
         corners = []
         for (x, y), source in zip(coords, ids):
@@ -220,20 +240,28 @@ def relief(bm, rng, material_index=1):
                 corners.append(verts[source[0]])
                 continue
             edge = edge_distance(Vector((x, y)))
-            fade = min(1, max(0, edge / (2 * step)))
-            q = 1.61 * x + 2.38 * y
+            fade = min(1, edge / (3 * step))
+            fade = fade * fade * (3 - 2 * fade)
+            ray = Vector((x, y)) - strike
+            shell = math.hypot(ray.x, 1.14 * ray.y)
+            distances, _ = voronoi(Vector((x * 4.1, y * 4.1, phi)))
+            scar = min(1, (distances[1] - distances[0]) * 2.8)
             gouge = (
-                math.sin(6 * q + phi) * 0.42
-                + 0.29 * math.sin(14 * q - 5 * x + phi)
-                + 0.17 * math.cos(21 * x + 38 * y)
-                + 0.12 * math.sin(46 * x - 41 * y)
+                0.44 * math.sin(5.9 * shell + phi)
+                + 0.16 * math.sin(13.4 * shell - 0.62 * ray.y)
+                - 0.30 * (1 - scar) ** 2
             )
             corners.append(
                 bm.verts.new(origin + u * x + v * y + normal * (amount * fade * gouge))
             )
-        for ids in pieces:
-            new = bm.faces.new([corners[i] for i in ids])
+        for piece in pieces:
+            new = bm.faces.new([corners[i] for i in piece])
             new.material_index = material_index
+            new.smooth = True
+        for a, b in zip(verts, verts[1:] + verts[:1]):
+            edge = bm.edges.get((a, b))
+            if edge:
+                edge.smooth = False
 
 
 def fit_arrises():
@@ -390,7 +418,7 @@ def stone_block(
     return obj
 
 
-def seat(parts, x, y, roll, bearing, fall, foot):
+def seat(parts, x, y, roll, bearing, fall, burial):
     rotation = (
         Matrix.Rotation(bearing, 4, "Z")
         @ Matrix.Rotation(fall, 4, "Y")
@@ -398,12 +426,13 @@ def seat(parts, x, y, roll, bearing, fall, foot):
     )
     points = [rotation @ v.co for obj in parts for v in obj.data.vertices]
     lo, hi = ([fn(p[i] for p in points) for i in range(3)] for fn in (min, max))
-    transform = (
-        Matrix.Translation(
-            (x - (lo[0] + hi[0]) / 2, y - (lo[1] + hi[1]) / 2, foot - lo[2])
-        )
-        @ rotation
+    dx, dy = x - (lo[0] + hi[0]) / 2, y - (lo[1] + hi[1]) / 2
+    floor = max(
+        soil_height(dx + p.x, dy + p.y) - burial - p.z
+        for p in points
+        if p.z - lo[2] <= 0.24
     )
+    transform = Matrix.Translation((dx, dy, max(-0.055 - lo[2], floor))) @ rotation
     for obj in parts:
         obj.matrix_world = transform
 
@@ -419,9 +448,11 @@ def split(obj, cuts, fracture, rng):
     obj.data.update()
 
 
-def break_drum(obj, index, phase, slope, loss, rng, fracture, *, stump=False):
+def break_drum(
+    obj, index, phase, slope, loss, rng, fracture, *, stump=False, flank=False
+):
     bed, tip = SHAFT_LEVELS[index : index + 2]
-    end = bed + 0.88 if stump else tip - loss
+    end = bed + 0.76 if stump else tip - loss
     r = shaft_radius(end)
     c, s = math.cos(phase), math.sin(phase)
     cuts = [
@@ -435,6 +466,12 @@ def break_drum(obj, index, phase, slope, loss, rng, fracture, *, stump=False):
         cuts.append(
             ((-0.81 * r * s, 0.81 * r * c, bed + 0.13), (-0.63 * s, 0.63 * c, -1))
         )
+    if flank:
+        mid = (bed + tip) / 2
+        cuts += [
+            ((-0.43 * r, 0, mid), (-1.0, 0.21, 0.16)),
+            ((-0.47 * r, -0.52 * r, mid), (-0.72, -0.58, -0.10)),
+        ]
     split(obj, cuts, fracture, rng)
 
 
@@ -459,37 +496,33 @@ def source_parts():
 def build():
     rng = random.Random(873321)
     drums, footing, capital = source_parts()
-    fracture = column.accent(
-        "Freshly split limestone · granular ochre",
-        "monument_weathered",
-        "stone_weathered",
-        0.51,
-        0.88,
-    )
+    fracture = bpy.data.materials["Old limestone fracture"].copy()
+    fracture.name = "New split · survey fracture limestone"
     tones = [obj.data.materials[0] for obj in drums.values()]
     break_drum(drums[0], 0, -0.72, 0.39, 0, rng, fracture, stump=True)
-    seat([*footing, drums[0]], -8.20, 0.48, 0.10, 0, 0, -0.048)
+    seat([*footing, drums[0]], -8.05, 0.42, 0.10, 0, 0, 0.14)
     for index, phase, slope, loss, x, y, roll, bearing, fall in (
-        (1, 1.84, 0.27, 0.33, -4.57, 0.48, 0.29, -0.20, 1.41),
-        (3, -0.33, 0.46, 0.52, -1.38, -1.04, 0.54, 0.59, 0.16),
-        (6, 0.82, 0.43, 0.42, 2.67, 0.52, -0.28, -0.72, 1.18),
+        (1, 1.84, 0.32, 0.22, -4.35, 0.92, 0.40, -0.11, 1.32),
+        (3, -0.72, 0.39, 0.26, -1.53, -0.72, 0.12, 0.29, 1.55),
+        (6, 0.82, 0.28, 0.26, 2.23, 0.54, -0.92, -0.61, 1.81),
     ):
         obj = drums[index]
         obj.name = f"Fallen survey drum {index+1:02}"
-        break_drum(obj, index, phase, slope, loss, rng, fracture)
-        seat((obj,), x, y, roll, bearing, fall, -0.049)
+        break_drum(obj, index, phase, slope, loss, rng, fracture, flank=index == 3)
+        seat((obj,), x, y, roll, bearing, fall, 0.14)
 
-    for obj in capital:
-        split(
-            obj,
-            [
-                ((1.16, -0.88, 16.83), (0.71, -0.67, -0.18)),
-                ((1.46, -1.19, 17.74), (0.82, -0.37, 0.36)),
-            ],
-            fracture,
-            rng,
-        )
-    seat(capital, 6.54, -0.51, 0.03, -0.94, 1.57, -0.048)
+    abacus = next(obj for obj in capital if "abacus" in obj.name)
+    split(
+        abacus,
+        [
+            ((1.59, -1.49, 17.65), (0.78, -0.71, -0.27)),
+            ((1.61, -1.81, 17.82), (0.92, -0.51, 0.41)),
+            ((0, 0, 17.95), (0.021, -0.030, 1)),
+        ],
+        fracture,
+        rng,
+    )
+    seat(capital, 6.00, -0.84, 0.31, 0.44, 1.09, 0.14)
 
     for index, a, x, y, length, thickness in (
         (2, -0.78, -5.42, 1.98, 0.86, 0.24),
@@ -547,13 +580,13 @@ def build():
             rng.uniform(-0.68, 0.60),
             rng.uniform(-1.9, 1.1),
             rng.uniform(0.99, 1.82),
-            -0.035,
+            0.046,
         )
     for index in (2, 4, 5):
         bpy.data.objects.remove(drums[index], do_unlink=True)
 
     soil = ground_materials("Fallen Survey Line")
-    turf(-0.65, -0.04, 10.20, 3.55, 0.42, rng, soil, blades=890)
+    turf(rng, soil)
     for cx, cy, count in (
         (-7.9, -0.88, 16),
         (-5.0, 1.52, 18),
@@ -580,10 +613,10 @@ def build():
                 azimuth=rng.uniform(-math.pi, math.pi),
                 tilt=(rng.uniform(-0.38, 0.38), rng.uniform(-0.38, 0.38)),
                 broken=True,
-                foot=0.115,
+                foot=max(-0.053, soil_height(x, y) - size * 0.10),
             )
 
-    turn = Matrix.Rotation(math.radians(-65), 4, "Z")
+    turn = Matrix.Rotation(math.radians(155), 4, "Z")
     for obj in vrlib.source_objects():
         obj.matrix_world = turn @ obj.matrix_world
     fit_arrises()
