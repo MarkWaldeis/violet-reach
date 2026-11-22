@@ -1,0 +1,20 @@
+{
+  "id": "crystal_spire_a",
+  "category": "crystals",
+  "title": "Violet Fault Spire",
+  "description": "A seven-metre violet blade growing with smaller intergrown crystals from a displaced limestone fissure; references: ref_07_violet_crater and ref_03_canyon_cliffs.",
+  "target_size_m": [
+    5,
+    5.35,
+    7.25
+  ],
+  "lod_triangles": [
+    10300,
+    3700,
+    1150
+  ],
+  "texture_size": 2048,
+  "status": "blender_review",
+  "builder": "devin-79c81cd3e9c64cc49f913648e628a347",
+  "review": null
+}
