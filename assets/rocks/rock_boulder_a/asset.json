@@ -1,0 +1,20 @@
+{
+  "id": "rock_boulder_a",
+  "category": "rocks",
+  "title": "Geschichteter Kalkfindling A",
+  "description": "Länglicher zusammenhängender Kalkfindling mit geneigten Schichtbänken, zurückgesetzten dunklen Lagerfugen und schräg abgebrochener Oberseite. Modellierte feine Laminationen, stufige Abplatzungen und gezackte Sackklüfte mit eingeklemmtem Geröll. Helle kreidige lokale Variante von canyon_layered für Canyonränder und lichte Hänge.",
+  "target_size_m": [
+    7.5,
+    5.0,
+    5.0
+  ],
+  "lod_triangles": [
+    30000,
+    10000,
+    2500
+  ],
+  "texture_size": 2048,
+  "status": "blender_review",
+  "builder": "devin-376742566d344b90aa5a22ec7e9cc164",
+  "review": null
+}

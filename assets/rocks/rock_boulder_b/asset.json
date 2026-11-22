@@ -1,0 +1,20 @@
+{
+  "id": "rock_boulder_b",
+  "category": "rocks",
+  "title": "Bemooster Sandsteinfindling B",
+  "description": "Asymmetrischer warmer Sandsteinfindling mit acht großen Bruchfacetten, millimeterfeiner Oberflächenrauheit und kleinen Kantenabplatzern. Vier geneigte Schichtlippen und wandernde keilförmige Klüfte laufen unregelmäßig aus. Flache unregelmäßige Wabenmulden liegen nur auf einer schattigen Seite. Dunkle olivfarbene Moosschalen wachsen aus den Oberseiten; ein kantiger angelehnter Bruchblock und elf unterschiedlich große scharfkantige Splitter liegen am Fuß.",
+  "target_size_m": [
+    3.2,
+    2.6,
+    2.0
+  ],
+  "lod_triangles": [
+    16000,
+    6000,
+    1500
+  ],
+  "texture_size": 2048,
+  "status": "blender_review",
+  "builder": "devin-376742566d344b90aa5a22ec7e9cc164",
+  "review": null
+}
