@@ -14,22 +14,8 @@
     1150
   ],
   "texture_size": 2048,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-b06222e48d554ae4a6a116ad07645e06",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 8,
-      "form_detail": 7,
-      "material": 6,
-      "scale": 8,
-      "style": 7,
-      "defects": 7
-    },
-    "notes": "Round 1 (new build). Good silhouette: a tall 7 m main shaft with a fan of smaller crystals and a layered limestone base whose strata and broken edges are the best stone in this PR. Defects: (1) material: same as the cluster. Uniform saturated purple with mottled light and dark polygon blotches along the whole shaft (hero.jpg, turn_245/290); no dark core, no inner bands, no directional facet light. 'Violett dominiert jede Fläche' is listed as a failure in the STYLE.md review table. (2) form_detail: the main shaft is a near-parallel column whose faces are broken into small random facets, so it reads as crumpled foil and not as a single crystal with 6 large faces. Taper it slightly, keep the prism faces flat, and add growth steps or a secondary termination. (3) defects: the long crack in closeup.jpg is a thin black painted line with no depth or glow. Model it as a real fracture with an offset and faint emission. All tips are pristine.",
-    "round": 1,
-    "source_sha256": "b62caec6442e72fdb3db128e42c1869d403205bcb85765a6db26b69f6e872fdc",
-    "sheet_sha256": "d54149342e332a08d0a7768c26c1959aefe50d9e9bc38e4a1ea3daccf984597c"
-  },
+  "review": null,
   "review_rounds": 1
 }

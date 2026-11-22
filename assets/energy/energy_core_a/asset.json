@@ -14,22 +14,8 @@
     2100
   ],
   "texture_size": 4096,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-b06222e48d554ae4a6a116ad07645e06",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 7,
-      "form_detail": 6,
-      "material": 5,
-      "scale": 8,
-      "style": 6,
-      "defects": 6
-    },
-    "notes": "Round 1 (new build). The concept works: 19 m, four curved limestone sails around a floating seed, currents ending in modeled stone sockets, and it reads as a rare landmark at the right scale. Defects: (1) material: the sheath uses Transmission Weight 0.72 (build.py energy_finish), and STYLE.md is explicit: 'Keine Glaskugeln, keine Transmission'. It renders as glossy translucent purple plastic or a jelly bag (closeup.jpg), which also fails 'rund/plastisch'. There is no visible bright core and no flowing filaments with narrow bright cores on a dark violet base, as in the violet_energy swatch. Use an opaque dark violet_body with emissive filament patterns and one clear bright heart that is visible through openings in the sheath. (2) form_detail: the seed is a smooth, crumpled, folded sack with no structure. Give it a readable form, for example ribbed petals or plates around a core, with sharp edges. The currents are uniform-width purple tubes with no bright core and no taper, and two of them loop and cross in front of the body (closeup.jpg, turn_020). Taper them, give them a bright inner line, and route them without crossing the seed's front. (3) style/defects: the sails are stacked blocks with uniform dark joint gaps (like a stack of tyres in turn_065/110) and grey camouflage-like mottling over the whole surface. Vary the block heights, make the joints tight with local dirt only, and keep the limestone ivory. The rear sail is tinted mauve/pink with a dark stain around its socket.",
-    "round": 1,
-    "source_sha256": "7e6d877b0e189797015beaf4265042ab38e4d4bdf0ad6bb5c8ffe21668caadab",
-    "sheet_sha256": "ec7abf9668a54afff9646a4be58a1b7afbff7f1a2fc57e5d4d6f004b20a2b850"
-  },
+  "review": null,
   "review_rounds": 1
 }

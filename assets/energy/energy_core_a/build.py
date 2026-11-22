@@ -140,16 +140,16 @@ def rib(name, angle, profile, breaks, section, sockets, rng, limestone):
         steps = max(10, round((b-a)*142))
         for k in range(steps+1):
             f = k/steps
-            start = a + (.0027 if index else 0)
-            stop = b - (.0033 if index < len(breaks)-2 else 0)
+            start = a + (.0013 if index else 0)
+            stop = b - (.0016 if index < len(breaks)-2 else 0)
             t = start+(stop-start)*f
             row = blade_section(angle, profile, section, t, sockets)
             centre = sum(row, Vector()) / len(row)
-            bed = .045 * abs(2*f-1)**14
+            bed = .023 * abs(2*f-1)**14
             for j, v in enumerate(row):
                 noise = noise_vector(v * 3.6 + Vector((1.7, 3.1, 2)))
                 v -= (v-centre)*bed
-                v += noise * (.024 + .030 * abs(2*f-1)**4)
+                v += noise * (.013 + .022 * abs(2*f-1)**4)
                 v.z = max(-.035, v.z)
             rows.append(row)
         points, faces = loft(rows)
@@ -169,25 +169,18 @@ def rib(name, angle, profile, breaks, section, sockets, rng, limestone):
         obj = commit_mesh(f"{name} | ashlar {index+1}", bm,
                           [limestone, "monument_white"], smooth=True)
         obj.data.set_sharp_from_angle(angle=math.radians(37))
-        patina = obj.data.attributes.new("socket lining", "FLOAT", "POINT")
-        forward, across_dir = radial(angle), radial(angle+math.pi/2)
-        for (level, across, size) in sockets:
-            if not a-.12 <= level <= b+.12:
-                continue
-            socket = blade_section(angle, profile, [(-.94, across)], level)[0]
-            for field, vert in zip(patina.data, obj.data.vertices):
-                v = vert.co-socket
-                if v.dot(forward) > .85:
-                    continue
-                rr = math.hypot((v.dot(across_dir)-.15*v.z)/size, v.z/(1.73*size))
-                field.value = max(field.value, .79*max(0, 1-(rr/.83)**4))
         if index:
             bed_rows = []
             for t in (a-.006, a, a+.006):
                 row = blade_section(angle, profile, section, t, sockets)
                 centre = sum(row, Vector()) / len(row)
-                bed_rows.append([v.lerp(centre, .105) for v in row])
-            mesh_object(f"{name} | recessed joint {index}", *loft(bed_rows), ["dirt_path"])
+                bed_rows.append([v.lerp(centre, .076) for v in row])
+            joint = mesh_object(f"{name} | recessed joint {index}", *loft(bed_rows),
+                                [limestone, "dirt_path"])
+            start = rng.randrange(len(section))
+            patch = {((start+k) % len(section)) for k in range(max(2, len(section)//3))}
+            for face in joint.data.polygons[1:-1]:
+                face.material_index = int((face.index-1) % len(section) in patch)
 
 
 def limestone_finish():
@@ -205,22 +198,19 @@ def limestone_finish():
     links.new(grain.outputs["Vector"], seams.inputs["Vector"])
     tone = nodes.new("ShaderNodeValToRGB")
     tone.color_ramp.elements[0].position = .24
-    tone.color_ramp.elements[0].color = (.67,.60,.54,1)
+    tone.color_ramp.elements[0].color = (.82,.77,.70,1)
     tone.color_ramp.elements[1].position = .64
     links.new(seams.outputs["Fac"], tone.inputs[0])
     shade = nodes.new("ShaderNodeMixRGB")
     shade.blend_type = "MULTIPLY"
-    shade.inputs[0].default_value = .64
-    links.new(base.links[0].from_socket, shade.inputs[1])
+    shade.inputs[0].default_value = .45
+    ivory = nodes.new("ShaderNodeMixRGB")
+    ivory.inputs[0].default_value = .68
+    ivory.inputs[2].default_value = (*vrmat.load_palette()["monument_white"]["linear_rgb"], 1)
+    links.new(base.links[0].from_socket, ivory.inputs[1])
+    links.new(ivory.outputs[0], shade.inputs[1])
     links.new(tone.outputs["Color"], shade.inputs[2])
-    attr = nodes.new("ShaderNodeAttribute")
-    attr.attribute_name = "socket lining"
-    lining = nodes.new("ShaderNodeMixRGB")
-    lining.blend_type = "MULTIPLY"
-    lining.inputs[2].default_value = (.34,.29,.48,1)
-    links.new(attr.outputs["Fac"], lining.inputs[0])
-    links.new(shade.outputs[0], lining.inputs[1])
-    links.new(lining.outputs[0], base)
+    links.new(shade.outputs[0], base)
     return mat
 
 
@@ -256,8 +246,8 @@ def energy_finish(name, strength, current=False):
 
 
 def seed_axis(t):
-    return Vector((.64*math.sin(6.4*t-.45)+.25*math.sin(12*t),
-                   .51*math.sin(6*t+.35), -5.25+10.5*t))
+    return Vector((.58*math.sin(6.4*t-.45)+.13*math.sin(12*t),
+                   .36*math.sin(6*t+.35), -5.25+10.5*t))
 
 
 def seed_point(t, theta):
@@ -265,11 +255,11 @@ def seed_point(t, theta):
     centre = seed_axis(t)
     swelling = 1 + .15*math.sin(2*math.pi*t+.22) + .093*math.sin(4*math.pi*t-.64)
     helix = 3*theta - 11.8*t + .65*math.sin(6.6*t)
-    lobes = .245*math.cos(helix) + .094*math.sin(2*theta+8*t) + .046*math.cos(2*helix+.32)
+    lobes = .105*math.cos(helix) + .047*math.sin(2*theta+8*t) + .014*math.cos(2*helix+.32)
     radius = 2.60*swelling*span*(1+span*lobes)
     x = centre.x + radius*math.cos(theta)
     y = centre.y + radius*.79*math.sin(theta)
-    z = centre.z + .24*span*math.cos(theta+7*t)
+    z = centre.z + .12*span*math.cos(theta+7*t)
     return CORE_ORIGIN + CORE_TILT @ Vector((x, y, z))
 
 
@@ -290,7 +280,7 @@ def body():
             waist = .49 + .10*math.sin(2*theta+4.8*t)
             envelope = math.sin(math.pi*t)**1.13 * math.exp(-((t-waist)/.39)**2)
             noise = noise_vector(p*.82).x
-            value = .065 + envelope*(.25 + .49*lane**1.9 + .21*fold + .12*thread + .09*noise)
+            value = .065 + envelope*(.31 + .55*lane**1.55 + .18*fold + .11*thread + .072*noise)
             points.append(p)
             intensity.append(max(0,min(1,value)))
     points.append(seed_point(1, 0))
@@ -316,14 +306,14 @@ def anchor(angle, profile, section, t, across):
     return blade_section(angle, profile, [(min(intersections), across)], t)[0] + radial(angle)*.64
 
 
-def branch(name, start, end, turns, width, gain, phase, overpass):
+def branch(name, start, end, width, gain, phase):
     n = 140
     points = []
     local_start, local_end = CORE_TILT.inverted() @ (start-CORE_ORIGIN), CORE_TILT.inverted() @ (end-CORE_ORIGIN)
     t0, t1 = (min(.92, max(.08, (v.z+5.25)/10.5)) for v in (local_start, local_end))
     directions = (v-seed_axis(t) for v,t in ((local_start,t0),(local_end,t1)))
     head, tail = (math.atan2(v.y/.79, v.x) for v in directions)
-    travel = (tail-head+math.pi) % math.tau - math.pi + turns*math.tau
+    travel = (tail-head+math.pi) % math.tau - math.pi
     radii = []
     normals = []
     for k in range(n+1):
@@ -336,9 +326,7 @@ def branch(name, start, end, turns, width, gain, phase, overpass):
         rise = seed_point(t+.002, theta) - seed_point(t-.002, theta)
         normal = tangent.cross(rise).normalized()
         normals.append(normal)
-        lift = sum(height * math.exp(-((u-level)/span)**2)
-                   for level, span, height in overpass)
-        p = seed_point(t, theta) + normal*(width*radius+.09+lift)
+        p = seed_point(t, theta) + normal*(width*radius+.09)
         if u < .172:
             f = 1-u/.172
             p = p.lerp(start, f*f*(3-2*f))
@@ -362,7 +350,7 @@ def branch(name, start, end, turns, width, gain, phase, overpass):
     obj.select_set(True)
     bpy.ops.object.convert(target="MESH")
     obj.select_set(False)
-    obj.data.materials.append(energy_finish(name+" | emission", 1.9*gain, current=True))
+    obj.data.materials.append(energy_finish(name+" | emission", 2.05*gain, current=True))
     bm = bmesh.new()
     bm.from_mesh(obj.data)
     bmesh.ops.remove_doubles(bm, verts=list(bm.verts), dist=.00001)
@@ -377,9 +365,9 @@ def branch(name, start, end, turns, width, gain, phase, overpass):
     for point, vert in zip(field.data, obj.data.vertices):
         spine, i, _ = track.find(vert.co)
         u = i/n
-        ridge = max(0, (vert.co-spine).normalized().dot(normals[i]))**2.6
+        ridge = max(0, (vert.co-spine).normalized().dot(normals[i]))**4.7
         pulse = math.sin(15*u+phase+.45*math.sin(19*u))**2
-        point.value = .57 + .25*ridge + .12*pulse + .065*noise_vector(vert.co*3.5).x
+        point.value = .43 + .49*ridge + .10*pulse + .047*noise_vector(vert.co*3.5).x
     for face in obj.data.polygons:
         face.use_smooth = True
 
@@ -412,26 +400,26 @@ def build():
          [(7.72,.03,1.88,2.76,-.21),(7.78,2.76,1.58,2.46,-.47),
           (7.55,6.13,1.42,2.02,-.5),(7.16,10.02,1.17,1.55,-.37),
           (6.56,13.12,.89,1.08,-.21),(5.34,15.76,.72,.85,-.14),(4.23,17.18,.42,.47,-.05)],
-         [0,.123,.225,.363,.553,.711,.859,1],
+         [0,.09,.22,.29,.43,.57,.72,.92,1],
          [(-1,-.31),(-.91,-.78),(-.56,-.96),(.26,-1),(.82,-.73),(1,-.33),
           (1,.46),(.67,.79),(.09,1),(-.68,.93),(-.92,.57),(-1,.25)]),
         ("East high vane", .72,
          [(7.78,.05,2.02,2.7,.60),(8.1,2.86,1.62,2.41,.62),(7.97,6.46,1.41,2.0,.39),
           (7.62,10.37,1.26,1.54,.26),(6.97,14.22,1.12,1.25,.03),
           (5.83,17.23,.75,.86,-.21),(4.52,19.23,.37,.52,-.47)],
-         [0,.10,.231,.332,.474,.643,.776,.917,1],
+         [0,.078,.185,.29,.398,.575,.659,.835,.947,1],
          [(-1,-.27),(-.81,-.82),(-.51,-1),(.37,-.88),(.85,-.96),(1,-.61),
           (1,.34),(.82,.71),(.28,.99),(-.53,.91),(-.92,.65),(-1,.12)]),
         ("Far usher", 1.88,
          [(6.84,.04,1.56,2.28,.31),(7.06,2.19,1.34,1.95,.26),(6.96,4.99,1.11,1.51,.18),
           (6.75,7.51,.90,1.06,.15),(6.13,9.92,.78,.77,-.04),(5.09,11.53,.33,.38,-.26)],
-         [0,.17,.30,.514,.697,.913,1],
+         [0,.135,.249,.405,.61,.754,.91,1],
          [(-1,-.30),(-.82,-.87),(-.23,-1),(.56,-.87),(.94,-.49),
           (1,.21),(.80,.78),(.19,1),(-.63,.83),(-.95,.48)]),
         ("Near remnant", 5.08,
          [(6.80,.04,1.63,2.35,-.33),(7.10,1.61,1.42,1.84,-.18),(7.09,3.45,1.20,1.54,-.21),
           (6.76,5.58,1.02,1.25,-.19),(6.21,7.30,.80,.73,-.31),(5.67,8.04,.48,.56,-.43)],
-         [0,.188,.37,.547,.779,1],
+         [0,.14,.352,.46,.69,.871,1],
          [(-.99,-.46),(-.72,-.93),(.09,-1),(.72,-.62),(1,-.26),
           (.94,.41),(.67,.88),(-.16,1),(-.86,.64)]),
     ]
@@ -442,10 +430,9 @@ def build():
               ] + [p for p in section if p[1] > .33 or (p[0] < -.90 and p[1] >= 0)])
              for name, angle, profile, breaks, section in sails]
     paths = [
-        ("Primary current", (0,.29,-.15,.61), (1,.70,.16,.53), 1,.246,1,1.3, ((.887,.08,.38),)),
-        ("Return current", (2,.45,.16,.55), (0,.78,-.10,.50), -1,.158,.94,3.2, ((.544,.11,.59),)),
-        ("Lower winding", (3,.64,-.15,.54), (1,.42,-.20,.51), 0,.194,.97,1.8, ((.48,.14,.75),)),
-        ("Upper winding", (1,.60,.15,.49), (2,.96,.06,.39), 0,.132,.92,4.0, ()),
+        ("Primary current", (0,.49,-.15,.61), (1,.49,.16,.53), .246,1,1.3),
+        ("Return current", (2,.96,.06,.44), (0,.84,-.10,.50), .158,.94,3.2),
+        ("Lower winding", (3,.55,-.15,.54), (1,.34,-.20,.51), .194,.97,1.8),
     ]
     limestone = limestone_finish()
     for index, (name, angle, profile, breaks, section) in enumerate(sails):
