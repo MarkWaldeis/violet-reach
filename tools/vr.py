@@ -134,8 +134,14 @@ def gate_problems(asset_dir, meta):
 
 def blender(args, blend=None):
     exe = os.environ.get("BLENDER", "blender")
-    cmd = [exe, "-b"] + ([blend] if blend else ["--factory-startup"]) + ["--python-exit-code", "1"] + args
-    proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    # `blender -b <file>` hangs on this machine (Blender 5.2); start from the factory
+    # scene and let open_blend.py load the file before the work script runs.
+    cmd = [exe, "-b", "--factory-startup", "--python-exit-code", "1"]
+    env = None
+    if blend:
+        cmd += ["--python", os.path.join(BLENDER_TOOLS, "open_blend.py")]
+        env = dict(os.environ, VR_OPEN_BLEND=os.path.abspath(blend))
+    proc = subprocess.run(cmd + args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, env=env)
     result = [line for line in proc.stdout.splitlines() if line.startswith("VR_RESULT")]
     if proc.returncode != 0 or not result:
         sys.stderr.write(proc.stdout[-4000:])

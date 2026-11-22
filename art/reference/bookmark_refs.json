@@ -1,0 +1,26 @@
+{
+  "G1": ["ref_12_forest_path.jpg", "ref_35_savanna_meadow_depth.jpg", "ref_45_grass_trail.jpg", "ref_34_acacia_slope_sun.jpg"],
+  "G2": ["ref_36_canopy_backlight.jpg", "ref_37_under_crown_trunks.jpg", "ref_38_bottle_trees_ring.jpg", "ref_39_trunk_bark_close.jpg"],
+  "G3": ["ref_42_open_meadow_horizon.jpg", "ref_43_meadow_structures_horizon.jpg", "ref_14_grass_light.jpg"],
+  "G4": ["ref_46_trunk_ferns_foreground.jpg", "ref_44_thick_trunk_canopy.jpg", "ref_41_baobab_tree_ferns.jpg", "ref_47_umbrella_acacia_grove.jpg"],
+  "G5": ["ref_31_rock_ledge_shore.jpg", "ref_32_beach_bridge_gate.jpg", "ref_29_shallow_beach_water.jpg", "ref_30_layered_rock_disc.jpg"],
+  "G6": ["ref_06_weathered_wall.jpg", "ref_26_gas_giant_white_tower.jpg", "ref_30_layered_rock_disc.jpg", "ref_22_chalk_cliff_layers.jpg"],
+  "G7": ["ref_03_canyon_cliffs.jpg", "ref_19_canyon_river_walls.jpg", "ref_15_pillar_gorge_rim.jpg", "ref_02_pillar_light.jpg"],
+  "F1": ["ref_10_lake_shore.jpg", "ref_29_shallow_beach_water.jpg", "ref_30_layered_rock_disc.jpg"],
+  "F2": ["ref_28_disc_lake_island.jpg", "ref_27_ringed_planet_savanna.jpg", "ref_10_lake_shore.jpg"],
+  "F3": ["ref_08_ribbed_crown.jpg", "ref_25_crescent_spires_meadow.jpg", "ref_09_crescent_grass.jpg"],
+  "F4": ["ref_03_canyon_cliffs.jpg", "ref_17_cliff_bands_aqueduct.jpg", "ref_18_canyon_aqueduct_ribs.jpg", "ref_16_gorge_aqueduct_far.jpg"],
+  "H1": ["ref_09_crescent_grass.jpg", "ref_20_canyon_overview_high.jpg", "ref_27_ringed_planet_savanna.jpg", "ref_16_gorge_aqueduct_far.jpg"],
+  "H2": ["ref_01_white_monuments_sky.jpg", "ref_15_pillar_gorge_rim.jpg", "ref_16_gorge_aqueduct_far.jpg"],
+  "detail": {
+    "sky": ["ref_27_ringed_planet_savanna.jpg", "ref_26_gas_giant_white_tower.jpg", "ref_33_broken_moon_fragments.jpg", "ref_01_white_monuments_sky.jpg"],
+    "floating_bodies": ["ref_11_floating_bodies.jpg", "ref_33_broken_moon_fragments.jpg"],
+    "crystal_pit": ["ref_23_crystal_pit_rim.jpg", "ref_24_crystal_pit_close.jpg", "ref_07_violet_crater.jpg"],
+    "shallow_water": ["ref_29_shallow_beach_water.jpg", "ref_31_rock_ledge_shore.jpg", "ref_32_beach_bridge_gate.jpg", "ref_21_canyon_river_pyramid.jpg"],
+    "bark": ["ref_39_trunk_bark_close.jpg", "ref_44_thick_trunk_canopy.jpg", "ref_38_bottle_trees_ring.jpg"],
+    "tree_umbrella_acacia": ["ref_47_umbrella_acacia_grove.jpg", "ref_34_acacia_slope_sun.jpg", "ref_35_savanna_meadow_depth.jpg"],
+    "tree_bottle": ["ref_38_bottle_trees_ring.jpg", "ref_41_baobab_tree_ferns.jpg", "ref_44_thick_trunk_canopy.jpg"],
+    "ground_plants": ["ref_40_tall_grass_ferns.jpg", "ref_46_trunk_ferns_foreground.jpg", "ref_41_baobab_tree_ferns.jpg", "ref_13_forest_ground.jpg"],
+    "chalk_cliff_layers": ["ref_22_chalk_cliff_layers.jpg", "ref_06_weathered_wall.jpg", "ref_17_cliff_bands_aqueduct.jpg", "ref_19_canyon_river_walls.jpg"]
+  }
+}

@@ -152,5 +152,368 @@
       1154,
       659
     ]
+  },
+  {
+    "file": "ref_15_pillar_gorge_rim.jpg",
+    "video": "lang",
+    "seconds": 3.766,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_16_gorge_aqueduct_far.jpg",
+    "video": "lang",
+    "seconds": 4.633,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_17_cliff_bands_aqueduct.jpg",
+    "video": "lang",
+    "seconds": 5.166,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_18_canyon_aqueduct_ribs.jpg",
+    "video": "lang",
+    "seconds": 7.135,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_19_canyon_river_walls.jpg",
+    "video": "lang",
+    "seconds": 10.37,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_20_canyon_overview_high.jpg",
+    "video": "lang",
+    "seconds": 12.138,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_21_canyon_river_pyramid.jpg",
+    "video": "lang",
+    "seconds": 12.705,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_22_chalk_cliff_layers.jpg",
+    "video": "lang",
+    "seconds": 17.24,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_23_crystal_pit_rim.jpg",
+    "video": "lang",
+    "seconds": 19.208,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_24_crystal_pit_close.jpg",
+    "video": "lang",
+    "seconds": 19.875,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_25_crescent_spires_meadow.jpg",
+    "video": "lang",
+    "seconds": 23.243,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_26_gas_giant_white_tower.jpg",
+    "video": "lang",
+    "seconds": 25.226,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_27_ringed_planet_savanna.jpg",
+    "video": "lang",
+    "seconds": 26.611,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_28_disc_lake_island.jpg",
+    "video": "lang",
+    "seconds": 28.928,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_29_shallow_beach_water.jpg",
+    "video": "lang",
+    "seconds": 30.713,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_30_layered_rock_disc.jpg",
+    "video": "lang",
+    "seconds": 31.33,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_31_rock_ledge_shore.jpg",
+    "video": "lang",
+    "seconds": 33.08,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_32_beach_bridge_gate.jpg",
+    "video": "lang",
+    "seconds": 33.731,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_33_broken_moon_fragments.jpg",
+    "video": "lang",
+    "seconds": 35.215,
+    "crop_xywh": [
+      0,
+      812,
+      1170,
+      659
+    ]
+  },
+  {
+    "file": "ref_34_acacia_slope_sun.jpg",
+    "video": "kurz",
+    "seconds": 0.431,
+    "crop_xywh": [
+      8,
+      812,
+      1154,
+      659
+    ]
+  },
+  {
+    "file": "ref_35_savanna_meadow_depth.jpg",
+    "video": "kurz",
+    "seconds": 3.7,
+    "crop_xywh": [
+      8,
+      812,
+      1154,
+      659
+    ]
+  },
+  {
+    "file": "ref_36_canopy_backlight.jpg",
+    "video": "kurz",
+    "seconds": 4.8,
+    "crop_xywh": [
+      8,
+      812,
+      1154,
+      659
+    ]
+  },
+  {
+    "file": "ref_37_under_crown_trunks.jpg",
+    "video": "kurz",
+    "seconds": 5.016,
+    "crop_xywh": [
+      8,
+      812,
+      1154,
+      659
+    ]
+  },
+  {
+    "file": "ref_38_bottle_trees_ring.jpg",
+    "video": "kurz",
+    "seconds": 5.268,
+    "crop_xywh": [
+      8,
+      812,
+      1154,
+      659
+    ]
+  },
+  {
+    "file": "ref_39_trunk_bark_close.jpg",
+    "video": "kurz",
+    "seconds": 5.585,
+    "crop_xywh": [
+      8,
+      812,
+      1154,
+      659
+    ]
+  },
+  {
+    "file": "ref_40_tall_grass_ferns.jpg",
+    "video": "kurz",
+    "seconds": 7.151,
+    "crop_xywh": [
+      8,
+      812,
+      1154,
+      659
+    ]
+  },
+  {
+    "file": "ref_41_baobab_tree_ferns.jpg",
+    "video": "kurz",
+    "seconds": 7.618,
+    "crop_xywh": [
+      8,
+      812,
+      1154,
+      659
+    ]
+  },
+  {
+    "file": "ref_42_open_meadow_horizon.jpg",
+    "video": "kurz",
+    "seconds": 9.353,
+    "crop_xywh": [
+      8,
+      812,
+      1154,
+      659
+    ]
+  },
+  {
+    "file": "ref_43_meadow_structures_horizon.jpg",
+    "video": "kurz",
+    "seconds": 10.786,
+    "crop_xywh": [
+      8,
+      812,
+      1154,
+      659
+    ]
+  },
+  {
+    "file": "ref_44_thick_trunk_canopy.jpg",
+    "video": "kurz",
+    "seconds": 12.821,
+    "crop_xywh": [
+      8,
+      812,
+      1154,
+      659
+    ]
+  },
+  {
+    "file": "ref_45_grass_trail.jpg",
+    "video": "kurz",
+    "seconds": 14.088,
+    "crop_xywh": [
+      8,
+      812,
+      1154,
+      659
+    ]
+  },
+  {
+    "file": "ref_46_trunk_ferns_foreground.jpg",
+    "video": "kurz",
+    "seconds": 14.955,
+    "crop_xywh": [
+      8,
+      812,
+      1154,
+      659
+    ]
+  },
+  {
+    "file": "ref_47_umbrella_acacia_grove.jpg",
+    "video": "kurz",
+    "seconds": 16.756,
+    "crop_xywh": [
+      8,
+      812,
+      1154,
+      659
+    ]
   }
 ]
