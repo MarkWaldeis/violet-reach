@@ -138,6 +138,11 @@ def main():
         baseline = vr.source_hash(d)
         with patch.object(vr, "sha256", side_effect=changed_library):
             results.append(expect("comments and strings do not opt into vrmat", [] if vr.source_hash(d) == baseline else ["changed"], None))
+        for statement, depends in (("from vrcolumn import drum", True), ("# import vrcolumn", False)):
+            Path(d, "build.py").write_text(statement + "\n")
+            baseline = vr.source_hash(d)
+            with patch.object(vr, "sha256", side_effect=lambda p: "changed" if str(p).endswith("vrcolumn.py") else real_sha256(p)):
+                results.append(expect(statement + " tracks survey geometry", [] if (vr.source_hash(d) != baseline) == depends else ["incorrect dependency"], None))
     colors = vrmat.load_palette()
     results.append(expect("all material colors match sRGB and linear palette", [] if colors else ["empty"], None))
     results.append(expect("ochre accent remains in palette without an inlay material",
