@@ -21,16 +21,20 @@ def seed_material():
     output = nodes.new("ShaderNodeOutputMaterial")
     links.new(bsdf.outputs["BSDF"], output.inputs["Surface"])
     bsdf.inputs["IOR"].default_value = 1.6
-    bsdf.inputs["Roughness"].default_value = 0.28
-    bsdf.inputs["Coat Weight"].default_value = 0.08
-    bsdf.inputs["Coat Roughness"].default_value = 0.12
-    bsdf.inputs["Specular IOR Level"].default_value = 0.12
+    bsdf.inputs["Roughness"].default_value = 0.23
+    bsdf.inputs["Coat Weight"].default_value = 0.3
+    bsdf.inputs["Coat Roughness"].default_value = 0.08
+    bsdf.inputs["Specular IOR Level"].default_value = 0.35
     heat = nodes.new("ShaderNodeAttribute")
-    heat.attribute_name = "core_heat"
+    heat.attribute_name = "core_distance"
+    inward = nodes.new("ShaderNodeMath")
+    inward.operation = "SUBTRACT"
+    inward.inputs[0].default_value = 1
+    links.new(heat.outputs["Fac"], inward.inputs[1])
     body = nodes.new("ShaderNodeValToRGB")
     body.color_ramp.elements[0].color = (0.05, 0.004, 0.09, 1)
     body.color_ramp.elements[1].color = (0.11, 0.02, 0.27, 1)
-    links.new(heat.outputs["Fac"], body.inputs["Fac"])
+    links.new(inward.outputs[0], body.inputs["Fac"])
     links.new(body.outputs["Color"], bsdf.inputs["Base Color"])
     glow = nodes.new("ShaderNodeValToRGB")
     glow.color_ramp.elements[0].color = (0.045, 0.002, 0.08, 1)
@@ -38,13 +42,13 @@ def seed_material():
     glow.color_ramp.elements[1].color = (0.40, 0.15, 0.85, 1)
     mid = glow.color_ramp.elements.new(0.25)
     mid.color = (0.20, 0.025, 0.48, 1)
-    links.new(heat.outputs["Fac"], glow.inputs["Fac"])
+    links.new(inward.outputs[0], glow.inputs["Fac"])
     links.new(glow.outputs["Color"], bsdf.inputs["Emission Color"])
     gain = nodes.new("ShaderNodeMath")
     gain.operation = "MULTIPLY_ADD"
-    gain.inputs[1].default_value = 1.65
+    gain.inputs[1].default_value = 1.2
     gain.inputs[2].default_value = 0.12
-    links.new(heat.outputs["Fac"], gain.inputs[0])
+    links.new(inward.outputs[0], gain.inputs[0])
     links.new(gain.outputs[0], bsdf.inputs["Emission Strength"])
     return mat
 
@@ -53,18 +57,26 @@ def seed(rng, mat):
     radius, height = 3.45, 14.75
     sides = 6
     twist = 0.22
-    profile = [rng.uniform(0.94, 1.06) for _ in range(sides)]
-    rings = [(0.0, 0.0), (0.13, 0.48), (0.30, 1.0),
-             (0.71, 0.96), (0.89, 0.48), (1.0, 0.0)]
+    profile = [rng.uniform(0.82, 1.18) for _ in range(sides)]
+    rings = [(0.0, 0.0), (0.12, 0.52), (0.28, 0.98),
+             (0.52, 1.06), (0.74, 0.90), (0.88, 0.46), (1.0, 0.0)]
+    tip_shift = Vector((0.20, -0.16, 0)) * radius
     bm = bmesh.new()
     loops = []
     for t, width in rings:
         if width == 0:
-            loops.append([bm.verts.new((0.18 * t, -0.12 * t, height * t))])
+            loops.append([bm.verts.new(Vector((0, 0, height * t)) + tip_shift * (2 * t - 1))])
         else:
-            loops.append([bm.verts.new((math.cos(twist + math.tau * s / sides) * radius * width * profile[s] + 0.18 * t,
-                                        math.sin(twist + math.tau * s / sides) * radius * width * profile[s] - 0.12 * t,
-                                        height * t)) for s in range(sides)])
+            loop = []
+            for s in range(sides):
+                angle = twist + math.tau * s / sides
+                r = radius * width * profile[s]
+                if t in (0.12, 0.88):
+                    r *= rng.uniform(0.8, 1.2)
+                z = height * (t + rng.uniform(-0.018, 0.018))
+                loop.append(bm.verts.new(Vector((math.cos(angle) * r, math.sin(angle) * r, z))
+                                         + tip_shift * ((t - 0.5) * 2) ** 3 * 0.6))
+            loops.append(loop)
     for lower, upper in zip(loops, loops[1:]):
         for s in range(sides):
             n = (s + 1) % sides
@@ -74,18 +86,16 @@ def seed(rng, mat):
                 bm.faces.new((lower[s], lower[n], upper[0]))
             else:
                 bm.faces.new((lower[s], lower[n], upper[n], upper[s]))
-    bmesh.ops.subdivide_edges(bm, edges=bm.edges[:], cuts=10, use_grid_fill=True)
+    bmesh.ops.triangulate(bm, faces=bm.faces[:])
+    bmesh.ops.subdivide_edges(bm, edges=bm.edges[:], cuts=16, use_grid_fill=True)
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     mesh = bpy.data.meshes.new("Seed planar facets")
     bm.to_mesh(mesh)
     bm.free()
-    heat = mesh.attributes.new("core_heat", "FLOAT", "POINT")
+    heat = mesh.attributes.new("core_distance", "FLOAT", "POINT")
+    centre = Vector((0, 0, height * 0.5))
     for v, value in zip(mesh.vertices, heat.data):
-        t = v.co.z / height
-        rho = Vector((v.co.x - 0.18 * t, v.co.y + 0.12 * t)).length / radius
-        inward = max(0, min(1, (1 - rho) / 0.20))
-        axial = math.sin(math.pi * t) ** 4
-        value.value = inward ** 1.2 * axial
+        value.value = min(1, (v.co - centre).length / (height * 0.5))
     obj = bpy.data.objects.new("Levitating violet seed", mesh)
     obj.data.materials.append(mat)
     obj.location = (0, 0, 4.55)
@@ -98,11 +108,22 @@ def seed(rng, mat):
 
 def limestone_block(name, rng, size, location, rotation, mat):
     bm = bmesh.new()
-    bmesh.ops.create_cube(bm, size=1)
-    for v in bm.verts:
-        v.co = Vector(tuple(a * b for a, b in zip(v.co, size)))
-        v.co.x += v.co.z * rng.uniform(-0.18, 0.18)
-        v.co.y += v.co.z * rng.uniform(-0.16, 0.16)
+    loops = []
+    profile = [rng.uniform(0.8, 1.15) for _ in range(7)]
+    for z, scale in [(-0.5, 0.95), (0.03, 1.05), (0.43, 0.74)]:
+        loop = []
+        for s in range(7):
+            angle = math.tau * s / 7
+            loop.append(bm.verts.new((math.cos(angle) * size[0] * 0.5 * scale * profile[s],
+                                      math.sin(angle) * size[1] * 0.5 * scale * profile[s],
+                                      (z + rng.uniform(-0.07, 0.07)) * size[2])))
+        loops.append(loop)
+    bm.faces.new(list(reversed(loops[0])))
+    bm.faces.new(loops[-1])
+    for lower, upper in zip(loops, loops[1:]):
+        for s in range(7):
+            n = (s + 1) % 7
+            bm.faces.new((lower[s], lower[n], upper[n], upper[s]))
     planes = [(Vector((rng.uniform(-0.4, 0.4), rng.uniform(-0.4, 0.4), 1)),
                Vector((0, 0, size[2] * rng.uniform(0.20, 0.38)))),
               (Vector((1, rng.uniform(-0.6, 0.6), rng.uniform(-0.3, 0.3))),
@@ -173,22 +194,32 @@ def build():
     weather.name = "Cradle | weathered breaks"
     moss = vrmat.get("mossy_rock").copy()
     soil = vrmat.get("forest_soil").copy()
-    stones = [((-6.0, -4.6, 1.7), (6.3, 4.7, 4.9), (0.08, -0.18, -0.5)),
-              ((5.4, -5.5, 1.75), (5.5, 5.0, 5.6), (-0.13, 0.12, 0.55)),
-              ((5.6, 5.5, 1.9), (5.7, 5.0, 5.7), (0.10, 0.15, -0.35)),
-              ((-5.5, 5.4, 1.6), (6.0, 5.2, 4.5), (-0.08, -0.14, 0.45))]
+    mound("Shared earth bed", rng, 7.4, 0.075, (0, 0, 0.12), soil)
+    mound("Shared moss turf", rng, 6.8, 0.065, (0.08, 0.1, 0.26), moss)
+    stones = []
+    for i in range(5):
+        angle = math.tau * i / 5 + 0.3
+        distance = 4.5 + rng.uniform(-0.2, 0.2)
+        height = rng.uniform(4.6, 5.5)
+        stones.append(((math.cos(angle) * distance, math.sin(angle) * distance, height * 0.43),
+                       (rng.uniform(3.3, 4.2), rng.uniform(2.7, 3.4), height),
+                       (0.12, -0.28, angle)))
     for i, (location, size, rotation) in enumerate(stones):
         limestone_block(f"Cradle stone {i}", rng, size, location, rotation,
                         weather if i == 3 else limestone)
-        mound(f"Stone earth socket {i}", rng, 3.15, 0.16, (*location[:2], 0.12), soil)
+        mound(f"Stone earth socket {i}", rng, 2.1, 0.16, (*location[:2], 0.30), soil)
         mound(f"Moss at cradle foot {i}", rng, 1.2, 0.30,
               (location[0] * 1.1, location[1] * 1.1, 0.28), moss)
         for j in range(3):
             angle = rng.uniform(0, math.tau)
             radius = rng.uniform(0.25, 0.65)
             mound(f"Limestone debris {i}_{j}", rng, radius, 0.65,
-                  (location[0] + math.cos(angle) * 3.2, location[1] + math.sin(angle) * 3.2, radius * 0.3),
+                  (location[0] + math.cos(angle) * 2.0, location[1] + math.sin(angle) * 2.0, 0.35 + radius * 0.3),
                   weather)
-    seed(rng, seed_material())
+    crystal = seed(rng, seed_material())
+    bpy.context.view_layer.update()
+    stones = [obj for obj in vrlib.source_objects() if obj.name.startswith("Cradle stone")]
+    _, tops = vrlib.world_bounds(stones)
+    crystal.location.z = tops.z + 0.22
     bpy.context.view_layer.update()
     trim_ground()
