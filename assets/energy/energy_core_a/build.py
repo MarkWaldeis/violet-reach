@@ -5,7 +5,7 @@ import random
 import bmesh
 import bpy
 from mathutils import Quaternion, Vector
-from mathutils.kdtree import KDTree
+from mathutils.bvhtree import BVHTree
 from mathutils.noise import noise_vector
 
 import vrlib
@@ -214,34 +214,82 @@ def limestone_finish():
     return mat
 
 
-def energy_finish(name, strength, current=False):
+def energy_finish(current=False):
+    name = "Violet | ribbon spine" if current else "Violet | cracked plasma"
+    if name in bpy.data.materials:
+        return bpy.data.materials[name]
     mat = vrmat.get("violet_energy").copy()
     mat.name = name
     palette = vrmat.load_palette()
     r,g,b = palette["violet_body"]["linear_rgb"]
-    light = (r*.77, g*.19, b*.51, 1)
-    hot = (r*1.72, g*.19, b*.92, 1)
-    dark = (r*.078, g*.04, b*.115, 1)
+    dark = (r*.075,g*.045,b*.12,1)
+    blue_violet = (r*.72,g*.52,b*1.05,1)
+    lavender = (r*1.01,g*1.02,b*1.32,1)
     nodes, links = mat.node_tree.nodes, mat.node_tree.links
     bsdf = nodes["Principled BSDF"]
+    for key in ("Base Color","Emission Strength","Emission Color","Normal"):
+        for link in list(bsdf.inputs[key].links):
+            links.remove(link)
+    bsdf.inputs["Base Color"].default_value = dark
+    bsdf.inputs["Specular IOR Level"].default_value = 0
+
+    def scalar(op, a, b, clamp=False):
+        result = nodes.new("ShaderNodeMath")
+        result.operation, result.use_clamp = op, clamp
+        for value, socket in zip((a,b),result.inputs):
+            if isinstance(value,(int,float)):
+                socket.default_value = value
+            else:
+                links.new(value,socket)
+        return result.outputs[0]
+
+    def ramp(source, stops):
+        result = nodes.new("ShaderNodeValToRGB")
+        result.color_ramp.interpolation = "EASE"
+        for i,(pos,c) in enumerate(stops):
+            elems = result.color_ramp.elements
+            e = elems[i] if i < 2 else elems.new(pos)
+            e.position,e.color = pos,c
+        links.new(source,result.inputs["Fac"])
+        return result.outputs["Color"]
+
     attr = nodes.new("ShaderNodeAttribute")
     attr.attribute_name = "plasma"
-    ramp = nodes.new("ShaderNodeValToRGB")
-    e = ramp.color_ramp.elements
-    e[0].position, e[0].color = .06, dark
-    e[1].position, e[1].color = .95, hot
-    e.new(.43).color = (r*.38, g*.13, b*.48, 1)
-    e.new(.72).color = light
-    ramp.color_ramp.interpolation = "EASE"
-    links.new(attr.outputs["Fac"], ramp.inputs["Fac"])
-    links.new(ramp.outputs[0], bsdf.inputs["Base Color"])
-    links.new(ramp.outputs[0], bsdf.inputs["Emission Color"])
-    emission = bsdf.inputs["Emission Strength"]
-    links.remove(emission.links[0])
-    emission.default_value = strength
     if current:
-        links.remove(bsdf.inputs["Base Color"].links[0])
-        bsdf.inputs["Base Color"].default_value = dark
+        links.new(ramp(attr.outputs["Fac"], [(0,dark), (1,lavender), (.45,blue_violet)]),
+                  bsdf.inputs["Emission Color"])
+        links.new(scalar("MULTIPLY", attr.outputs["Fac"], 1.24), bsdf.inputs["Emission Strength"])
+        return mat
+
+    facing = nodes.new("ShaderNodeLayerWeight")
+    facing.inputs["Blend"].default_value = .5
+    front = scalar("SUBTRACT", 1, facing.outputs["Facing"])
+    front = scalar("POWER", front, 1.9)
+    coord = nodes.new("ShaderNodeTexCoord")
+    stretch = nodes.new("ShaderNodeVectorMath")
+    stretch.operation = "MULTIPLY"
+    stretch.inputs[1].default_value = (1.06,1.14,.48)
+    links.new(coord.outputs["Object"], stretch.inputs[0])
+    cells = nodes.new("ShaderNodeTexVoronoi")
+    cells.feature = "DISTANCE_TO_EDGE"
+    cells.inputs["Scale"].default_value = 1.68
+    fine = nodes.new("ShaderNodeTexNoise")
+    fine.inputs["Scale"].default_value = 1.9
+    fine.inputs["Detail"].default_value = 2
+    links.new(stretch.outputs["Vector"], fine.inputs["Vector"])
+    warp = nodes.new("ShaderNodeVectorMath")
+    warp.operation = "MULTIPLY_ADD"
+    warp.inputs[1].default_value = (.76,.76,.92)
+    links.new(fine.outputs["Color"], warp.inputs[0])
+    links.new(stretch.outputs["Vector"], warp.inputs[2])
+    links.new(warp.outputs["Vector"], cells.inputs["Vector"])
+    vein = scalar("SUBTRACT", 1, scalar("MULTIPLY", cells.outputs["Distance"], 11), True)
+    vein = scalar("MULTIPLY", vein, scalar("MULTIPLY", fine.outputs["Fac"],
+                                          scalar("ADD", .09, scalar("MULTIPLY", front, .66))))
+    face_glow = scalar("MULTIPLY", front, scalar("ADD", .17, attr.outputs["Fac"]))
+    glow = scalar("ADD", scalar("ADD", .06, face_glow), vein, True)
+    links.new(ramp(glow, [(0,dark), (1,lavender), (.52,blue_violet)]), bsdf.inputs["Emission Color"])
+    links.new(scalar("ADD", .25, scalar("MULTIPLY", glow, 1.22)), bsdf.inputs["Emission Strength"])
     return mat
 
 
@@ -255,7 +303,9 @@ def seed_point(t, theta):
     centre = seed_axis(t)
     swelling = 1 + .15*math.sin(2*math.pi*t+.22) + .093*math.sin(4*math.pi*t-.64)
     helix = 3*theta - 11.8*t + .65*math.sin(6.6*t)
-    lobes = .105*math.cos(helix) + .047*math.sin(2*theta+8*t) + .014*math.cos(2*helix+.32)
+    lobe = .5+.5*math.cos(helix)
+    channels = lobe**25 * .13 * math.sin(math.pi*t)
+    lobes = .07*math.cos(helix) + .035*math.sin(2*theta+8*t) - channels
     radius = 2.60*swelling*span*(1+span*lobes)
     x = centre.x + radius*math.cos(theta)
     y = centre.y + radius*.79*math.sin(theta)
@@ -273,14 +323,9 @@ def body():
             theta = math.tau*j/n
             p = seed_point(t, theta)
             helix = 3*theta-11.8*t+.65*math.sin(6.6*t)
-            twist = helix + .44*math.sin(14*t-2*theta)
-            lane = .5 + .5*math.cos(twist)
-            fold = (.5 + .5*math.cos(twist+1.52))**4
-            thread = (.5 + .5*math.cos(2*twist-.8+.49*math.sin(theta+9*t)))**8
-            waist = .49 + .10*math.sin(2*theta+4.8*t)
-            envelope = math.sin(math.pi*t)**1.13 * math.exp(-((t-waist)/.39)**2)
-            noise = noise_vector(p*.82).x
-            value = .065 + envelope*(.31 + .55*lane**1.55 + .18*fold + .11*thread + .072*noise)
+            channel = (.5+.5*math.cos(helix))**18
+            envelope = math.sin(math.pi*t)**1.6
+            value = .05 + envelope*(.64+.30*channel)
             points.append(p)
             intensity.append(max(0,min(1,value)))
     points.append(seed_point(1, 0))
@@ -294,9 +339,10 @@ def body():
     for j in range(n):
         faces.append((last-n+j,last-n+(j+1)%n,last))
     obj = mesh_object("Levitating seed | plasma folds", points, faces,
-                      [energy_finish("Violet | plasma folds", 2.3)], smooth=True)
+                      [energy_finish()], smooth=True)
     field = obj.data.attributes.new("plasma", "FLOAT", "POINT")
     field.data.foreach_set("value", intensity)
+    return BVHTree.FromPolygons(points, faces)
 
 
 def anchor(angle, profile, section, t, across):
@@ -306,70 +352,82 @@ def anchor(angle, profile, section, t, across):
     return blade_section(angle, profile, [(min(intersections), across)], t)[0] + radial(angle)*.64
 
 
-def branch(name, start, end, width, gain, phase):
-    n = 140
-    points = []
-    local_start, local_end = CORE_TILT.inverted() @ (start-CORE_ORIGIN), CORE_TILT.inverted() @ (end-CORE_ORIGIN)
-    t0, t1 = (min(.92, max(.08, (v.z+5.25)/10.5)) for v in (local_start, local_end))
-    directions = (v-seed_axis(t) for v,t in ((local_start,t0),(local_end,t1)))
-    head, tail = (math.atan2(v.y/.79, v.x) for v in directions)
-    travel = (tail-head+math.pi) % math.tau - math.pi
-    radii = []
-    normals = []
-    for k in range(n+1):
-        u = k/n
-        radius = .36 + .53*math.sin(math.pi*u)**.78 + .21*math.sin(11*u+phase)**2
-        radii.append(radius)
-        theta = head+travel*(u*u*(3-2*u)) + .105*math.sin(math.tau*u)*math.sin(math.pi*u)
-        t = t0+(t1-t0)*u
-        tangent = seed_point(t, theta+.002) - seed_point(t, theta-.002)
-        rise = seed_point(t+.002, theta) - seed_point(t-.002, theta)
-        normal = tangent.cross(rise).normalized()
-        normals.append(normal)
-        p = seed_point(t, theta) + normal*(width*radius+.09)
-        if u < .172:
-            f = 1-u/.172
-            p = p.lerp(start, f*f*(3-2*f))
-        if u > .828:
-            f = (u-.828)/.172
-            p = p.lerp(end, f*f*(3-2*f))
-        points.append(p)
-    curve = bpy.data.curves.new(name, "CURVE")
-    curve.dimensions = "3D"
-    curve.bevel_depth, curve.bevel_resolution = width, 4
-    curve.use_fill_caps = True
-    spline = curve.splines.new("POLY")
-    spline.points.add(n)
-    for p, loc, radius in zip(spline.points, points, radii):
-        p.co = (*loc, 1)
-        p.radius = radius
-    obj = bpy.data.objects.new(name, curve)
-    vrlib.link_to_source(obj)
-    bpy.context.view_layer.objects.active = obj
-    bpy.ops.object.select_all(action="DESELECT")
-    obj.select_set(True)
-    bpy.ops.object.convert(target="MESH")
-    obj.select_set(False)
-    obj.data.materials.append(energy_finish(name+" | emission", 2.05*gain, current=True))
-    bm = bmesh.new()
-    bm.from_mesh(obj.data)
-    bmesh.ops.remove_doubles(bm, verts=list(bm.verts), dist=.00001)
-    bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
-    bm.to_mesh(obj.data)
-    bm.free()
-    track = KDTree(len(points))
-    for i, point in enumerate(points):
-        track.insert(point, i)
-    track.balance()
-    field = obj.data.attributes.new("plasma", "FLOAT", "POINT")
-    for point, vert in zip(field.data, obj.data.vertices):
-        spine, i, _ = track.find(vert.co)
+def branch(name, start, end, track, width, phase, surface):
+    n = 176
+    clearance = .16
+    start_height, end_height = track
+    facing = []
+    positions = []
+    contact = []
+    inverse = CORE_TILT.inverted()
+    endpoints = [(inverse @ (p-CORE_ORIGIN))-seed_axis(t)
+                 for p,t in ((start,start_height),(end,end_height))]
+    head, tail = (math.atan2(v.y/.79, v.x) for v in endpoints)
+    sweep = (tail-head+math.pi) % math.tau - math.pi
+
+    def skin_at(v):
+        t = start_height+(end_height-start_height)*v
+        theta = head+sweep*v + .12*math.sin(math.pi*v)
+        hit, normal, _, _ = surface.find_nearest(seed_point(t,theta))
+        return hit+normal*clearance, normal
+
+    def lead_in(socket, skin, tangent, t):
+        incoming = (skin-socket)*.84
+        incoming.z *= .32
+        return (socket.lerp(skin,t*t*(3-2*t)) + incoming*t*(1-t)**2
+                - tangent*t*t*(1-t))
+
+    start_skin, start_normal = skin_at(0)
+    end_skin, end_normal = skin_at(1)
+    start_tangent = (skin_at(.015)[0]-start_skin)*22
+    end_tangent = (skin_at(.985)[0]-end_skin)*22
+
+    for i in range(n+1):
         u = i/n
-        ridge = max(0, (vert.co-spine).normalized().dot(normals[i]))**4.7
-        pulse = math.sin(15*u+phase+.45*math.sin(19*u))**2
-        point.value = .43 + .49*ridge + .10*pulse + .047*noise_vector(vert.co*3.5).x
-    for face in obj.data.polygons:
-        face.use_smooth = True
+        if u < .27:
+            p, normal = lead_in(start,start_skin,start_tangent,u/.27), start_normal
+        elif u > .73:
+            p, normal = lead_in(end,end_skin,end_tangent,(1-u)/.27), end_normal
+        else:
+            p, normal = skin_at((u-.27)/.46)
+        positions.append(p)
+        facing.append(normal)
+        fade = max(0, 1 - abs(u-.5)/.29)
+        contact.append(min(1,fade*4))
+    intensity, rows = [], []
+    section = [(-1,0),(-.40,.76),(0,1),(.40,.76),(1,0),(.46,-.64),(-.46,-.64)]
+    for i,p in enumerate(positions):
+        u = i/n
+        normal = facing[i]
+        tangent = positions[min(n,i+1)]-positions[max(0,i-1)]
+        across = normal.cross(tangent).normalized()
+        if contact[i] < 1:
+            free_across = Vector((0,0,1)).cross(tangent).normalized()
+            if free_across.dot(across) < 0:
+                free_across.negate()
+            across = free_across.lerp(across,contact[i]).normalized()
+        size = width*(.14 + .74*math.sin(math.pi*u)**.79 + .19*math.sin(13*u+phase)**2)
+        pulse = .37 + .48*math.sin(12*u+phase+.54*math.sin(19*u))**2
+        socket_fade = min(1, 6*u, 6*(1-u))
+        row = []
+        for across_unit, depth_unit in section:
+            q = p+across*(across_unit*size)
+            depth_normal = normal
+            hit, norm, _, _ = surface.find_nearest(q)
+            if contact[i] or (q-hit).dot(norm) < clearance:
+                amount = 1 if (q-hit).dot(norm) < clearance else contact[i]
+                q = q.lerp(hit+norm*clearance,amount)
+                depth_normal = normal.lerp(norm,amount).normalized()
+            q += depth_normal*(size*.15*depth_unit)
+            row.append(q)
+            spine = (1-abs(across_unit))**2.8 if depth_unit > 0 else 0
+            intensity.append((.34+.66*socket_fade)*(.46*pulse + spine*(.46+.38*pulse)))
+        rows.append(row)
+    points, faces = loft(rows)
+    faces = [tuple(reversed(face)) for face in faces]
+    obj = mesh_object(name, points, faces, [energy_finish(current=True)], smooth=True)
+    field = obj.data.attributes.new("plasma", "FLOAT", "POINT")
+    field.data.foreach_set("value", intensity)
 
 
 def earth_bed(name, angle, base, rng):
@@ -430,9 +488,9 @@ def build():
               ] + [p for p in section if p[1] > .33 or (p[0] < -.90 and p[1] >= 0)])
              for name, angle, profile, breaks, section in sails]
     paths = [
-        ("Primary current", (0,.49,-.15,.61), (1,.49,.16,.53), .246,1,1.3),
-        ("Return current", (2,.96,.06,.44), (0,.84,-.10,.50), .158,.94,3.2),
-        ("Lower winding", (3,.55,-.15,.54), (1,.34,-.20,.51), .194,.97,1.8),
+        ("Primary current", (0,.065,-.28,.53), (1,.046,.32,.53), (.43,.59), .43,1.3),
+        ("Return current", (2,.086,.19,.41), (0,.038,.35,.42), (.69,.75), .29,3.2),
+        ("Lower winding", (3,.120,-.33,.52), (1,.033,-.33,.44), (.21,.34), .35,1.8),
     ]
     limestone = limestone_finish()
     for index, (name, angle, profile, breaks, section) in enumerate(sails):
@@ -462,14 +520,13 @@ def build():
         shaped_stone(name+" | buried foundation course", outline, -.042,
                      rng.uniform(.32,.46), rng, "monument_weathered", True)
     paving = [
-        ([(.13,-6.53),(1.12,-6.16),(2.17,-5.09),(1.51,-4.37),(.35,-4.76),(-.42,-5.66)], .14),
-        ([(-.40,-5.04),(.33,-4.49),(.79,-3.43),(.17,-2.9),(-.86,-3.31),(-1.24,-4.24)], .195),
-        ([(.51,-4.37),(1.60,-4.20),(1.75,-3.48),(.91,-3.22)], .17),
-        ([(-.79,-3.16),(.05,-2.77),(.37,-1.91),(-.32,-1.34),(-1.21,-1.76),(-1.39,-2.60)], .14),
-        ([(.47,-2.79),(1.12,-2.97),(1.38,-2.37),(.89,-1.92),(.48,-2.04)], .11),
+        ([(-.58,-5.69),(-.08,-6.14),(1.04,-5.78),(1.67,-4.82),(.89,-4.58),(.62,-5.01),(-.28,-5.19)], .24),
+        ([(.91,-4.55),(1.76,-4.82),(1.92,-4.23),(1.63,-3.90),(1.49,-3.43),(.71,-3.91)], .13),
+        ([(-1.27,-4.32),(-.70,-4.88),(-.37,-4.49),(.17,-4.25),(.51,-3.31),(-.82,-3.52)], .28),
+        ([(-1.18,-3.40),(-.80,-3.44),(-.52,-3.09),(-.75,-2.70),(-1.37,-2.98)], .10),
     ]
     for i, (outline, top) in enumerate(paving):
-        shaped_stone(f"Broken processional flags {i+1}", outline, -.017, top, rng, "monument_weathered")
+        shaped_stone(f"Broken processional flags {i+1}", outline, -.028, top, rng, limestone)
     for i in range(42):
         _, a, profile, _, _ = rng.choice(sails)
         centre = profile[0][0]
@@ -484,15 +541,15 @@ def build():
                             y+extent*rng.uniform(.68,1.15)*math.sin(angle)))
         shaped_stone(f"Apron spall {i+1}", outline, -.018,
                      extent*rng.uniform(.32,.76), rng, "monument_weathered", True)
-    body()
+    surface = body()
 
     def seat(spec):
         index, t, across, _ = spec
         _, angle, profile, _, section = sails[index]
         return anchor(angle, profile, section, t, across)
 
-    for name, start, end, *spec in paths:
-        branch(name, seat(start), seat(end), *spec)
+    for name, start, end, track, width, phase in paths:
+        branch(name, seat(start), seat(end), track, width, phase, surface)
     rotation = Quaternion(Vector((0,0,1)), .86).to_matrix().to_4x4()
     for obj in vrlib.source_objects():
         obj.data.transform(rotation)

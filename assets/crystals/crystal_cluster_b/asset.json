@@ -14,22 +14,8 @@
     840
   ],
   "texture_size": 2048,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-b06222e48d554ae4a6a116ad07645e06",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 8,
-      "form_detail": 7,
-      "material": 6,
-      "scale": 8,
-      "style": 7,
-      "defects": 7
-    },
-    "notes": "Round 2. Fixed: the shafts now have clean, large prism faces instead of crumpled facets (wire tile), and the main shaft has a modeled fracture step. Still open: (1) material, not fixed: the crystal is still one flat saturated blue-purple with soft vertical streaks; there is no dark violet_shadow core, no inner growth bands and no lighter veins (hero.jpg, closeup.jpg). The main termination face blows out to flat white in closeup.jpg. (2) form_detail/defects: the termination caps show starburst shading (radial streaks from the apex, clear in closeup_upper and closeup_base), so the caps read as smoothed cones, not flat faces. Use flat shading or split normals on the prism and termination faces. All tips are still clean and unchipped, with no growth steps. (3) defects: the fracture is a dark groove with a ledge but no faint glow ('Risse leuchten nur schwach'), and it runs as a straight ring round the shaft, so it reads as a seam. Fix: dark core plus 2-4 inner bands along the c-axis, bright violet only on edges and veins, flat-shaded faces, chipped tips, and an irregular glowing fracture.",
-    "round": 2,
-    "source_sha256": "f447659878c7b2f38098e4fd8df5b48afc80889b80daff015b4caed7e4b5d226",
-    "sheet_sha256": "b0a2495d0522769b59dc30576f6c61a66ceb92261ebd603f88458ddee21a3e2a"
-  },
+  "review": null,
   "review_rounds": 2
 }
