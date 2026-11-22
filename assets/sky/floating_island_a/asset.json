@@ -14,8 +14,22 @@
     2600
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-8d8786f1f7144ea59f31fe8bffc2bd4c",
-  "review": null,
-  "review_rounds": 4
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 7,
+      "material": 7,
+      "scale": 8,
+      "style": 8,
+      "defects": 6
+    },
+    "notes": "Rebuild, round 1 of the new budget. Good: a strong asymmetric silhouette with a long tapering keel, pale ivory limestone strata with vertical joints, an olive meadow with grouped trees, rocks and a path, a turf rim with hanging grass, and small satellite islands (hero, turn tiles). Still failing: (1) the bed undersides are flat, smooth beige plates with straight edges, so the keel reads as stacked trays or an inverted ziggurat; one chamfered face at the upper left of closeup_base is a flat untextured slab. (2) The keel ends in a thin needle spike (closeup_base). (3) A loose flat grey plate floats left of the keel in one turn tile (turn 4), and white flat wedges stick out of the underside in the neutral-material tile. (4) A pure black wedge sits on the far-left rim of the meadow (closeup_upper). (5) The cliff faces are soft, blotchy noise between the joints instead of crisp fracture planes, and the turf sheet sits on the rock with a dark seam and no soil or roots. Fix: break the ledge soffits into fractured, dripping undersides of varied depth, end the keel in a blunt broken tip with a few hanging roots, remove the stray plate, wedges and black rim object, give the faces sharper fracture planes with darker joints, and add a soil band with roots between turf and rock.",
+    "round": 5,
+    "source_sha256": "b4c4130114e4d8254ecc3793064e61d393b4a7a0167a2b9653deea90cb80daea",
+    "sheet_sha256": "9dd3d0bf552c5b22f9dd2450b8901136e6a4c0d6349751bd0d0547c95eb8b27e"
+  },
+  "review_rounds": 5
 }
