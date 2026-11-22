@@ -170,7 +170,7 @@ def main():
         baseline = vr.source_hash(d)
         with patch.object(vr, "sha256", side_effect=changed_library):
             results.append(expect("comments and strings do not opt into vrmat", [] if vr.source_hash(d) == baseline else ["changed"], None))
-        for statement in ("import vrcolumn", "import vrcolumn as column", "from vrcolumn import mesh", "from tools.blender import vrcolumn"):
+        for statement in ("import vrcolumn", "import vrcolumn as column", "from vrcolumn import mesh", "from vrcolumn import drum", "from tools.blender import vrcolumn"):
             Path(d, "build.py").write_text(statement + "\ndef build(): pass\n")
             baseline = vr.source_hash(d)
             with patch.object(vr, "sha256", side_effect=lambda p: "changed" if str(p).endswith("vrcolumn.py") else real_sha256(p)):

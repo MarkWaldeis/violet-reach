@@ -37,6 +37,8 @@ size = hi - lo
 centre = (lo + hi) / 2
 radius = max(size) / 2 * 1.3
 stats = {"triangles": vrlib.triangle_count(objs), "size_m": [round(v, 3) for v in size], "objects": len(objs)}
+context = [obj for obj in scene.objects if obj.get("vr_review_context")]
+figure_location = scene.get("vr_review_figure")
 
 
 def studio():
@@ -73,6 +75,8 @@ def studio():
     bpy.ops.mesh.primitive_plane_add(size=max(60, radius * 30), location=(0, 0, 0))
     ground = bpy.context.object
     ground.name = "vr_ground"
+    if context:
+        ground.location.z = min(lo.z, 0) - .02
     gmat = bpy.data.materials.new("vr_ground")
     gmat.use_nodes = True
     b = gmat.node_tree.nodes["Principled BSDF"]
@@ -81,10 +85,10 @@ def studio():
     ground.data.materials.append(gmat)
 
     # 1.8 m figure for scale: body, head.
-    figure_xy = (centre.x, hi.y + 0.5)
-    bpy.ops.mesh.primitive_cylinder_add(radius=0.22, depth=1.5, location=(*figure_xy, 0.75))
+    x, y, z = figure_location if figure_location is not None else (centre.x, hi.y + 0.5, 0)
+    bpy.ops.mesh.primitive_cylinder_add(radius=0.22, depth=1.5, location=(x, y, z + 0.75))
     body = bpy.context.object
-    bpy.ops.mesh.primitive_uv_sphere_add(radius=0.15, location=(*figure_xy, 1.65))
+    bpy.ops.mesh.primitive_uv_sphere_add(radius=0.15, location=(x, y, z + 1.65))
     head = bpy.context.object
     fmat = bpy.data.materials.new("vr_figure")
     fmat.use_nodes = True
@@ -158,9 +162,16 @@ if draft:
 
 started = time.time()
 tiles = []
+for obj in context:
+    obj.hide_render = False
+if (turn := scene.get("vr_review_turn")) is not None:
+    x, y, z, az, el, dist = turn
+    offsets = (0,) if draft else range(0, 360, 45)
+    views[:len(offsets)] = [("turn_%03d" % a, a, el, Vector((x, y, z)), dist)
+                            for a in ((az + offset) % 360 for offset in offsets)]
 for name, az, el, target, dist in views:
     for o in figure:
-        o.hide_render = name.startswith("closeup")
+        o.hide_render = name.startswith("closeup") and not (name == "closeup_upper" and figure_location is not None)
     aim(az, el, target, dist)
     scene.render.filepath = os.path.join(tmp_dir, name + ".png")
     bpy.ops.render.render(write_still=True)
@@ -168,6 +179,8 @@ for name, az, el, target, dist in views:
 
 for o in figure:
     o.hide_render = False
+for obj in context:
+    obj.hide_render = True
 for kind in (() if draft else ("wire", "clay")):
     bpy.context.view_layer.material_override = override_material(kind)
     aim(*views[0][1:])
