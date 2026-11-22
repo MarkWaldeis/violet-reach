@@ -1,0 +1,20 @@
+{
+  "id": "rock_pillar_a",
+  "category": "rocks",
+  "title": "Freistehende geschichtete Felsnadel A",
+  "description": "Sechzig Meter hoher eigenständiger Kalkpfeiler mit dem lokal kopierten Stein- und Materialrezept von lake_shore_a. Geschlossene Querschnitte des Referenzsteins formen den unregelmäßig verjüngten Körper; wechselnde Schichtbänke, auskeilende Vorsprünge, sekundäre Bruchnarben und versetzte Vertikalklüfte gliedern alle Seiten. Eine modellierte Grasnarbe mit Büscheln überzieht die leicht verwitterte Kappe; gefallene Bruchstücke und ein flacher Kalkgruskragen verbinden den breiten Fuß mit dem Gelände.",
+  "target_size_m": [
+    16,
+    14,
+    60
+  ],
+  "lod_triangles": [
+    80000,
+    28000,
+    7000
+  ],
+  "texture_size": 4096,
+  "status": "blender_review",
+  "builder": "devin-376742566d344b90aa5a22ec7e9cc164",
+  "review": null
+}

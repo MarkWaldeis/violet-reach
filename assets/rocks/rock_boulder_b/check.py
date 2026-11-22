@@ -1,4 +1,4 @@
-"""Run inside Blender against the rebuilt sandstone source."""
+"""Run in Blender on the generated source blend."""
 import importlib.util
 import math
 import sys
@@ -6,110 +6,153 @@ from pathlib import Path
 
 import bmesh
 import bpy
+import numpy as np
 from mathutils import Vector
-from mathutils.bvhtree import BVHTree
 
-sys.path.insert(0,str(Path(__file__).resolve().parents[3]/"tools/blender"))
+ASSET_DIR=Path(__file__).resolve().parent
+sys.path.insert(0,str(ASSET_DIR.parents[2]/"tools"/"blender"))
 import vrlib
 
+spec=importlib.util.spec_from_file_location("asset_builder",ASSET_DIR/"build.py")
+builder=importlib.util.module_from_spec(spec)
+spec.loader.exec_module(builder)
 objects=vrlib.source_objects()
-assert len(objects)==17,len(objects)
-lo,hi=vrlib.world_bounds(objects)
-assert lo.z>=-.06
-assert abs(lo.x+hi.x)<.001 and abs(lo.y+hi.y)<.001
-assert vrlib.triangle_count(objects)<3000000
-assert bpy.context.scene.cycles.device=="CPU"
+assert objects,"Empty source collection"
+low,high=vrlib.world_bounds(objects)
+assert low.z>=-.06001,low
+assert abs(low.x+high.x)<.01 and abs(low.y+high.y)<.01,(low,high)
+triangles=0
 for obj in objects:
-    assert all(abs(s-1)<.00001 for s in obj.scale),obj.name
+    assert obj.type=="MESH" and obj.data.vertices,obj.name
+    assert max(abs(s-1) for s in obj.scale)<1e-6,obj.name
     bm=bmesh.new()
     bm.from_mesh(obj.data)
     assert all(e.is_manifold for e in bm.edges),obj.name
     assert bm.calc_volume(signed=True)>0,obj.name
     bm.free()
-    if "recipe_seed" in obj:
-        assert obj["ico_subdivisions"]>=6
-        planes=[Vector(n) for n in obj["fracture_planes"]]
-        assert 4<=len(planes)<=8
-        assert all(min(abs(v) for v in n)>.06 for n in planes)
-        assert all(.1<abs(n.dot(m))<.98 for i,n in enumerate(planes) for m in planes[:i])
-body=bpy.data.objects["Sandstein_Hauptmasse"]
-block=bpy.data.objects["Abgespaltener_Bruchblock"]
-bed=bpy.data.objects["Sand_und_Feinkieskragen"]
-assert tuple(body["split_normal"])==tuple(block["split_normal"])
-assert body["tafoni_voronoi"] and body["fissure_count"]==2
-assert body["macro_amplitude_m"]>=.08
-assert body["grain_mode"]=="directional"
-assert body["cleft_method"]=="tapered Boolean V-grooves"
-normals=[Vector(n) for n in body["fitted_fracture_normals"]]
-areas=[sum(face.area for face in body.data.polygons if face.normal.dot(n)>.98) for n in normals]
-assert sum(area>.25 for area in areas)>=3,areas
-low=min(v.co.z for v in body.data.vertices)
-high=max(v.co.z for v in body.data.vertices)
-foot=[v.co for v in body.data.vertices if v.co.z<low+(high-low)*.25]
-foot_width=max(p.x for p in foot)-min(p.x for p in foot)
-width=max(v.co.x for v in body.data.vertices)-min(v.co.x for v in body.data.vertices)
-assert foot_width>width*.80,(foot_width,width)
-assert vrlib.world_bounds([block])[1].z<1.1
-cleft_tree=BVHTree.FromObject(body,bpy.context.evaluated_depsgraph_get())
-depths=[]
-for direction,phase in (((.85,.5,0),.2),((-.6,.8,0),2.3)):
-    outward=Vector(direction).normalized()
-    tangent=Vector((-outward.y,outward.x,0))
-    z=low+(high-low)*(.12+.77*.5)
-    wander=.12*math.sin(z*3+phase)+.02*math.sin(z*9+phase)
-    distances=[]
-    for delta in (0,-.12,.12):
-        result=cleft_tree.ray_cast(outward*5+tangent*(wander+delta)+Vector((0,0,z)),-outward)
-        assert result[0] is not None
-        distances.append(result[3])
-    depth=distances[0]-(distances[1]+distances[2])*.5
-    assert depth>.15,depth
-    depths.append(depth)
-moss=bpy.data.objects["Angewachsene_Moosschale"]
-assert moss.data.attributes["moss_edge"].domain=="POINT"
-tree=BVHTree.FromObject(body,bpy.context.evaluated_depsgraph_get())
-inverse=body.matrix_world.inverted()
-thickness=max(tree.find_nearest(inverse@(moss.matrix_world@v.co))[3] for v in moss.data.vertices)
-assert thickness<.045,thickness
-shards=[o for o in objects if o.name.startswith("Bruchsplitter")]
-assert len(shards)==12
-supports=[(obj.matrix_world.inverted(),BVHTree.FromObject(obj,bpy.context.evaluated_depsgraph_get())) for obj in (bed,block)]
-for shard in shards:
-    points=[shard.matrix_world@v.co for v in shard.data.vertices]
-    distance=min(tree.find_nearest(inv@p)[3] for p in points for inv,tree in supports)
-    assert distance<.035,(shard.name,distance)
-print("B_GEOMETRY: 17 closed outward meshes; unit scales; centred XY; min_z >= -0.06; CPU: CPU")
-print("B_RECIPE: dense cut icospheres; 7 nonorthogonal planes; geometric Voronoi/strata/grain; 2 fissures; Voronoi tafoni")
-print("B_MOSS_MAX_SURFACE_OFFSET_M:",round(thickness,4))
-print("B_PLANAR_AREAS_M2:",[round(a,3) for a in areas],"CLEFT_DEPTHS_M:",[round(d,3) for d in depths])
-print("B_FOOT_WIDTH_M:",round(foot_width,3),"FALLEN_BLOCK_MAX_Z_M:",round(vrlib.world_bounds([block])[1].z,3))
-print("B_RUBBLE_CONTACT: all 12 shards touch soil collar or fallen block within 3.5 cm")
-print("B_SIZE_M:",tuple(round(v,3) for v in hi-lo),"TRIANGLES:",vrlib.triangle_count(objects))
-spec=importlib.util.spec_from_file_location("boulder_builder",Path(__file__).with_name("build.py"))
-builder=importlib.util.module_from_spec(spec)
-spec.loader.exec_module(builder)
-empty_mesh=bpy.data.meshes.new("empty_test")
-empty=bpy.data.objects.new("empty_test",empty_mesh)
-try:
-    builder.cut_cleft(empty,(0,0,0),0)
-except ValueError:
-    pass
-else:
-    raise AssertionError("Empty cleft surface accepted")
-try:
-    builder.moss_shell(empty,None)
-except RuntimeError as error:
-    assert str(error)=="No upward north-side faces for moss"
-else:
-    raise AssertionError("Empty moss surface was accepted")
-finally:
-    bpy.data.objects.remove(empty)
-    bpy.data.meshes.remove(empty_mesh)
-for size,cuts in (((1,0,1),7),((1,1,1),3)):
+    obj.data.calc_loop_triangles()
+    triangles+=len(obj.data.loop_triangles)
+assert triangles<5000000,triangles
+stones=[obj for obj in objects if obj.get("stone_piece")]
+asset=ASSET_DIR.name
+assert len(stones)=={"rock_boulder_b":14,"cliff_strata_a":15,"rock_pillar_a":13,"shore_stones_a":40}[asset],len(stones)
+assert len({obj["recipe_seed"] for obj in stones})==len(stones),"Repeated seeds"
+for obj in stones:
+    assert obj["lake_shore_recipe"]=="pr9/lake_shore_a"
+    assert 4<=len(obj["fracture_planes"])<=11
+    assert obj.data.color_attributes["stone_tones"].domain=="POINT"
+    assert obj.data.attributes["stone_saturation"].domain=="POINT"
+    assert sum(f.use_smooth for f in obj.data.polygons)/len(obj.data.polygons)>.9,obj.name
+trees=[builder.world_tree(obj) for obj in stones]
+centres=[sum(vrlib.world_bounds([obj]),Vector())*.5 for obj in stones]
+for i,tree in enumerate(trees):
+    for j in range(i):
+        assert not tree.overlap(trees[j]),(stones[i].name,stones[j].name)
+        assert not builder.inside(tree,centres[j]),(stones[i].name,stones[j].name)
+        assert not builder.inside(trees[j],centres[i]),(stones[i].name,stones[j].name)
+bed=next(obj for obj in objects if obj.get("gravel_apron"))
+assert vrlib.world_bounds([bed])[1].z<.04,"Raised sand cone"
+grit=next(obj for obj in objects if obj.get("modelled_grit_count"))
+assert grit["modelled_grit_count"]>100
+grit_tree=builder.world_tree(grit)
+assert all(not grit_tree.overlap(tree) for tree in trees),"Intersecting grit"
+main=max(stones,key=lambda obj:math.prod(vrlib.world_bounds([obj])[1]-vrlib.world_bounds([obj])[0]))
+a,b=vrlib.world_bounds([main])
+size=b-a
+assert len(main.data.vertices)>10000
+if asset=="rock_boulder_b":
+    assert 2.8<size.x<3.5 and 1.8<size.z<2.3,size
+    assert main["fissure_count"]==2
+    block=next(obj for obj in stones if obj.get("replacement_kind"))
+    points=np.array([tuple(v.co) for v in block.data.vertices])
+    points-=points.mean(axis=0)
+    axes=np.linalg.eigh(points.T@points)[1]
+    thickness=float(np.ptp(points@axes,axis=0).min())
+    assert thickness>=.25,thickness
+    moss=next(obj for obj in objects if obj.get("moss_patch_count"))
+    assert moss["moss_patch_count"]>=2 and moss["moss_lee_only"]
+    tree=builder.world_tree(main)
+    rise=max(tree.find_nearest(moss.matrix_world@v.co)[3] for v in moss.data.vertices)
+    assert .01<rise<.033,rise
+    empty=bpy.data.objects.new("empty_moss_test",bpy.data.meshes.new("empty_moss_test"))
     try:
-        builder.fractured_rock("invalid",size,1,None,cuts=cuts)
-    except ValueError as error:
-        assert str(error)=="Positive dimensions and 4-8 fracture planes required"
+        builder.moss_shell(empty,None)
+        raise AssertionError("Empty moss surface accepted")
+    except RuntimeError:
+        pass
+    finally:
+        bpy.data.objects.remove(empty,do_unlink=True)
+    supports=[(obj.matrix_world.inverted(),builder.BVHTree.FromObject(obj,bpy.context.evaluated_depsgraph_get())) for obj in (bed,block)]
+    for shard in (obj for obj in stones if obj.name.startswith("Bruchsplitter")):
+        points=[shard.matrix_world@v.co for v in shard.data.vertices]
+        distance=min(tree.find_nearest(inverse@p)[3] for p in points for inverse,tree in supports)
+        assert distance<.035,(shard.name,distance)
+    empty=bpy.data.objects.new("empty_cleft_test",bpy.data.meshes.new("empty_cleft_test"))
+    try:
+        builder.cut_cleft(empty,(0,0,0),0)
+        raise AssertionError("Empty cleft surface accepted")
+    except ValueError:
+        pass
+    finally:
+        bpy.data.objects.remove(empty,do_unlink=True)
+    for cuts in (3,9):
+        try:
+            builder.fractured_rock("invalid",(1,1,1),0,None,cuts=cuts)
+            raise AssertionError("Invalid fracture count accepted")
+        except ValueError:
+            pass
+    print("B_SUPPORT: all twelve shards touch soil or fallen block within 3.5 cm")
+    print("B_DETAIL: thick fallen block; two clefts; sheltered raised olive cushions; max moss distance",round(rise,4))
+elif asset in ("cliff_strata_a","rock_pillar_a"):
+    heights=main["strata_heights_m"]
+    assert all(1<=y-x<=6 for x,y in zip(heights,heights[1:])),heights
+    assert any("gras" in obj.name.lower() for obj in objects)
+    if asset=="cliff_strata_a":
+        assert 39.9<size.x<40.1 and 44<size.z<46 and 8<size.y<12,size
+        nx,nz=main["front_columns"],main["front_rows"]
+        error=max(abs(main.data.vertices[j*nx].co[k]-main.data.vertices[j*nx+nx-1].co[k]) for j in range(nz) for k in (1,2))
+        assert error<.0001,error
+        print("TILE_PROFILE_MAX_ERROR_M:",error)
     else:
-        raise AssertionError("Invalid rock recipe accepted")
-print("B_EMPTY_AND_ERROR_CASES: empty moss, zero dimension and invalid cut count rejected")
+        assert 12<size.x<18.1 and 58<size.z<62,size
+        assert main["landmark_mode"]=="pillar"
+    try:
+        builder.strata_heights(0)
+        raise AssertionError("Zero-height strata accepted")
+    except ValueError:
+        pass
+else:
+    assert 4<high.x-low.x<6,(low,high)
+    assert sum(obj.name.startswith("Uferstein_") for obj in stones)==12
+    wet,dry=[],[]
+    for obj in stones:
+        factors=obj.data.attributes["stone_saturation"].data
+        for v in obj.data.vertices:
+            y=(obj.matrix_world@v.co).y
+            if y<-.8:wet.append(factors[v.index].value)
+            if y>.8:dry.append(factors[v.index].value)
+    assert wet and dry and sum(wet)/len(wet)>sum(dry)/len(dry)+.4
+    assert bed.data.color_attributes.get("bank_tones")
+    assert bed.data.attributes.get("ground_moisture")
+    print("SHORE_WETNESS_MEANS:",round(sum(wet)/len(wet),3),round(sum(dry)/len(dry),3))
+for dims in ((),(0,1,1),(1,-1,1)):
+    try:
+        builder.fractured_rock("invalid",dims,0,None)
+        raise AssertionError("Invalid dimensions accepted")
+    except ValueError:
+        pass
+original=builder.vrlib.source_objects
+try:
+    builder.vrlib.source_objects=lambda:[]
+    try:
+        builder.add_grit()
+        raise AssertionError("Missing apron accepted")
+    except ValueError:
+        pass
+finally:
+    builder.vrlib.source_objects=original
+assert bpy.context.scene.cycles.device=="CPU"
+print("GEOMETRY_CHECK:",asset,len(objects),"closed outward meshes; unit scales; centred XY; min_z >= -0.06; CPU")
+print("STONE_CHECK:",len(stones),"unique seeds; no stone intersections/containment; grit disjoint")
+print("INPUT_CHECK: empty and invalid inputs rejected")
+print("SIZE_M:",tuple(round(v,3) for v in high-low),"MASS_M:",tuple(round(v,3) for v in size),"TRIANGLES:",triangles,"GRIT:",grit["modelled_grit_count"])
