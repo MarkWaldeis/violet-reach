@@ -2,7 +2,7 @@
   "id": "reed_cluster_a",
   "category": "vegetation",
   "title": "Schilfhorst A",
-  "description": "Ausladender Uferhorst mit 27 unterschiedlich hohen, starken und um 5–20 Grad geneigten Schilfhalmen, darunter ein gebogener und ein abgebrochener Halm. Modellierte Knoten, Blattscheiden und stark überhängende Olivblätter. Zwölf dichte seitlich nickende Phragmites-Federrispen mit feinen Zweigen, länglichen Ährchen und Grannen in warmem Strohbraun und helleren Spitzen. Glatt modellierter, organisch auslaufender nasser Schlammkragen mit alten Stängelresten.",
+  "description": "Ausladender Uferhorst mit 27 unterschiedlich hohen geneigten Schilfhalmen, Knoten, Blattscheiden und stark überhängenden Olivblättern. Zwölf dichte seitlich nickende strohbraune Phragmites-Rispen. Modellierte unregelmäßige nasse Erd- und Schlammbank mit eingesunkenen Rändern, kleinen Steinen, gebrochenen Altstängeln, niedrigen Blattbögen und gefalteten Ufergräsern.",
   "target_size_m": [
     1.7,
     1.7,
@@ -14,22 +14,8 @@
     600
   ],
   "texture_size": 1024,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-bbbec46812f34f45bdf2489c6f83c0fa",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 8,
-      "form_detail": 8,
-      "material": 8,
-      "scale": 8,
-      "style": 8,
-      "defects": 7
-    },
-    "notes": "Round 2. Fixed: feathery panicles instead of bead heads, and the culms carry long drooping leaves (hero, closeup_upper). Still failing: the base stands in a smooth, hard-edged brown puddle shape like a placeholder disc, with a few dark sticks lying on it (closeup_base). Fix: replace the disc with a muddy, wet base that blends into the ground, with broken old culms and some low leaves, no hard outline.",
-    "round": 2,
-    "source_sha256": "a51a179e6f44b8fa023663c112fc31af0e51c21d5215ab08f4e665cf82877776",
-    "sheet_sha256": "9744699267a10296b2f90b15527ebc8a7dc89cb4a6a0ed62d0882185fafdd77c"
-  },
+  "review": null,
   "review_rounds": 2
 }

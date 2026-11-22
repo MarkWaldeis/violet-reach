@@ -4,7 +4,7 @@ import random
 
 import bmesh
 import bpy
-from mathutils import Vector
+from mathutils import Vector, noise
 
 import vrlib
 import vrmat
@@ -87,7 +87,7 @@ class Mesh:
 
 
 SEED = 82719
-FRONDS = 12
+FROND_SLOTS = 12
 
 
 def materials():
@@ -97,7 +97,7 @@ def materials():
         ("Olivbasis", "foliage_leaf", "grass_green", "grass_dry", .55, 1.8),
         ("Olivlaub", "foliage_leaf", "grass_green", "grass_dry", .55, 2.1),
         ("Lichtspitzen", "foliage_leaf", "grass_green", "grass_dry", .55, 2.8),
-        ("Altfarn", "tree_bark", "bark", "soil", .3, 1.2),
+        ("Kronenoliv", "foliage_leaf", "grass_green", "grass_dry", .7, 1.5),
         ("Blattachsen", "foliage_leaf", "grass_green", "grass_dry", .55, 1.4),
     ]:
         material = vrmat.get(library).copy()
@@ -126,18 +126,118 @@ def pinnule(mesh, root, direction, normal, length, width, material):
         mesh.face([centre, points[i], points[(i+1)%len(points)]], material)
 
 
+
+def ground_contact(radius, rise, seed, wet=False):
+    rng = random.Random(seed)
+    vertices, faces, indices = [], [], []
+    def face(points, material):
+        start = len(vertices)
+        vertices.extend(points)
+        faces.append(tuple(range(start, len(vertices))))
+        indices.append(material)
+    def blade(points, width, side, material, twist):
+        rows = []
+        count = len(points)-1
+        for i, point in enumerate(points):
+            t = i/count
+            tangent = (points[min(i+1, count)]-points[max(0, i-1)]).normalized()
+            across = (side-tangent*side.dot(tangent)).normalized()
+            normal = across.cross(tangent).normalized()
+            across = across*math.cos(twist*t)+normal*math.sin(twist*t)
+            normal = across.cross(tangent).normalized()
+            w = width*(.35+.65*min(1, t/.15))*(1-t)**.75
+            rows.append([point-across*w*.5, point+normal*w*.24, point+across*w*.5])
+        for i in range(count):
+            for j in range(2):
+                if i == count-1:
+                    face([rows[i][j], rows[i+1][j], rows[i][j+1]], material)
+                else:
+                    face([rows[i][j], rows[i+1][j], rows[i+1][j+1], rows[i][j+1]], material)
+    phase = rng.uniform(0, math.tau)
+    def height(t, a):
+        relief = noise.noise(Vector((radius*t*math.cos(a)*9, radius*t*math.sin(a)*9, (seed%67)*.37)))
+        return rise*(1-t*t)**2+min(.04, rise*.5)*relief*math.sin(math.pi*t)-.045*t**3
+    def point(j, k):
+        a, t = j*math.tau/64, k/10
+        r = radius*t*(1+.18*math.sin(3*a+phase)+.09*math.sin(5*a-phase))
+        return Vector((r*math.cos(a), r*math.sin(a), height(t, a)))
+    for j in range(64):
+        face([Vector((0, 0, rise)), point(j, 1), point(j+1, 1)], 0)
+        for k in range(1, 10):
+            face([point(j, k), point(j, k+1), point(j+1, k+1), point(j+1, k)], 0)
+        bottom = Vector((point(j, 10).x, point(j, 10).y, -.055))
+        next_bottom = Vector((point(j+1, 10).x, point(j+1, 10).y, -.055))
+        face([point(j, 10), bottom, next_bottom, point(j+1, 10)], 0)
+        face([Vector((0, 0, -.055)), next_bottom, bottom], 0)
+    count = 360 if radius > .8 else 240 if radius > .3 else 48
+    for i in range(count):
+        a = (i%13)*2.39996+rng.uniform(-.12, .12)
+        t = .64+.018*(i%13)+rng.uniform(-.06, .06)
+        r = radius*t*(1+.18*math.sin(3*a+phase)+.09*math.sin(5*a-phase))
+        root = Vector((r*math.cos(a), r*math.sin(a), max(-.004, height(t, a)-.012)))
+        direction = Vector((math.cos(a+rng.uniform(-.8, .8)), math.sin(a+rng.uniform(-.8, .8)), 0)).normalized()
+        length = rng.uniform(.16, .40)*min(1, radius/.5)
+        points = [root]
+        for j in range(8):
+            u = (j+.5)/8
+            angle = .3+2.5*u**1.7
+            points.append(points[-1]+(direction*math.sin(angle)+UP*math.cos(angle))*(length/8))
+        blade(points, rng.uniform(.006, .014), UP.cross(direction), 2 if i%5 == 0 else 1, rng.uniform(-.4, .4))
+    for i in range(58 if radius > .3 else 16):
+        a = rng.uniform(0, math.tau)
+        t = rng.uniform(.25, .85)
+        p = point(a*64/math.tau, t*10)+UP*.004
+        direction = Vector((math.cos(a+1), math.sin(a+1), 0))
+        length = rng.uniform(.045, .12)*min(1, radius/.25)
+        points = [p+direction*(length*u)+UP*(.025*math.sin(math.pi*u)) for u in (0, .2, .4, .6, .8, 1)]
+        blade(points, length*.24, UP.cross(direction), 2, rng.uniform(.5, 1.5))
+    for i in range(9 if wet else 12):
+        a, t = rng.uniform(0, math.tau), rng.uniform(.45, 1.03)
+        centre = point(a*64/math.tau, t*10)
+        size = rng.uniform(.012, .036)*min(1.5, radius/.3)
+        centre.z = max(-.008, centre.z)-size*.2
+        scale = Vector((size, size*rng.uniform(.65, 1.2), size*.55))
+        rings = [[centre+Vector((math.cos(a)*math.sin(v)*scale.x, math.sin(a)*math.sin(v)*scale.y, math.cos(v)*scale.z))
+                  for a in [math.tau*j/10 for j in range(10)]] for v in (math.pi/4, math.pi/2, math.pi*3/4)]
+        for j in range(10):
+            face([centre+UP*scale.z, rings[0][j], rings[0][(j+1)%10]], 3 if wet else 0)
+            for k in range(2):
+                face([rings[k][j], rings[k+1][j], rings[k+1][(j+1)%10], rings[k][(j+1)%10]], 3 if wet else 0)
+            face([centre-UP*scale.z, rings[-1][(j+1)%10], rings[-1][j]], 3 if wet else 0)
+    palette = vrmat.load_palette()
+    mats = []
+    for library, first, second, mix, gain in [
+        ("forest_soil", "soil", "grass_dry", .5, 1.3),
+        ("grass_ground", "grass_green", "grass_dry", .55, 2.1),
+        ("grass_ground", "grass_dry", "bark", .18, 1.9),
+        ("river_stones", "shore_wet", "soil", .35, 1.0),
+    ]:
+        mat = vrmat.get(library).copy()
+        bsdf = mat.node_tree.nodes["Principled BSDF"]
+        for socket in ("Base Color", "Normal", "Roughness"):
+            for link in list(bsdf.inputs[socket].links):
+                mat.node_tree.links.remove(link)
+        bsdf.inputs["Base Color"].default_value = (*(gain*(x*(1-mix)+y*mix) for x, y in zip(
+            palette[first]["linear_rgb"], palette[second]["linear_rgb"])), 1)
+        bsdf.inputs["Specular IOR Level"].default_value = .16
+        bsdf.inputs["Roughness"].default_value = .38 if wet and library in ("forest_soil", "river_stones") else .88
+        mats.append(mat)
+    mesh = Mesh()
+    mesh.vertices, mesh.faces, mesh.indices = vertices, faces, indices
+    mesh.object("Bodensaum_Gras_und_Streu", mats)
+
+
 def build():
     rng = random.Random(SEED)
     mesh = Mesh()
-    for i in range(FRONDS):
+    for i in range(FROND_SLOTS):
+        if i in (0, 7):
+            continue
         angle = i*2.39996+rng.uniform(-.18, .18)
         radial = Vector((math.cos(angle), math.sin(angle), 0))
         side = UP.cross(radial)
         base = radial*rng.uniform(.012, .033)+UP*rng.uniform(-.006, -.002)
-        older = i in (0, 7)
-        if older:
-            length, start_angle, end_angle, power = rng.uniform(.64, .71), .9, 2.7, 2.4
-        elif i % 3 == 0:
+        if i % 3 == 0:
             length, start_angle, end_angle, power = rng.uniform(.74, .81), rng.uniform(.9, 1.03), 2.12, 1.6
         elif i % 3 == 1:
             length, start_angle, end_angle, power = rng.uniform(.86, .9), rng.uniform(.525, .58), 1.75, 2.2
@@ -150,10 +250,8 @@ def build():
                 u = t*(k+.5)/32
                 angle = start_angle+(end_angle-start_angle)*u**power
                 point += (radial*math.sin(angle)+UP*math.cos(angle))*(frond_length*t/32)
-            if older:
-                point += side*(.035*math.sin(math.pi*t*t))
             return point
-        stem_material = 3 if older else 4
+        stem_material = 4
         mesh.tube([rachis(j/24) for j in range(25)], .0037, stem_material, 6)
         for j in range(16):
             t = .08+j*.90/15
@@ -165,16 +263,16 @@ def build():
                 normal = side.cross(tangent).normalized()
                 if normal.z < 0:
                     normal.negate()
-                roll = 1.3*t*t if older else .08*math.sin(t*7+i)
+                roll = .08*math.sin(t*7+i)
                 rolled_side = side*math.cos(roll)+normal*math.sin(roll)
                 axis = (rolled_side*sign*.85+tangent*.5).normalized()
                 normal = rolled_side.cross(tangent).normalized()
                 lateral = normal.cross(axis).normalized()
-                length = rng.uniform(.115, .135)*profile*(.75 if older else 1)
+                length = rng.uniform(.115, .135)*profile
                 def pinna(v):
                     return root+axis*(length*v)-UP*(length*.15*v*v)
                 mesh.tube([pinna(k/5) for k in range(6)], max(.00024, .0012*profile), stem_material, 4)
-                material = 3 if older else (2 if t > .68 else 1 if t > .25 else 0)
+                material = 2 if t > .68 else 1 if t > .25 else 0
                 for k in range(5):
                     v = .10+k*.16
                     for hand in (-1, 1):
@@ -185,7 +283,7 @@ def build():
                                 size*rng.uniform(.155, .175), material)
                 pinnule(mesh, pinna(.86), axis-UP*.15, normal, length*.15, length*.035, material)
         pinnule(mesh, rachis(.975), (rachis(1)-rachis(.97)).normalized(), UP,
-                .018, .004, 3 if older else 2)
+                .018, .004, 2)
     for i in range(4):
         angle = rng.uniform(0, math.tau)
         radial = Vector((math.cos(angle), math.sin(angle), 0))
@@ -201,9 +299,6 @@ def build():
         mesh.tube(points, .0032, 1, 6)
         for j in (19, 24, 29):
             pinnule(mesh, points[j], radial+UP*.3, UP, .009, .003, 2)
-    for _ in range(11):
-        angle = rng.uniform(0, math.tau)
-        radial = Vector((math.cos(angle), math.sin(angle), 0))
-        base = radial*rng.uniform(.006, .025)-UP*.006
-        mesh.tube([base, base+radial*.008+UP*rng.uniform(.018, .04)], .003, 3, 5)
     mesh.object("Doppelt_gefiederte_Wedel", materials())
+
+    ground_contact(0.16, 0.035, SEED+921, wet=False)

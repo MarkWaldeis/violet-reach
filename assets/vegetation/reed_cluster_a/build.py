@@ -4,7 +4,7 @@ import random
 
 import bmesh
 import bpy
-from mathutils import Vector
+from mathutils import Vector, noise
 
 import vrlib
 import vrmat
@@ -154,24 +154,6 @@ def leaf(mesh, points, width, side, material, dry_tip=False, twist=0, root_scale
                 mesh.face([rows[i][j], rows[i+1][j], rows[i+1][j+1], rows[i][j+1]], index)
 
 
-def collar(mesh, radius, material, phase):
-    n = 64
-    def point(j, t, bottom=False):
-        a = math.tau*j/n
-        r = radius*t*(1+.22*math.sin(3*a+phase)+.12*math.cos(5*a-phase)+.06*math.sin(8*a+1.2))
-        z = -.04 if bottom else .016*(1-t)**1.5+.004*math.sin(2*a+.4)*(1-t)*math.sin(math.pi*t)-.022*t**3
-        return Vector((math.cos(a)*r+.025*t*t, math.sin(a)*r-.015*t*t, z))
-    centre = Vector((0, 0, .016))
-    for j in range(n):
-        mesh.face([centre, point(j, .2), point(j+1, .2)], material)
-        for k in range(1, 5):
-            mesh.face([point(j, k/5), point(j, (k+1)/5),
-                       point(j+1, (k+1)/5), point(j+1, k/5)], material)
-        mesh.face([point(j, 1), point(j, 1, True), point(j+1, 1, True), point(j+1, 1)], material)
-        mesh.face([Vector((.025, -.015, -.04)), point(j+1, 1, True), point(j, 1, True)], material)
-
-
-
 def panicle(mesh, base, wind, length, rng):
     across_wind = UP.cross(wind)
     def axis(t):
@@ -220,6 +202,107 @@ def panicle(mesh, base, wind, length, rng):
                     hair = along*rng.uniform(.018, .033)+side*(fan*.012)+wind*.004
                     mesh.face([root_hair, root_hair+hair+side*.00035,
                                root_hair+hair-side*.00035], material)
+
+
+
+def ground_contact(radius, rise, seed, wet=False):
+    rng = random.Random(seed)
+    vertices, faces, indices = [], [], []
+    def face(points, material):
+        start = len(vertices)
+        vertices.extend(points)
+        faces.append(tuple(range(start, len(vertices))))
+        indices.append(material)
+    def blade(points, width, side, material, twist):
+        rows = []
+        count = len(points)-1
+        for i, point in enumerate(points):
+            t = i/count
+            tangent = (points[min(i+1, count)]-points[max(0, i-1)]).normalized()
+            across = (side-tangent*side.dot(tangent)).normalized()
+            normal = across.cross(tangent).normalized()
+            across = across*math.cos(twist*t)+normal*math.sin(twist*t)
+            normal = across.cross(tangent).normalized()
+            w = width*(.35+.65*min(1, t/.15))*(1-t)**.75
+            rows.append([point-across*w*.5, point+normal*w*.24, point+across*w*.5])
+        for i in range(count):
+            for j in range(2):
+                if i == count-1:
+                    face([rows[i][j], rows[i+1][j], rows[i][j+1]], material)
+                else:
+                    face([rows[i][j], rows[i+1][j], rows[i+1][j+1], rows[i][j+1]], material)
+    phase = rng.uniform(0, math.tau)
+    def height(t, a):
+        relief = noise.noise(Vector((radius*t*math.cos(a)*9, radius*t*math.sin(a)*9, (seed%67)*.37)))
+        return rise*(1-t*t)**2+min(.04, rise*.5)*relief*math.sin(math.pi*t)-.045*t**3
+    def point(j, k):
+        a, t = j*math.tau/64, k/10
+        r = radius*t*(1+.18*math.sin(3*a+phase)+.09*math.sin(5*a-phase))
+        return Vector((r*math.cos(a), r*math.sin(a), height(t, a)))
+    for j in range(64):
+        face([Vector((0, 0, rise)), point(j, 1), point(j+1, 1)], 0)
+        for k in range(1, 10):
+            face([point(j, k), point(j, k+1), point(j+1, k+1), point(j+1, k)], 0)
+        bottom = Vector((point(j, 10).x, point(j, 10).y, -.055))
+        next_bottom = Vector((point(j+1, 10).x, point(j+1, 10).y, -.055))
+        face([point(j, 10), bottom, next_bottom, point(j+1, 10)], 0)
+        face([Vector((0, 0, -.055)), next_bottom, bottom], 0)
+    count = 360 if radius > .8 else 240 if radius > .3 else 48
+    for i in range(count):
+        a = (i%13)*2.39996+rng.uniform(-.12, .12)
+        t = .64+.018*(i%13)+rng.uniform(-.06, .06)
+        r = radius*t*(1+.18*math.sin(3*a+phase)+.09*math.sin(5*a-phase))
+        root = Vector((r*math.cos(a), r*math.sin(a), max(-.004, height(t, a)-.012)))
+        direction = Vector((math.cos(a+rng.uniform(-.8, .8)), math.sin(a+rng.uniform(-.8, .8)), 0)).normalized()
+        length = rng.uniform(.16, .40)*min(1, radius/.5)
+        points = [root]
+        for j in range(8):
+            u = (j+.5)/8
+            angle = .3+2.5*u**1.7
+            points.append(points[-1]+(direction*math.sin(angle)+UP*math.cos(angle))*(length/8))
+        blade(points, rng.uniform(.006, .014), UP.cross(direction), 2 if i%5 == 0 else 1, rng.uniform(-.4, .4))
+    for i in range(58 if radius > .3 else 16):
+        a = rng.uniform(0, math.tau)
+        t = rng.uniform(.25, .85)
+        p = point(a*64/math.tau, t*10)+UP*.004
+        direction = Vector((math.cos(a+1), math.sin(a+1), 0))
+        length = rng.uniform(.045, .12)*min(1, radius/.25)
+        points = [p+direction*(length*u)+UP*(.025*math.sin(math.pi*u)) for u in (0, .2, .4, .6, .8, 1)]
+        blade(points, length*.24, UP.cross(direction), 2, rng.uniform(.5, 1.5))
+    for i in range(9 if wet else 12):
+        a, t = rng.uniform(0, math.tau), rng.uniform(.45, 1.03)
+        centre = point(a*64/math.tau, t*10)
+        size = rng.uniform(.012, .036)*min(1.5, radius/.3)
+        centre.z = max(-.008, centre.z)-size*.2
+        scale = Vector((size, size*rng.uniform(.65, 1.2), size*.55))
+        rings = [[centre+Vector((math.cos(a)*math.sin(v)*scale.x, math.sin(a)*math.sin(v)*scale.y, math.cos(v)*scale.z))
+                  for a in [math.tau*j/10 for j in range(10)]] for v in (math.pi/4, math.pi/2, math.pi*3/4)]
+        for j in range(10):
+            face([centre+UP*scale.z, rings[0][j], rings[0][(j+1)%10]], 3 if wet else 0)
+            for k in range(2):
+                face([rings[k][j], rings[k+1][j], rings[k+1][(j+1)%10], rings[k][(j+1)%10]], 3 if wet else 0)
+            face([centre-UP*scale.z, rings[-1][(j+1)%10], rings[-1][j]], 3 if wet else 0)
+    palette = vrmat.load_palette()
+    mats = []
+    for library, first, second, mix, gain in [
+        ("forest_soil", "soil", "grass_dry", .5, 1.3),
+        ("grass_ground", "grass_green", "grass_dry", .55, 2.1),
+        ("grass_ground", "grass_dry", "bark", .18, 1.9),
+        ("river_stones", "shore_wet", "soil", .35, 1.0),
+    ]:
+        mat = vrmat.get(library).copy()
+        bsdf = mat.node_tree.nodes["Principled BSDF"]
+        for socket in ("Base Color", "Normal", "Roughness"):
+            for link in list(bsdf.inputs[socket].links):
+                mat.node_tree.links.remove(link)
+        bsdf.inputs["Base Color"].default_value = (*(gain*(x*(1-mix)+y*mix) for x, y in zip(
+            palette[first]["linear_rgb"], palette[second]["linear_rgb"])), 1)
+        bsdf.inputs["Specular IOR Level"].default_value = .16
+        bsdf.inputs["Roughness"].default_value = .38 if wet and library in ("forest_soil", "river_stones") else .88
+        mats.append(mat)
+    mesh = Mesh()
+    mesh.vertices, mesh.faces, mesh.indices = vertices, faces, indices
+    mesh.object("Bodensaum_Gras_und_Streu", mats)
 
 
 def build():
@@ -284,6 +367,15 @@ def build():
         height = rng.uniform(.06, .25)
         reach = rng.uniform(.06, .18)
         mesh.tube([root+outward*(reach*t)+UP*(height*t*(1-.45*t))
-                   for t in (0, .25, .5, .75, 1)], rng.uniform(.0025, .004), 4, 6, .7)
-    collar(mesh, .23, 5, rng.uniform(0, math.tau))
+                   for t in (0, .25, .5, .75, 1)], rng.uniform(.0025, .004), 3, 6, .7)
+    for i in range(12):
+        a = rng.uniform(0, math.tau)
+        direction = Vector((math.cos(a), math.sin(a), 0))
+        root = direction*rng.uniform(.02, .12)+UP*.035
+        length = rng.uniform(.16, .30)
+        points = [root+direction*(length*t)+UP*(length*.7*math.sin(math.pi*t))
+                  for t in (0, .125, .25, .375, .5, .625, .75, .875, 1)]
+        leaf(mesh, points, rng.uniform(.016, .025), UP.cross(direction), 1, twist=.3)
     mesh.object("Schilfhalme_Blattscheiden_und_Federrispen", materials())
+
+    ground_contact(0.45, 0.09, SEED+921, wet=True)

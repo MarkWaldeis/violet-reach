@@ -2,7 +2,7 @@
   "id": "tree_broadleaf_b",
   "category": "vegetation",
   "title": "Eschenartiger Laubbaum B",
-  "description": "Schiefwüchsiger Laubbaum mit niedriger Zweiergabel, zwei ungleichen Leitachsen und einseitig aufstrebender, gestaffelter Krone. Schmale spitze Einzelblätter an fein verzweigten Seitenästen, durchbrochene Kronenränder und sichtbare Leitachsen. Flächengetreue Astverjüngung, fünf gerundete Wurzelsporne und geometrisch gefurchte Rinde mit dezentem wetterseitigem Moos; dunkles Olivlaub mit warmen helleren Außenflächen.",
+  "description": "Schiefwüchsiger Laubbaum mit niedriger Zweiergabel, ungleichen sichtbaren Leitachsen und gestaffelter offener Krone. Schmale spitze Olivblätter und geometrisch gefurchte Rinde. Vier ungleiche modellierte Wurzelanläufe tauchen steil in einen unregelmäßigen erhöhten Erdbank-Saum mit gefalteten Gräsern und gebogener Laubstreu ein.",
   "target_size_m": [
     8,
     7,
@@ -14,22 +14,8 @@
     2500
   ],
   "texture_size": 2048,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-bbbec46812f34f45bdf2489c6f83c0fa",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 8,
-      "form_detail": 7,
-      "material": 8,
-      "scale": 8,
-      "style": 8,
-      "defects": 7
-    },
-    "notes": "Round 2. Fixed: olive foliage, open, irregular crown with visible branch structure, furrowed bark (hero, closeup_upper). Still failing: the trunk foot is a smooth three-lobed blob that spreads over the ground like paste, with no roots entering the soil and no ground cover (closeup_base). Fix: modelled root buttresses of different sizes that disappear into a soil and grass collar; break up the lobed outline.",
-    "round": 2,
-    "source_sha256": "ef060e4de2eb67b3e607fdf21d31c03f416ef3ce4c30998153137708a67000a2",
-    "sheet_sha256": "b94eb442268ec29c26cc12e70903cbeec2ace8540a3a3a7b6b4a73f6c0c7f7a6"
-  },
+  "review": null,
   "review_rounds": 2
 }
