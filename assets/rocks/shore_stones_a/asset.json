@@ -14,8 +14,22 @@
     1400
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-376742566d344b90aa5a22ec7e9cc164",
-  "review": null,
-  "review_rounds": 1
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 7,
+      "material": 7,
+      "scale": 8,
+      "style": 7,
+      "defects": 7
+    },
+    "notes": "Round 2. Fixed: all stones now come from one pale limestone family, the glossy dark putty boulder and the slate slabs are gone, the hard dark wet disc is gone, and the bed is an irregular sand and gravel patch (all tiles). Still failing: (1) form_detail 7: with the noise cut to 20% the angular stones are clean prisms with softly rounded edges and smooth faces, like soap bars or sugar cubes; there are no chipped edges, bed lines or fracture steps, and the two round stones are smooth dough-like domes (closeup, closeup_base). Next to the approved lake_shore_a stones they read softer and cleaner. (2) material 7: the wet gradient is not visible; the stone feet are as dry and pale as the tops, with no darker band where they sit in the sand (closeup_base). (3) silhouette/style 7: eight similar-sized stones stand evenly spaced on a round patch, like pieces on a board, with no grouping, stacking or leaning. (4) defects 7: the pebbles are an even scatter of near-identical round beads (sprinkles), and the sand patch ends in a flat hard edge on the ground plane (hero, turn tiles). Fix: restore crisp broken edges and 1-2 fracture steps per angular stone (keep large planes, add edge chips rather than noise), flatten and break the round domes into water-worn but asymmetric shapes, make the wet band at each foot readable, group the stones (2-3 touching or leaning clusters plus loners), vary pebble size and shape and cluster them in the hollows, and feather the patch edge into the ground with thinning gravel.",
+    "round": 2,
+    "source_sha256": "225106f1b42de8620a83383768b7a869fd8201da169e39dcd63c0a59a41e0e19",
+    "sheet_sha256": "218a7d6ad50afebf8401141997c38f2c62183ac73bbe87849dd4c80bd562967a"
+  },
+  "review_rounds": 2
 }
