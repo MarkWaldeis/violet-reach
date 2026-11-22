@@ -1,0 +1,20 @@
+{
+  "id": "floating_island_a",
+  "category": "sky",
+  "title": "Driftward Plateau",
+  "description": "An asymmetric faulted limestone island with a long keel, detached fragments and a grass-capped summit. The keel starts near Z=0.",
+  "target_size_m": [
+    330,
+    190,
+    165
+  ],
+  "lod_triangles": [
+    27000,
+    9000,
+    2600
+  ],
+  "texture_size": 2048,
+  "status": "blender_review",
+  "builder": "devin-4076f9d9c7794015bd813c73729bed6b",
+  "review": null
+}

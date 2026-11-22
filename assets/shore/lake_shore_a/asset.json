@@ -1,0 +1,20 @@
+{
+  "id": "lake_shore_a",
+  "category": "shore",
+  "title": "Shinglewake Shore",
+  "description": "A gently scalloped lake margin with damp sand, clustered glacial shingle and a rooted turf bank. Lake is on the negative Y side at Z=0; the water in the review is not part of the source.",
+  "target_size_m": [
+    21.2,
+    7.4,
+    1.0
+  ],
+  "lod_triangles": [
+    26000,
+    9000,
+    2800
+  ],
+  "texture_size": 2048,
+  "status": "blender_review",
+  "builder": "devin-4076f9d9c7794015bd813c73729bed6b",
+  "review": null
+}
