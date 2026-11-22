@@ -1,0 +1,20 @@
+{
+  "id": "crystal_cluster_b",
+  "category": "crystals",
+  "title": "Fault-Grown Violet Cluster",
+  "description": "A splayed cluster of chipped violet prisms rooted in a split limestone shelf and exposed mineral earth; reference: ref_07_violet_crater.",
+  "target_size_m": [
+    5,
+    3.65,
+    3
+  ],
+  "lod_triangles": [
+    7400,
+    2600,
+    840
+  ],
+  "texture_size": 2048,
+  "status": "blender_review",
+  "builder": "devin-79c81cd3e9c64cc49f913648e628a347",
+  "review": null
+}
