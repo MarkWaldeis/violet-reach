@@ -14,124 +14,6 @@ import vrmat
 SEED = 918643
 
 
-def rock_material():
-    mat = bpy.data.materials.new("vr_rock_mossy")
-    mat.use_nodes = True
-    nt = mat.node_tree
-    N, L = nt.nodes, nt.links
-    bsdf = N["Principled BSDF"]
-    coords = N.new("ShaderNodeTexCoord")
-    geo = N.new("ShaderNodeNewGeometry")
-    palette = vrmat.load_palette()
-
-    big = N.new("ShaderNodeTexNoise")
-    big.inputs["Scale"].default_value = 1.6
-    big.inputs["Detail"].default_value = 9
-    big.inputs["Roughness"].default_value = 0.62
-    fine = N.new("ShaderNodeTexNoise")
-    fine.inputs["Scale"].default_value = 22
-    fine.inputs["Detail"].default_value = 8
-    cracks = N.new("ShaderNodeTexVoronoi")
-    cracks.feature = "DISTANCE_TO_EDGE"
-    cracks.inputs["Scale"].default_value = 1.9
-    cracks.inputs["Randomness"].default_value = 1.0
-    for n in (big, fine):
-        L.new(coords.outputs["Object"], n.inputs["Vector"])
-    # Warp the crack pattern so it reads as natural fractures, not a honeycomb.
-    warp = N.new("ShaderNodeTexNoise")
-    warp.inputs["Scale"].default_value = 2.3
-    warp.inputs["Detail"].default_value = 4
-    L.new(coords.outputs["Object"], warp.inputs["Vector"])
-    warped = N.new("ShaderNodeMixRGB")
-    warped.inputs["Fac"].default_value = 0.22
-    L.new(coords.outputs["Object"], warped.inputs["Color1"])
-    L.new(warp.outputs["Color"], warped.inputs["Color2"])
-    L.new(warped.outputs["Color"], cracks.inputs["Vector"])
-
-    stone = N.new("ShaderNodeValToRGB")
-    e = stone.color_ramp.elements
-    e[0].position, e[0].color = 0.28, (*palette["monument_shadow"]["linear_rgb"], 1)
-    e[1].position, e[1].color = 0.74, (*palette["stone_weathered"]["linear_rgb"], 1)
-    mid = e.new(0.52)
-    mid.color = (*palette["canyon_chalk"]["linear_rgb"], 1)
-    L.new(big.outputs["Fac"], stone.inputs["Fac"])
-
-    # Lighter wear on convex edges, darker in creases.
-    wear = N.new("ShaderNodeValToRGB")
-    wear.color_ramp.elements[0].position = 0.46
-    wear.color_ramp.elements[1].position = 0.58
-    L.new(geo.outputs["Pointiness"], wear.inputs["Fac"])
-    worn = N.new("ShaderNodeMixRGB")
-    worn.blend_type = "OVERLAY"
-    worn.inputs["Fac"].default_value = 0.75
-    L.new(stone.outputs["Color"], worn.inputs["Color1"])
-    L.new(wear.outputs["Color"], worn.inputs["Color2"])
-
-    crack_mask = N.new("ShaderNodeValToRGB")
-    crack_mask.color_ramp.elements[0].position = 0.0
-    crack_mask.color_ramp.elements[1].position = 0.014
-    # Only keep cracks where the coarse noise is low, so they come and go.
-    crack_fade = N.new("ShaderNodeMath")
-    crack_fade.operation = "ADD"
-    crack_gate = N.new("ShaderNodeMapRange")
-    crack_gate.inputs["From Min"].default_value = 0.42
-    crack_gate.inputs["From Max"].default_value = 0.56
-    crack_gate.inputs["To Max"].default_value = 0.05
-    L.new(big.outputs["Fac"], crack_gate.inputs["Value"])
-    L.new(cracks.outputs["Distance"], crack_fade.inputs[0])
-    L.new(crack_gate.outputs["Result"], crack_fade.inputs[1])
-    L.new(crack_fade.outputs["Value"], crack_mask.inputs["Fac"])
-    cracked = N.new("ShaderNodeMixRGB")
-    cracked.blend_type = "MULTIPLY"
-    cracked.inputs["Fac"].default_value = 0.65
-    L.new(worn.outputs["Color"], cracked.inputs["Color1"])
-    L.new(crack_mask.outputs["Color"], cracked.inputs["Color2"])
-
-    # Moss on upward faces, broken up by noise.
-    sep = N.new("ShaderNodeSeparateXYZ")
-    L.new(geo.outputs["Normal"], sep.inputs["Vector"])
-    moss_noise = N.new("ShaderNodeTexNoise")
-    moss_noise.inputs["Scale"].default_value = 3.0
-    moss_noise.inputs["Detail"].default_value = 6
-    L.new(coords.outputs["Object"], moss_noise.inputs["Vector"])
-    up = N.new("ShaderNodeMath")
-    up.operation = "MULTIPLY"
-    L.new(sep.outputs["Z"], up.inputs[0])
-    L.new(moss_noise.outputs["Fac"], up.inputs[1])
-    moss_mask = N.new("ShaderNodeValToRGB")
-    moss_mask.color_ramp.elements[0].position = 0.36
-    moss_mask.color_ramp.elements[1].position = 0.50
-    L.new(up.outputs["Value"], moss_mask.inputs["Fac"])
-    moss_col = N.new("ShaderNodeValToRGB")
-    moss_col.color_ramp.elements[0].color = (*palette["moss"]["linear_rgb"], 1)
-    moss_col.color_ramp.elements[1].color = (*palette["grass_green"]["linear_rgb"], 1)
-    L.new(fine.outputs["Fac"], moss_col.inputs["Fac"])
-    mossy = N.new("ShaderNodeMixRGB")
-    L.new(moss_mask.outputs["Color"], mossy.inputs["Fac"])
-    L.new(cracked.outputs["Color"], mossy.inputs["Color1"])
-    L.new(moss_col.outputs["Color"], mossy.inputs["Color2"])
-
-    L.new(mossy.outputs["Color"], bsdf.inputs["Base Color"])
-
-    rough = N.new("ShaderNodeMapRange")
-    rough.inputs["To Min"].default_value = 0.72
-    rough.inputs["To Max"].default_value = 0.96
-    L.new(fine.outputs["Fac"], rough.inputs["Value"])
-    L.new(rough.outputs["Result"], bsdf.inputs["Roughness"])
-
-    bump_fine = N.new("ShaderNodeBump")
-    bump_fine.inputs["Strength"].default_value = 0.35
-    bump_fine.inputs["Distance"].default_value = 0.03
-    L.new(fine.outputs["Fac"], bump_fine.inputs["Height"])
-    bump_crack = N.new("ShaderNodeBump")
-    bump_crack.inputs["Strength"].default_value = 0.9
-    bump_crack.inputs["Distance"].default_value = 0.04
-    L.new(crack_mask.outputs["Color"], bump_crack.inputs["Height"])
-    L.new(bump_fine.outputs["Normal"], bump_crack.inputs["Normal"])
-    L.new(bump_crack.outputs["Normal"], bsdf.inputs["Normal"])
-    return mat
-
-
 def crystal_material():
     mat = bpy.data.materials.new("vr_crystal_violet")
     mat.use_nodes = True
@@ -325,29 +207,76 @@ def cut_below_ground(depth=0.06):
 
 
 def support_material(name, ao_distance, earth=False):
-    mat = rock_material()
+    mat = vrmat.get("forest_soil" if earth else "monument_weathered").copy()
     mat.name = name
     nodes, links = mat.node_tree.nodes, mat.node_tree.links
     bsdf = nodes["Principled BSDF"]
-    mossy = bsdf.inputs["Base Color"].links[0].from_node
-    moss_colors = mossy.inputs["Color2"].links[0].from_node
     palette = vrmat.load_palette()
-    for element, key in zip(moss_colors.color_ramp.elements, ("moss", "grass_green")):
-        element.color = (*palette[key]["linear_rgb"], 1)
-    stone = next(node for node in nodes if node.type == "VALTORGB"
-                 and abs(node.color_ramp.elements[0].position - 0.28) < 0.001)
-    low = palette["soil" if earth else "monument_shadow"]["linear_rgb"]
-    high = palette["grass_green" if earth else "stone_weathered"]["linear_rgb"]
-    for element, factor in zip(stone.color_ramp.elements, (0, 0.5, 1)):
-        element.color = tuple((1 - factor) * a + factor * b for a, b in zip(low, high)) + (1,)
+    coords = next(node for node in nodes if node.type == "TEX_COORD").outputs["Object"]
+
+    def grain(scale, detail):
+        node = nodes.new("ShaderNodeTexNoise")
+        node.inputs["Scale"].default_value = scale
+        node.inputs["Detail"].default_value = detail
+        links.new(coords, node.inputs["Vector"])
+        return node.outputs["Fac"]
+
+    def tones(source, low, high):
+        node = nodes.new("ShaderNodeValToRGB")
+        node.color_ramp.elements[0].color = (*low, 1)
+        node.color_ramp.elements[1].color = (*high, 1)
+        links.new(source, node.inputs["Fac"])
+        return node.outputs["Color"]
+
+    def mix(factor, first, second):
+        node = nodes.new("ShaderNodeMixRGB")
+        if isinstance(factor, (float, int)):
+            node.inputs[0].default_value = factor
+        else:
+            links.new(factor, node.inputs[0])
+        for socket, value in zip(node.inputs[1:3], (first, second)):
+            if isinstance(value, tuple):
+                socket.default_value = (*value, 1)
+            else:
+                links.new(value, socket)
+        return node.outputs["Color"]
+
+    if earth:
+        base = bsdf.inputs["Base Color"].links[0].from_socket
+        coverage = nodes.new("ShaderNodeAttribute")
+        coverage.attribute_name = "moss_coverage"
+        mask = coverage.outputs["Fac"]
+    else:
+        neutral = tuple(0.55 * a + 0.45 * b for a, b in zip(
+            palette["stone_weathered"]["linear_rgb"], palette["monument_shadow"]["linear_rgb"]))
+        base = tones(grain(0.87, 3), tuple(v * 0.55 for v in neutral),
+                     tuple(v * 0.68 for v in neutral))
+        geometry = nodes.new("ShaderNodeNewGeometry")
+        up = nodes.new("ShaderNodeSeparateXYZ")
+        links.new(geometry.outputs["Normal"], up.inputs[0])
+        patch = nodes.new("ShaderNodeMapRange")
+        patch.clamp = True
+        patch.interpolation_type = "SMOOTHSTEP"
+        patch.inputs["From Min"].default_value = 0.46
+        patch.inputs["From Max"].default_value = 0.68
+        links.new(grain(1.8, 5), patch.inputs["Value"])
+        coverage = nodes.new("ShaderNodeMath")
+        coverage.operation = "MULTIPLY"
+        coverage.use_clamp = True
+        links.new(up.outputs["Z"], coverage.inputs[0])
+        links.new(patch.outputs[0], coverage.inputs[1])
+        mask = coverage.outputs[0]
+    moss = tones(grain(18, 5), tuple(v * 0.8 for v in palette["grass_green"]["linear_rgb"]),
+                 tuple(0.7 * a + 0.3 * b for a, b in zip(
+                     palette["grass_green"]["linear_rgb"], palette["grass_dry"]["linear_rgb"])))
+    base = mix(mask, base, moss)
     ao = nodes.new("ShaderNodeAmbientOcclusion")
     ao.samples = 8
     ao.inputs["Distance"].default_value = ao_distance
-    grime = nodes.new("ShaderNodeMixRGB")
-    grime.inputs[1].default_value = tuple(v * 0.45 for v in palette["soil"]["linear_rgb"]) + (1,)
-    links.new(ao.outputs["AO"], grime.inputs[0])
-    links.new(mossy.outputs[0], grime.inputs[2])
-    links.new(grime.outputs[0], bsdf.inputs["Base Color"])
+    grime = tuple(v * 0.65 for v in palette["soil"]["linear_rgb"])
+    links.new(mix(ao.outputs["AO"], grime, base), bsdf.inputs["Base Color"])
+    bsdf.inputs["Specular IOR Level"].default_value = 0.18
+    mat["asset_tweaks"] = "copied library pores; narrow palette limestone tones, irregular moss coverage, recessed AO soil; no painted fracture lines"
     return mat
 
 
@@ -395,8 +324,6 @@ def finish():
 def outcrop(rng, radius, mat):
     base = make_rock("Limestone fault", rng, radius, 0.38, 7, mat)
     base.location = (0, 0, 0.14)
-    fracture(base, (radius * 0.72, 0, 0), (1, 0.35, 0.22))
-    fracture(base, (-radius * 0.66, 0, 0), (-1, -0.3, 0.15))
     for i, (angle, distance, size) in enumerate(((0.6, 0.72, 0.39),
                                                 (2.8, 0.68, 0.45),
                                                 (4.2, 0.63, 0.33))):
@@ -404,7 +331,6 @@ def outcrop(rng, radius, mat):
         block.location = (math.cos(angle) * radius * distance,
                           math.sin(angle) * radius * distance, radius * size * 0.23)
         block.rotation_euler = Euler((0.12 * i, -0.09 * i, angle))
-        fracture(block, (radius * size * 0.63, 0, 0), (1, 0.3, 0.15))
 
 
 

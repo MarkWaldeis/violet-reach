@@ -14,124 +14,6 @@ import vrmat
 SEED = 840173
 
 
-def rock_material():
-    mat = bpy.data.materials.new("vr_rock_mossy")
-    mat.use_nodes = True
-    nt = mat.node_tree
-    N, L = nt.nodes, nt.links
-    bsdf = N["Principled BSDF"]
-    coords = N.new("ShaderNodeTexCoord")
-    geo = N.new("ShaderNodeNewGeometry")
-    palette = vrmat.load_palette()
-
-    big = N.new("ShaderNodeTexNoise")
-    big.inputs["Scale"].default_value = 1.6
-    big.inputs["Detail"].default_value = 9
-    big.inputs["Roughness"].default_value = 0.62
-    fine = N.new("ShaderNodeTexNoise")
-    fine.inputs["Scale"].default_value = 22
-    fine.inputs["Detail"].default_value = 8
-    cracks = N.new("ShaderNodeTexVoronoi")
-    cracks.feature = "DISTANCE_TO_EDGE"
-    cracks.inputs["Scale"].default_value = 1.9
-    cracks.inputs["Randomness"].default_value = 1.0
-    for n in (big, fine):
-        L.new(coords.outputs["Object"], n.inputs["Vector"])
-    # Warp the crack pattern so it reads as natural fractures, not a honeycomb.
-    warp = N.new("ShaderNodeTexNoise")
-    warp.inputs["Scale"].default_value = 2.3
-    warp.inputs["Detail"].default_value = 4
-    L.new(coords.outputs["Object"], warp.inputs["Vector"])
-    warped = N.new("ShaderNodeMixRGB")
-    warped.inputs["Fac"].default_value = 0.22
-    L.new(coords.outputs["Object"], warped.inputs["Color1"])
-    L.new(warp.outputs["Color"], warped.inputs["Color2"])
-    L.new(warped.outputs["Color"], cracks.inputs["Vector"])
-
-    stone = N.new("ShaderNodeValToRGB")
-    e = stone.color_ramp.elements
-    e[0].position, e[0].color = 0.28, (*palette["monument_shadow"]["linear_rgb"], 1)
-    e[1].position, e[1].color = 0.74, (*palette["stone_weathered"]["linear_rgb"], 1)
-    mid = e.new(0.52)
-    mid.color = (*palette["canyon_chalk"]["linear_rgb"], 1)
-    L.new(big.outputs["Fac"], stone.inputs["Fac"])
-
-    # Lighter wear on convex edges, darker in creases.
-    wear = N.new("ShaderNodeValToRGB")
-    wear.color_ramp.elements[0].position = 0.46
-    wear.color_ramp.elements[1].position = 0.58
-    L.new(geo.outputs["Pointiness"], wear.inputs["Fac"])
-    worn = N.new("ShaderNodeMixRGB")
-    worn.blend_type = "OVERLAY"
-    worn.inputs["Fac"].default_value = 0.75
-    L.new(stone.outputs["Color"], worn.inputs["Color1"])
-    L.new(wear.outputs["Color"], worn.inputs["Color2"])
-
-    crack_mask = N.new("ShaderNodeValToRGB")
-    crack_mask.color_ramp.elements[0].position = 0.0
-    crack_mask.color_ramp.elements[1].position = 0.014
-    # Only keep cracks where the coarse noise is low, so they come and go.
-    crack_fade = N.new("ShaderNodeMath")
-    crack_fade.operation = "ADD"
-    crack_gate = N.new("ShaderNodeMapRange")
-    crack_gate.inputs["From Min"].default_value = 0.42
-    crack_gate.inputs["From Max"].default_value = 0.56
-    crack_gate.inputs["To Max"].default_value = 0.05
-    L.new(big.outputs["Fac"], crack_gate.inputs["Value"])
-    L.new(cracks.outputs["Distance"], crack_fade.inputs[0])
-    L.new(crack_gate.outputs["Result"], crack_fade.inputs[1])
-    L.new(crack_fade.outputs["Value"], crack_mask.inputs["Fac"])
-    cracked = N.new("ShaderNodeMixRGB")
-    cracked.blend_type = "MULTIPLY"
-    cracked.inputs["Fac"].default_value = 0.65
-    L.new(worn.outputs["Color"], cracked.inputs["Color1"])
-    L.new(crack_mask.outputs["Color"], cracked.inputs["Color2"])
-
-    # Moss on upward faces, broken up by noise.
-    sep = N.new("ShaderNodeSeparateXYZ")
-    L.new(geo.outputs["Normal"], sep.inputs["Vector"])
-    moss_noise = N.new("ShaderNodeTexNoise")
-    moss_noise.inputs["Scale"].default_value = 3.0
-    moss_noise.inputs["Detail"].default_value = 6
-    L.new(coords.outputs["Object"], moss_noise.inputs["Vector"])
-    up = N.new("ShaderNodeMath")
-    up.operation = "MULTIPLY"
-    L.new(sep.outputs["Z"], up.inputs[0])
-    L.new(moss_noise.outputs["Fac"], up.inputs[1])
-    moss_mask = N.new("ShaderNodeValToRGB")
-    moss_mask.color_ramp.elements[0].position = 0.36
-    moss_mask.color_ramp.elements[1].position = 0.50
-    L.new(up.outputs["Value"], moss_mask.inputs["Fac"])
-    moss_col = N.new("ShaderNodeValToRGB")
-    moss_col.color_ramp.elements[0].color = (*palette["moss"]["linear_rgb"], 1)
-    moss_col.color_ramp.elements[1].color = (*palette["grass_green"]["linear_rgb"], 1)
-    L.new(fine.outputs["Fac"], moss_col.inputs["Fac"])
-    mossy = N.new("ShaderNodeMixRGB")
-    L.new(moss_mask.outputs["Color"], mossy.inputs["Fac"])
-    L.new(cracked.outputs["Color"], mossy.inputs["Color1"])
-    L.new(moss_col.outputs["Color"], mossy.inputs["Color2"])
-
-    L.new(mossy.outputs["Color"], bsdf.inputs["Base Color"])
-
-    rough = N.new("ShaderNodeMapRange")
-    rough.inputs["To Min"].default_value = 0.72
-    rough.inputs["To Max"].default_value = 0.96
-    L.new(fine.outputs["Fac"], rough.inputs["Value"])
-    L.new(rough.outputs["Result"], bsdf.inputs["Roughness"])
-
-    bump_fine = N.new("ShaderNodeBump")
-    bump_fine.inputs["Strength"].default_value = 0.35
-    bump_fine.inputs["Distance"].default_value = 0.03
-    L.new(fine.outputs["Fac"], bump_fine.inputs["Height"])
-    bump_crack = N.new("ShaderNodeBump")
-    bump_crack.inputs["Strength"].default_value = 0.9
-    bump_crack.inputs["Distance"].default_value = 0.04
-    L.new(crack_mask.outputs["Color"], bump_crack.inputs["Height"])
-    L.new(bump_fine.outputs["Normal"], bump_crack.inputs["Normal"])
-    L.new(bump_crack.outputs["Normal"], bsdf.inputs["Normal"])
-    return mat
-
-
 def crystal_material():
     mat = bpy.data.materials.new("vr_crystal_violet")
     mat.use_nodes = True
@@ -325,29 +207,84 @@ def cut_below_ground(depth=0.06):
 
 
 def support_material(name, ao_distance, earth=False):
-    mat = rock_material()
+    mat = vrmat.get("forest_soil" if earth else "monument_weathered").copy()
     mat.name = name
     nodes, links = mat.node_tree.nodes, mat.node_tree.links
     bsdf = nodes["Principled BSDF"]
-    mossy = bsdf.inputs["Base Color"].links[0].from_node
-    moss_colors = mossy.inputs["Color2"].links[0].from_node
     palette = vrmat.load_palette()
-    for element, key in zip(moss_colors.color_ramp.elements, ("moss", "grass_green")):
-        element.color = (*palette[key]["linear_rgb"], 1)
-    stone = next(node for node in nodes if node.type == "VALTORGB"
-                 and abs(node.color_ramp.elements[0].position - 0.28) < 0.001)
-    low = palette["soil" if earth else "monument_shadow"]["linear_rgb"]
-    high = palette["grass_green" if earth else "stone_weathered"]["linear_rgb"]
-    for element, factor in zip(stone.color_ramp.elements, (0, 0.5, 1)):
-        element.color = tuple((1 - factor) * a + factor * b for a, b in zip(low, high)) + (1,)
+    coords = next(node for node in nodes if node.type == "TEX_COORD").outputs["Object"]
+
+    def grain(scale, detail):
+        node = nodes.new("ShaderNodeTexNoise")
+        node.inputs["Scale"].default_value = scale
+        node.inputs["Detail"].default_value = detail
+        links.new(coords, node.inputs["Vector"])
+        return node.outputs["Fac"]
+
+    def tones(source, low, high):
+        node = nodes.new("ShaderNodeValToRGB")
+        node.color_ramp.elements[0].color = (*low, 1)
+        node.color_ramp.elements[1].color = (*high, 1)
+        links.new(source, node.inputs["Fac"])
+        return node.outputs["Color"]
+
+    def mix(factor, first, second):
+        node = nodes.new("ShaderNodeMixRGB")
+        if isinstance(factor, (float, int)):
+            node.inputs[0].default_value = factor
+        else:
+            links.new(factor, node.inputs[0])
+        for socket, value in zip(node.inputs[1:3], (first, second)):
+            if isinstance(value, tuple):
+                socket.default_value = (*value, 1)
+            else:
+                links.new(value, socket)
+        return node.outputs["Color"]
+
+    if earth:
+        base = bsdf.inputs["Base Color"].links[0].from_socket
+        coverage = nodes.new("ShaderNodeAttribute")
+        coverage.attribute_name = "moss_coverage"
+        mask = coverage.outputs["Fac"]
+    else:
+        neutral = tuple(0.55 * a + 0.45 * b for a, b in zip(
+            palette["stone_weathered"]["linear_rgb"], palette["monument_shadow"]["linear_rgb"]))
+        base = tones(grain(0.87, 3), tuple(v * 0.78 for v in neutral),
+                     tuple(v * 0.95 for v in neutral))
+        geometry = nodes.new("ShaderNodeNewGeometry")
+        up = nodes.new("ShaderNodeSeparateXYZ")
+        links.new(geometry.outputs["Normal"], up.inputs[0])
+        patch = nodes.new("ShaderNodeMapRange")
+        patch.clamp = True
+        patch.interpolation_type = "SMOOTHSTEP"
+        patch.inputs["From Min"].default_value = 0.46
+        patch.inputs["From Max"].default_value = 0.68
+        links.new(grain(0.7, 5), patch.inputs["Value"])
+        coverage = nodes.new("ShaderNodeMath")
+        coverage.operation = "MULTIPLY"
+        coverage.use_clamp = True
+        links.new(up.outputs["Z"], coverage.inputs[0])
+        links.new(patch.outputs[0], coverage.inputs[1])
+        mask = coverage.outputs[0]
+    moss = tones(grain(18, 5), tuple(v * 0.8 for v in palette["grass_green"]["linear_rgb"]),
+                 tuple(0.7 * a + 0.3 * b for a, b in zip(
+                     palette["grass_green"]["linear_rgb"], palette["grass_dry"]["linear_rgb"])))
+    base = mix(mask, base, moss)
     ao = nodes.new("ShaderNodeAmbientOcclusion")
     ao.samples = 8
     ao.inputs["Distance"].default_value = ao_distance
-    grime = nodes.new("ShaderNodeMixRGB")
-    grime.inputs[1].default_value = tuple(v * 0.45 for v in palette["soil"]["linear_rgb"]) + (1,)
-    links.new(ao.outputs["AO"], grime.inputs[0])
-    links.new(mossy.outputs[0], grime.inputs[2])
-    links.new(grime.outputs[0], bsdf.inputs["Base Color"])
+    grime = tuple(v * 0.65 for v in palette["soil"]["linear_rgb"])
+    links.new(mix(ao.outputs["AO"], grime, base), bsdf.inputs["Base Color"])
+    if not earth:
+        normal = bsdf.inputs["Normal"].links[0].from_socket
+        bump = nodes.new("ShaderNodeBump")
+        bump.inputs["Distance"].default_value = 0.035
+        bump.inputs["Strength"].default_value = 0.35
+        links.new(grain(10, 3), bump.inputs["Height"])
+        links.new(normal, bump.inputs["Normal"])
+        links.new(bump.outputs["Normal"], bsdf.inputs["Normal"])
+    bsdf.inputs["Specular IOR Level"].default_value = 0.18
+    mat["asset_tweaks"] = "copied library pores; narrow palette limestone tones, irregular moss coverage, recessed AO soil; no painted fracture lines"
     return mat
 
 
@@ -394,28 +331,42 @@ def finish():
 
 
 def ground_disc(name, radius, squash, location, mat):
-    bm = bmesh.new()
-    centre = bm.verts.new((0, 0, radius * squash))
-    loops = []
-    for t in (0.25, 0.5, 0.72, 0.88, 1.0):
-        loop = []
-        for i in range(64):
-            angle = math.tau * i / 64
-            edge = 1 + 0.07 * math.sin(angle * 3) + 0.055 * math.sin(angle * 7 + 1) + 0.025 * math.sin(angle * 17)
+    vertices = []
+    faces = []
+    coverage = []
+    for ring in range(25):
+        t = ring / 24
+        for i in range(128):
+            angle = math.tau * i / 128
+            edge = (1 + 0.10 * math.sin(angle * 3) + 0.07 * math.sin(angle * 7 + 1)
+                    + 0.055 * math.sin(angle * 13) + 0.035 * math.sin(angle * 29 + 0.7))
             r = radius * t * edge
-            z = radius * squash * (1 - t * t) ** 2 - (location[2] + 0.055) * t ** 2
-            loop.append(bm.verts.new((math.cos(angle) * r, math.sin(angle) * r, z)))
-        loops.append(loop)
-    for i in range(64):
-        n = (i + 1) % 64
-        bm.faces.new((centre, loops[0][i], loops[0][n]))
-        for lower, upper in zip(loops, loops[1:]):
-            bm.faces.new((lower[i], upper[i], upper[n], lower[n]))
-    underside = bm.verts.new((0, 0, -location[2] - 0.055))
-    for i in range(64):
-        bm.faces.new((underside, loops[-1][(i + 1) % 64], loops[-1][i]))
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+            x, y = math.cos(angle) * r, math.sin(angle) * r
+            p = Vector((x, y, 2.7))
+            patch = noise.fractal(p * 0.42, 1, 2, 4)
+            moss = max(0, min(1, (patch - 0.06) / 0.26)) * max(0, min(1, (0.92 - t) / 0.15))
+            rough = noise.fractal(p * 2.1, 1, 2, 4)
+            z = (radius * squash * (1 - t * t) ** 2
+                 + (0.10 * rough + 0.055 * moss) * (1 - t ** 4)
+                 - (location[2] + 0.055) * t ** 2)
+            vertices.append((x, y, z))
+            coverage.append(moss)
+    for ring in range(24):
+        for i in range(128):
+            a = ring * 128 + i
+            b = ring * 128 + (i + 1) % 128
+            if ring == 0:
+                faces.append((a, b + 128, a + 128))
+            else:
+                faces.append((a, b, b + 128, a + 128))
     mesh = bpy.data.meshes.new(name)
+    mesh.from_pydata(vertices, [], [tuple(reversed(face)) for face in faces])
+    mesh.update()
+    field = mesh.attributes.new("moss_coverage", "FLOAT", "POINT")
+    field.data.foreach_set("value", coverage)
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts[:], dist=0.000001)
     bm.to_mesh(mesh)
     bm.free()
     for face in mesh.polygons:
@@ -460,17 +411,21 @@ def menhir(name, rng, size, location, angle, mat):
                (0.5, 0.40), (-0.15, 0.5), (-0.5, 0.24), (-0.46, -0.4), (0.05, -0.5)]
     bm = bmesh.new()
     loops = []
-    for z, scale in ((-0.5, 1.0), (0.02, 0.95), (0.5, 0.62)):
+    local_rng = random.Random(SEED + int(angle * 10000))
+    profile = [local_rng.uniform(0.86, 1.12) if i > 4 else 1 for i in range(len(section))]
+    for z, scale in ((-0.5, 0.94), (-0.12, 1.03), (0.19, 0.88), (0.5, 0.72)):
         loop = []
         for i, (x, y) in enumerate(section):
             top = z == 0.5
+            scale_x = scale * profile[i]
+            scale_y = scale * (1 + (0.09 * math.sin(i * 1.9 + z * 5 + angle) if i > 4 else 0))
             height = z
             if top:
                 height += (0.045 * math.sin(i * 1.7 + angle) if i not in (1, 2, 3) else 0)
                 if i == 2:
                     height -= 0.16
-            loop.append(bm.verts.new(((x * scale + (0.08 if top else 0)) * size[0],
-                                      (y * scale - (0.04 if top else 0)) * size[1],
+            loop.append(bm.verts.new(((x * scale_x + (0.08 if top else -0.035 * math.sin(z * 9 + angle))) * size[0],
+                                      (y * scale_y - (0.04 if top else 0.025 * math.sin(z * 7))) * size[1],
                                       height * size[2])))
         loops.append(loop)
     socket = loops[-1][2].co.copy()
@@ -483,7 +438,10 @@ def menhir(name, rng, size, location, angle, mat):
         bm.faces.new((loops[-1][i], loops[-1][j], centre))
     for normal, point in (((-0.4, -0.2, 1), (-size[0] * 0.2, -size[1] * 0.18, size[2] * 0.47)),
                           ((-1, 0.2, 0.15), (-size[0] * 0.40, 0, 0)),
-                          ((0.2, 1, 0.05), (0, size[1] * 0.42, 0))):
+                          ((0.2, 1, 0.05), (0, size[1] * 0.42, 0)),
+                          ((1, 1, 0.15), (size[0] * 0.36, size[1] * 0.26, size[2] * 0.12)),
+                          ((1, -1, -0.25), (size[0] * 0.39, -size[1] * 0.35, -size[2] * 0.10)),
+                          ((-0.7, 1, 0.24), (-size[0] * 0.3, size[1] * 0.3, size[2] * 0.12))):
         cut = bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:],
                                     plane_co=point, plane_no=Vector(normal).normalized(),
                                     clear_outer=True)
@@ -492,7 +450,7 @@ def menhir(name, rng, size, location, angle, mat):
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     bmesh.ops.bevel(bm, geom=bm.edges[:], offset=min(size) * 0.008, segments=1, affect="EDGES")
     bm.normal_update()
-    sharp = [e for e in bm.edges if len(e.link_faces) == 2 and e.calc_face_angle() > math.radians(32)]
+    sharp = [e for e in bm.edges if len(e.link_faces) == 2 and e.calc_face_angle() > math.radians(12)]
     bmesh.ops.split_edges(bm, edges=sharp)
     bmesh.ops.triangulate(bm, faces=bm.faces[:])
     bmesh.ops.subdivide_edges(bm, edges=bm.edges[:], cuts=8, use_grid_fill=True)
