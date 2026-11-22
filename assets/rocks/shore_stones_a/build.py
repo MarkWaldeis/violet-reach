@@ -251,7 +251,7 @@ def fines_bed(name, radius, material, height=.16, slope=False):
     coverage.data[0].value=1
     for row in range(1,rings+1):
         for j in range(count):
-            coverage.data[1+(row-1)*count+j].value=1-smooth((row/rings-.52)/.43)
+            coverage.data[1+(row-1)*count+j].value=1-smooth((row/rings-.38)/.28)
     obj["gravel_apron"]=True
     return obj
 
@@ -492,26 +492,30 @@ def wet_finish(material):
 
 def feather_finish(material):
     nodes,links=material.node_tree.nodes,material.node_tree.links
+    bsdf=nodes["Principled BSDF"]
     cover=nodes.new("ShaderNodeAttribute")
     cover.attribute_name="bed_coverage"
-    coord=nodes.new("ShaderNodeTexCoord")
-    grain=nodes.new("ShaderNodeTexNoise")
-    grain.inputs["Scale"].default_value=32
-    links.new(coord.outputs["Object"],grain.inputs["Vector"])
-    cut=nodes.new("ShaderNodeMath")
-    cut.operation="MULTIPLY"
-    cut.inputs[1].default_value=.4
-    links.new(grain.outputs["Fac"],cut.inputs[0])
-    subtract=nodes.new("ShaderNodeMath")
-    subtract.operation="SUBTRACT"
-    links.new(cover.outputs["Fac"],subtract.inputs[0])
-    links.new(cut.outputs[0],subtract.inputs[1])
-    alpha=nodes.new("ShaderNodeMath")
-    alpha.operation="MULTIPLY"
-    alpha.inputs[1].default_value=2
-    alpha.use_clamp=True
-    links.new(subtract.outputs[0],alpha.inputs[0])
-    links.new(alpha.outputs[0],nodes["Principled BSDF"].inputs["Alpha"])
+    palette={key:value["linear_rgb"] for key,value in vrmat.load_palette().items()}
+    ground=blend(blend(palette["canyon_strata"],palette["water_shallow"],.5),palette["grass_green"],.2)
+    color=nodes.new("ShaderNodeMixRGB")
+    color.name="Opaque_ground_blend"
+    color.inputs[1].default_value=(*ground,1)
+    links.new(bsdf.inputs["Base Color"].links[0].from_socket,color.inputs[2])
+    links.new(cover.outputs["Fac"],color.inputs[0])
+    links.new(color.outputs[0],bsdf.inputs["Base Color"])
+    rough=nodes.new("ShaderNodeMixRGB")
+    rough.inputs[1].default_value=(.9,.9,.9,1)
+    links.new(bsdf.inputs["Roughness"].links[0].from_socket,rough.inputs[2])
+    links.new(cover.outputs["Fac"],rough.inputs[0])
+    links.new(rough.outputs[0],bsdf.inputs["Roughness"])
+    for node in list(nodes):
+        if node.type=="BUMP":
+            strength=nodes.new("ShaderNodeMath")
+            strength.operation="MULTIPLY"
+            strength.inputs[1].default_value=node.inputs["Strength"].default_value
+            links.new(cover.outputs["Fac"],strength.inputs[0])
+            links.new(strength.outputs[0],node.inputs["Strength"])
+    bsdf.inputs["Alpha"].default_value=1
 
 
 def contact_stone(obj, other, direction, obstacles):

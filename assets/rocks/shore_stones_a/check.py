@@ -158,7 +158,21 @@ if ASSET_DIR.name=="shore_stones_a":
     cover=bed.data.attributes["bed_coverage"].data
     assert min(v.value for v in cover)==0 and max(v.value for v in cover)==1
     assert any(.05<v.value<.95 for v in cover)
-    assert bed.data.materials[0].node_tree.nodes["Principled BSDF"].inputs["Alpha"].is_linked
+    bed_nodes=bed.data.materials[0].node_tree.nodes
+    assert bed_nodes["Opaque_ground_blend"].inputs[0].is_linked
+    assert max(v.co.z for v in bed.data.vertices if v.index>0 and cover[v.index].value==0)<.01
+    for material in bpy.data.materials:
+        if hasattr(material,"surface_render_method"):
+            assert material.surface_render_method!="BLENDED",material.name
+        else:
+            assert material.blend_method=="OPAQUE",material.name
+        assert material.diffuse_color[3]==1,material.name
+        if not material.use_nodes:continue
+        for node in material.node_tree.nodes:
+            assert node.type not in {"BSDF_TRANSPARENT","BSDF_GLASS","BSDF_REFRACTION","HOLDOUT"},(material.name,node.type)
+            if node.type=="BSDF_PRINCIPLED":
+                assert not node.inputs["Alpha"].is_linked and node.inputs["Alpha"].default_value==1,material.name
+                assert not node.inputs["Transmission Weight"].is_linked and node.inputs["Transmission Weight"].default_value==0,material.name
     wet_material=primary[0].data.materials[0]
     mask=wet_material.node_tree.nodes["Physical_wet_band"]
     assert mask.interpolation_type=="SMOOTHSTEP"
@@ -167,7 +181,8 @@ if ASSET_DIR.name=="shore_stones_a":
     assert any(l.from_node.type=="TEX_COORD" and l.from_socket.name=="Object" and l.to_node.type=="SEPXYZ" for l in wet_material.node_tree.links)
     print("SHORE_FRACTURES: six angular stones with two modeled steps and three edge cuts each; two flattened faceted worn forms")
     print("SHORE_GROUPS: three non-intersecting contact pairs plus two loners; closest gaps_m",tuple(round(v,4) for v in gaps))
-    print("SHORE_GRAVEL: varied shapes, sizes and tints; foot-biased fraction",round(grit["foot_biased_fraction"],3),"; buried alpha-feathered edge")
+    print("SHORE_GRAVEL: varied shapes, sizes and tints; foot-biased fraction",round(grit["foot_biased_fraction"],3),"; buried opaque colour-blended edge")
+    print("OPAQUE_MATERIALS: alpha = 1, unlinked; transmission = 0; no transparent BSDF or transparency blending")
     print("SHORE_BASE_WETNESS: object-space analytic 5-14 cm bands on primary stones; dark feet, smooth fade and lower roughness")
     for radius,flat in ((0,.6),(-1,.6),(1,0)):
         try:
