@@ -1,0 +1,26 @@
+{
+  "id": "column_white_a",
+  "category": "monuments",
+  "title": "Survey Column",
+  "description": "An 18 m ivory limestone survey marker with continuous fluting, a cushion capital and a settled masonry footing.",
+  "target_size_m": [
+    7,
+    6.6,
+    18
+  ],
+  "lod_triangles": [
+    21000,
+    6700,
+    1900
+  ],
+  "texture_size": 2048,
+  "status": "blender_review",
+  "builder": "devin-10557958564a4a9894cdbd6bc867cb9f",
+  "review": null,
+  "references": [
+    "art/reference/ref_01_white_monuments_sky.jpg",
+    "art/reference/ref_03_canyon_cliffs.jpg",
+    "art/reference/ref_04_white_ribbed_arches.jpg",
+    "art/reference/ref_08_ribbed_crown.jpg"
+  ]
+}

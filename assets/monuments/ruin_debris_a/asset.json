@@ -1,0 +1,26 @@
+{
+  "id": "ruin_debris_a",
+  "category": "monuments",
+  "title": "Fallen Survey Line",
+  "description": "A surviving foot and three split shaft drums along one fall line, ending in a broken cushion capital.",
+  "target_size_m": [
+    12.5,
+    14.6,
+    4.5
+  ],
+  "lod_triangles": [
+    22000,
+    7300,
+    2100
+  ],
+  "texture_size": 4096,
+  "status": "blender_review",
+  "builder": "devin-10557958564a4a9894cdbd6bc867cb9f",
+  "review": null,
+  "references": [
+    "art/reference/ref_01_white_monuments_sky.jpg",
+    "art/reference/ref_03_canyon_cliffs.jpg",
+    "art/reference/ref_06_weathered_wall.jpg",
+    "art/reference/ref_08_ribbed_crown.jpg"
+  ]
+}

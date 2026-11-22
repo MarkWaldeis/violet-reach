@@ -1,0 +1,26 @@
+{
+  "id": "ruin_wall_a",
+  "category": "monuments",
+  "title": "Broken Retaining Wall",
+  "description": "A thick limestone retaining wall split across a breached drain bay, with fractured ashlar and a collapse fan.",
+  "target_size_m": [
+    11.1,
+    15.7,
+    6.7
+  ],
+  "lod_triangles": [
+    24000,
+    8500,
+    2400
+  ],
+  "texture_size": 4096,
+  "status": "blender_review",
+  "builder": "devin-10557958564a4a9894cdbd6bc867cb9f",
+  "review": null,
+  "references": [
+    "art/reference/ref_01_white_monuments_sky.jpg",
+    "art/reference/ref_03_canyon_cliffs.jpg",
+    "art/reference/ref_04_white_ribbed_arches.jpg",
+    "art/reference/ref_06_weathered_wall.jpg"
+  ]
+}
