@@ -96,6 +96,12 @@ def shipping_checks(root):
         yield expect("unregistered placement is refused", check_output(), "placements.json")
         placements.write_text('{"placements":[{"asset":"thing","x":0,"z":0,"yaw":0,"scale":1}]}')
         yield expect("gated placement passes", check_output(), None)
+        tilted = {"asset": "thing", "x": 0, "z": 0, "yaw": .4, "scale": 1, "pitch": .1, "roll": -.2}
+        yield expect("tilted single passes", vr.placement_problems({"placements": [tilted]}), None)
+        yield expect("fallen single passes", vr.placement_problems({"placements": [{**tilted, "roll": 1.5707963267948966}]}), None)
+        for key in ("pitch", "roll"):
+            for value in (True, None, "0.1", float("nan"), float("inf")):
+                yield expect("invalid single rotation refused", vr.placement_problems({"placements": [{**tilted, key: value}]}), "invalid")
 
         scatter = {"asset": "thing", "scatter": {"seed": 42, "count": 2000,
                    "rect": {"minX": 0, "minZ": 0, "maxX": 100, "maxZ": 100},
@@ -103,6 +109,7 @@ def shipping_checks(root):
                    "max_height_above_water": 100, "scale": [0.8, 1.2], "align_to_slope": True}}
         placements.write_text(json.dumps({"placements": [scatter]}))
         yield expect("gated scatter passes", check_output(), None)
+        yield expect("single rotation on scatter refused", vr.placement_problems({"placements": [{**scatter, "pitch": .1}]}), "invalid")
         scatter["asset"] = "rogue"
         placements.write_text(json.dumps({"placements": [scatter]}))
         yield expect("scatter cannot bypass asset gate", check_output(), "has not passed")

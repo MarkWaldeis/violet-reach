@@ -25,7 +25,7 @@ test("scatter water reference matches interpolated segment level and width, not 
 
 test("single placement follows terrain plus offset; empty documents produce no instances", () => {
   assert.deepEqual(expandPlacements([], ground, water), []);
-  const single = { asset: "crystal", x: 1, z: 2, yaw: 3, scale: 1, y_offset: -0.2 };
+  const single = { asset: "crystal", x: 1, z: 2, yaw: 3, pitch: .1, roll: -.2, scale: 1, y_offset: -0.2 };
   assert.deepEqual(expandPlacements([single], ground, water), [{ ...single, y: 184.8 }]);
   assert.throws(() => expandPlacements([single], () => undefined, water), /Missing/);
   assert.deepEqual(expandPlacements([single], () => undefined, water, () => false), []);

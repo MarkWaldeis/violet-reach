@@ -1,10 +1,11 @@
 import {
   Box3, Color, DynamicDrawUsage, Frustum, Group, InstancedMesh, Matrix4, Mesh,
-  PerspectiveCamera, Quaternion, Sphere, Vector3, type BufferGeometry, type Material,
+  PerspectiveCamera, Sphere, Vector3, type BufferGeometry, type Material,
 } from "three/webgpu";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import type { InstancePlacement } from "./placements.ts";
+import { placementRotation } from "./placement-rotation.ts";
 import { assetRenderOptions, chunkVisible, instanceLOD, instanceTint, lodDistances, spatialChunks, type AssetRenderOptions, type Chunk } from "./instance-lod.ts";
 
 interface Instance extends InstancePlacement { matrix: Matrix4; tint: Color; sphere: { centre: Vector3; radius: number }; lod: number }
@@ -47,8 +48,7 @@ export class InstanceAssets {
       const localSphere = bounds.getBoundingSphere(new Sphere());
       const settings = assetRenderOptions(size, options, byAsset[id]);
       const instances: Instance[] = placements.filter((p) => p.asset === id).map((p) => {
-        const rotation = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), p.yaw);
-        if (p.normal) rotation.premultiply(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), new Vector3(...p.normal).normalize()));
+        const rotation = placementRotation(p);
         const matrix = new Matrix4().compose(new Vector3(p.x, p.y, p.z), rotation, new Vector3().setScalar(p.scale));
         const sphere = localSphere.clone().applyMatrix4(matrix);
         return { ...p, matrix, sphere: { centre: sphere.center, radius: sphere.radius }, tint: new Color(...instanceTint(p.x, p.z, settings.tintVariation)), lod: -1 };

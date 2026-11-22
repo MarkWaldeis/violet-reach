@@ -14,10 +14,10 @@ def placement_problems(document):
         valid = isinstance(p, dict) and isinstance(p.get("asset"), str) and bool(p["asset"])
         if valid and "scatter" not in p:
             valid = all(number(p.get(k)) for k in ("x", "z", "yaw", "scale")) and p["scale"] > 0
-            valid = valid and number(p.get("y_offset", 0))
+            valid = valid and all(number(p.get(k, 0)) for k in ("y_offset", "pitch", "roll"))
         elif valid:
             s = p["scatter"]
-            valid = isinstance(s, dict) and not any(k in p for k in ("x", "z", "yaw", "scale", "y_offset"))
+            valid = isinstance(s, dict) and not any(k in p for k in ("x", "z", "yaw", "scale", "y_offset", "pitch", "roll"))
             if valid:
                 valid = (type(s.get("seed")) is int and 0 <= s["seed"] <= 4294967295
                          and type(s.get("count")) is int and 0 <= s["count"] <= 1000000

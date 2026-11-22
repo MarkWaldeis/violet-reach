@@ -1,5 +1,5 @@
 export interface SinglePlacement {
-  asset: string; x: number; z: number; yaw: number; scale: number; y_offset?: number;
+  asset: string; x: number; z: number; yaw: number; scale: number; y_offset?: number; pitch?: number; roll?: number;
 }
 export interface ScatterPlacement {
   asset: string;
