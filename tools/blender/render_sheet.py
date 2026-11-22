@@ -38,6 +38,7 @@ centre = (lo + hi) / 2
 radius = max(size) / 2 * 1.3
 stats = {"triangles": vrlib.triangle_count(objs), "size_m": [round(v, 3) for v in size], "objects": len(objs)}
 context = [ob for ob in scene.objects if ob.get("vr_review_context")]
+figure_location = scene.get("vr_review_figure")
 
 
 def studio():
@@ -84,17 +85,16 @@ def studio():
     ground.data.materials.append(gmat)
 
     # 1.8 m figure for scale: body, head.
-    figure_xy = (centre.x, hi.y + 0.5)
-    bpy.ops.mesh.primitive_cylinder_add(radius=0.22, depth=1.5, location=(*figure_xy, 0.75))
+    x, y, z = figure_location if figure_location is not None else (centre.x, hi.y + 0.5, 0)
+    bpy.ops.mesh.primitive_cylinder_add(radius=0.22, depth=1.5, location=(x, y, z + 0.75))
     body = bpy.context.object
-    bpy.ops.mesh.primitive_uv_sphere_add(radius=0.15, location=(*figure_xy, 1.65))
+    bpy.ops.mesh.primitive_uv_sphere_add(radius=0.15, location=(x, y, z + 1.65))
     head = bpy.context.object
     fmat = bpy.data.materials.new("vr_figure")
     fmat.use_nodes = True
     fmat.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0.9, 0.35, 0.05, 1)
     for o in (body, head):
         o.data.materials.append(fmat)
-        o.hide_render = ground.hide_render
     return [body, head]
 
 
@@ -157,14 +157,14 @@ started = time.time()
 tiles = []
 for name, az, el, target, dist in views:
     for o in figure:
-        o.hide_render = bool(scene.get("vr_review_floating")) or name.startswith("closeup")
+        o.hide_render = name.startswith("closeup") and not (name == "closeup_upper" and figure_location is not None)
     aim(az, el, target, dist)
     scene.render.filepath = os.path.join(tmp_dir, name + ".png")
     bpy.ops.render.render(write_still=True)
     tiles.append(scene.render.filepath)
 
 for o in figure:
-    o.hide_render = bool(scene.get("vr_review_floating"))
+    o.hide_render = False
 for ob in context:
     ob.hide_render = True
 for kind in (() if draft else ("wire", "clay")):

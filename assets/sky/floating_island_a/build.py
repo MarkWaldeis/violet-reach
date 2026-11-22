@@ -317,6 +317,10 @@ def build():
     for ob in objects:
         ob.location.z+=lift
     scene=bpy.context.scene
+    x,y=-45,-48
+    bpy.context.view_layer.update()
+    hit,point,*_=scene.ray_cast(bpy.context.evaluated_depsgraph_get(),Vector((x,y,170)),Vector((0,0,-1)))
+    scene["vr_review_figure"]=(x,y,point.z if hit else summit(x,y,143)+lift)
     scene["vr_review_floating"]=True
-    scene["vr_closeup_upper"]=(-34,-36,140+lift,247,20,135)
+    scene["vr_closeup_upper"]=(-39,-40,141+lift,247,20,92)
     scene["vr_closeup_base"]=(-3,-19,73+lift,281,5,313)
