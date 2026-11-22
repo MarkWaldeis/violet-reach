@@ -84,6 +84,12 @@ Sonniges Gelbgrün, strohige Trockenwiesen und offene Erde wechseln auf etwa
 Höhenatlas-Nachbarn ermittelte Muldenlage steuern feuchtes Moos. Ab etwa 35–40°
 werden helle, höhengeschichtete Kalk-/Strataflächen sichtbar. Direkt am Wasser
 folgt auf den dunklen Nasssaum ein sandfarbener Strand; Wege haben erdige Ränder.
+Strata entstehen aus geneigtem, großräumig verworfenem 3D-Rauschen statt
+periodischen Höhenlinien; vertikale Erosionsspuren unterbrechen die Schichtung.
+Deterministisch einmal erzeugte 256²-Detailtexturen liefern Halmbüschel,
+Erdkiesel und feinen Sand samt Normalrelief. Sie wiederholen sich weltfest auf
+1,54 und gedrehten 0,73 m, mit Mipmaps und 16× anisotroper Filterung; die
+Materialgewichte steuern die Mischung, zwischen 30 und 80 m wird ausgeblendet.
 
 `CSMShadowNode` erzeugt drei weich überblendete 2048²-Kaskaden bis 1100 m.
 Der gleiche Node-Pfad funktioniert mit dem WebGPU- und WebGL2-Backend des
