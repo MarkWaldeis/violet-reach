@@ -64,22 +64,28 @@ def weathering(mat):
         links.new(mix.outputs[0], surface.inputs["Base Color"])
 
     z, y = xyz.outputs["Z"], op("ABSOLUTE", xyz.outputs["Y"])
-    rain = ramp(noise((1.45, 2.6, .21), 2), .44, .71, 0, 1)
-    impost = op("MULTIPLY", ramp(z, 9.9, 13.0, 0, .58), ramp(z, 12.9, 13.9, 1, 0))
-    crown = op("MULTIPLY", ramp(y, .30, 2.3, 1, 0), ramp(z, 26.7, 31.5, 0, .70))
-    multiply_color(op("MULTIPLY", rain, op("MAXIMUM", impost, crown)), (.52, .48, .40, 1))
+    rain = ramp(noise((1.65, 2.75, .15), 2), .20, .80, .18, 1)
+    impost = op("MULTIPLY", ramp(z, 8.6, 12.55, 0, 1), ramp(z, 12.72, 13.65, 1, 0))
+    crown = op("MULTIPLY", ramp(y, .55, 3.15, 1, 0), ramp(z, 26.35, 31.3, 0, 1))
+    multiply_color(op("MULTIPLY", rain, op("MAXIMUM", impost, crown)), (.18, .14, .096, 1))
 
     foot = op("MULTIPLY", ramp(y, 11.6, 12.5, 0, 1), ramp(z, .18, 2.35, 1, 0))
-    damp = op("MULTIPLY", foot, ramp(noise((1.43, 1.69, 2.6), 3), .33, .69, .24, .97))
-    multiply_color(damp, (.27, .35, .18, 1))
+    broken_edge = op("ADD", z, op("MULTIPLY", noise((1.1,1.1,1.4), 2), .82))
+    band = op("MULTIPLY", foot, ramp(broken_edge, 1.29, 2.32, .99, .27))
+    multiply_color(band, (.23, .34, .21, 1))
+    lichen = ramp(noise((6.0,6.0,5.7), 3), .47, .72, 0, 1)
+    multiply_color(op("MULTIPLY", lichen, foot), (.39, .64, .23, 1))
 
-    tread = op("MULTIPLY", ramp(y, 2.1, 6.6, .83, 0), ramp(z, .87, 1.13, 1, 0))
+    worn_width = op("ADD", y, op("MULTIPLY", noise((.38,.55,1.0), 2), 1.6))
+    tread = op("MULTIPLY", ramp(worn_width, 2.0, 6.65, 1, 0), ramp(z, .87, 1.13, 1, 0))
     tread = op("MULTIPLY", tread, ramp(normal.outputs["Z"], .74, .98, 0, 1))
-    tread = op("MULTIPLY", tread, ramp(noise((.63, .35, 1.0), 2), .28, .73, .49, .98))
-    multiply_color(tread, (.57, .52, .44, 1))
+    multiply_color(tread, (.39, .35, .29, 1))
     rough = surface.inputs["Roughness"]
-    subtract = op("SUBTRACT", rough.links[0].from_socket, op("MULTIPLY", tread, .40))
+    subtract = op("SUBTRACT", rough.links[0].from_socket, op("MULTIPLY", tread, .48))
     links.new(subtract, rough)
+    bump = surface.inputs["Normal"].links[0].from_node
+    if bump.type == "BUMP":
+        links.new(ramp(tread, 0, 1, bump.inputs["Strength"].default_value, .05), bump.inputs["Strength"])
 
 
 def finish():
@@ -92,7 +98,7 @@ def finish():
         nodes, links = mat.node_tree.nodes, mat.node_tree.links
         surface = nodes["Principled BSDF"]
         old_color = surface.inputs["Base Color"].links[0].from_socket
-        tone = .65 + .035 * i
+        tone = .58 + .043 * i
         warm = math.sin(1.93 * i)
         color = tuple(c * tone * s for c, s in zip(cream, (1 + .080 * warm, 1, 1 - .147 * warm)))
         mix = nodes.new("ShaderNodeMixRGB")
