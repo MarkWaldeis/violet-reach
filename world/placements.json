@@ -74579,6 +74579,16 @@
         "surface": "meadow",
         "path_clearance": 0.5
       }
+    },
+    {
+      "asset": "crystal_spire_a",
+      "x": 424,
+      "z": 1412,
+      "yaw": 0.8,
+      "pitch": 0.12217304763960307,
+      "roll": 0.15707963267948966,
+      "scale": 1,
+      "y_offset": -0.25293
     }
   ]
 }

@@ -1,0 +1,15 @@
+{
+  "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+  "scores": {
+    "silhouette": 7,
+    "form_detail": 6,
+    "material": 7,
+    "scale": 8,
+    "style": 6,
+    "defects": 7
+  },
+  "notes": "Round 1: rejected. Failing: (1) silhouette/style: the spire is one smooth, straight, symmetrical prism with a pointed cap, so it reads as a purple obelisk or plastic monument rather than a crystal; the three side crystals are too small to balance it (sheet turns, hero). (2) form_detail 6: the main body has almost no readable facets or growth lines, only a smooth dark-to-light gradient; no steps, terminations or fractures (closeup_upper). (3) material 7: no dark core, inner bands or bright veins. (4) defects 7: the base is a ring of clean white boxy blocks with flat cut faces, like sugar cubes, set loosely around a dark soil patch; they do not read as the fault rock the spire grows out of (closeup_base). Fix: lean and taper the spire, break it into a main prism with 2-3 intergrown secondary prisms and one broken termination; carve stepped growth faces; give it the dark core, inner bands and veins; replace the block ring with a split, weathered limestone outcrop the crystal emerges from, with soil and grass in the cracks.",
+  "round": 1,
+  "source_sha256": "134dd8951d442fe4656890437a9747222f938370db6058e2574aba0759c6ed2c",
+  "sheet_sha256": "a59b324cc5594f06e8579f73513430121ce1a5e2c8b2462e2f8807015de5cb7f"
+}

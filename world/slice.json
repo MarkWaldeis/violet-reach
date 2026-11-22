@@ -74,6 +74,10 @@
       "lodScale": 0.25,
       "shadowLODs": 0,
       "tintVariation": 0.08
+    },
+    "crystal_spire_a": {
+      "maxDistance": 1200,
+      "shadowLODs": 1
     }
   }
 }

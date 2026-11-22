@@ -1,0 +1,53 @@
+{
+  "id": "crystal_spire_a",
+  "category": "crystals",
+  "title": "Violet Fault Spire",
+  "description": "A seven-metre violet blade growing with smaller intergrown crystals from a displaced limestone fissure; references: ref_07_violet_crater and ref_03_canyon_cliffs.",
+  "target_size_m": [
+    5,
+    5.35,
+    7.25
+  ],
+  "lod_triangles": [
+    10300,
+    3700,
+    1150
+  ],
+  "texture_size": 2048,
+  "status": "exported",
+  "builder": "devin-79c81cd3e9c64cc49f913648e628a347",
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 8,
+      "scale": 8,
+      "style": 8,
+      "defects": 8
+    },
+    "notes": "Lead extra round: approved. The crystal is unchanged from round 3 (same make_crystal/crystal_material code; the diff only touches support_material and outcrop), and it already passed then. The base now uses cluster_b's approved support_material and outcrop code, identical line for line: the camouflage blotches, stretched side texture and painted black cracks are gone. The limestone is a narrow grey tone range with irregular moss on the upward faces, soil-dark AO in recesses, and fractured blocks of varied height (closeup_base, all turns). Polish, not blocking: the moss patches read slightly soft and smudged up close.",
+    "round": 4,
+    "source_sha256": "37bf0f20c444b77664a09754cbd560ff0f9bf0548f1c12542e3ce265cc5a5550",
+    "sheet_sha256": "a8397dfa687fb655cf9cf24a6329b0dca2acfe16fce554ba0649eeb543769b8f"
+  },
+  "review_rounds": 4,
+  "size_m": [
+    3.938,
+    3.587,
+    7.111
+  ],
+  "export": {
+    "file": "export/crystal_spire_a.glb",
+    "bytes": 2452032,
+    "sha256": "62462ac15d5d888eca329d030b80befffbc58d8864d937fd1111901964b34bd7",
+    "source_sha256": "37bf0f20c444b77664a09754cbd560ff0f9bf0548f1c12542e3ce265cc5a5550",
+    "sheet_sha256": "a8397dfa687fb655cf9cf24a6329b0dca2acfe16fce554ba0649eeb543769b8f",
+    "lod_triangles": [
+      10300,
+      3700,
+      1150
+    ],
+    "texture_size": 2048
+  }
+}

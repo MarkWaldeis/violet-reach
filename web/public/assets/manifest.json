@@ -25,6 +25,18 @@
       "bytes": 2597012
     },
     {
+      "id": "crystal_spire_a",
+      "category": "crystals",
+      "title": "Violet Fault Spire",
+      "file": "crystal_spire_a.glb",
+      "size_m": [
+        3.938,
+        3.587,
+        7.111
+      ],
+      "bytes": 2452032
+    },
+    {
       "id": "crystal_violet_cluster_a",
       "category": "crystals",
       "title": "Violetter Kristallhaufen A",
