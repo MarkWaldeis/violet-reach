@@ -1,5 +1,5 @@
 import {
-  DirectionalLight, HemisphereLight, Scene, Vector3,
+  Color, DirectionalLight, HemisphereLight, Scene, Vector3,
 } from "three/webgpu";
 import { CSMShadowNode } from "three/addons/csm/CSMShadowNode.js";
 import { cameraPosition, cameraProjectionMatrixInverse, cameraWorldMatrix, color, fog, mix, mx_noise_float, positionWorld, screenUV, smoothstep, time, vec2, vec3, vec4 } from "three/tsl";
@@ -49,6 +49,8 @@ export function setupAtmosphere(scene: Scene) {
   const csm = new CSMShadowNode(sun, { cascades: 3, maxFar: 1100, mode: "practical", lightMargin: 350 });
   csm.fade = true;
   sun.shadow.shadowNode = csm;
-  scene.add(sun, sun.target, new HemisphereLight(swatch("sky_blue"), swatch("monument_shadow"), 1.9));
+  const skyFill = new Color(swatch("sky_blue")).lerp(new Color(swatch("cloud_cream")), 0.65);
+  const groundFill = new Color(swatch("monument_shadow")).lerp(new Color(swatch("stone_weathered")), 0.35);
+  scene.add(sun, sun.target, new HemisphereLight(skyFill, groundFill, 1.9));
   return { resize: () => { if (csm.camera) csm.updateFrustums(); } };
 }

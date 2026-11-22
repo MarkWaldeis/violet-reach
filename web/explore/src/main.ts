@@ -59,6 +59,7 @@ async function main() {
   }
   const manifest = params.get("terrain") ?? (slice ? "./terrain/manifest.json" : "./demo-terrain/manifest.json");
   terrainLabel.textContent = slice ? "Spiegelsee · Phase-2-Ausschnitt" : params.has("terrain") ? "Höhenkartenvorschau" : "Testlandschaft";
+  document.querySelector("#phase")!.textContent = slice ? "PHASE 2 · SPIEGELSEE-AUSSCHNITT" : params.has("terrain") ? "GELÄNDEVORSCHAU" : "DEMO · TESTLANDSCHAFT";
   const groundMaterial = terrainMaterial();
   const terrain = await TerrainStream.open(new URL(manifest, location.href), groundMaterial);
   scene.add(terrain.group);
