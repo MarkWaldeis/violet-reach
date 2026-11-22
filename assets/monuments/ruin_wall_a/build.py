@@ -184,11 +184,13 @@ def build():
         (3.04,3.74,(3.84,4.32,4.92),None),
         (3.74,4.62,(4.18,4.91),.87)],-1)
     ashlar("Solid lower terrace bed",(-4.94,4.94,-.09,2.36,-.14,.30),rng,old)
-    for i in range(5):
-        x0=2.77-i*.72
-        ashlar(f"Rear terrace tread {i+1}",(x0,x0+.72,.16,2.27,.285,.50+i*.19),rng,white)
-    ashlar("Solid upper terrace bed",(-4.97,-.82,-.09,2.30,.24,1.27),rng,white)
-    for i,(a,b) in enumerate(zip((-4.97,-3.79,-2.65,-1.73),(-3.79,-2.65,-1.73,-.82))):
+    tread_depth,tread_count=.72,5
+    terrace_edge=2.77-(tread_count-1)*tread_depth
+    for i in range(tread_count):
+        x0=2.77-i*tread_depth
+        ashlar(f"Rear terrace tread {i+1}",(x0,x0+tread_depth,.16,2.27,.285,.50+i*.19),rng,white)
+    ashlar("Solid upper terrace bed",(-4.97,terrace_edge+.045,-.09,2.30,.24,1.22),rng,white)
+    for i,(a,b) in enumerate(zip((-4.97,-3.79,-2.65,-1.73),(-3.79,-2.65,-1.73,terrace_edge))):
         ashlar(f"Upper terrace paving {i+1}",(a+.012,b-.01,.12,2.38,1.23,1.36),rng,white,.12)
 
     for i,(x,y,length,depth,height) in enumerate((
