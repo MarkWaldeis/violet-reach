@@ -1,0 +1,35 @@
+{
+  "id": "energy_core_a",
+  "category": "energy",
+  "title": "Violet Seed Sanctuary",
+  "description": "A floating violet energy seed held between four eroded limestone sails by currents that wind around the body; references: ref_04_white_ribbed_arches and ref_07_violet_crater.",
+  "target_size_m": [
+    20,
+    22,
+    19.3
+  ],
+  "lod_triangles": [
+    18800,
+    6900,
+    2100
+  ],
+  "texture_size": 4096,
+  "status": "modeling",
+  "builder": "devin-b06222e48d554ae4a6a116ad07645e06",
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 6,
+      "form_detail": 6,
+      "material": 5,
+      "scale": 8,
+      "style": 5,
+      "defects": 5
+    },
+    "notes": "Round 3 (final) against the round-2 points. Seed: changed, not fixed. The jelly bean is now a lumpy sack covered with a water-caustic vein texture in pale lilac; there is still no bright narrow core and no structure, and it reads as a patterned balloon (closeup.jpg). Fix: a dark violet faceted or ribbed body with a narrow bright core visible through slits, emission confined to the core and seams. Currents: still plain uniform tubes; four of them now run from the seed to the ground as straight legs, so the core reads as a tripod lander or a spider (hero.jpg). Fix: thin wire-like filaments with bright cores that taper, branch and arc between the seed and the sails, none touching the ground as a strut. Sails and slabs: the sails read better and the pink socket is gone, but the floor slabs are still flat placeholder plates at each foot. Fix: embed the sail feet in broken rubble and turf.",
+    "round": 3,
+    "source_sha256": "a2e4c92ef4aede350b1ae4f3879730a33ec26536576b511f179894fc6ee92272",
+    "sheet_sha256": "6a99e55a0b80575452056a06e6ad899e6dc373f848d3f3dc3b71ec2d3693fc9a"
+  },
+  "review_rounds": 3
+}
