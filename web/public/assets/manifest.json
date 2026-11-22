@@ -1,6 +1,18 @@
 {
   "assets": [
     {
+      "id": "bridge_arch_a",
+      "category": "bridges",
+      "title": "Pale Ford Arch",
+      "file": "bridge_arch_a.glb",
+      "size_m": [
+        40.94,
+        6.48,
+        7.251
+      ],
+      "bytes": 3806124
+    },
+    {
       "id": "crystal_violet_cluster_a",
       "category": "crystals",
       "title": "Violetter Kristallhaufen A",
