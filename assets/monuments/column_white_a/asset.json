@@ -14,23 +14,9 @@
     1900
   ],
   "texture_size": 2048,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-10557958564a4a9894cdbd6bc867cb9f",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 8,
-      "form_detail": 8,
-      "material": 7,
-      "scale": 8,
-      "style": 8,
-      "defects": 8
-    },
-    "notes": "Round 2, checked against the round-1 points. Fixed: the drilled holes on the torus, abacus and drum are gone; the crack is now a cut V-groove with a jagged edge that ends at a drum joint (closeup_upper); the clay tile shows clean concave flutes. Fails only on material: the weathering sits almost entirely on the torus and plinth as dark blotchy patches that read as marble veining, not limestone grime, and the shaft and capital stay clean even ivory with no lichen and no rain streaks (hero, closeup_base). Fix: replace the torus blotches with soft grime graded upwards from the plinth; add a few vertical rain streaks below the abacus and echinus on one side; lichen spots in the flute bottoms of the two lowest drums and at the plinth corners; slightly darker drum joints.",
-    "round": 2,
-    "source_sha256": "47c302c06f62b43d6039bce8eb48247cd78fe7c3717b3b5b9dfcf72e759e716e",
-    "sheet_sha256": "4eee96bcdaee2bc68c87386283b73e76ead87adbe8d0ce26918fd6881a56f9dd"
-  },
+  "review": null,
   "references": [
     "art/reference/ref_01_white_monuments_sky.jpg",
     "art/reference/ref_03_canyon_cliffs.jpg",

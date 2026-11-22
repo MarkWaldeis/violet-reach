@@ -14,23 +14,9 @@
     2100
   ],
   "texture_size": 4096,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-10557958564a4a9894cdbd6bc867cb9f",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 6,
-      "form_detail": 6,
-      "material": 6,
-      "scale": 8,
-      "style": 6,
-      "defects": 6
-    },
-    "notes": "Round 2, checked against the round-1 points. The convex ribs are gone, but the drums are now faceted boxy blocks with stair-stepped notches cut into one face, so the row reads as stepped boulders or stair fragments, not fallen column drums (hero, closeup_upper, closeup_base). No capital is recognisable: the right piece is a scalloped disc, the left a flat slab with a wavy top. The pieces stand in a straight row on edge like a fence rather than lying along a fall line. Material is clean white with blotchy grey smudges. Fix: round drums (true cylinders) with concave Doric flutes and sharp arrises, lying on their sides at varied angles, half sunk into the turf, decreasing in size along a fall line; one profiled broken capital (echinus plus abacus) at the end; fracture faces as large planes with secondary chips; grime and lichen on the down side and where they touch the ground.",
-    "round": 2,
-    "source_sha256": "861905bf34c285b8bf1dcaed9adf57bb0f1812e73a16b0764b91938e18a2be10",
-    "sheet_sha256": "5c6cc91c411ced8ae00adff6e6d52f739a3557d19cb391b26f4d2ec85cd00423"
-  },
+  "review": null,
   "references": [
     "art/reference/ref_01_white_monuments_sky.jpg",
     "art/reference/ref_03_canyon_cliffs.jpg",

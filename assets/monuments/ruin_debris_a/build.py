@@ -8,7 +8,16 @@ import bpy
 from mathutils import Euler, Matrix, Vector
 from mathutils.geometry import delaunay_2d_cdt
 
-from vrcolumn import drum, fracture_planes, survey_capital, weather_stone
+from vrcolumn import (
+    SHAFT_LEVELS,
+    fracture_planes,
+    limestone,
+    limestone_library,
+    shaft_radius,
+    survey_base,
+    survey_capital,
+    survey_drum,
+)
 import vrlib
 import vrmat
 
@@ -28,70 +37,7 @@ def mesh(name, vertices, faces, materials=(), smooth=False, indices=()):
 
 
 def stone_library(prefix):
-    palette = vrmat.load_palette()
-    cream = palette["monument_white"]["linear_rgb"]
-    tones = []
-    for i, (value, warmth) in enumerate(
-        (
-            (0.89, 0.01),
-            (0.94, 0.023),
-            (1.02, 0.018),
-            (0.97, -0.018),
-            (0.88, -0.028),
-            (0.92, 0.039),
-            (1.035, -0.025),
-            (0.83, 0.012),
-            (0.97, 0.052),
-            (0.91, -0.038),
-        )
-    ):
-        material = vrmat.get("monument_white").copy()
-        material.name = f"{prefix} · limestone bed {i+1:02}"
-        tree = material.node_tree
-        nodes, links = tree.nodes, tree.links
-        surface = nodes["Principled BSDF"]
-        prev = surface.inputs["Base Color"].links[0].from_socket
-        tone = nodes.new("ShaderNodeMixRGB")
-        tone.inputs[0].default_value = 0.60
-        links.new(prev, tone.inputs[1])
-        tone.inputs[2].default_value = (
-            *[c * value * k for c, k in zip(cream, (1 + warmth, 1, 1 - warmth))],
-            1,
-        )
-        coord = next(n for n in nodes if n.type == "TEX_COORD")
-        weather = weather_stone(
-            tree,
-            coord.outputs["Object"],
-            tone.outputs[0],
-            palette,
-            height=1.85,
-            recess=0.18,
-            exposed=1.70,
-        )
-        bands = nodes.new("ShaderNodeVectorMath")
-        bands.operation = "MULTIPLY"
-        bands.inputs[1].default_value = (2.1, 2.1, 17.0)
-        links.new(coord.outputs["Object"], bands.inputs[0])
-        beds = nodes.new("ShaderNodeTexNoise")
-        beds.inputs["Scale"].default_value = 1.1
-        beds.inputs["Detail"].default_value = 2.4
-        links.new(bands.outputs[0], beds.inputs["Vector"])
-        streak = nodes.new("ShaderNodeMixRGB")
-        streak.inputs[1].default_value = (0.73, 0.69, 0.60, 1)
-        streak.inputs[2].default_value = (1, 1, 1, 1)
-        links.new(beds.outputs["Fac"], streak.inputs[0])
-        calcite = nodes.new("ShaderNodeMixRGB")
-        calcite.blend_type = "MULTIPLY"
-        calcite.inputs[0].default_value = 0.34
-        links.new(weather, calcite.inputs[1])
-        links.new(streak.outputs[0], calcite.inputs[2])
-        links.new(calcite.outputs[0], surface.inputs["Base Color"])
-        surface.inputs["Specular IOR Level"].default_value = 0.24
-        bump = surface.inputs["Normal"].links[0].from_node
-        bump.inputs["Distance"].default_value = 0.006
-        bump.inputs["Strength"].default_value = 0.30
-        tones.append(material)
-    return tones
+    return limestone_library(prefix, base=1.10, runoff=(0.95, 2.85), flute_lichen=0.27)
 
 
 def accent(prefix, key, color_key, scale, blend):
@@ -491,123 +437,85 @@ def seat(parts, x, y, twist, yaw, rise, foot):
         part.data.update()
 
 
-def broken_drum(name, r, length, tilt, rng, tone, fracture, extra=(), stump=False):
-    centre = 0.5 * length if stump else 0
-    bed = centre - length / 2
-    obj = drum(
-        mesh,
-        name,
-        bed if stump else bed - 0.86,
-        centre + length / 2 + 0.86,
-        lambda z: r
-        - tilt * (z - centre)
-        + (0.16 * max(0, 1 - z / 0.34) ** 2 if stump else 0),
-        lambda z: z / 0.26 if stump else 1,
-        tone,
-        rng,
-    )
-    tip = centre + length / 2
-    phase = rng.uniform(0, math.tau)
+def broken_drum(name, index, phase, slope, loss, rng, tone, fracture, *, stump=False):
+    obj = survey_drum(mesh, name, index, tone, rng)
+    bed, tip = SHAFT_LEVELS[index : index + 2]
+    end = bed + 0.98 if stump else tip - loss
+    r = shaft_radius(end)
     c, s = math.cos(phase), math.sin(phase)
     planes = [
-        ((0, 0, tip), (0.26 * c, 0.35 * s, 1)),
-        ((r * c * 0.32, r * s * 0.32, tip - 0.10), (0.54 * c, 0.67 * s, 1)),
-        ((r * c * 0.69, r * s * 0.69, tip - 0.19), (c - 0.33 * s, s + 0.33 * c, 0.86)),
-        ((r * s * 0.55, -r * c * 0.55, tip - 0.14), (0.87 * s, -0.87 * c, 0.62)),
+        ((0, 0, end), (slope * c, slope * s, 1)),
+        (
+            (0.85 * r * c, 0.85 * r * s, end - slope * r * 0.87 - 0.075),
+            (0.78 * c, 0.78 * s, 1),
+        ),
     ]
     if not stump:
-        planes.extend(
-            [
-                ((0, 0, bed), (0.27 * s, -0.30 * c, -1)),
-                ((-0.45 * r * s, 0.43 * r * c, bed + 0.09), (-0.48 * s, 0.62 * c, -1)),
-                ((0.94 * r * c, 0.94 * r * s, bed + 0.27), (c, s, -0.56)),
-                ((0.97 * r * s, -0.97 * r * c, tip - 0.30), (s, -c, 0.75)),
-            ]
+        planes.append(
+            ((-0.86 * r * s, 0.86 * r * c, bed + 0.09), (-0.62 * s, 0.62 * c, -1))
         )
-    return fracture_planes(obj, [*planes, *extra], fracture)
+    fracture_planes(obj, planes, fracture)
+    if not stump:
+        obj.data.transform(Matrix.Translation((0, 0, -(bed + tip) / 2)))
+    return obj
 
 
 def capital(tones, fracture):
-    parts = survey_capital(moulding, blend_curve, tones)
-    planes = [
-        ((0.61, 0.33, 16.88), (0.85, 0.50, -0.17)),
-        ((0.12, 1.75, 17.77), (0.52, 0.82, 0.36)),
-        ((-1.54, -1.45, 17.91), (-0.74, -0.66, 0.32)),
-        ((-1.27, 0.22, 17.24), (-0.82, 0.43, -0.13)),
-    ]
-    for part in parts:
-        fracture_planes(part, planes, fracture)
+    neck, cushion, abacus = survey_capital(moulding, blend_curve, tones)
+    fracture_planes(
+        abacus,
+        [
+            ((1.65, -1.68, 17.51), (0.69, -0.64, 0.14)),
+            ((1.71, -1.44, 17.80), (0.77, -0.35, 0.40)),
+            ((-1.92, 1.91, 17.73), (-0.72, 0.67, 0.31)),
+        ],
+        fracture,
+    )
+    fracture_planes(cushion, [((1.51, -1.65, 17.19), (0.69, -0.64, 0.14))], fracture)
+    for part in (neck, cushion, abacus):
         part.data.transform(Matrix.Translation((0, 0, -16.72)))
-    return parts
+    return neck, cushion, abacus
 
 
 def build():
     rng = random.Random(873321)
     tones = stone_library("Fallen Survey Line")
-    fracture = accent(
-        "Limestone break plane", "monument_white", "stone_weathered", 0.81, 0.61
+    fracture = limestone(
+        "Limestone break plane", 0.86, 0.045, base=1.12, runoff=(0.95, 2.85)
     )
-    tree = fracture.node_tree
-    base_color = tree.nodes["Principled BSDF"].inputs["Base Color"]
-    coord = next(n for n in tree.nodes if n.type == "TEX_COORD")
-    weather = weather_stone(
-        tree,
-        coord.outputs["Object"],
-        base_color.links[0].from_socket,
-        vrmat.load_palette(),
-        height=1.52,
-        exposed=1.12,
-    )
-    tree.links.new(weather, base_color)
     soil = ground_materials("Fallen Survey Line")
+    base = survey_base(moulding, blend_curve, tones[3])
     stump = broken_drum(
-        "Source stump · sheared just above the foot",
-        1.66,
-        1.29,
-        0.022,
+        "Source stump · sheared above its profiled foot",
+        0,
+        -0.61,
+        0.30,
+        0.0,
         rng,
         tones[5],
         fracture,
         stump=True,
     )
-    seat((stump,), -6.91, 0.76, 0.29, -0.10, 0.052, -0.038)
-    obj = broken_drum(
-        "Fall 01 · heavy lower shaft",
-        1.61,
-        2.24,
-        0.020,
-        rng,
-        tones[1],
-        fracture,
-        extra=[((1.02, 0.98, 1.02), (0.49, 0.78, 0.68))],
-    )
-    seat((obj,), -3.92, 0.12, 0.74, -0.06, 1.46, -0.044)
-    obj = broken_drum(
-        "Fall 02 · shaft with split flank",
-        1.53,
-        1.99,
-        0.023,
-        rng,
-        tones[3],
-        fracture,
-        extra=[
-            ((-0.76, 0.16, 0.10), (-0.90, 0.23, 0.37)),
-            ((-0.91, -0.72, 0.29), (-0.65, -0.57, 0.26)),
-        ],
-    )
-    seat((obj,), -1.04, -0.51, 0.42, 0.23, 1.53, -0.043)
-    obj = broken_drum(
-        "Fall 03 · upper shaft kicked sideways",
-        1.43,
-        1.78,
-        0.013,
-        rng,
-        tones[6],
-        fracture,
-        extra=[((-0.33, -1.14, 0.79), (-0.19, -0.81, 0.68))],
-    )
-    seat((obj,), 1.91, 0.51, -0.19, -0.23, 1.36, -0.037)
-    seat(capital(tones, fracture), 4.96, -0.43, -0.53, -0.58, 1.72, -0.044)
+    seat((base, stump), -7.18, 0.37, 0.10, 0, 0, -0.044)
+    for name, index, phase, slope, loss, x, y, twist, yaw, rise in (
+        ("Fall 01 · lower shaft", 1, 1.85, 0.28, 0.14, -3.53, 0.36, 0.55, -0.24, 1.57),
+        (
+            "Fall 02 · middle shaft",
+            3,
+            -0.21,
+            0.24,
+            0.20,
+            -0.77,
+            -1.04,
+            0.12,
+            0.69,
+            1.38,
+        ),
+        ("Fall 03 · upper shaft", 6, 0.81, 0.31, 0.22, 1.96, 0.51, -0.28, 0.12, 1.83),
+    ):
+        obj = broken_drum(name, index, phase, slope, loss, rng, tones[index], fracture)
+        seat((obj,), x, y, twist, yaw, rise, -0.049)
+    seat(capital(tones, fracture), 5.28, -0.46, -0.37, 0.37, 2.56, -0.047)
     for x, y, w, d, h, az in (
         (-7.31, -1.76, 1.14, 0.71, 0.49, -0.29),
         (-5.46, 1.73, 1.47, 1.08, 0.81, -0.51),
@@ -639,13 +547,13 @@ def build():
     for x, y, rx, ry, h, blades in (
         (-6.9, -0.44, 1.57, 1.59, 0.49, 338),
         (-6.24, 1.94, 1.89, 1.05, 0.29, 246),
-        (-4.16, 1.04, 1.94, 1.02, 0.49, 209),
-        (-3.84, -1.02, 1.43, 0.91, 0.46, 236),
-        (-1.62, -1.32, 1.81, 1.24, 0.39, 231),
-        (-0.93, 0.78, 1.19, 1.23, 0.38, 250),
-        (1.32, -0.32, 1.69, 1.08, 0.47, 215),
+        (-4.16, 0.82, 1.94, 1.21, 0.65, 209),
+        (-3.84, -0.63, 1.58, 1.32, 0.57, 236),
+        (-1.62, -1.18, 1.81, 1.24, 0.55, 231),
+        (-0.93, 0.52, 1.49, 1.23, 0.43, 250),
+        (1.52, -0.32, 1.69, 1.36, 0.59, 215),
         (1.99, 1.43, 1.70, 1.29, 0.38, 200),
-        (4.17, -1.39, 2.37, 0.98, 0.43, 244),
+        (4.32, -1.32, 2.37, 1.18, 0.48, 244),
         (4.94, 1.37, 1.72, 1.23, 0.35, 225),
         (6.35, -0.53, 1.23, 1.43, 0.24, 121),
     ):

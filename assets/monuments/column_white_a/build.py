@@ -10,11 +10,14 @@ from mathutils.geometry import delaunay_2d_cdt
 
 from vrcolumn import (
     FLUTE_DEPTH,
-    drum,
+    SHAFT_LEVELS,
     flute,
     fracture_planes,
+    limestone_library,
+    shaft_radius,
+    survey_base,
     survey_capital,
-    weather_stone,
+    survey_drum,
 )
 import vrlib
 import vrmat
@@ -35,69 +38,7 @@ def mesh(name, vertices, faces, materials=(), smooth=False, indices=()):
 
 
 def stone_library(prefix):
-    palette = vrmat.load_palette()
-    cream = palette["monument_white"]["linear_rgb"]
-    tones = []
-    for i, (value, warmth) in enumerate(
-        (
-            (0.89, 0.01),
-            (0.94, 0.023),
-            (1.02, 0.018),
-            (0.97, -0.018),
-            (0.88, -0.028),
-            (0.92, 0.039),
-            (1.035, -0.025),
-            (0.83, 0.012),
-            (0.97, 0.052),
-            (0.91, -0.038),
-        )
-    ):
-        material = vrmat.get("monument_white").copy()
-        material.name = f"{prefix} · limestone bed {i+1:02}"
-        tree = material.node_tree
-        nodes, links = tree.nodes, tree.links
-        surface = nodes["Principled BSDF"]
-        prev = surface.inputs["Base Color"].links[0].from_socket
-        tone = nodes.new("ShaderNodeMixRGB")
-        tone.inputs[0].default_value = 0.60
-        links.new(prev, tone.inputs[1])
-        tone.inputs[2].default_value = (
-            *[c * value * k for c, k in zip(cream, (1 + warmth, 1, 1 - warmth))],
-            1,
-        )
-        coord = next(n for n in nodes if n.type == "TEX_COORD")
-        weather = weather_stone(
-            tree,
-            coord.outputs["Object"],
-            tone.outputs[0],
-            palette,
-            height=3.4,
-            recess=0.19,
-        )
-        bands = nodes.new("ShaderNodeVectorMath")
-        bands.operation = "MULTIPLY"
-        bands.inputs[1].default_value = (2.1, 2.1, 17.0)
-        links.new(coord.outputs["Object"], bands.inputs[0])
-        beds = nodes.new("ShaderNodeTexNoise")
-        beds.inputs["Scale"].default_value = 1.1
-        beds.inputs["Detail"].default_value = 2.4
-        links.new(bands.outputs[0], beds.inputs["Vector"])
-        streak = nodes.new("ShaderNodeMixRGB")
-        streak.inputs[1].default_value = (0.73, 0.69, 0.60, 1)
-        streak.inputs[2].default_value = (1, 1, 1, 1)
-        links.new(beds.outputs["Fac"], streak.inputs[0])
-        calcite = nodes.new("ShaderNodeMixRGB")
-        calcite.blend_type = "MULTIPLY"
-        calcite.inputs[0].default_value = 0.34
-        links.new(weather, calcite.inputs[1])
-        links.new(streak.outputs[0], calcite.inputs[2])
-        links.new(calcite.outputs[0], surface.inputs["Base Color"])
-        surface.inputs["Specular IOR Level"].default_value = 0.24
-        bump = surface.inputs["Normal"].links[0].from_node
-        bump.inputs["Distance"].default_value = 0.006
-        bump.inputs["Strength"].default_value = 0.30
-        tones.append(material)
-    return tones
+    return limestone_library(prefix, base=2.55, runoff=(10.6, 16.4), flute_lichen=0.92)
 
 
 def accent(prefix, key, color_key, scale, blend):
@@ -498,25 +439,14 @@ def stone_block(
     return obj
 
 
-SHAFT_BOTTOM, SHAFT_TOP = 1.82, 15.44
-
-
-def shaft_radius(z):
-    t = (z - SHAFT_BOTTOM) / (SHAFT_TOP - SHAFT_BOTTOM)
-    return 1.65 - 0.24 * t + 0.093 * math.sin(math.pi * t)
-
-
 def shaft(tones, mortar, fracture, rng):
-    levels = (1.82, 3.79, 5.92, 7.66, 9.91, 11.67, 13.71, 15.44)
+    levels = SHAFT_LEVELS
     for index, (start, end) in enumerate(zip(levels, levels[1:])):
         lo, hi = start + 0.009, end - 0.009
-        obj = drum(
+        obj = survey_drum(
             mesh,
             f"Survey shaft · drum {index+1:02}",
-            lo,
-            hi,
-            shaft_radius,
-            lambda z: min(1, (z - SHAFT_BOTTOM) / 0.23, (SHAFT_TOP - z) / 0.29),
+            index,
             tones[[2, 0, 3, 1, 6, 2, 4][index]],
             rng,
         )
@@ -630,19 +560,7 @@ def footing(tones, mortar, fracture, rng):
             mortar,
             rng,
         )
-    curve = blend_curve(
-        (
-            ((0.92, 2.09), (0.94, 2.16), (0.97, 2.19), (1.014, 2.19)),
-            ((1.014, 2.19), (1.10, 2.19), (1.107, 2.37), (1.244, 2.37)),
-            ((1.244, 2.37), (1.387, 2.37), (1.402, 2.05), (1.405, 2.021)),
-            ((1.405, 2.021), (1.454, 1.86), (1.475, 1.84), (1.542, 1.837)),
-            ((1.542, 1.837), (1.60, 1.834), (1.63, 1.918), (1.674, 1.918)),
-            ((1.674, 1.918), (1.752, 1.918), (1.752, 1.70), (1.811, 1.68)),
-            ((1.811, 1.68), (1.821, 1.677), (1.833, 1.644), (1.844, 1.643)),
-        ),
-        14,
-    )
-    moulding("Attic footing · broad torus and scotia", curve, tones[3])
+    survey_base(moulding, blend_curve, tones[3])
 
 
 def capital(tones, fracture):
@@ -661,7 +579,7 @@ def build():
     rng = random.Random(483039)
     tones = stone_library("Survey Column")
     mortar = accent(
-        "Compressed lime and grit", "monument_weathered", "stone_weathered", 0.49, 0.84
+        "Compressed lime and grit", "monument_weathered", "stone_weathered", 0.39, 0.88
     )
     fracture = accent(
         "Old limestone fracture", "monument_white", "monument_white", 0.87, 0.61
