@@ -49,11 +49,11 @@ def outline(a):
     return 1 + .075*math.sin(3*a+.7) + .045*math.sin(7*a-1.1) + .023*math.sin(17*a)
 
 
-def edge(a, scale=1, shift=(0, 0), phase=0):
+def edge(a, scale=1, shift=(0, 0), phase=0, notch_strength=1):
     r = outline(a) * scale * (1 + .08*math.sin(2*a+phase) + .035*math.sin(11*a+phase))
     for angle, width, depth in ((.52, .17, .23), (2.14, .13, .27), (3.77, .18, .20), (4.91, .14, .30)):
         delta = abs(math.atan2(math.sin(a-angle), math.cos(a-angle)))
-        r -= scale*depth*max(0, 1-delta/width)
+        r -= notch_strength*scale*depth*max(0, 1-delta/width)
     return Vector((132*r*math.cos(a)+shift[0], 89.5*r*math.sin(a)+shift[1], 0))
 
 
@@ -87,6 +87,7 @@ def wall_fractures(mesh, corners, seed):
     if width < .15 or height < .2:
         mesh.face(corners)
         return
+    patch = Mesh()
     normal = (low_b-low_a).cross(high_a-low_a).normalized()
     uv = [Vector((0, 0)), Vector((width, 0)), Vector((width, height)), Vector((0, height))]
     pivot = Vector((width*rng.uniform(.28, .72), height*rng.uniform(.3, .7)))
@@ -131,7 +132,30 @@ def wall_fractures(mesh, corners, seed):
                 if len(poly) >= 3:
                     points = [point(p) for p in poly]
                     for k in range(1, len(points)-1):
-                        mesh.face((points[0], points[k], points[k+1]))
+                        patch.face((points[0], points[k], points[k+1]))
+    if width > 3 and height > 3:
+        bm = bmesh.new()
+        verts = [bm.verts.new(p) for p in patch.vertices]
+        for face in patch.faces:
+            bm.faces.new([verts[i] for i in face])
+        bmesh.ops.remove_doubles(bm, verts=list(bm.verts), dist=.0001)
+        across = (low_b-low_a).normalized()
+        up = (high_a-low_a).normalized()
+        cut_normal = (across+up*rng.uniform(-.28, .28)).normalized()
+        cut_point = low_a.lerp(low_b, rng.uniform(.25, .75))+up*(height*.5)
+        bmesh.ops.bisect_plane(bm, geom=list(bm.verts)+list(bm.edges)+list(bm.faces),
+                              plane_co=cut_point, plane_no=cut_normal, dist=.00001)
+        depth = rng.uniform(.35, .9)
+        for v in bm.verts:
+            if not v.is_boundary:
+                v.co -= normal*(depth*max(0, 1-abs((v.co-cut_point).dot(cut_normal))/.6))
+        bmesh.ops.triangulate(bm, faces=list(bm.faces))
+        for face in bm.faces:
+            mesh.face([v.co.copy() for v in face.verts])
+        bm.free()
+    else:
+        for face in patch.faces:
+            mesh.face([patch.vertices[i] for i in face])
 
 
 def fractured_relief(p, seed):
@@ -140,7 +164,68 @@ def fractured_relief(p, seed):
     large = fracture_field(Vector((q.x*.23, q.y*.23, q.z*.105))+offset, seed)
     steps = fracture_field(q*(.8+(seed % 17)*.013)+offset*1.71, seed+73)
     grain = fracture_field(q*4.3+offset*2.37, seed+191)
-    return large*2.6+math.floor(steps*2)*.32+grain*.055
+    distances, _ = noise.voronoi(q*.43+offset)
+    crack = max(0, 1-(distances[1]-distances[0])/.085)
+    return large*1.7+math.floor(steps*2)*.4+grain*.045-crack*.65
+
+
+def soffit_wedge(mesh, centre, a, b, seed):
+    rng = random.Random(seed+round(a.x*317)+round(a.y*733))
+    radius = max((a-centre).length, (b-centre).length)
+    nr = max(1, math.ceil(radius*.45/1.1))
+    radii = [0, .3, .55]+[.55+.45*(i+rng.uniform(-.32, .32))/nr for i in range(1, nr)]+[1]
+    ns = max(1, math.ceil((b-a).length/rng.uniform(.7, 2.1)))
+    fractions = [0]+[(i+rng.uniform(-.3, .3))/ns for i in range(1, ns)]+[1]
+
+    def point(i, j):
+        r = radii[i]
+        p = centre.lerp(a.lerp(b, fractions[j]), r)
+        relief = fracture_field(p*.19, seed)
+        tooth_scale = .22+.6*(.5+.5*fracture_field(p*.035, seed+41))
+        tooth_mask = max(0, min(1, (fracture_field(p*.075, seed+11)+.15)*2))
+        spall = max(0, fracture_field(p*tooth_scale, seed+19))*tooth_mask
+        distances, _ = noise.voronoi(p*.68+Vector((seed*.17, 3, seed*.31)))
+        crack = max(0, 1-(distances[1]-distances[0])/.12)
+        chips = math.floor(fracture_field(p*.83, seed+89)*3)*.42
+        grain = fracture_field(p*3.1, seed+191)*.05
+        p.z = max(2.5, p.z-(1-r)**.35*(3.5+4.5*(relief+1)+spall*5+chips-crack+grain))
+        return p
+
+    for i in range(len(radii)-1):
+        for j in range(ns):
+            a0, a1, b1, b0 = point(i, j), point(i, j+1), point(i+1, j+1), point(i+1, j)
+            if i:
+                mesh.face((a0, b1, a1))
+            mesh.face((a0, b0, b1))
+
+
+def fractured_block(mesh, centre, size, seed, orientation=None):
+    rng = random.Random(seed)
+    bm = bmesh.new()
+    bmesh.ops.create_cube(bm, size=2)
+    for _ in range(rng.randint(5, 8)):
+        angle = rng.uniform(0, TAU)
+        normal = Vector((math.cos(angle), math.sin(angle), rng.uniform(-.9, .9))).normalized()
+        cut = bmesh.ops.bisect_plane(bm, geom=list(bm.verts)+list(bm.edges)+list(bm.faces),
+                                     plane_co=normal*rng.uniform(.8, 1.12), plane_no=normal,
+                                     dist=.00001, clear_outer=True)
+        edges = [e for e in cut["geom_cut"] if isinstance(e, bmesh.types.BMEdge) and e.is_boundary]
+        if edges:
+            bmesh.ops.holes_fill(bm, edges=edges)
+    bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
+    polygons = [[v.co.copy() for v in face.verts] for face in bm.faces]
+    bm.free()
+    for k, polygon in enumerate(polygons):
+        world = []
+        for p in polygon:
+            p = Vector((p.x*size[0], p.y*size[1], p.z*size[2]))
+            if orientation is not None:
+                p = orientation @ p
+            world.append(Vector(centre)+p)
+        midpoint = sum(world, Vector())/len(world)
+        for j, a in enumerate(world):
+            b, previous = world[(j+1)%len(world)], world[j-1]
+            wall_fractures(mesh, (a, a.lerp(b, .5), midpoint, previous.lerp(a, .5)), seed+k*37)
 
 
 def fracture_field(p, seed):
@@ -176,7 +261,7 @@ def strata(name, z0, z1, scale, shift, index, material="canyon_layered", origin=
         row_low, row_high = [], []
         for fraction in (0, .14, .83, 1):
             angle = a+(b-a)*fraction
-            p = edge(angle, scale, shift, phase)
+            p = edge(angle, scale, shift, phase, notch_strength=.2 if index == 11 else 1)
             p.x += origin[0]
             p.y += origin[1]
             radial = Vector((math.cos(angle), math.sin(angle), 0))
@@ -189,13 +274,11 @@ def strata(name, z0, z1, scale, shift, index, material="canyon_layered", origin=
                 top -= (z1-z0)*.68*max(0, math.cos(angle-index))**6
             high = p+Vector((0, 0, top))
             low = p+tilt+Vector((0, 0, min(bottom, top-1)))
+            low.z = max(2.5, low.z-2.5*(.5+.5*fracture_field(p*.24, SEED+index*83)))
             if fraction in (.14, .83):
                 chip = rng.uniform(.15, min(1.5, (top-bottom)*.14))
                 high -= radial*rng.uniform(.15, .8)+Vector((0, 0, chip))
                 low += radial*rng.uniform(-.45, .3)+Vector((0, 0, rng.uniform(.05, .6)))
-            if index == 0:
-                low.x = shift[0]+origin[0]+(low.x-shift[0]-origin[0])*.025
-                low.y = shift[1]+origin[1]+(low.y-shift[1]-origin[1])*.025
             row_low.append(low)
             row_high.append(high)
         columns.append((row_low, row_high))
@@ -208,16 +291,21 @@ def strata(name, z0, z1, scale, shift, index, material="canyon_layered", origin=
             p = row_low[1].lerp(Vector((shift[0]+origin[0], shift[1]+origin[1], row_low[1].z)), .035)
             p.z += 1.2
             hull(fallen, p, (rng.uniform(1.8, 3.5), 2.2, rng.uniform(1, 2.8)), rng, 12)
+        if scale > .08 and rng.random() < .07:
+            p = row_low[1].lerp(Vector((shift[0]+origin[0], shift[1]+origin[1], row_low[1].z)), .025)
+            p.z -= .8
+            fractured_block(mesh, p, (rng.uniform(1.1, 2.5), rng.uniform(1, 2), rng.uniform(2.5, 5)),
+                             SEED+index*1777+i)
     for i, (low, high) in enumerate(columns):
         prev_low, prev_high = columns[i-1]
-        mesh.face((prev_low[-1], low[0], high[0], prev_high[-1]))
+        wall_fractures(mesh, (prev_low[-1], low[0], high[0], prev_high[-1]), SEED+index*941+i)
         centre_low = Vector((shift[0]+origin[0], shift[1]+origin[1], z0))
         centre_high = Vector((shift[0]+origin[0], shift[1]+origin[1], z1))
         for j in range(3):
             mesh.face((centre_high, high[j], high[j+1]))
-            mesh.face((centre_low, low[j+1], low[j]))
+            soffit_wedge(mesh, centre_low, low[j], low[j+1], SEED+index*149)
         mesh.face((centre_high, prev_high[-1], high[0]))
-        mesh.face((centre_low, low[0], prev_low[-1]))
+        soffit_wedge(mesh, centre_low, prev_low[-1], low[0], SEED+index*149)
     obj = mesh.object(name, material, smooth="rock")
     if fallen.faces:
         fallen.object(name+" fallen column blocks", material)
@@ -317,6 +405,26 @@ def leafy_mass(mesh, centre, size, seed, canopy=False):
         p = Vector(centre)+Vector((direction.x*size[0], direction.y*size[1], direction.z*size[2]))*.85
         scale = rng.uniform(.23, .46)
         blob(mesh, p, tuple(s*scale for s in size), rng.randrange(100000))
+
+
+def leaf_material(index):
+    """Library leaf shader with a lifted, palette-derived olive albedo ramp."""
+    name = "Driftward olive leaves %d" % index
+    cached = bpy.data.materials.get(name)
+    if cached is not None:
+        return cached
+    mat = vrmat.get("foliage_leaf").copy()
+    mat.name = name
+    colors = vrmat.load_palette()
+    moss, grass, leaf = (colors[key]["linear_rgb"] for key in ("moss", "grass_green", "leaf_green"))
+    t = .55+.03*index
+    low = tuple(a*.75+b*.25 for a, b in zip(moss, leaf))+(1,)
+    high = tuple(a*(1-t)+b*t for a, b in zip(moss, grass))+(1,)
+    bsdf = mat.node_tree.nodes["Principled BSDF"]
+    ramp = bsdf.inputs["Base Color"].links[0].from_node.color_ramp
+    ramp.elements[0].color, ramp.elements[1].color = low, high
+    mat.diffuse_color = high
+    return mat
 
 
 def meadow_paths():
@@ -435,46 +543,60 @@ def turf_edge(angle):
     t = t*t*(3-2*t)
     x = random.Random(SEED+(i % 96)*73).uniform(-4, 2.5)
     y = random.Random(SEED+((i+1) % 96)*73).uniform(-4, 2.5)
-    p = edge(angle, 1.006)
+    p = edge(angle, 1.006, notch_strength=.2)
     p += Vector((math.cos(angle), math.sin(angle), 0))*(x+(y-x)*t)
     return p
 
 
+def soil_depth(p):
+    return .1+.3*max(0, min(1, .5+.7*fracture_field(p*.45, SEED+512)))
+
+
+def root_curve(mesh, points, radius):
+    rings = []
+    for i, p in enumerate(points):
+        tangent = (points[min(i+1, len(points)-1)]-points[max(0, i-1)]).normalized()
+        u = tangent.cross(Vector((.1, 1, .1))).normalized()
+        v = tangent.cross(u)
+        r = radius*(1-i/(len(points)-1))**1.3+.0008
+        rings.append([p+(u*math.cos(k*TAU/6)+v*math.sin(k*TAU/6))*r for k in range(6)])
+    for a, b in zip(rings, rings[1:]):
+        for k in range(6):
+            mesh.face((a[k], a[(k+1)%6], b[(k+1)%6], b[k]))
+    mesh.face(list(reversed(rings[0])))
+    mesh.face(rings[-1])
+
+
 def turf():
-    soil, grass, blades, exposed = Mesh(), Mesh(), Mesh(), Mesh()
+    soil, grass, blades, contact = Mesh(), Mesh(), Mesh(), Mesh()
     n, rings = 640, 50
     for i in range(n):
         a, b = TAU*i/n, TAU*(i+1)/n
         pa, pb = turf_edge(a), turf_edge(b)
         za, zb = summit(pa.x, pa.y), summit(pb.x, pb.y)
-        gap = math.sin(23*a+.3)+.35*math.sin(47*a) > .57
-        if not gap:
-            profiles = []
-            for angle, p, z in ((a, pa, za), (b, pb, zb)):
-                radial = Vector((math.cos(angle), math.sin(angle), 0))
-                depth = .3+1.2*(.5+.5*math.sin(39*angle+.7)*math.cos(17*angle))
-                bulge = -.45+.16*math.sin(51*angle)
-                profile = []
-                for inset, drop in ((-1.25, .12), (-.4, .12), (bulge, depth*.32),
-                                    (bulge-.15, depth*.78), (-.9, depth), (-1.4, depth*.8)):
-                    profile.append(p+radial*inset+Vector((0, 0, -drop+z)))
-                profiles.append(profile)
-            for k in range(6):
-                l = (k+1)%6
-                soil.face((profiles[0][k], profiles[1][k], profiles[1][l], profiles[0][l]))
-            previous = a-TAU/n
-            if math.sin(23*previous+.3)+.35*math.sin(47*previous) > .57:
-                soil.face(list(reversed(profiles[0])))
-            if math.sin(23*b+.3)+.35*math.sin(47*b) > .57:
-                soil.face(profiles[1])
-            curls = []
-            for angle, p, z in ((a, pa, za), (b, pb, zb)):
-                radial = Vector((math.cos(angle), math.sin(angle), 0))
-                curl = .15+.5*(.5+.5*math.sin(29*angle+.3))
-                curls.append([p+radial*inset+Vector((0, 0, z-drop))
-                              for inset, drop in ((0, 0), (.1, curl*.25), (-.05, curl*.7), (-.4, curl))])
-            for k in range(3):
-                grass.face((curls[0][k], curls[1][k], curls[1][k+1], curls[0][k+1]))
+        profiles, feet, tops, curls = [], [], [], []
+        for angle, p, z in ((a, pa, za), (b, pb, zb)):
+            radial = Vector((math.cos(angle), math.sin(angle), 0))
+            depth = soil_depth(p)
+            profile = []
+            for inset, drop in ((-.65, .02), (0, .015), (.015, depth*.45),
+                                (0, depth+.035), (-.65, depth+.035)):
+                q = p+radial*inset
+                q.z = summit(q.x, q.y)-drop
+                profile.append(q)
+            profiles.append(profile)
+            foot = rim_point(angle, TOP-3)-radial*3
+            foot.z = TOP-3
+            feet.append(foot)
+            tops.append(p+Vector((0, 0, z-depth+.025)))
+            curls.append([p+radial*inset+Vector((0, 0, z-drop))
+                          for inset, drop in ((0, 0), (.018, .02), (.01, .05))])
+        for k in range(5):
+            l = (k+1)%5
+            soil.face((profiles[0][k], profiles[1][k], profiles[1][l], profiles[0][l]))
+        for k in range(2):
+            grass.face((curls[0][k], curls[1][k], curls[1][k+1], curls[0][k+1]))
+        wall_fractures(contact, (feet[0], feet[1], tops[1], tops[0]), SEED+i*19)
         for j in range(rings):
             pts = []
             for angle, r in ((a, j/rings), (b, j/rings), (b, (j+1)/rings), (a, (j+1)/rings)):
@@ -484,10 +606,44 @@ def turf():
                 grass.face((pts[0], pts[2], pts[3]))
             else:
                 grass.face(pts)
-        if gap:
-            top_a, top_b = pa.copy(), pb.copy()
-            top_a.z, top_b.z = za-.12, zb-.12
-            wall_fractures(exposed, (rim_point(a, TOP-2), rim_point(b, TOP-2), top_b, top_a), SEED+i*19)
+    soil.object("Continuous thin root bearing soil", "forest_soil", smooth=True)
+    for p in contact.vertices:
+        depth = soil_depth(Vector((p.x, p.y, 0)))
+        p.z = min(p.z, summit(p.x, p.y)-depth-.015)
+    shoulder = contact.object("Rock shoulder supporting the turf soil", "canyon_layered", smooth="rock")
+    roots, pebbles = Mesh(), Mesh()
+    root_rng = random.Random(SEED+913)
+
+    def root_point(angle, z):
+        radial = Vector((math.cos(angle), math.sin(angle), 0))
+        p = turf_edge(angle)
+        p.z = z
+        hit, location, normal, _ = shoulder.ray_cast(p+radial*12, -radial, distance=14.5)
+        return location+normal*.012 if hit else p
+
+    for _ in range(340):
+        a = root_rng.uniform(0, TAU)
+        p = turf_edge(a)
+        z = summit(p.x, p.y)-.04
+        length, drift = root_rng.uniform(.35, 1.25), root_rng.uniform(-.008, .008)
+        points = [root_point(a+drift*t, z-length*t) for t in (0, .18, .42, .7, 1)]
+        radius = root_rng.uniform(.018, .055)
+        root_curve(roots, points, radius)
+        for j in (2, 3):
+            if root_rng.random() < .7:
+                drop = root_rng.uniform(.18, .55)
+                bend = root_rng.uniform(-.004, .004)
+                angle = a+drift*j/4
+                child = [points[j]]+[root_point(angle+bend*t, points[j].z-drop*t) for t in (.35, .7, 1)]
+                root_curve(roots, child, radius*.35)
+    for _ in range(680):
+        a = root_rng.uniform(0, TAU)
+        p = turf_edge(a)
+        p.z = summit(p.x, p.y)-soil_depth(p)*root_rng.uniform(.35, .8)
+        s = root_rng.uniform(.045, .14)
+        hull(pebbles, p, (s, s*root_rng.uniform(.65, 1.1), s*.75), root_rng, 12)
+    roots.object("Fine tapered branching exposed rim roots", "tree_bark", smooth=True)
+    pebbles.object("Small stones embedded in the soil band", "monument_weathered")
     rng = random.Random(SEED+82)
     for _ in range(195):
         a = rng.uniform(0, TAU)
@@ -502,10 +658,6 @@ def turf():
             direction = (normal*rng.uniform(.18, .4)+Vector((rng.uniform(-.08, .08), rng.uniform(-.08, .08), -.95))).normalized()
             blade(blades, p, direction, length*rng.uniform(.3, 1.15),
                   rng.uniform(.009, .028), normal*rng.uniform(.12, .65)+Vector((0, 0, -.15)))
-    soil.object("Soft irregular soil overhangs", "forest_soil", smooth=True)
-    for vertex in exposed.vertices:
-        vertex.z = min(vertex.z, summit(vertex.x, vertex.y)-.25)
-    exposed.object("Limestone exposed through slumped turf bites", "canyon_layered", smooth="rock")
     grass.object("Undulating meadow", "grass_ground")
     blades.object("Opaque tapered rim grass curtains", "grass_ground")
     cover = Mesh()
@@ -586,16 +738,15 @@ def vegetation():
         boulder(stones, stone_bases, (x, y, summit(x, y)-s*.02), s, rng)
     trunks.object("Forked acacia trunks", "tree_bark")
     for i, crown in enumerate(crowns):
-        crown.object("Open irregular leafy canopies %d" % i, "grass_ground", smooth=True)
+        crown.object("Open irregular leafy canopies %d" % i, leaf_material(i), smooth=True)
     for i, shrub in enumerate(shrubs):
-        shrub.object("Varied leafy shrub masses %d" % i, "foliage_leaf", smooth=True)
+        shrub.object("Varied leafy shrub masses %d" % i, leaf_material(i+1), smooth=True)
     stones.object("Half buried fractured weathered limestone", "mossy_rock")
     stone_bases.object("Weathered lower fracture planes", "mossy_rock")
     stone_grass.object("Tufts around sunken stones", "grass_ground")
 
 
 def fragments():
-    rng = random.Random(SEED+17)
     for i, (x, y, z, scale) in enumerate(((-151, 9, 114, .105), (149, -30, 123, .12))):
         for j, (lo, hi, width, shift) in enumerate(((z-19, z-12, scale*.45, (3, 1)),
                                                    (z-13, z-6, scale*.82, (1, -1)),
@@ -622,15 +773,17 @@ def fragments():
         keel.face(rings[-1])
         keel.object("Short broken fragment keel %d" % i, "canyon_layered")
     blocks = Mesh()
-    hull(blocks, (129, 62, 94), (11, 7, 8), rng, 11)
-    hull(blocks, (126, 60, 90), (7, 6, 7), rng, 9)
-    blocks.object("Detached angular multi fracture chunk", "canyon_layered")
+    fractured_block(blocks, (126, 60, 94), (8, 6.7, 8.7), SEED+687,
+                     Vector((0, 0, 1)).rotation_difference(Vector((.5, -.2, .8)).normalized()))
+    fractured_block(blocks, (123, 62, 100), (5, 5.5, 6.5), SEED+688,
+                     Vector((0, 0, 1)).rotation_difference(Vector((-.32, .48, .8)).normalized()))
+    blocks.object("Volumetric bisected detached crag", "canyon_layered", smooth="rock")
 
 
 def build():
     RIM_WALL.clear()
     # Unequal bed heights and lateral migration carry the keel away from the summit centre.
-    beds = ((.5, 9, .016, (-40, 8)), (8, 18, .031, (-37, 7)),
+    beds = ((4, 11, .029, (-40, 8)), (8, 18, .031, (-37, 7)),
             (17, 29, .054, (-35, 7)), (28, 42, .089, (-30, 5)),
             (40, 56, .145, (-25, 4)), (54, 73, .215, (-17, 6)),
             (71, 91, .32, (-11, 8)), (89, 107, .46, (-5, 8)),
@@ -640,10 +793,30 @@ def build():
         strata("Jointed chalk bed %02d" % i, lo, hi, width, shift, i,
                "monument_weathered" if i in (3, 7) else "canyon_layered")
     rng = random.Random(SEED+90)
-    spurs = Mesh()
+    bridges, spurs, tip = Mesh(), Mesh(), Mesh()
+    for i in range(1, len(beds)):
+        lo, hi, scale, shift = beds[i]
+        lower = beds[i-1]
+        for j in range(rng.randint(4, 7)):
+            a = rng.uniform(0, TAU)
+            upper = edge(a, scale*.94, shift, .4*math.sin(i*1.73), notch_strength=.2 if i == 11 else 1)
+            below = edge(a, lower[2]*.88, lower[3], .4*math.sin((i-1)*1.73))
+            upper.z, below.z = lo+3, max(3, lo-rng.uniform(5, 9))
+            axis = upper-below
+            width = rng.uniform(2, 4)*min(1, scale*7)
+            fractured_block(bridges, upper.lerp(below, .5), (width, width*rng.uniform(.7, 1.2), axis.length*.55),
+                             SEED+i*773+j, Vector((0, 0, 1)).rotation_difference(axis.normalized()))
+    bridges.object("Broken interbed buttresses", "canyon_layered", smooth="rock")
     for centre, size in (((-59, 12, 97), (13, 14, 25)), ((49, 25, 112), (12, 13, 20))):
-        hull(spurs, centre, size, rng, 13)
-    spurs.object("Secondary hanging fault spurs", "canyon_layered")
+        fractured_block(spurs, centre, size, rng.randrange(100000))
+    spurs.object("Fractured secondary hanging buttresses", "canyon_layered", smooth="rock")
+    for i, (centre, size) in enumerate((((-41, 7, 4.1), (1.8, 1.7, 2.9)),
+                                        ((-36.5, 8.5, 5.2), (1.8, 1.4, 2.5)),
+                                        ((-42, 10, 6), (1.3, 1.6, 2.3)))):
+        fractured_block(tip, centre, size, SEED+831+i)
+    for p in tip.vertices:
+        p.z = max(.5, p.z)
+    tip.object("Three blunt broken keel prongs", "canyon_layered", smooth="rock")
     turf()
     ground_features()
     vegetation()
