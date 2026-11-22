@@ -7,6 +7,7 @@ import bpy
 import numpy as np
 from mathutils import Quaternion, Vector, noise
 from mathutils.bvhtree import BVHTree
+from mathutils.kdtree import KDTree
 
 import vrlib
 import vrmat
@@ -733,11 +734,14 @@ def weather_faces(body):
     bm=bmesh.new()
     bm.from_mesh(mesh)
     bmesh.ops.triangulate(bm,faces=list(bm.faces))
+    planar_edges=[edge for edge in bm.edges if edge.is_manifold and edge.calc_face_angle()<math.radians(5)]
+    bmesh.ops.beautify_fill(bm,faces=list(bm.faces),edges=planar_edges)
     for _ in range(8):
         long_edges=[edge for edge in bm.edges if edge.calc_length()>.038]
         if not long_edges:
             break
         bmesh.ops.subdivide_edges(bm,edges=long_edges,cuts=1,use_grid_fill=True)
+        bmesh.ops.triangulate(bm,faces=list(bm.faces))
     pending=set(bm.faces)
     components=[]
     while pending:
@@ -757,19 +761,17 @@ def weather_faces(body):
     mesh.update()
     mesh.set_sharp_from_angle(angle=math.radians(16))
     sharp=mesh.attributes.get("sharp_edge")
-    adjacent=[set() for vertex in mesh.vertices]
     boundary=set()
     for edge in mesh.edges:
         a,b=edge.vertices
-        adjacent[a].add(b)
-        adjacent[b].add(a)
         if sharp is not None and sharp.data[edge.index].value:
             boundary.update((a,b))
-    distances={i:0 for i in boundary}
-    frontier=boundary
-    for step in range(1,5):
-        frontier={j for i in frontier for j in adjacent[i] if j not in distances}
-        distances.update({i:step for i in frontier})
+    tree=KDTree(len(boundary)) if boundary else None
+    if tree is not None:
+        for index in boundary:
+            tree.insert(mesh.vertices[index].co,index)
+        tree.balance()
+    centre=Vector(tuple((min(v.co[i] for v in mesh.vertices)+max(v.co[i] for v in mesh.vertices))*.5 for i in range(3)))
     attribute=mesh.attributes.new("weather_relief","FLOAT","POINT")
     offsets=[]
     normals=[vertex.normal.copy() for vertex in mesh.vertices]
@@ -781,13 +783,15 @@ def weather_faces(body):
         stepped=sum(weight*noise.cell(sites[k]) for k,weight in enumerate(weights))/sum(weights)
         bed=.010*max(0,math.sin(dip*math.tau/.34+.25*noise.noise(p*2)))**3
         bed*=feather((noise.noise(p*2+Vector((4,8,2)))-.18)*4)
-        distance=distances.get(vertex.index,4)
+        distance=tree.find(p)[2] if tree is not None else .25
         ripple=.012*math.sin(p.dot(Vector((4,7,3)))*math.tau+1.5*noise.noise(p*4))
         ripple*=feather((noise.noise(p*1.7)-.28)*5)
-        chip=.020*feather((noise.noise(p*23)-.10)*3)*(1-feather(distance/4))
-        amount=(.035*stepped+bed+ripple+.004*noise.noise(p*17))*feather(distance/2)-chip
+        chip=.020*feather((noise.noise(p*23)-.10)*3)*(1-feather(distance/.08))
+        taper=feather(distance/.04)
+        amount=(.035*stepped+bed+ripple+.004*noise.noise(p*17))*taper-chip
         amount*=feather((p.z+.035)/.15)
-        vertex.co+=normal*amount
+        direction=(normal*taper+(p-centre).normalized()*(1-taper)).normalized()
+        vertex.co+=direction*amount
         attribute.data[vertex.index].value=amount
         offsets.append(amount)
     mesh.update()

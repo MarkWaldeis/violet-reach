@@ -66,6 +66,11 @@ if asset=="rock_boulder_b":
     relief=[v.value for v in main.data.attributes["weather_relief"].data]
     assert .025<max(relief)-min(relief)<.11,(min(relief),max(relief))
     assert max(abs(v) for v in relief)<.055
+    assert all(len(face.vertices)==3 for face in main.data.polygons)
+    longest=max((main.data.vertices[e.vertices[0]].co-main.data.vertices[e.vertices[1]].co).length for e in main.data.edges)
+    assert longest<.09,longest
+    assert not main.data.has_custom_normals
+    print("B_FRACTURE_TOPOLOGY: all triangles before displacement; max edge",round(longest,4),"m; no custom normals")
     assert sum(abs(v)>.01 for v in relief)>1000
     assert any(n.type=="AMBIENT_OCCLUSION" for n in main.data.materials[0].node_tree.nodes)
     lichen=main.data.materials[0].node_tree.nodes["MetricLichen"]
