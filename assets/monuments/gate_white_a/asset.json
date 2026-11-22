@@ -1,0 +1,53 @@
+{
+  "id": "gate_white_a",
+  "category": "monuments",
+  "title": "Floodmark Gate",
+  "description": "A Romanesque limestone gate with three concentric orders, battered ashlar piers and a paved ford threshold.",
+  "target_size_m": [
+    18,
+    46,
+    33
+  ],
+  "lod_triangles": [
+    23000,
+    8200,
+    2500
+  ],
+  "texture_size": 2048,
+  "status": "exported",
+  "builder": "devin-ac377e3f64b249c4a59d5943f70f2061",
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 8,
+      "scale": 8,
+      "style": 8,
+      "defects": 8
+    },
+    "notes": "Round 3 (final): approved. The weathering now reads at full size: dark rain streaks run down from under the impost blocks and the keystone, and the pier feet have a damp green-grey band with lichen and turf (hero, closeup_upper, closeup_base). Structure, joints and threshold were already at 8. Polish, not blocking: the worn tread is still hard to see on the threshold; darken the central walking line slightly.",
+    "round": 3,
+    "source_sha256": "68737665b691275d2fb184b85c6a6a271056bfa51bf3162d6931b357a31cc917",
+    "sheet_sha256": "dc6a59ae9d6da6d33cb06f4b9a385d9d2c23b9a6b4b7124b2685d5870bec8bce"
+  },
+  "review_rounds": 3,
+  "size_m": [
+    18.087,
+    46.23,
+    33.092
+  ],
+  "export": {
+    "file": "export/gate_white_a.glb",
+    "bytes": 4050624,
+    "sha256": "269343164815e23c51e4fc439526e06342933bb6455f973dfd508651661bb815",
+    "source_sha256": "68737665b691275d2fb184b85c6a6a271056bfa51bf3162d6931b357a31cc917",
+    "sheet_sha256": "dc6a59ae9d6da6d33cb06f4b9a385d9d2c23b9a6b4b7124b2685d5870bec8bce",
+    "lod_triangles": [
+      23000,
+      8200,
+      2500
+    ],
+    "texture_size": 2048
+  }
+}

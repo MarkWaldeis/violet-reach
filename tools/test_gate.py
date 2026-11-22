@@ -163,6 +163,18 @@ def main():
         baseline = vr.source_hash(d)
         with patch.object(vr, "sha256", side_effect=changed_library):
             results.append(expect("comments and strings do not opt into vrmat", [] if vr.source_hash(d) == baseline else ["changed"], None))
+        for statement in ("import vrcolumn", "import vrcolumn as column", "from vrcolumn import mesh", "from tools.blender import vrcolumn"):
+            Path(d, "build.py").write_text(statement + "\ndef build(): pass\n")
+            baseline = vr.source_hash(d)
+            with patch.object(vr, "sha256", side_effect=lambda p: "changed" if str(p).endswith("vrcolumn.py") else real_sha256(p)):
+                results.append(expect(statement + " includes geometry helper hash", ["changed"] if vr.source_hash(d) != baseline else [], "changed"))
+            for dependency in ("vrmat.py", "palette.json"):
+                with patch.object(vr, "sha256", side_effect=lambda p: "changed" if str(p).endswith(dependency) else real_sha256(p)):
+                    results.append(expect(statement + " includes transitive " + dependency, ["changed"] if vr.source_hash(d) != baseline else [], "changed"))
+        Path(d, "build.py").write_text('# import vrcolumn\nTEXT = "vrcolumn"\n')
+        baseline = vr.source_hash(d)
+        with patch.object(vr, "sha256", side_effect=lambda p: "changed" if str(p).endswith("vrcolumn.py") else real_sha256(p)):
+            results.append(expect("comments and strings do not opt into vrcolumn", [] if vr.source_hash(d) == baseline else ["changed"], None))
     colors = vrmat.load_palette()
     results.append(expect("all material colors match sRGB and linear palette", [] if colors else ["empty"], None))
     results.append(expect("ochre accent remains in palette without an inlay material",

@@ -25,6 +25,30 @@
       "bytes": 3316836
     },
     {
+      "id": "column_white_a",
+      "category": "monuments",
+      "title": "Survey Column",
+      "file": "column_white_a.glb",
+      "size_m": [
+        6.91,
+        6.712,
+        18.047
+      ],
+      "bytes": 3337468
+    },
+    {
+      "id": "gate_white_a",
+      "category": "monuments",
+      "title": "Floodmark Gate",
+      "file": "gate_white_a.glb",
+      "size_m": [
+        18.087,
+        46.23,
+        33.092
+      ],
+      "bytes": 4050624
+    },
+    {
       "id": "lake_shore_a",
       "category": "shore",
       "title": "Shinglewake Shore",

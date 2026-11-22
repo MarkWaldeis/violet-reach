@@ -105,3 +105,11 @@ PR #8 head `7f5f57f` approves all seven imported vegetation assets; each is expo
 Scatter entries can select a `surface` profile (`meadow`, `land`, or `shore`) and a nonnegative `path_clearance` in metres. Deterministic surface filtering combines terrain slope, broad soil/grass noise, local hollows, interpolated water height and distance from paths. Land plants avoid sand and wet banks; reeds alone may use shallow water. Grass and ferns follow the ground normal.
 
 Optional `slice.json.asset_options` records set per-asset `maxDistance` (metres), `lodScale` (screen-space transition multiplier), `maxLOD` (coarsest permitted LOD) and `shadowLODs` (number of near LODs casting shadows). Defaults preserve existing assets. Mixed trees retain LOD1 silhouettes because LOD2 loses canopy coverage, with only LOD0 casting shadows; shrubs, ferns, reeds and grass cut off at 160, 70, 40 and 35 metres respectively. Reeds retain many triangles even at low LOD, so their visible range is deliberately short. All placements share instanced batches and spatial culling.
+
+### Shore gate and ruined colonnade (Step M)
+
+`gate_white_a` from approved PR #13 head `84ecc13` stands at `(522,1510)`, yaw `-2.35619449`, scale `1`, offset `0.005`. Its source geometry has a quarter-turn before export; the runtime yaw follows the exported axes. The shore path loops around the upstream pier and passes through the opening before climbing inland. No terrain was reshaped.
+
+Both complete pier footprints occupy the flat, dry inlet bank. A ray survey against the actual exported LOD0 finds the stone bases embedded approximately 4.6–4.9 cm, while the threshold foundation is below terrain and its upper surface remains exposed.
+
+Three approved PR #12 `column_white_a` instances form a broken colonnade upstream: `(501.92031,1484.90812)`, `(492.72792,1478.54416)` and `(483.53553,1472.18019)`. Their yaws are `0.2`, `1.6`, `2.7`; uniform scales `1`, `0.87`, `0.96` give one shorter marker. Each uses offset `-0.06`, embedding the lower footing into the gentle bank. Placements support yaw, not tilt. The shared `vrcolumn.py` geometry helper and its material/palette dependencies participate in approval hashes.

@@ -4856,6 +4856,10 @@
         "surface": "meadow",
         "path_clearance": 0.4
       }
-    }
+    },
+    {"asset":"gate_white_a","x":522,"z":1510,"yaw":-2.35619449,"scale":1,"y_offset":0.005},
+    {"asset":"column_white_a","x":501.92031,"z":1484.90812,"yaw":0.2,"scale":1,"y_offset":-0.06},
+    {"asset":"column_white_a","x":492.72792,"z":1478.54416,"yaw":1.6,"scale":0.87,"y_offset":-0.06},
+    {"asset":"column_white_a","x":483.53553,"z":1472.18019,"yaw":2.7,"scale":0.96,"y_offset":-0.06}
   ]
 }
