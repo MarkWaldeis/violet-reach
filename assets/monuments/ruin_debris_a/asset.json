@@ -14,14 +14,28 @@
     2100
   ],
   "texture_size": 4096,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-10557958564a4a9894cdbd6bc867cb9f",
-  "review": null,
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 6,
+      "material": 7,
+      "scale": 8,
+      "style": 6,
+      "defects": 6
+    },
+    "notes": "New budget round 1 of 2: rejected. Fixed: the pieces now reuse the approved column's flutes and plinth, the foot keeps its torus and plinth, and there are small chips in the turf. Still failing: (1) silhouette/style: the drums stand on end side by side in a straight row on one oval turf patch, like coins on a shelf (hero, turn_020, turn_245), not a column that fell along one line. (2) form_detail 6: the break faces are crumpled triangle facets (closeup_base upper left, right), one drum is a clean, unbroken cylinder with a single thin crack (closeup_base centre), and the flutes on the lying drums read as stacked convex rings. (3) the capital is a square slab with a round disc stuck on its face (closeup left), not a recognisable broken cushion capital. (4) material/defects: the stone has the old dark marble-like blotches; the turf is a flat oval disc with a hard edge. Fix: lay the drums on their sides along one fall line from the foot, rotated and partly sunk into the soil, with gaps; give the breaks a conchoidal fracture with a few large planes; make the capital a tilted cushion echinus under its abacus with one corner broken off; use the approved column's weathering; blend the turf edge into the ground.",
+    "round": 4,
+    "source_sha256": "86e29e4367082bfe6e4e4360ae9801b912877f5e79d9df73c3a1e6e9a1f669db",
+    "sheet_sha256": "4e915def73ab9472de304410ca2aa1cedb3c5af54227bf7757ff24903a63a9ed"
+  },
   "references": [
     "art/reference/ref_01_white_monuments_sky.jpg",
     "art/reference/ref_03_canyon_cliffs.jpg",
     "art/reference/ref_06_weathered_wall.jpg",
     "art/reference/ref_08_ribbed_crown.jpg"
   ],
-  "review_rounds": 3
+  "review_rounds": 4
 }
