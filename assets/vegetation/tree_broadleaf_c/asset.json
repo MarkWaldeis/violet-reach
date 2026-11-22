@@ -2,7 +2,7 @@
   "id": "tree_broadleaf_c",
   "category": "vegetation",
   "title": "Junger Laubbaum C",
-  "description": "Junger schlanker Laubbaum mit leicht gebogenem Leittrieb und kleinem Wurzelanlauf. Ab etwa zwei Metern verzweigte Seitenäste tragen lockere Blattspreiten; sichtbare Feinzweige und Lichtlücken prägen die junge Krone.",
+  "description": "Junger, sanft geneigter und gebogener Laubbaum mit schlankem Stamm und im Laub endender Leitachse. Ab gut zwei Metern asymmetrische Seitenäste mit längeren Auslegern auf einer Seite; luftige, durchbrochene Krone mit kleinen birkenartigen, geometrisch gezähnten Blättern. Vier niedrige gerundete Wurzelsporne, fein verdrängte Längsrinde und warmes Olivlaub mit helleren Außensprays.",
   "target_size_m": [
     5,
     4.5,
@@ -14,22 +14,8 @@
     2000
   ],
   "texture_size": 2048,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-bbbec46812f34f45bdf2489c6f83c0fa",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 7,
-      "form_detail": 7,
-      "material": 7,
-      "scale": 8,
-      "style": 7,
-      "defects": 7
-    },
-    "notes": "Round 1. Good: a 7 m young tree with an airy crown, leaves on visible twigs, sky gaps. Defects: (1) the trunk runs as one straight pole to the top and pokes out of the crown as a bare stick (sheet tiles 2 and 5, closeup_upper); end the leader inside the foliage or fork it. (2) The silhouette is a narrow pole with a symmetric oval of leaves; give it a lean and asymmetric branches. (3) The bark is a smooth dark tube without tree_bark furrows; the root flare is minimal and sharp. (4) The foliage is dark blue-green, not olive; the sunlit leaves are pale grey-green rather than warm.",
-    "round": 1,
-    "source_sha256": "b120f00433217e4c2ebffd83a3ec7ce9c7288e8534865162683e1ab4ee95e31e",
-    "sheet_sha256": "18325fc8703a4a3032adb36b723007a95cebd74321bcef3bb318d25b7324f75e"
-  },
+  "review": null,
   "review_rounds": 1
 }

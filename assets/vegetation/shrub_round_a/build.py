@@ -110,23 +110,24 @@ class Tubes:
 
 
 def foliage_materials():
-    """Copy foliage_leaf; palette-only colour mixes, opaque library BSDF unchanged."""
+    """Copy foliage_leaf; warmer grass-palette colour floor, reduced sky specular."""
     palette = vrmat.load_palette()
     materials = []
-    for name, colour, strength, gain in [("Schatten", "leaf_green", .55, 1.0),
-                                    ("Innenlaub", "grass_green", .50, 1.0),
-                                    ("Sonnenlaub", "grass_green", 1.0, 2.2),
-                                    ("Oliveflecken", "grass_green", 1.0, 2.5)]:
+    for name, colour, strength, gain in [("Schatten", "grass_green", 1.0, 1.8),
+                                    ("Innenlaub", "grass_green", 1.0, 2.1),
+                                    ("Sonnenlaub", "grass_green", 1.0, 2.8),
+                                    ("Oliveflecken", "grass_green", 1.0, 3.1)]:
         material = vrmat.get("foliage_leaf").copy()
         material.name = "shrub_"+name
         nt = material.node_tree
         socket = nt.nodes["Principled BSDF"].inputs["Base Color"]
+        nt.nodes["Principled BSDF"].inputs["Specular IOR Level"].default_value = .2
         original = socket.links[0].from_socket
         mix = nt.nodes.new("ShaderNodeMixRGB")
         mix.inputs[0].default_value = strength
         green = palette[colour]["linear_rgb"]
-        moss = palette["moss"]["linear_rgb"]
-        tint = tuple((a*.8+b*.2)*gain for a, b in zip(green, moss)) if gain > 1 else green
+        dry = palette["grass_dry"]["linear_rgb"]
+        tint = tuple((a*.45+b*.55)*gain for a, b in zip(green, dry))
         mix.inputs[2].default_value = (*tint, 1)
         if gain > 1:
             texture = nt.nodes.new("ShaderNodeTexNoise")
@@ -308,7 +309,8 @@ def build():
         if not group:
             continue
         angle = math.tau*(i+.5)/STEMS
-        base = Vector((.07*math.cos(angle), .07*math.sin(angle), -.035))
+        spread = .17+.035*math.sin(i*2.39996)
+        base = Vector((spread*math.cos(angle), spread*.8*math.sin(angle), -.025))
         centre = sum(group, Vector())/len(group)
         start = Vector((centre.x*.24, centre.y*.24, rng.uniform(.25, .43)))
         stem = [base, base+UP*.18, start-UP*.13, start]
@@ -339,5 +341,76 @@ def build():
         vertex.co.z = max(-.055, vertex.co.z)
     thin.object("Feinaeste_und_Zweige", bark)
     mesh_object("Einzelblaetter", vertices, faces, materials, indices)
+    litter_rng = random.Random(SEED+1)
+    soil_vertices, soil_faces = [], []
+    sides, rings = 64, 8
+    phase = litter_rng.uniform(0, math.tau)
+    for ring in range(1, rings+1):
+        t = ring/rings
+        for i in range(sides):
+            angle = math.tau*i/sides
+            outline = .31+.045*math.sin(angle*3+phase)+.028*math.sin(angle*5-phase)
+            radius = t*outline
+            z = .026*(1-t)**1.3-.018*t**4
+            z += .008*math.sin(angle*4+t*9+phase)*t*(1-t)
+            soil_vertices.append(Vector((radius*math.cos(angle), radius*.85*math.sin(angle), z)))
+    soil_vertices += [Vector((v.x, v.y, -.045)) for v in soil_vertices[-sides:]]
+    soil_vertices.append(Vector((0, 0, .026)))
+    for i in range(sides):
+        j = (i+1)%sides
+        soil_faces.append((sides*(rings+1), i, j))
+        for ring in range(rings):
+            a, b = ring*sides+i, ring*sides+j
+            soil_faces.append((a, a+sides, b+sides, b))
+    soil_faces.append(tuple(reversed(range(sides*rings, sides*(rings+1)))))
+    mesh_object("Kleiner_Waldboden", soil_vertices, soil_faces, [vrmat.get("forest_soil")])
+    litter = vrmat.get("foliage_leaf").copy()
+    litter.name = "shrub_trockenes_Falllaub"
+    socket = litter.node_tree.nodes["Principled BSDF"].inputs["Base Color"]
+    for link in list(socket.links):
+        litter.node_tree.links.remove(link)
+    palette = vrmat.load_palette()
+    socket.default_value = (*(a*.55+b*.45 for a, b in zip(
+        palette["bark"]["linear_rgb"], palette["grass_dry"]["linear_rgb"])), 1)
+    litter_vertices, litter_faces = [], []
+    for i in range(21):
+        angle = litter_rng.uniform(0, math.tau)
+        centre = Vector((math.cos(angle), math.sin(angle), 0))*litter_rng.uniform(.17, .41)
+        centre.z = litter_rng.uniform(.012, .020)
+        angle = litter_rng.uniform(0, math.tau)
+        along = Vector((math.cos(angle), math.sin(angle), 0))
+        across = UP.cross(along)
+        length = litter_rng.uniform(.06, .10)
+        offset = len(litter_vertices)
+        for x, y in [(-.5, 0), (-.3, -.3), (.1, -.36), (.5, 0),
+                     (.1, .36), (-.3, .3)]:
+            litter_vertices.append(centre+along*x*length+across*y*length+UP*length*.2*x*x)
+        litter_vertices.append(centre+UP*.002)
+        for j in range(6):
+            litter_faces.append((offset+j, offset+(j+1)%6, offset+6))
+    mesh_object("Modelliertes_Falllaub", litter_vertices, litter_faces, [litter])
+    crumbs, crumb_faces = [], []
+    for i in range(17):
+        angle = litter_rng.uniform(0, math.tau)
+        centre = Vector((math.cos(angle), math.sin(angle), 0))*litter_rng.uniform(.28, .59)
+        size = litter_rng.uniform(.008, .023)
+        offset = len(crumbs)
+        for x, y, z in [(1, 0, 0), (0, 1, 0), (-1, 0, 0), (0, -1, 0),
+                        (0, 0, .7), (0, 0, -.45)]:
+            crumbs.append(centre+Vector((x*size, y*size*.7, z*size)))
+        for j in range(4):
+            crumb_faces.extend([(offset+j, offset+(j+1)%4, offset+4),
+                                (offset+(j+1)%4, offset+j, offset+5)])
+    mesh_object("Erdkruemel", crumbs, crumb_faces, [vrmat.get("forest_soil")])
+    fallen_twigs = Tubes()
+    for i in range(6):
+        angle = litter_rng.uniform(0, math.tau)
+        start = Vector((math.cos(angle), math.sin(angle), 0))*litter_rng.uniform(.2, .54)
+        start.z = .003
+        angle = litter_rng.uniform(0, math.tau)
+        reach = Vector((math.cos(angle), math.sin(angle), 0))*litter_rng.uniform(.09, .18)
+        fallen_twigs.add([start, start+reach*.3+UP*.004, start+reach*.7, start+reach],
+                         .005, .0015, 5, 4)
+    fallen_twigs.object("Gefallene_Zweige", bark)
     print("VR_BRANCHES", {"terminal_twigs": TARGETS, "leaves": len(indices)//9,
                           "pipe_model": "parent end radius squared = sum child start radii squared"}, flush=True)

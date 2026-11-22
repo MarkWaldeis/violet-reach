@@ -1,4 +1,4 @@
-"""Sparsames Grasbüschel aus 96 geknickten, gefalteten und gedrehten Blattspreiten."""
+"""Dichter Wiesenhorst mit schmalen gefalteten, individuell gebogenen Halmen."""
 import math
 import random
 
@@ -85,64 +85,117 @@ class Mesh:
         return vrlib.link_to_source(obj)
 
 
+
+SEED = 91823
+BLADES = 156
+
 def materials():
     palette = vrmat.load_palette()
     result = []
     for name, library, first, second, blend, gain in [
-        ("Basis", "foliage_leaf", "leaf_green", "moss", .35, 1.1),
-        ("Gruen", "foliage_leaf", "grass_green", "moss", .25, 1.35),
-        ("Spitzen", "foliage_leaf", "grass_green", "moss", .20, 1.9),
-        ("Stroh", "grass_ground", "grass_dry", "accent_ochre", .23, 1.1),
-        ("Samen", "tree_bark", "bark", "soil", .22, 1.0),
+        ("Olivbasis", "foliage_leaf", "grass_green", "grass_dry", .55, 1.8),
+        ("Olivlaub", "foliage_leaf", "grass_green", "grass_dry", .55, 2.1),
+        ("Lichtspitzen", "foliage_leaf", "grass_green", "grass_dry", .55, 2.8),
+        ("Trockenes_Gras", "grass_ground", "grass_dry", "bark", .12, 1.7),
+        ("Alte_Blattbasen", "tree_bark", "bark", "grass_dry", .25, 1.5),
     ]:
         material = vrmat.get(library).copy()
         material.name = name
-        socket = material.node_tree.nodes["Principled BSDF"].inputs["Base Color"]
+        bsdf = material.node_tree.nodes["Principled BSDF"]
+        socket = bsdf.inputs["Base Color"]
         for link in list(socket.links):
             material.node_tree.links.remove(link)
         socket.default_value = (*(gain*(a*(1-blend)+b*blend) for a, b in zip(
             palette[first]["linear_rgb"], palette[second]["linear_rgb"])), 1)
+        bsdf.inputs["Specular IOR Level"].default_value = .2
+        for node in material.node_tree.nodes:
+            if node.type == "BUMP":
+                node.inputs["Distance"].default_value = .00025
         result.append(material)
+    result.append(vrmat.get("forest_soil").copy())
     return result
 
 
-def blade(mesh, points, width, side, dry=False, twist=0):
-    for i in range(len(points)-1):
-        t0, t1 = i/(len(points)-1), (i+1)/(len(points)-1)
-        rows = []
-        for point, t in ((points[i], t0), (points[i+1], t1)):
-            axis = (side*math.cos(twist*t)+UP*math.sin(twist*t)).normalized()
-            w = width*(1-t)**.8*(.35+.65*min(1, t*4))
-            rows.append([point-axis*w, point+UP*w*.22, point+axis*w])
-        material = 3 if dry else 1
+def leaf(mesh, points, width, side, material, dry_tip=False, twist=0):
+    rows = []
+    count = len(points)-1
+    for i, point in enumerate(points):
+        t = i/count
+        tangent = (points[min(i+1, count)]-points[max(0, i-1)]).normalized()
+        across = (side-tangent*side.dot(tangent)).normalized()
+        normal = across.cross(tangent).normalized()
+        across = across*math.cos(twist*t)+normal*math.sin(twist*t)
+        normal = across.cross(tangent).normalized()
+        w = width*(.35+.65*min(1, t/.15))*(1-t)**.75
+        rows.append([point-across*w*.5, point+normal*w*.24, point+across*w*.5])
+    for i in range(count):
+        index = 3 if dry_tip and i/count >= .72 else material
         for j in range(2):
-            face_points = [rows[0][j], rows[1][j], rows[0][j+1]] if t1 == 1 else [
-                rows[0][j], rows[1][j], rows[1][j+1], rows[0][j+1]]
-            mesh.face(face_points, material)
+            if i == count-1:
+                mesh.face([rows[i][j], rows[i+1][j], rows[i][j+1]], index)
+            else:
+                mesh.face([rows[i][j], rows[i+1][j], rows[i+1][j+1], rows[i][j+1]], index)
 
-SEED = 39017
-BLADES = 96
+
+def collar(mesh, radius, material, phase):
+    n = 40
+    def point(j, t, bottom=False):
+        a = math.tau*j/n
+        r = radius*t*(1+.14*math.sin(3*a+phase)+.09*math.cos(7*a-phase))
+        z = -.03 if bottom else .014*(1-t)**1.1-.018*t**3
+        return Vector((math.cos(a)*r, math.sin(a)*r, z))
+    centre = Vector((0, 0, .014))
+    for j in range(n):
+        mesh.face([centre, point(j, .25), point(j+1, .25)], material)
+        for k in range(1, 4):
+            mesh.face([point(j, k/4), point(j, (k+1)/4),
+                       point(j+1, (k+1)/4), point(j+1, k/4)], material)
+        mesh.face([point(j, 1), point(j, 1, True), point(j+1, 1, True), point(j+1, 1)], material)
+        mesh.face([Vector((0, 0, -.03)), point(j+1, 1, True), point(j, 1, True)], material)
 
 
 def build():
     rng = random.Random(SEED)
     mesh = Mesh()
-    dry_blades = set(rng.sample(range(BLADES), 18))
+    bases = [Vector((.045*math.cos(i*2.4), .045*math.sin(i*2.4), .006)) for i in range(7)]
     for i in range(BLADES):
-        angle = i*2.39996+rng.uniform(-.3, .3)
-        radial = Vector((math.cos(angle), math.sin(angle), 0))
-        side = UP.cross(radial)
-        base = radial*(.065*math.sqrt(rng.random()))-UP*rng.uniform(.006, .018)
-        length = rng.uniform(.45, .78)
-        bent = i%9 == 0
-        if bent:
-            length *= .72
-        lean = rng.uniform(.16, .24)
-        curve = rng.uniform(.06, .10) if not bent else .24
-        points = []
-        for j in range(8):
-            t = j/7
-            z = length*(t-(.18 if not bent else .62)*t**3)
-            points.append(base+radial*(length*(lean*t+curve*t*t))+side*(.012*math.sin(t*math.pi))+UP*z)
-        blade(mesh, points, rng.uniform(.006, .012), side, i in dry_blades, rng.uniform(-.6,.6))
-    mesh.object("Grashalme", materials())
+        root = bases[i%len(bases)]+Vector((rng.uniform(-.032, .032), rng.uniform(-.032, .032), 0))
+        angle = rng.uniform(0, math.tau)
+        outward = Vector((math.cos(angle), math.sin(angle), 0))
+        side = UP.cross(outward)
+        length = rng.uniform(.48, .65) if i % 6 == 0 else rng.uniform(.15, .38)
+        tilt = rng.uniform(.08, .4)
+        bend = rng.uniform(.65, 2.6)
+        exponent = rng.uniform(1.2, 1.8)
+        if length > .45:
+            tilt = min(tilt, .18)
+            bend = min(bend, (.22/length-tilt)*(exponent+1))
+        if i < 12:
+            length, tilt, bend, exponent = rng.uniform(.22, .36), .28, 3.4, 1.1
+        points = [root]
+        for j in range(10):
+            start, end = (j/10)**.7, ((j+1)/10)**.7
+            t = (start+end)*.5
+            a = tilt+bend*t**exponent
+            p = points[-1]+(outward*math.sin(a)+UP*math.cos(a))*(length*(end-start))
+            p.z = max(.005, p.z)
+            points.append(p)
+        dry = i % 10 == 0
+        dry_tip = i % 10 == 5
+        sunlit = outward.x+outward.y > .85 and length > .35
+        material = 3 if dry else 2 if sunlit else 1
+        leaf(mesh, points, rng.uniform(.0038, .0095), side, material,
+             dry_tip, rng.uniform(-.5, .5))
+    for i in range(14):
+        root = bases[i%len(bases)]+Vector((rng.uniform(-.025, .025), rng.uniform(-.025, .025), -.003))
+        direction = Vector((rng.uniform(-1, 1), rng.uniform(-1, 1), 1)).normalized()
+        mesh.tube([root+direction*(j*.012) for j in range(4)], rng.uniform(.0012, .002), 4, 5)
+    for i in range(12):
+        angle = rng.uniform(0, math.tau)
+        outward = Vector((math.cos(angle), math.sin(angle), 0))
+        root = outward*rng.uniform(.03, .07)+UP*.006
+        points = [root+outward*(t*.10)+UP*(.012*math.sin(math.pi*t))
+                  for t in (0, .2, .4, .6, .8, 1)]
+        leaf(mesh, points, rng.uniform(.003, .005), UP.cross(outward), 3, twist=.3)
+    collar(mesh, .10, 5, rng.uniform(0, math.tau))
+    mesh.object("Gefaltete_Wiesenhalme_und_Bodenkragen", materials())

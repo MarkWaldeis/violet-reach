@@ -1,4 +1,4 @@
-"""Farnhorst mit zwölf gebogenen Wedeln und einzeln gelappten Fiederblättchen."""
+"""Doppelt gefiederte Farnrosette mit durchgehend gebogenen Wedeln."""
 import math
 import random
 
@@ -85,98 +85,125 @@ class Mesh:
         return vrlib.link_to_source(obj)
 
 
+
+SEED = 82719
+FRONDS = 12
+
+
 def materials():
     palette = vrmat.load_palette()
     result = []
     for name, library, first, second, blend, gain in [
-        ("Basis", "foliage_leaf", "leaf_green", "moss", .35, 1.1),
-        ("Gruen", "foliage_leaf", "grass_green", "moss", .25, 1.35),
-        ("Spitzen", "foliage_leaf", "grass_green", "moss", .20, 1.9),
-        ("Stroh", "grass_ground", "grass_dry", "accent_ochre", .23, 1.1),
-        ("Samen", "tree_bark", "bark", "soil", .22, 1.0),
+        ("Olivbasis", "foliage_leaf", "grass_green", "grass_dry", .55, 1.8),
+        ("Olivlaub", "foliage_leaf", "grass_green", "grass_dry", .55, 2.1),
+        ("Lichtspitzen", "foliage_leaf", "grass_green", "grass_dry", .55, 2.8),
+        ("Altfarn", "tree_bark", "bark", "soil", .3, 1.2),
+        ("Blattachsen", "foliage_leaf", "grass_green", "grass_dry", .55, 1.4),
     ]:
         material = vrmat.get(library).copy()
         material.name = name
-        socket = material.node_tree.nodes["Principled BSDF"].inputs["Base Color"]
+        bsdf = material.node_tree.nodes["Principled BSDF"]
+        socket = bsdf.inputs["Base Color"]
         for link in list(socket.links):
             material.node_tree.links.remove(link)
         socket.default_value = (*(gain*(a*(1-blend)+b*blend) for a, b in zip(
             palette[first]["linear_rgb"], palette[second]["linear_rgb"])), 1)
+        bsdf.inputs["Specular IOR Level"].default_value = .2
         result.append(material)
     return result
 
 
-def blade(mesh, points, width, side, dry=False, twist=0):
-    for i in range(len(points)-1):
-        t0, t1 = i/(len(points)-1), (i+1)/(len(points)-1)
-        rows = []
-        for point, t in ((points[i], t0), (points[i+1], t1)):
-            axis = (side*math.cos(twist*t)+UP*math.sin(twist*t)).normalized()
-            w = width*(1-t)**.8
-            rows.append([point-axis*w, point+UP*w*.22, point+axis*w])
-        material = 3 if dry else min(2, int((t0+t1)*1.5))
-        for j in range(2):
-            face_points = [rows[0][j], rows[1][j], rows[0][j+1]] if t1 == 1 else [
-                rows[0][j], rows[1][j], rows[1][j+1], rows[0][j+1]]
-            mesh.face(face_points, material)
-
-SEED = 82719
-FRONDS = 15
+def pinnule(mesh, root, direction, normal, length, width, material):
+    along = direction.normalized()
+    across = normal.cross(along).normalized()
+    outline = [(0, 0), (.12, -.8), (.32, -1), (.43, -.75), (.62, -1),
+               (.85, -.85), (1, -.35), (1, .35), (.85, .85), (.62, 1),
+               (.43, .75), (.32, 1), (.12, .8)]
+    points = [root+along*(x*length)+across*(y*width)
+              +normal*(length*(.06*y*y-.13*x*x)) for x, y in outline]
+    centre = root+along*length*.45+normal*length*.025
+    for i in range(len(points)):
+        mesh.face([centre, points[i], points[(i+1)%len(points)]], material)
 
 
 def build():
     rng = random.Random(SEED)
     mesh = Mesh()
     for i in range(FRONDS):
-        angle = i*2.39996+rng.uniform(-.2, .2)
+        angle = i*2.39996+rng.uniform(-.18, .18)
         radial = Vector((math.cos(angle), math.sin(angle), 0))
         side = UP.cross(radial)
-        base = radial*rng.uniform(.015, .045)+UP*.025
-        older = i in (3, 11)
-        outer = i % 3 == 0 or older
-        spread = rng.uniform(.53, .66) if outer else rng.uniform(.27, .44)
-        height = rng.uniform(.19, .30) if outer else rng.uniform(.54, .76)
-        if not outer and i % 3 == 1:
-            spread, height = rng.uniform(.43, .53), rng.uniform(.43, .56)
+        base = radial*rng.uniform(.012, .033)+UP*rng.uniform(-.006, -.002)
+        older = i in (0, 7)
+        if older:
+            length, start_angle, end_angle, power = rng.uniform(.64, .71), .9, 2.7, 2.4
+        elif i % 3 == 0:
+            length, start_angle, end_angle, power = rng.uniform(.74, .81), rng.uniform(.9, 1.03), 2.12, 1.6
+        elif i % 3 == 1:
+            length, start_angle, end_angle, power = rng.uniform(.86, .9), rng.uniform(.525, .58), 1.75, 2.2
+        else:
+            length, start_angle, end_angle, power = rng.uniform(.78, .86), rng.uniform(.7, .85), 1.95, 1.9
+        frond_length = length
         def rachis(t):
-            return base+radial*(spread*t**.9)+UP*(height*math.sin(math.pi*.72*t)-.07*t**5)
-        mesh.tube([rachis(j*.995/24) for j in range(25)], .0045, 0)
-        for j in range(26):
-            t = .12+j*(.875/25)
-            profile = ((t-.08)/.27)**.55 if t < .35 else ((1-t)/.65)**.5
-            length = rng.uniform(.095, .12)*profile
+            point = base.copy()
+            for k in range(32):
+                u = t*(k+.5)/32
+                angle = start_angle+(end_angle-start_angle)*u**power
+                point += (radial*math.sin(angle)+UP*math.cos(angle))*(frond_length*t/32)
+            if older:
+                point += side*(.035*math.sin(math.pi*t*t))
+            return point
+        stem_material = 3 if older else 4
+        mesh.tube([rachis(j/24) for j in range(25)], .0037, stem_material, 6)
+        for j in range(16):
+            t = .08+j*.90/15
+            u = (t-.08)/.92
+            profile = max(.04, (u/.3)**.5 if u < .3 else ((1-u)/.7)**.85)
             for sign in (-1, 1):
-                root = rachis(t+sign*.007)
+                root = rachis(t+sign*.002)
                 tangent = (rachis(t+.001)-rachis(t-.001)).normalized()
-                along = (side*sign*math.sqrt(3)+tangent).normalized()
-                across = (tangent-along*tangent.dot(along)).normalized()
-                outline = [(0, 0)]
-                for k in range(1, 18):
-                    x = k/18
-                    width = .011*profile*math.sin(math.pi*x)**.7*(.88 if k%2 else 1)
-                    outline.append((x, -width))
-                outline.append((1, 0))
-                for k in reversed(range(1, 18)):
-                    x = k/18
-                    width = .011*profile*math.sin(math.pi*x)**.7*(.88 if k%2 else 1)
-                    outline.append((x, width))
-                points = [root+along*(x*length)+across*y-UP*(length*.09*x*x) for x,y in outline]
-                centre = root+along*length*.48+UP*length*(.025-.09*.48**2)
-                material = 3 if older else min(2, int(t*3))
-                for k in range(len(points)):
-                    mesh.face([centre, points[k], points[(k+1)%len(points)]], material)
+                normal = side.cross(tangent).normalized()
+                if normal.z < 0:
+                    normal.negate()
+                roll = 1.3*t*t if older else .08*math.sin(t*7+i)
+                rolled_side = side*math.cos(roll)+normal*math.sin(roll)
+                axis = (rolled_side*sign*.85+tangent*.5).normalized()
+                normal = rolled_side.cross(tangent).normalized()
+                lateral = normal.cross(axis).normalized()
+                length = rng.uniform(.115, .135)*profile*(.75 if older else 1)
+                def pinna(v):
+                    return root+axis*(length*v)-UP*(length*.15*v*v)
+                mesh.tube([pinna(k/5) for k in range(6)], max(.00024, .0012*profile), stem_material, 4)
+                material = 3 if older else (2 if t > .68 else 1 if t > .25 else 0)
+                for k in range(5):
+                    v = .10+k*.16
+                    for hand in (-1, 1):
+                        attachment = pinna(v+hand*.025+rng.uniform(-.018, .018))
+                        direction = lateral*hand*.85+axis*rng.uniform(.55, .75)+normal*rng.uniform(-.1, .1)
+                        size = length*.38*math.sin(math.pi*v)**.45*rng.uniform(.88, 1.12)
+                        pinnule(mesh, attachment, direction, normal, size,
+                                size*rng.uniform(.155, .175), material)
+                pinnule(mesh, pinna(.86), axis-UP*.15, normal, length*.15, length*.035, material)
+        pinnule(mesh, rachis(.975), (rachis(1)-rachis(.97)).normalized(), UP,
+                .018, .004, 3 if older else 2)
     for i in range(4):
-        a = i*math.tau/4
-        radial = Vector((math.cos(a), math.sin(a), 0))
-        points = [radial*.035+UP*(.025+.16*j/10) for j in range(7)]
-        points += [radial*(.035+.025*math.sin(j*math.pi/8))+UP*(.121+.025*math.cos(j*math.pi/8)) for j in range(9)]
-        mesh.tube(points, .006, 0)
-    for i in range(13):
         angle = rng.uniform(0, math.tau)
         radial = Vector((math.cos(angle), math.sin(angle), 0))
-        base = Vector((rng.gauss(0, .018), rng.gauss(0, .018), .006))
-        height = rng.uniform(.03, .065)
-        mesh.tube([base, base+radial*.012+UP*height*.65,
-                   base+radial*.025+UP*height], rng.uniform(.004, .008), 4, 6)
-    mesh.vertices = [vertex-UP*.025 for vertex in mesh.vertices]
-    mesh.object("Farnwedel_und_Fiederblaetter", materials())
+        base = radial*rng.uniform(.02, .045)-UP*.004
+        height = rng.uniform(.12, .20)
+        points = [base+UP*(height*j/12)+radial*(.018*(j/12)**2) for j in range(13)]
+        centre = points[-1]+radial*.025
+        for j in range(1, 33):
+            t = j/32
+            angle = math.pi+math.tau*1.3*t
+            radius = .025*(1-.72*t)
+            points.append(centre+radial*(radius*math.cos(angle))+UP*(radius*math.sin(angle)))
+        mesh.tube(points, .0032, 1, 6)
+        for j in (19, 24, 29):
+            pinnule(mesh, points[j], radial+UP*.3, UP, .009, .003, 2)
+    for _ in range(11):
+        angle = rng.uniform(0, math.tau)
+        radial = Vector((math.cos(angle), math.sin(angle), 0))
+        base = radial*rng.uniform(.006, .025)-UP*.006
+        mesh.tube([base, base+radial*.008+UP*rng.uniform(.018, .04)], .003, 3, 5)
+    mesh.object("Doppelt_gefiederte_Wedel", materials())

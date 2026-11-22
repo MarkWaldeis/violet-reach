@@ -5,32 +5,36 @@ import random
 import bmesh
 import bpy
 from mathutils import Vector, noise
+from mathutils.kdtree import KDTree
 
 import vrlib
 import vrmat
 
 SEED = 71429
-TARGETS = 2200
-SCAFFOLDS = 3
-YOUNG = False
-BOLE = [(0, 0, -.04), (-.12, .04, 1.4), (.08, 0, 3.3), (0, 0, 4.0)]
-BASE_RADIUS, FORK_RADIUS = .53, .35
-LEAN, ROOT_RIDGES = 0, 6
-ROOT_RINGS = [(-.055, .62, .64), (.08, .55, .60), (.35, .51, .45), (.8, .47, .22), (1.45, .44, .025)]
-ENVELOPE = [
-    ((-3.4, -1.3, 8.2), (3.4, 4.9, 2.8)),
-    ((3.5, -.6, 8.7), (3.5, 4.4, 2.9)),
-    ((-1.0, 2.9, 10.5), (4.5, 4.1, 3.1)),
-    ((.6, -1.4, 12.6), (3.6, 3.5, 2.8)),
-    ((-3.8, 1.2, 11.2), (2.7, 3.0, 2.5)),
-    ((3.9, 2.1, 11.0), (2.7, 3.2, 2.8)),
+TARGETS = 1800
+BOLE = [(0, 0, -.04), (-.10, .04, 1.1), (.06, 0, 2.5), (0, 0, 3.2)]
+BASE_RADIUS = .78
+CLUSTERS = [
+    [((-4.3, -3.2, 6.0), (2.5, 2.8, 1.05)),
+     ((-3.8, -1.3, 7.7), (2.5, 2.5, 1.5)),
+     ((-2.9, -2.4, 7.4), (2.0, 2.2, 1.3))],
+    [((3.9, -2.9, 8.0), (2.8, 2.8, 1.45)),
+     ((2.8, -1.7, 9.5), (2.0, 2.3, 1.6)),
+     ((4.7, -.8, 8.9), (1.9, 2.0, 1.2))],
+    [((-2.0, 3.8, 13.8), (2.9, 3.0, 1.65)),
+     ((-3.7, 2.8, 10.7), (2.4, 2.3, 1.35)),
+     ((-1.7, 4.8, 12.8), (2.1, 2.2, 1.2))],
+    [((4.2, 3.8, 12.5), (2.7, 2.6, 1.45)),
+     ((3.2, 4.4, 12.9), (1.8, 2.1, 1.35)),
+     ((4.8, 2.5, 10.5), (2.0, 2.1, 1.2))],
 ]
-GAPS = [((-5.0, -4.0, 10.4), 2.0), ((4.7, 4.0, 12.0), 1.9),
-        ((0, -5.0, 12.5), 1.9)]
+ENVELOPE = [ellipsoid for cluster in CLUSTERS for ellipsoid in cluster]
+GAPS = [((.5, 1.8, 10.2), 1.25), ((-2.7, .4, 11.6), 1.0),
+        ((.5, -2.3, 10.9), 1.2)]
 CROWN_CENTRE = (0, 0)
-TWIG_RADIUS, REMESH_THRESHOLD, VOXEL_SIZE = .0065, .04, .032
+TWIG_RADIUS, REMESH_THRESHOLD, VOXEL_SIZE = .009, .045, .045
 LEAVES_PER_TWIG, LEAF_LENGTH = (24, 34), (.20, .32)
-EXPOSURE_DISTANCE, BARK_RELIEF = 1.5, .024
+EXPOSURE_DISTANCE, BARK_RELIEF = 1.25, .012
 
 UP = Vector((0, 0, 1))
 
@@ -89,8 +93,9 @@ def tangent(points, t):
 class Tubes:
     def __init__(self):
         self.vertices, self.faces = [], []
+        self.frames = []
 
-    def add(self, points, r0, r1, sides=7, steps=7):
+    def add(self, points, r0, r1, sides=7, steps=7, radius_at=None):
         offset = len(self.vertices)
         axis = tangent(points, 0).orthogonal().normalized()
         for i in range(steps+1):
@@ -100,7 +105,8 @@ class Tubes:
             axis = axis-direction*axis.dot(direction)
             axis = axis.normalized() if axis.length > .001 else direction.orthogonal().normalized()
             other = direction.cross(axis).normalized()
-            radius = r0*(1-t)+r1*t
+            radius = radius_at(t, centre) if radius_at else r0*(1-t)+r1*t
+            self.frames.append((centre, direction, axis.copy(), radius, max(6, round(math.tau*r0/.11))))
             for j in range(sides):
                 a = math.tau*j/sides
                 self.vertices.append(centre+radius*(axis*math.cos(a)+other*math.sin(a)))
@@ -117,23 +123,24 @@ class Tubes:
 
 
 def foliage_materials():
-    """Copy foliage_leaf; palette-only colour mixes, opaque library BSDF unchanged."""
+    """Copy foliage_leaf; warm grass-palette colour floor, reduced sky specular."""
     palette = vrmat.load_palette()
     materials = []
-    for name, colour, strength, gain in [("Schatten", "leaf_green", .55, 1.0),
-                                    ("Innenlaub", "grass_green", .50, 1.0),
-                                    ("Sonnenlaub", "grass_green", 1.0, 2.2),
-                                    ("Oliveflecken", "grass_green", 1.0, 2.5)]:
+    for name, colour, strength, gain in [("Schatten", "grass_green", 1.0, 1.8),
+                                    ("Innenlaub", "grass_green", 1.0, 2.1),
+                                    ("Sonnenlaub", "grass_green", 1.0, 2.8),
+                                    ("Oliveflecken", "grass_green", 1.0, 3.1)]:
         material = vrmat.get("foliage_leaf").copy()
         material.name = "broadleaf_"+name
         nt = material.node_tree
         socket = nt.nodes["Principled BSDF"].inputs["Base Color"]
+        nt.nodes["Principled BSDF"].inputs["Specular IOR Level"].default_value = .2
         original = socket.links[0].from_socket
         mix = nt.nodes.new("ShaderNodeMixRGB")
         mix.inputs[0].default_value = strength
         green = palette[colour]["linear_rgb"]
-        moss = palette["moss"]["linear_rgb"]
-        tint = tuple((a*.8+b*.2)*gain for a, b in zip(green, moss)) if gain > 1 else green
+        dry = palette["grass_dry"]["linear_rgb"]
+        tint = tuple((a*.45+b*.55)*gain for a, b in zip(green, dry))
         mix.inputs[2].default_value = (*tint, 1)
         if gain > 1:
             texture = nt.nodes.new("ShaderNodeTexNoise")
@@ -152,9 +159,13 @@ def foliage_materials():
     return materials
 
 
+def ellipsoid_score(point, centre, size):
+    x, y, z = ((point[i]-centre[i])/size[i] for i in range(3))
+    return x*x+y*y+(z**4 if z < 0 else z*z)
+
+
 def envelope_score(point):
-    return min(sum(((point[i]-centre[i])/size[i])**2 for i in range(3))
-               for centre, size in ENVELOPE)
+    return min(ellipsoid_score(point, centre, size) for centre, size in ENVELOPE)
 
 
 def canopy_top(point):
@@ -172,12 +183,15 @@ def attractors(rng):
     points = []
     for _ in range(TARGETS*100):
         p = Vector(tuple(rng.uniform(lower[i], upper[i]) for i in range(3)))
-        boundary = 1+.13*noise.noise(p*.93+Vector((4, 8, 2)))
+        boundary = 1+.24*noise.noise(p*.93+Vector((4, 8, 2)))
         if envelope_score(p) > boundary:
             continue
+        if len(points) % 11 == 0:
+            centre, _ = min(ENVELOPE, key=lambda e: ellipsoid_score(p, *e))
+            outward = Vector((p.x-centre[0], p.y-centre[1], 0))
+            if outward.length > .01:
+                p += outward.normalized()*rng.uniform(.2, .55)
         if any((p-Vector(centre)).length < radius for centre, radius in GAPS):
-            continue
-        if -.5 < p.y < 1.4 and 9.1 < p.z < 10.5 and p.x > -.8:
             continue
         points.append(p)
         if len(points) == TARGETS:
@@ -218,7 +232,7 @@ class Branch:
         angle = max(math.radians(30), min(math.radians(70), angle))
         departure = incoming*math.cos(angle)+lateral*math.sin(angle)
         length = max(.06, (end-start).length)
-        lift = UP*length*(.16 if depth < 2 else .10)
+        lift = UP*length*(.16 if depth < 2 else .22)
         self.points = [start, start+departure*length*.36,
                        end-direction*length*.30+lift, end]
         self.children = []
@@ -234,22 +248,86 @@ class Branch:
         self.depth = depth
 
 
-def root_flare(bark):
-    vertices, faces = [], []
-    sides = 96
-    for z, core, flare in ROOT_RINGS:
-        for j in range(sides):
-            a = math.tau*j/sides
-            r = core+flare*max(0, math.cos(ROOT_RIDGES*a+.3))**4
-            shift = Vector((LEAN*max(z, 0), 0, 0))
-            vertices.append(Vector((r*math.cos(a), r*math.sin(a), z))+shift)
-    for i in range(len(ROOT_RINGS)-1):
-        for j in range(sides):
-            a, b = i*sides+j, i*sides+(j+1)%sides
-            faces.append((a, b, b+sides, a+sides))
-    faces.extend([tuple(reversed(range(sides))),
-                  tuple((len(ROOT_RINGS)-1)*sides+j for j in range(sides))])
-    return mesh_object("Wurzelanlauf", vertices, faces, [bark])
+def side_growth(curve, rng):
+    for i, t in enumerate((.48, .57, .66, .75, .84, .93)):
+        start = bezier(curve, t)
+        outward = Vector((start.x, start.y, 0)).normalized()
+        across = UP.cross(outward)
+        tip = start+outward*rng.uniform(.25, .55)+across*((-1)**i)*.3
+        tip.z -= rng.uniform(.05, .25)
+        points = []
+        for _ in range(18):
+            point = tip+Vector((rng.uniform(-.5, .5), rng.uniform(-.5, .5),
+                                rng.uniform(-.45, .5)))
+            if not any((point-Vector(c)).length < r for c, r in GAPS):
+                points.append(point)
+        if points:
+            yield t, points
+
+
+def root_flare(wood, rng):
+    for angle in (.12, 1.02, 2.31, 3.47, 4.4, 5.6):
+        angle += rng.uniform(-.12, .12)
+        end_angle = angle+rng.uniform(-.18, .18)
+        length = rng.uniform(1.05, 1.65)
+        along = Vector((math.cos(angle), math.sin(angle), 0))
+        outward = Vector((math.cos(end_angle), math.sin(end_angle), 0))
+        wood.add([along*.18+UP*.18, along*.52+UP*.13,
+                  outward*(length*.72)-UP*.03, outward*length-UP*.28],
+                 rng.uniform(.35, .43), rng.uniform(.15, .19), 28, 32)
+
+
+def displace_bark(obj, frames):
+    subdivision = obj.modifiers.new("Rindengeometrie", "SUBSURF")
+    subdivision.subdivision_type = "SIMPLE"
+    subdivision.levels = 1
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.modifier_apply(modifier=subdivision.name)
+    tree = KDTree(len(frames))
+    for i, (centre, *_rest) in enumerate(frames):
+        tree.insert(centre, i)
+    tree.balance()
+    obj.data.update()
+    normals = [vertex.normal.copy() for vertex in obj.data.vertices]
+    for vertex, normal in zip(obj.data.vertices, normals):
+        if vertex.co.z < .015:
+            continue
+        _, index, _ = tree.find(vertex.co)
+        centre, direction, axis, radius, bands = frames[index]
+        radial = vertex.co-centre
+        other = direction.cross(axis).normalized()
+        angle = math.atan2(radial.dot(other), radial.dot(axis))
+        wander = .3*noise.noise(vertex.co*.8+Vector((2, 7, 4)))
+        relief = (.005*math.cos(angle*bands+wander)
+                  + .001*math.cos(angle*bands*2+1.4+wander))
+        fade = min(1, (vertex.co.z-.015)/.08, radius/.16)
+        vertex.co += normal*relief*fade
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
+    bm.to_mesh(obj.data)
+    bm.free()
+    obj.data.update()
+    moss = vrmat.get("tree_bark").copy()
+    moss.name = "broadleaf_moos_Wetterseite"
+    socket = moss.node_tree.nodes["Principled BSDF"].inputs["Base Color"]
+    for link in list(socket.links):
+        moss.node_tree.links.remove(link)
+    palette = vrmat.load_palette()
+    socket.default_value = (*(a*.20+b*.80 for a, b in zip(
+        palette["moss"]["linear_rgb"], palette["bark"]["linear_rgb"])), 1)
+    obj.data.materials.append(moss)
+    weather = Vector((-.9, -.4, 0)).normalized()
+    for polygon in obj.data.polygons:
+        centre = polygon.center
+        radial = Vector((centre.x, centre.y, 0))
+        if radial.length < .1:
+            continue
+        patch = noise.noise(centre*4.5+Vector((1, 8, 3)))
+        if (.08 < centre.z < .65 and radial.length < 1.35
+                and radial.normalized().dot(weather) > .65 and patch > 0
+                and polygon.normal.z > .25):
+            polygon.material_index = len(obj.data.materials)-1
 
 
 def spray(branch, rng, vertices, faces, indices):
@@ -262,6 +340,7 @@ def spray(branch, rng, vertices, faces, indices):
     patch = noise.noise(centre*(.35/EXPOSURE_DISTANCE)+Vector((3, 0, 7)))
     local = min(ENVELOPE, key=lambda e: sum(((centre[i]-e[0][i])/e[1][i])**2 for i in range(3)))
     local_height = (centre.z-local[0][2])/local[1][2]
+    hanging = local_height < -.1
     upper_outer = local_height > -.12 and envelope_score(centre) > .32
     bright = exposed or upper_outer or depth < EXPOSURE_DISTANCE*(1.4+patch*.3)
     material = (3 if patch > .12 else 2) if bright else (1 if depth < EXPOSURE_DISTANCE*2 else 0)
@@ -277,7 +356,8 @@ def spray(branch, rng, vertices, faces, indices):
         side = forward.cross(axis).normalized()
         radial = axis*math.cos(angle)+side*math.sin(angle)
         outward = Vector((stem.x-CROWN_CENTRE[0], stem.y-CROWN_CENTRE[1], .4)).normalized()
-        along = (forward*.45+radial*.85+outward*.25+UP*rng.uniform(.05, .4)).normalized()
+        along = (forward*.45+radial*.85+outward*.25
+                 + UP*(rng.uniform(.05, .4)-(.65 if hanging else 0))).normalized()
         normal = (UP*.85+radial*.45+outward*.2).normalized()
         across = normal.cross(along).normalized()
         normal = along.cross(across).normalized()
@@ -319,55 +399,63 @@ def build():
     rng = random.Random(SEED)
     bark = vrmat.get("tree_bark").copy()
     bark.name = "broadleaf_bark_furrows"
-    # World-aligned metre coordinates retain the library's longitudinal bark grain.
     for node in bark.node_tree.nodes:
         if node.type == "BUMP" and node.inputs["Distance"].default_value > .001:
             node.inputs["Distance"].default_value = BARK_RELIEF
             node.inputs["Strength"].default_value = .65
     materials = foliage_materials()+[bark]
     thick, thin = Tubes(), Tubes()
-    thick.add([Vector(p) for p in BOLE], BASE_RADIUS, FORK_RADIUS, 28, 32)
-    root_flare(bark)
-    if not YOUNG:
-        centre = Vector(BOLE[-1])-UP*.06
-        vertices, faces = [], []
-        sides, rings = 32, 16
-        for i in range(rings+1):
-            latitude = -.5*math.pi+math.pi*(i+.01)/(rings+.02)
-            for j in range(sides):
-                angle = math.tau*j/sides
-                r = FORK_RADIUS*1.06*math.cos(latitude)
-                vertices.append(centre+Vector((r*math.cos(angle), r*math.sin(angle), FORK_RADIUS*1.45*math.sin(latitude))))
-        for i in range(rings):
-            for j in range(sides):
-                a, b = i*sides+j, i*sides+(j+1)%sides
-                faces.append((a, b, b+sides, a+sides))
-        faces.extend([tuple(reversed(range(sides))), tuple(rings*sides+j for j in range(sides))])
-        mesh_object("Gabelkragen", vertices, faces, [bark])
+    root_flare(thick, random.Random(SEED+263))
     points = attractors(rng)
     roots = []
-    if YOUNG:
-        leader = [Vector((.02, 0, 1.95)), Vector((.18, -.06, 3.4)),
-                  Vector((-.12, .1, 5.1)), Vector((.12, 0, 6.65))]
-        thick.add(leader, .10, .012, 12, 32)
-        for group in partition(points, 7):
-            centre = sum(group, Vector())/len(group)
-            t = max(.025, min(.80, (centre.z-2.65)/4.7))
-            start = bezier(leader, t)
-            roots.append(Branch(group, start, tangent(leader, t), 0, rng))
-    else:
-        groups = [[] for _ in range(SCAFFOLDS)]
-        for point in points:
-            if SCAFFOLDS == 2:
-                index = 0 if point.x < 1.0 else 1
-            else:
-                angle = math.atan2(point.y, point.x)
-                index = int(((angle+.35) % math.tau)/math.tau*SCAFFOLDS)
-            groups[index].append(point)
-        start = Vector(BOLE[-1])
-        for group in groups:
-            if group:
-                roots.append(Branch(group, start, UP, 0, rng))
+    fork = Vector(BOLE[-1])
+    scaffolds = [
+        [fork, Vector((-1.2, -1.0, 4.4)), Vector((-3.4, -2.8, 5.2)), Vector((-3.7, -2.4, 7.5))],
+        [fork, Vector((1.3, -1.0, 4.8)), Vector((2.6, -2.3, 6.5)), Vector((3.8, -2.0, 9.0))],
+        [fork, Vector((-.7, 1.2, 5.3)), Vector((-1.6, 2.8, 8.5)), Vector((-2.2, 3.8, 12.6))],
+        [fork, Vector((1.0, 1.3, 5.5)), Vector((3.2, 3.0, 8.8)), Vector((4.1, 3.8, 11.8))],
+    ]
+    for curve in scaffolds:
+        for point in curve[1:3]:
+            point.x += rng.uniform(-.16, .16)
+            point.y += rng.uniform(-.16, .16)
+    groups = [[] for _ in CLUSTERS]
+    for point in points:
+        index = min(range(len(CLUSTERS)), key=lambda k: min(
+            ellipsoid_score(point, c, r) for c, r in CLUSTERS[k]))
+        groups[index].append(point)
+    scaffold_radii = []
+    for cluster, group, curve in zip(CLUSTERS, groups, scaffolds):
+        lower = min(c[2]-r[2] for c, r in cluster)
+        upper = max(c[2]+r[2] for c, r in cluster)
+        attachments = []
+        for t, secondary in side_growth(curve, rng):
+            branch = Branch(secondary, bezier(curve, t), tangent(curve, t), 1, rng)
+            roots.append(branch)
+            attachments.append((t, branch.radius))
+        for secondary in partition(group, 7):
+            centre = sum(secondary, Vector())/len(secondary)
+            t = .35+.55*max(0, min(1, (centre.z-lower)/(upper-lower)))
+            branch = Branch(secondary, bezier(curve, t), tangent(curve, t), 1, rng)
+            roots.append(branch)
+            attachments.append((t, branch.radius))
+        def radius_at(t, centre):
+            return math.sqrt(.018**2+sum(radius**2*max(0, min(1, (position+.06-t)/.12))
+                                       for position, radius in attachments))
+        radius = radius_at(0, fork)
+        scaffold_radii.append(radius)
+        thick.add(curve, radius, .018, 24, 64, radius_at=radius_at)
+    fork_radius = math.sqrt(sum(radius**2 for radius in scaffold_radii))
+    def trunk_radius(t, centre):
+        z = max(0, centre.z)
+        if z < 1.3:
+            return .5+(BASE_RADIUS-.5)*(1-z/1.3)**2
+        return .5+(fork_radius-.5)*(z-1.3)/(BOLE[-1][2]-1.3)
+    thick.add([Vector(p) for p in BOLE], BASE_RADIUS, fork_radius, 40, 80,
+              radius_at=trunk_radius)
+    print("VR_PROPORTIONS", {"dbh_m": 1.0, "fork_radius_m": round(fork_radius, 3),
+                             "primary_diameters_m": [round(2*r, 3) for r in scaffold_radii]},
+          flush=True)
     vertices, faces, indices = [], [], []
     for branch in roots:
         emit(branch, thick, thin, rng, (vertices, faces, indices))
@@ -390,6 +478,10 @@ def build():
     bpy.ops.object.modifier_apply(modifier=smooth.name)
     bm = bmesh.new()
     bm.from_mesh(obj.data)
+    bmesh.ops.bisect_plane(bm, geom=list(bm.verts)+list(bm.edges)+list(bm.faces),
+                          plane_co=Vector((0, 0, -.055)), plane_no=UP,
+                          clear_inner=True, clear_outer=False, dist=1e-6)
+    bmesh.ops.holes_fill(bm, edges=[edge for edge in bm.edges if edge.is_boundary], sides=0)
     remaining = set(bm.verts)
     components = []
     while remaining:
@@ -409,8 +501,7 @@ def build():
     bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
     bm.to_mesh(obj.data)
     bm.free()
-    for vertex in obj.data.vertices:
-        vertex.co.z = max(-.055, vertex.co.z)
+    displace_bark(obj, thick.frames)
     thin.object("Feinaeste_und_Zweige", bark)
     mesh_object("Einzelblaetter", vertices, faces, materials, indices)
     print("VR_BRANCHES", {"terminal_twigs": TARGETS, "leaves": len(indices)//9,
