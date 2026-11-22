@@ -1,0 +1,35 @@
+{
+  "id": "lake_shore_a",
+  "category": "shore",
+  "title": "Shinglewake Shore",
+  "description": "A gently scalloped lake margin with damp sand, clustered glacial shingle and a rooted turf bank. Lake is on the negative Y side at Z=0; the water in the review is not part of the source.",
+  "target_size_m": [
+    21.2,
+    7.7,
+    1.2
+  ],
+  "lod_triangles": [
+    26000,
+    9000,
+    2800
+  ],
+  "texture_size": 2048,
+  "status": "approved",
+  "builder": "devin-4076f9d9c7794015bd813c73729bed6b",
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 8,
+      "scale": 8,
+      "style": 8,
+      "defects": 8
+    },
+    "notes": "Round 2: APPROVED. All round-1 points are fixed. The rocks now mix angular split boulders, flat slabs and rounded cobbles. The grass is dense, varied tufts with dry blades. There is a broad, darker, glossy wet band along the waterline, and the rock colours vary warm and cool. The pebbles sit in drift lines and at rock bases while the upper sand stays clean, and the shallow water is transparent, so the shore-to-water connection reads (closeup.jpg, closeup_base). Non-blocking polish for later: the foam/sediment line is one continuous white ribbon of constant width, so break it into irregular segments. Two or three boulders (bottom right in closeup_base, and the round one at the water's edge) are still lumpy noise blobs; split them with a flat fracture face.",
+    "round": 2,
+    "source_sha256": "32afd73456563dc46b0783d6c612c9a4a2ca728cd45740cbcb43b59f5fad8a1b",
+    "sheet_sha256": "e81f688f323bfe6af1368924e8d0df34b5b7d2e5062a9a434972e59da9c21fea"
+  },
+  "review_rounds": 2
+}
