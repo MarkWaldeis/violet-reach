@@ -5,6 +5,7 @@ import random
 import bmesh
 import bpy
 from mathutils import Quaternion, Vector
+from mathutils.kdtree import KDTree
 from mathutils.noise import noise_vector
 
 import vrlib
@@ -111,24 +112,43 @@ def radial(angle):
     return Vector((math.cos(angle), math.sin(angle), 0))
 
 
-def blade_section(angle, profile, section, t):
+def blade_section(angle, profile, section, t, sockets=()):
     distance, z, depth, width, drift = profile_at(profile, t)
     radial_dir, side_dir = radial(angle), radial(angle+math.pi/2)
     centre = radial_dir*distance + side_dir*drift + Vector((0, 0, z))
-    return [centre + radial_dir*(r*depth) + side_dir*(s*width) for r,s in section]
+    row = []
+    for r, s in section:
+        inset = 0
+        if r < -.85:
+            for level, across, size in sockets:
+                dz = z - profile_at(profile, level)[1]
+                lateral = (s-across)*width
+                rr = math.hypot((lateral-.15*dz)/size, dz/(size*1.73))
+                flute = .085 * rr * math.sin(5*math.atan2(dz, lateral)+.9)
+                inset += .55 * max(0, 1-(rr+flute)**4)**1.50
+        row.append(centre + radial_dir*(r*depth+inset) + side_dir*(s*width))
+    return row
 
 
-def rib(name, angle, profile, breaks, section, rng):
-    # Individual voussoirs share a continuous curved profile but have separate cut beds.
+def rib(name, angle, profile, breaks, section, sockets, rng, limestone):
+    section = [tuple(x+(y-x)*k/steps for x,y in zip(p,q))
+               for p, q in zip(section, section[1:] + section[:1])
+               for steps in [14 if max(p[0], q[0]) < -.85 else 1]
+               for k in range(steps)]
     for index, (a,b) in enumerate(zip(breaks, breaks[1:])):
         rows = []
-        steps = max(7, round((b-a)*100))
+        steps = max(10, round((b-a)*142))
         for k in range(steps+1):
             f = k/steps
-            t = (a + (.0009 if index else 0)) + (b-a-.0019)*f
-            row = blade_section(angle, profile, section, t)
+            start = a + (.0027 if index else 0)
+            stop = b - (.0033 if index < len(breaks)-2 else 0)
+            t = start+(stop-start)*f
+            row = blade_section(angle, profile, section, t, sockets)
+            centre = sum(row, Vector()) / len(row)
+            bed = .045 * abs(2*f-1)**14
             for j, v in enumerate(row):
                 noise = noise_vector(v * 3.6 + Vector((1.7, 3.1, 2)))
+                v -= (v-centre)*bed
                 v += noise * (.024 + .030 * abs(2*f-1)**4)
                 v.z = max(-.035, v.z)
             rows.append(row)
@@ -137,28 +157,81 @@ def rib(name, angle, profile, breaks, section, rng):
         verts = [bm.verts.new(p) for p in points]
         for face in faces:
             bm.faces.new([verts[i] for i in face])
-        for row, k, sign in ((rows[-1], (index*5+1)%len(section), 1),
-                             (rows[0], (index*7+4)%len(section), -1)):
+        corners = [j for j, (r, s) in enumerate(section) if r > -.85 or abs(s) > .53]
+        for row, k, sign in ((rows[-1], rng.choice(corners), 1),
+                             (rows[0], rng.choice(corners), -1)):
             if index == 0 and sign < 0:
                 continue
             point = row[k].lerp(row[(k+1)%len(row)], rng.uniform(.16,.46))
             q = sum(row, Vector()) / len(row)
-            n = (point-q).normalized() + Vector((0, 0, sign*rng.uniform(.50,.81)))
-            bm = spall(bm, point.lerp(q, rng.uniform(.035,.20)), n)
+            n = (point-q).normalized() + Vector((0, 0, sign*rng.uniform(.45,.76)))
+            bm = spall(bm, point.lerp(q, rng.uniform(.19,.36)), n)
         obj = commit_mesh(f"{name} | ashlar {index+1}", bm,
-                          ["monument_white", "monument_white"], smooth=True)
+                          [limestone, "monument_white"], smooth=True)
         obj.data.set_sharp_from_angle(angle=math.radians(37))
+        patina = obj.data.attributes.new("socket lining", "FLOAT", "POINT")
+        forward, across_dir = radial(angle), radial(angle+math.pi/2)
+        for (level, across, size) in sockets:
+            if not a-.12 <= level <= b+.12:
+                continue
+            socket = blade_section(angle, profile, [(-.94, across)], level)[0]
+            for field, vert in zip(patina.data, obj.data.vertices):
+                v = vert.co-socket
+                if v.dot(forward) > .85:
+                    continue
+                rr = math.hypot((v.dot(across_dir)-.15*v.z)/size, v.z/(1.73*size))
+                field.value = max(field.value, .79*max(0, 1-(rr/.83)**4))
+        if index:
+            bed_rows = []
+            for t in (a-.006, a, a+.006):
+                row = blade_section(angle, profile, section, t, sockets)
+                centre = sum(row, Vector()) / len(row)
+                bed_rows.append([v.lerp(centre, .105) for v in row])
+            mesh_object(f"{name} | recessed joint {index}", *loft(bed_rows), ["dirt_path"])
 
 
-def energy_finish(name, filament=False, gain=1):
-    """Local violet_energy variant: geometry supplies the flow, the shader supplies depth."""
+def limestone_finish():
+    mat = vrmat.get("monument_white").copy()
+    mat.name = "Sails | laminated limestone"
+    nodes, links = mat.node_tree.nodes, mat.node_tree.links
+    base = nodes["Principled BSDF"].inputs["Base Color"]
+    coord = next(node for node in nodes if node.type == "TEX_COORD")
+    grain = nodes.new("ShaderNodeVectorMath")
+    grain.operation = "MULTIPLY"
+    grain.inputs[1].default_value = (.68, .73, 3.1)
+    links.new(coord.outputs["Object"], grain.inputs[0])
+    seams = nodes.new("ShaderNodeTexNoise")
+    seams.inputs["Detail"].default_value = 2
+    links.new(grain.outputs["Vector"], seams.inputs["Vector"])
+    tone = nodes.new("ShaderNodeValToRGB")
+    tone.color_ramp.elements[0].position = .24
+    tone.color_ramp.elements[0].color = (.67,.60,.54,1)
+    tone.color_ramp.elements[1].position = .64
+    links.new(seams.outputs["Fac"], tone.inputs[0])
+    shade = nodes.new("ShaderNodeMixRGB")
+    shade.blend_type = "MULTIPLY"
+    shade.inputs[0].default_value = .64
+    links.new(base.links[0].from_socket, shade.inputs[1])
+    links.new(tone.outputs["Color"], shade.inputs[2])
+    attr = nodes.new("ShaderNodeAttribute")
+    attr.attribute_name = "socket lining"
+    lining = nodes.new("ShaderNodeMixRGB")
+    lining.blend_type = "MULTIPLY"
+    lining.inputs[2].default_value = (.34,.29,.48,1)
+    links.new(attr.outputs["Fac"], lining.inputs[0])
+    links.new(shade.outputs[0], lining.inputs[1])
+    links.new(lining.outputs[0], base)
+    return mat
+
+
+def energy_finish(name, strength, sheath=False, current=False):
     mat = vrmat.get("violet_energy").copy()
     mat.name = name
     palette = vrmat.load_palette()
     r,g,b = palette["violet_body"]["linear_rgb"]
-    light = (r*1.48, g*.31, b*.83, 1)
-    hot = (r*2.49, g*.37, b*1.27, 1)
-    dark = (r*.13, g*.04, b*.17, 1)
+    light = (r*.77, g*.19, b*.51, 1)
+    hot = (r*1.72, g*.19, b*.92, 1)
+    dark = (r*.078, g*.04, b*.115, 1)
     nodes, links = mat.node_tree.nodes, mat.node_tree.links
     bsdf = nodes["Principled BSDF"]
     attr = nodes.new("ShaderNodeAttribute")
@@ -167,47 +240,79 @@ def energy_finish(name, filament=False, gain=1):
     e = ramp.color_ramp.elements
     e[0].position, e[0].color = .06, dark
     e[1].position, e[1].color = .95, hot
-    e.new(.38).color = (r*.48, g*.17, b*.52, 1)
-    e.new(.68).color = light
+    e.new(.43).color = (r*.38, g*.13, b*.48, 1)
+    e.new(.72).color = light
+    ramp.color_ramp.interpolation = "EASE"
     links.new(attr.outputs["Fac"], ramp.inputs["Fac"])
     links.new(ramp.outputs[0], bsdf.inputs["Base Color"])
     links.new(ramp.outputs[0], bsdf.inputs["Emission Color"])
-    strength = bsdf.inputs["Emission Strength"]
-    links.remove(strength.links[0])
-    strength.default_value = (1.45 if filament else 1.22)*gain
+    emission = bsdf.inputs["Emission Strength"]
+    links.remove(emission.links[0])
+    emission.default_value = strength
+    if sheath:
+        # Review-source transmission stays local to the skin; its lit texture still has a bakeable base.
+        roughness = bsdf.inputs["Roughness"]
+        links.remove(roughness.links[0])
+        roughness.default_value = .24
+        bsdf.inputs["IOR"].default_value = 1.16
+        bsdf.inputs["Transmission Weight"].default_value = .72
+        bsdf.inputs["Subsurface Weight"].default_value = .06
+        bsdf.inputs["Subsurface Scale"].default_value = .33
+        bsdf.inputs["Specular IOR Level"].default_value = .12
+        tint = nodes.new("ShaderNodeMixRGB")
+        tint.inputs[0].default_value = .36
+        tint.inputs[1].default_value = (.27, .107, .57, 1)
+        links.new(ramp.outputs[0], tint.inputs[2])
+        links.new(tint.outputs[0], bsdf.inputs["Base Color"])
+    if current:
+        links.remove(bsdf.inputs["Base Color"].links[0])
+        bsdf.inputs["Base Color"].default_value = dark
     return mat
 
 
-def seed_point(t, theta, clearance=0):
-    span = math.sin(t*math.pi)**.90
-    swelling = (1 + .18 * math.sin(2*math.pi*(t-.14)) + .07*math.sin(5.4*t+.2))
-    wave = (.12*math.cos(2*theta-10*t) + .10*math.sin(3*theta+6*t) + .035*math.cos(6*theta-7*t))
-    radius = (2.47*swelling*(1+span*wave))*span
-    x = (radius+clearance) * math.cos(theta) + .29*math.sin(5.5*t)
-    y = (radius*.77+clearance) * math.sin(theta) + .27*math.sin(math.pi*t)
-    z = -5.45 + 10.9*t + .20*span*math.cos(theta + 7*t)
+def seed_axis(t):
+    return Vector((.64*math.sin(6.4*t-.45)+.25*math.sin(12*t),
+                   .51*math.sin(6*t+.35), -5.25+10.5*t))
+
+
+def seed_point(t, theta, inner=False):
+    span = max(0, math.sin(t*math.pi))**.67
+    centre = seed_axis(t)
+    swelling = 1 + .15*math.sin(2*math.pi*t+.22) + .093*math.sin(4*math.pi*t-.64)
+    helix = 3*theta - 11.8*t + .65*math.sin(6.6*t)
+    lobes = .245*math.cos(helix) + .094*math.sin(2*theta+8*t) + .046*math.cos(2*helix+.32)
+    radius = 2.60*swelling*span*(1+span*lobes)
+    if inner:
+        radius *= .68 + .125*math.cos(helix-.35)
+        centre.z *= .86
+    x = centre.x + radius*math.cos(theta)
+    y = centre.y + radius*.79*math.sin(theta)
+    z = centre.z + .24*span*math.cos(theta+7*t)
     return CORE_ORIGIN + CORE_TILT @ Vector((x, y, z))
 
 
-def body():
-    n, steps = 88, 100
-    points = [seed_point(0, 0)]
-    intensity = [.08]
+def body(inner=False):
+    n, steps = 104, 116
+    points = [seed_point(0, 0, inner)]
+    intensity = [.11 if inner else .06]
     for k in range(1, steps):
         t = k/steps
         for j in range(n):
             theta = math.tau*j/n
-            p = seed_point(t, theta)
-            curved = .5 + .5*math.sin(2*theta + 13*t + .47*math.sin(9*t))
-            secondary = .5 + .5*math.sin(4*theta - 16*t + .43*math.sin(theta*3))
-            whorl = max(0, .91 - abs(t-(.48 + .07*math.sin(theta+8*t)))*2.8)
-            noise = noise_vector(p*.67).x
-            streak = (.5 + .5*math.sin(11*t+theta*2+.60*math.sin(4*theta-17*t)))**12
-            value = whorl*(.37+.52*curved**2.2) + whorl*(.16*secondary**3 + .13*streak) + .104*noise + .055
+            p = seed_point(t, theta, inner)
+            helix = 3*theta-11.8*t+.65*math.sin(6.6*t)
+            spiral = .5 + .5*math.cos(helix+.36*math.sin(14*t-2*theta))
+            thread = (.5 + .5*math.cos(2*helix-.7+.49*math.sin(theta+9*t)))**7
+            envelope = math.sin(math.pi*t)**1.15
+            noise = noise_vector(p*.82).x
+            if inner:
+                value = .14 + envelope*(.30 + .43*spiral**1.8 + .18*thread + .09*noise)
+            else:
+                value = .065 + envelope*(.23 + .25*spiral**2.4 + .15*thread + .11*noise)
             points.append(p)
             intensity.append(max(0,min(1,value)))
-    points.append(seed_point(1, 0))
-    intensity.append(.08)
+    points.append(seed_point(1, 0, inner))
+    intensity.append(intensity[0])
     faces = [(0, 1+(j+1)%n, 1+j) for j in range(n)]
     for k in range(steps-2):
         for j in range(n):
@@ -216,8 +321,9 @@ def body():
     last = len(points)-1
     for j in range(n):
         faces.append((last-n+j,last-n+(j+1)%n,last))
-    obj = mesh_object("Levitating seed | rolling plasma surface", points, faces,
-                      [energy_finish("Violet | plasma interior")], smooth=True)
+    layer = "emissive heart" if inner else "violet sheath"
+    obj = mesh_object("Levitating seed | "+layer, points, faces,
+                      [energy_finish("Violet | "+layer, 2.6 if inner else .51, sheath=not inner)], smooth=True)
     field = obj.data.attributes.new("plasma", "FLOAT", "POINT")
     field.data.foreach_set("value", intensity)
 
@@ -226,28 +332,38 @@ def anchor(angle, profile, section, t, across):
     intersections = [r + (s-r)*(across-a)/(b-a)
                      for (r,a),(s,b) in zip(section, section[1:] + section[:1])
                      if min(a,b) <= across < max(a,b)]
-    return blade_section(angle, profile, [(min(intersections)+.11, across)], t)[0]
+    return blade_section(angle, profile, [(min(intersections), across)], t)[0] + radial(angle)*.64
 
 
-def branch(name, start, end, turns, width, gain, phase):
-    n = 108
+def branch(name, start, end, turns, width, gain, phase, overpass):
+    n = 140
     points = []
     local_start, local_end = CORE_TILT.inverted() @ (start-CORE_ORIGIN), CORE_TILT.inverted() @ (end-CORE_ORIGIN)
-    t0, t1 = ((v.z + 5.45)/10.9 for v in (local_start, local_end))
-    t0, t1 = min(.96, max(.04, t0)), min(.96, max(.04,t1))
-    head, tail = (math.atan2(v.y/.77, v.x) for v in (local_start, local_end))
+    t0, t1 = (min(.92, max(.08, (v.z+5.25)/10.5)) for v in (local_start, local_end))
+    directions = (v-seed_axis(t) for v,t in ((local_start,t0),(local_end,t1)))
+    head, tail = (math.atan2(v.y/.79, v.x) for v in directions)
     travel = (tail-head+math.pi) % math.tau - math.pi + turns*math.tau
+    radii = []
+    normals = []
     for k in range(n+1):
         u = k/n
-        distance = .28 + .18*(.5+.5*math.sin(math.tau*u+phase)) + 1.1*width
-        theta = head+travel*(u*u*(3-2*u)) + .16*math.sin(math.tau*u)*math.sin(math.pi*u)
-        p = seed_point(t0+(t1-t0)*u, theta, distance)
-        if u < .195:
-            f = u/.195
-            p = p.lerp(start, (1-f)**2)
-        if u > .795:
-            f = (u-.795)/.205
-            p = p.lerp(end, f*f)
+        radius = .36 + .53*math.sin(math.pi*u)**.78 + .21*math.sin(11*u+phase)**2
+        radii.append(radius)
+        theta = head+travel*(u*u*(3-2*u)) + .105*math.sin(math.tau*u)*math.sin(math.pi*u)
+        t = t0+(t1-t0)*u
+        tangent = seed_point(t, theta+.002) - seed_point(t, theta-.002)
+        rise = seed_point(t+.002, theta) - seed_point(t-.002, theta)
+        normal = tangent.cross(rise).normalized()
+        normals.append(normal)
+        lift = sum(height * math.exp(-((u-level)/span)**2)
+                   for level, span, height in overpass)
+        p = seed_point(t, theta) + normal*(width*radius+.09+lift)
+        if u < .172:
+            f = 1-u/.172
+            p = p.lerp(start, f*f*(3-2*f))
+        if u > .828:
+            f = (u-.828)/.172
+            p = p.lerp(end, f*f*(3-2*f))
         points.append(p)
     curve = bpy.data.curves.new(name, "CURVE")
     curve.dimensions = "3D"
@@ -255,10 +371,9 @@ def branch(name, start, end, turns, width, gain, phase):
     curve.use_fill_caps = True
     spline = curve.splines.new("POLY")
     spline.points.add(n)
-    for k,(p, loc) in enumerate(zip(spline.points, points)):
-        f = k/n
+    for p, loc, radius in zip(spline.points, points, radii):
         p.co = (*loc, 1)
-        p.radius = .30 + .66 * math.sin(math.pi*f)**.65 + .18*math.sin(13*f+phase)**2
+        p.radius = radius
     obj = bpy.data.objects.new(name, curve)
     vrlib.link_to_source(obj)
     bpy.context.view_layer.objects.active = obj
@@ -266,18 +381,46 @@ def branch(name, start, end, turns, width, gain, phase):
     obj.select_set(True)
     bpy.ops.object.convert(target="MESH")
     obj.select_set(False)
-    obj.data.materials.append(energy_finish(name+" | emission", True, gain))
+    obj.data.materials.append(energy_finish(name+" | emission", 1.9*gain, current=True))
     bm = bmesh.new()
     bm.from_mesh(obj.data)
     bmesh.ops.remove_doubles(bm, verts=list(bm.verts), dist=.00001)
     bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
     bm.to_mesh(obj.data)
     bm.free()
+    track = KDTree(len(points))
+    for i, point in enumerate(points):
+        track.insert(point, i)
+    track.balance()
     field = obj.data.attributes.new("plasma", "FLOAT", "POINT")
     for point, vert in zip(field.data, obj.data.vertices):
-        point.value = .71 + .13 * math.sin(vert.co.z*1.29 + phase) + .10 * math.cos(vert.co.x*2.1)
+        spine, i, _ = track.find(vert.co)
+        u = i/n
+        ridge = max(0, (vert.co-spine).normalized().dot(normals[i]))**2.6
+        pulse = math.sin(15*u+phase+.45*math.sin(19*u))**2
+        point.value = .57 + .25*ridge + .12*pulse + .065*noise_vector(vert.co*3.5).x
     for face in obj.data.polygons:
         face.use_smooth = True
+
+
+def earth_bed(name, angle, base, rng):
+    distance, _, depth, width, drift = base
+    forward, across = radial(angle), radial(angle+math.pi/2)
+    centre = forward*(distance-.19) + across*drift
+    n = 48
+    rows = []
+    phase = rng.uniform(0, math.tau)
+    for span, height in ((.96,-.085), (1,-.009), (.81,.078), (.65,.22), (.38,.32), (.13,.28)):
+        row = []
+        for j in range(n):
+            theta = j*math.tau/n
+            erosion = 1 + .08*math.sin(3*theta+phase) + .055*math.cos(7*theta-phase)
+            p = centre + span*erosion*((depth+.62)*math.cos(theta)*forward
+                                       + (width+.79)*math.sin(theta)*across)
+            p.z = height + min(.16, height+.09)*noise_vector(p*2.15).z
+            row.append(p)
+        rows.append(row)
+    return mesh_object(name+" | settled mineral earth", *loft(rows), ["dirt_path"], smooth=True)
 
 
 def build():
@@ -317,8 +460,17 @@ def build():
                   (.94, .06), (1.055, .14), (1.06, .24), (.96, .33),
               ] + [p for p in section if p[1] > .33 or (p[0] < -.90 and p[1] >= 0)])
              for name, angle, profile, breaks, section in sails]
-    for name, angle, profile, breaks, section in sails:
-        rib(name, angle, profile, breaks, section, rng)
+    paths = [
+        ("Primary current", (0,.29,-.15,.61), (1,.70,.16,.53), 1,.246,1,1.3, ((.887,.08,.38),)),
+        ("Return current", (2,.45,.16,.55), (0,.78,-.10,.50), -1,.158,.94,3.2, ((.544,.11,.59),)),
+        ("Lower winding", (3,.64,-.15,.54), (1,.42,-.20,.51), 0,.194,.97,1.8, ((.48,.14,.75),)),
+        ("Upper winding", (1,.60,.15,.49), (2,.96,.06,.39), 0,.132,.92,4.0, ()),
+    ]
+    limestone = limestone_finish()
+    for index, (name, angle, profile, breaks, section) in enumerate(sails):
+        sockets = [seat[1:] for _,start,end,*_ in paths for seat in (start,end) if seat[0] == index]
+        rib(name, angle, profile, breaks, section, sockets, rng, limestone)
+        earth_bed(name, angle, profile[0], rng)
     feet = [
         ("West out-thrust", [(-10.7,-2.8),(-8.3,-6.4),(-5.87,-5.42),(-4.89,-4.18),
                               (-5.47,-1.85),(-7.86,.17),(-10.0,-.59)], .68),
@@ -335,6 +487,12 @@ def build():
     ]
     for name, outline, top in feet:
         shaped_stone(name, outline, -.027, top, rng, "monument_weathered", True)
+    for name, angle, profile, _, section in sails:
+        bed = blade_section(angle, profile, section, .005)
+        centre = sum(bed, Vector())/len(bed)
+        outline = [(centre.x+1.18*(v.x-centre.x), centre.y+1.13*(v.y-centre.y)) for v in bed]
+        shaped_stone(name+" | buried foundation course", outline, -.042,
+                     rng.uniform(.32,.46), rng, "monument_weathered", True)
     paving = [
         ([(.13,-6.53),(1.12,-6.16),(2.17,-5.09),(1.51,-4.37),(.35,-4.76),(-.42,-5.66)], .14),
         ([(-.40,-5.04),(.33,-4.49),(.79,-3.43),(.17,-2.9),(-.86,-3.31),(-1.24,-4.24)], .195),
@@ -357,21 +515,17 @@ def build():
             outline.append((x+extent*rng.uniform(.72,1.24)*math.cos(angle),
                             y+extent*rng.uniform(.68,1.15)*math.sin(angle)))
         shaped_stone(f"Apron spall {i+1}", outline, -.018,
-                     extent*rng.uniform(.43,.91), rng, "monument_weathered", True)
+                     extent*rng.uniform(.32,.76), rng, "monument_weathered", True)
     body()
-    west,east,north,south = sails
+    body(inner=True)
 
-    def seat(sail, t, across):
-        return anchor(sail[1], sail[2], sail[4], t, across)
+    def seat(spec):
+        index, t, across, _ = spec
+        _, angle, profile, _, section = sails[index]
+        return anchor(angle, profile, section, t, across)
 
-    paths = [
-        ("Primary current", seat(west,.29,-.19), seat(east,.70,.19), 1,.052,1,1.3),
-        ("Return current", seat(north,.48,.21), seat(west,.73,-.13), -1,.032,.95,3.2),
-        ("Lower winding", seat(south,.61,-.15), seat(east,.42,-.24), 0,.039,.98,1.8),
-        ("Upper winding", seat(east,.62,.12), seat(north,.94,.06), 0,.026,.93,4.0),
-    ]
-    for path in paths:
-        branch(*path)
+    for name, start, end, *spec in paths:
+        branch(name, seat(start), seat(end), *spec)
     rotation = Quaternion(Vector((0,0,1)), .86).to_matrix().to_4x4()
     for obj in vrlib.source_objects():
         obj.data.transform(rotation)
