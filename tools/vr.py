@@ -68,31 +68,21 @@ def sha256(path):
         return hashlib.sha256(f.read()).hexdigest()
 
 
-def source_hash(asset_dir, ancestors=()):
-    asset_dir = Path(asset_dir).resolve()
-    if asset_dir in ancestors:
-        raise ValueError(f"cyclic builder dependency at {asset_dir.name}")
+def source_hash(asset_dir):
     inputs = [os.path.join(asset_dir, "build.py")]
     inputs += [os.path.join(BLENDER_TOOLS, name) for name in ("run_build.py", "vrlib.py")]
     tree = ast.parse(Path(inputs[0]).read_text(encoding="utf-8-sig"))
     imports = set()
-    builders = set()
     for node in ast.walk(tree):
         if isinstance(node, (ast.Import, ast.ImportFrom)):
             imports.update(alias.name.split(".")[-1] for alias in node.names)
         if isinstance(node, ast.ImportFrom) and node.module:
             imports.add(node.module.split(".")[-1])
-            parts = node.module.split(".")
-            if len(parts) == 3 and parts[0] == "assets" and not node.level:
-                if any(alias.name == "build" for alias in node.names):
-                    builders.add(Path(ASSETS, *parts[1:]))
     if "vrmat" in imports:
         inputs += [os.path.join(BLENDER_TOOLS, "vrmat.py"), os.path.join(ROOT, "art", "palette.json")]
     if "vrcolumn" in imports:
         inputs.append(os.path.join(BLENDER_TOOLS, "vrcolumn.py"))
-    hashes = [sha256(path) for path in inputs]
-    hashes.extend(source_hash(path, (*ancestors, asset_dir)) for path in sorted(builders))
-    return hashlib.sha256("".join(hashes).encode()).hexdigest()
+    return hashlib.sha256("".join(sha256(path) for path in inputs).encode()).hexdigest()
 
 
 def sheet_problems(asset_dir):
