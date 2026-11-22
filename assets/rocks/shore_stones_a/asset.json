@@ -14,7 +14,22 @@
     1400
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-376742566d344b90aa5a22ec7e9cc164",
-  "review": null
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 6,
+      "material": 6,
+      "scale": 8,
+      "style": 7,
+      "defects": 7
+    },
+    "notes": "Round 1: rejected. The layout works: a group of mixed stone sizes on a wet shore patch with gravel. (1) material 6: the stones don't share one rock: tan sandstone-like blobs, a dark blue-grey boulder with a glossy wet-plastic sheen, and dark slate slabs side by side; STYLE wants pale limestone with shore_wet only darkening the lower part (closeup_base, all turns). (2) form_detail 6: the boulders are rounded lumps like potatoes or putty, with one even dimple noise and no beds, joints or broken faces; the pitted cube stone at the back left reads as a sponge block (closeup_base). (3) defects 7: the wet patch is a dark flat disc with a hard edge. Fix: build all stones from one limestone set (fractured, bed planes, rounded only by water at the waterline), darken them with shore_wet only up to a waterline, drop the glossy sheen, and blend the patch edge into sand and gravel.",
+    "round": 1,
+    "source_sha256": "49ba5adb798d19b27baeaa1d52c9f1a95fbab3727e49152f9fcabd88ca1f901e",
+    "sheet_sha256": "d60717e6b81a78cc87fd6498b6c7e39bbdc8bd83aaf417820b198b7fb52f139c"
+  },
+  "review_rounds": 1
 }

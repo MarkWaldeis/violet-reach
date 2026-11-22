@@ -14,8 +14,22 @@
     1500
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-376742566d344b90aa5a22ec7e9cc164",
-  "review": null,
-  "review_rounds": 2
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 7,
+      "material": 7,
+      "scale": 8,
+      "style": 7,
+      "defects": 7
+    },
+    "notes": "Round 3 (last): rejected, needs escalation. Fixed: it is a blocky limestone boulder with a cleft and lichen on top, no longer a mushroom-stemmed clay lump, and the loose top slab is gone. Still failing: (1) material/form 7: close up, the faces are soft and smeared, covered with one even scatter of round pockmark holes like pumice, with no bed planes or crisp fracture edges (closeup_base); the left side shows stretched, streaky displacement. (2) defects 7: the chip block leaning against it is a clean faceted box with sharp, untextured faces (closeup_base, turns). (3) style 7: it still reads as a rounded cube. Fix: fracture planes with crisp edges and a couple of bed lines, pores only in recesses, and a chip that shares the boulder's material and fracture.",
+    "round": 3,
+    "source_sha256": "5ad7c903b23f81f8188b46cd236e06bc3340c61e3eee59ee65df3f0b27dc0888",
+    "sheet_sha256": "566755b1d738e565b3c1aa727d7680c522363f665e98d62d1fd69a91c3891ae5"
+  },
+  "review_rounds": 3
 }

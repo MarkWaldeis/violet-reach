@@ -14,7 +14,22 @@
     7000
   ],
   "texture_size": 4096,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-376742566d344b90aa5a22ec7e9cc164",
-  "review": null
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 7,
+      "material": 7,
+      "scale": 8,
+      "style": 7,
+      "defects": 7
+    },
+    "notes": "Round 1: rejected. The height, grass cap and pale tone fit the pillar gorge. (1) silhouette 7: the column twists along its height and is built from stacked drums with ledges sticking out at each joint, so it reads as a stack of tyres or a pagoda; the ref_02 pillars are straight vertical columns with vertical joint faces and a few bed lines. (2) form_detail/material 7: the drum faces have soft, even, wax-like fluting and one pale tone with no damp foot or darker joints (closeup_base). (3) defects 7: the foot is ringed by clean white faceted blocks like sugar cubes on a hard-edged sand disc. Fix: straight vertical column with vertical joint fractures and irregular bed lines, no twist or protruding drum rims; darker weathering in joints and at the foot; a fractured talus apron instead of the block ring.",
+    "round": 1,
+    "source_sha256": "8a61bd0270e475340a9182138e371f994d84b952ac04fa2931f242506e811332",
+    "sheet_sha256": "5e23d5808eafed340cb556450f0ce1a88003328434eae0dc56f6adb4214135ed"
+  },
+  "review_rounds": 1
 }

@@ -14,7 +14,22 @@
     12000
   ],
   "texture_size": 4096,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-376742566d344b90aa5a22ec7e9cc164",
-  "review": null
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 7,
+      "material": 7,
+      "scale": 8,
+      "style": 7,
+      "defects": 6
+    },
+    "notes": "Round 1: rejected. The front face has the requested pale horizontal strata. (1) silhouette 7: the cliff is a thin slab with a straight cut top edge and a flat back, so from turns 4-7 it reads as a free-standing wall; compare ref_03, where cliffs are deep blocks split by vertical joints. (2) defects 6: the back face is one flat plane covered in even sponge-like pits (closeup_base), and the strata lines on the front carry rows of tiny black stitch marks, like quilting (closeup_upper). (3) material/form/style 7: the strata are evenly spaced wavy lines of the same thickness, with no big vertical joints, overhangs or talus at the foot. Fix: give it depth (a back that returns into the terrain or is finished rock), split the face into a few large blocks with vertical joints and varied bed thickness, remove the stitch marks, and add a talus apron and vegetation on ledges.",
+    "round": 1,
+    "source_sha256": "cd6f1f2db185257074627a51b2e25c6bf08f2d62014379e859f5c2f87b655606",
+    "sheet_sha256": "15ef61184185ab59b472c3fcf1302aace2fc0f0f4a82ee595d877f74f351c5df"
+  },
+  "review_rounds": 1
 }
