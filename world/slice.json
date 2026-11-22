@@ -26,7 +26,7 @@
       "maxDistance": 1600,
       "lodScale": 0.11,
       "lodRatio": 12,
-      "aerialLODScale": 2.5,
+      "aerialLODScale": 2.0,
       "maxLOD": 2,
       "shadowLODs": 1,
       "tintVariation": 0.09
@@ -35,7 +35,7 @@
       "maxDistance": 1600,
       "lodScale": 0.12,
       "lodRatio": 12,
-      "aerialLODScale": 2.5,
+      "aerialLODScale": 2.0,
       "maxLOD": 2,
       "shadowLODs": 1,
       "tintVariation": 0.09
