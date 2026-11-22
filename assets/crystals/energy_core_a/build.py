@@ -403,14 +403,14 @@ def radial_glow(crystals):
     attribute.attribute_name = "core_glow"
     gain = nodes.new("ShaderNodeMath")
     gain.operation = "MULTIPLY_ADD"
-    gain.inputs[1].default_value = 1.8
+    gain.inputs[1].default_value = 2.8
     gain.inputs[2].default_value = 0.015
     links.new(attribute.outputs["Fac"], gain.inputs[0])
     links.new(gain.outputs[0], bsdf.inputs["Emission Strength"])
     palette = vrmat.load_palette()
     body = bsdf.inputs["Base Color"].links[0].from_socket
     inner = nodes.new("ShaderNodeMixRGB")
-    inner.inputs[0].default_value = 0.18
+    inner.inputs[0].default_value = 0.24
     inner.inputs[2].default_value = (*palette["violet_glow"]["linear_rgb"], 1)
     links.new(body, inner.inputs[1])
     links.new(inner.outputs[0], bsdf.inputs["Emission Color"])
@@ -502,24 +502,24 @@ def energy_filaments(stones):
         for link in list(bsdf.inputs[name].links):
             material.node_tree.links.remove(link)
     bsdf.inputs["Base Color"].default_value = (*palette["violet_body"]["linear_rgb"], 1)
-    bsdf.inputs["Emission Color"].default_value = tuple(
-        0.92 * a + 0.08 * b for a, b in zip(palette["violet_body"]["linear_rgb"],
-                                          palette["violet_glow"]["linear_rgb"])) + (1,)
-    bsdf.inputs["Emission Strength"].default_value = 2.6
+    bsdf.inputs["Emission Color"].default_value = (*palette["violet_shadow"]["linear_rgb"], 1)
+    bsdf.inputs["Emission Strength"].default_value = 3.2
     bsdf.inputs["Roughness"].default_value = 0.45
+    bsdf.inputs["Coat Weight"].default_value = 0
+    bsdf.inputs["Specular IOR Level"].default_value = 0.12
     for i, stone in enumerate(stones):
         anchor = stone.matrix_world @ Vector(stone["socket_local"])
         angle = math.atan2(anchor.y, anchor.x)
         radial = Vector((math.cos(angle), math.sin(angle), 0))
         tangent = Vector((-math.sin(angle), math.cos(angle), 0))
         points = [anchor - Vector((0, 0, 0.08))]
-        for outward, around, height in ((-0.2, 0.3, 0.8), (-0.9, 0.7, 1.7),
-                                        (-1.8, 0.65, 2.7), (-2.7, 0.15, 3.7)):
+        for outward, around, height in ((0.5, 0.4, 1.1), (0.15, 1.25, 2.8),
+                                        (-0.8, 1.4, 4.6), (-1.8, 0.6, 6.4)):
             points.append(anchor + radial * outward + tangent * around + Vector((0, 0, height)))
         curve = bpy.data.curves.new(f"filament_{i}", "CURVE")
         curve.dimensions = "3D"
         curve.resolution_u = 20
-        curve.bevel_depth = 0.075
+        curve.bevel_depth = 0.14
         curve.bevel_resolution = 3
         spline = curve.splines.new("BEZIER")
         spline.bezier_points.add(len(points) - 1)
