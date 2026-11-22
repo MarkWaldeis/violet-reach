@@ -108,7 +108,7 @@ Optional `slice.json.asset_options` records set per-asset `maxDistance` (metres)
 
 ### Shore gate and ruined colonnade (Step M)
 
-`gate_white_a` from approved PR #13 head `84ecc13` stands at `(522,1510)`, yaw `-2.35619449`, scale `1`, offset `0.005`. Its source geometry has a quarter-turn before export; the runtime yaw follows the exported axes. The shore path loops around the upstream pier and passes through the opening before climbing inland. No terrain was reshaped.
+`gate_white_a` from approved PR #13 head `84ecc13` stands at `(522,1510)`, yaw `-2.35619449`, scale `1`, offset `0.005`. Its source geometry has a quarter-turn before export; the runtime yaw follows the exported axes. The shore path loops around the upstream pier, passes through the opening and curves along the slope toward the stair's upper terrace at `(593.869,1490.652)`. The dead uphill spur ending at `(550,1460)`, which produced the pale rectangle behind the gate, is removed. No terrain or approved gate geometry was reshaped.
 
 Both complete pier footprints occupy the flat, dry inlet bank. A ray survey against the actual exported LOD0 finds the stone bases embedded approximately 4.6–4.9 cm, while the threshold foundation is below terrain and its upper surface remains exposed.
 

@@ -4,9 +4,18 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from "nod
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { worldFiles } from "../scripts/world-content.mjs";
+import { pathMask } from "../src/hydrology.ts";
+import type { Slice } from "../src/slice.ts";
 
 const vegetation = ["tree_broadleaf_a", "tree_broadleaf_b", "tree_broadleaf_c", "shrub_round_a", "grass_tuft_a", "fern_cluster_a", "reed_cluster_a"];
 const monuments = ["gate_white_a", "column_white_a"];
+
+test("shore path frames the gate and reaches the terrace without the dead uphill spur", () => {
+  const slice: Slice = JSON.parse(readFileSync(worldFiles().get("slice.json")!, "utf8"));
+  for (const [x, z] of [[494.5, 1489.5], [522, 1510], [570, 1495.8], [593.869, 1490.652]]) assert.equal(pathMask(slice.paths, x, z), 1);
+  assert.equal(pathMask(slice.paths, 550, 1460), 0);
+  assert.equal(pathMask(slice.paths, 530, 1475), 0);
+});
 
 test("world content includes real terrain and only registered placed assets", () => {
   const files = worldFiles();
