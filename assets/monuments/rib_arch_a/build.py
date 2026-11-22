@@ -316,8 +316,8 @@ def apron(x, y, ax, ay, turf, root, rng):
     faces = [tuple(range(n))]
     faces.extend((i*n+j, (i+1)*n+j, (i+1)*n+(j+1)%n, i*n+(j+1)%n)
                  for i in range(len(rings)-1) for j in range(n))
-    mesh("Irregular root soil and turf", [p for row in rings for p in row], faces, turf,
-         solid=False, smooth=True)
+    ground = mesh("Irregular root soil and turf", [p for row in rings for p in row], faces, turf,
+                  solid=False, smooth=True)
     tree = BVHTree.FromPolygons([v.co for v in root.data.vertices],
                                 [p.vertices for p in root.data.polygons])
     rubble = vrmat.get("mossy_rock")
@@ -353,6 +353,7 @@ def apron(x, y, ax, ay, turf, root, rng):
     for (blades,faces), name, mat in zip(plants, ("Feathered bank grass","Moss on damp ledges"),
                                         ("foliage_leaf","mossy_rock")):
         mesh(name, blades, faces, vrmat.get(mat), solid=False)
+    return ground
 
 
 def center_footprint(objects):
@@ -383,16 +384,22 @@ def build():
             root = limb(part,spine,rng.uniform(6.25,7.15),rng.uniform(4.1,4.85),
                         stone,rng,side,broken=(i,j) in ((0,1),(2,0)))
             ground_rng = random.Random(15427+53*i+j)
-            apron(x,y,ground_rng.uniform(18.8,21.0),ground_rng.uniform(17.3,19.7),turf,root,ground_rng)
+            ground = apron(x,y,ground_rng.uniform(18.8,21.0),ground_rng.uniform(17.3,19.7),
+                           turf,root,ground_rng)
             if i == 0 and j == 1:
                 foreground = Vector((-y,x,0))
+                foreground_ground = ground
     rotation = Matrix.Rotation(math.radians(-74),4,"Z")
     objects = vrlib.source_objects()
     for obj in objects:
         obj.data.transform(rotation)
     shift = center_footprint(objects)
     foot = shift @ rotation @ foreground
-    figure = foot+Vector((27,-22,0))
-    bpy.context.scene["vr_review_figure"] = (figure.x,figure.y)
+    figure_ray = foot+Vector((5.14,-6.13,20))
+    hit, figure, _, _ = foreground_ground.ray_cast(figure_ray,(0,0,-1))
+    if not hit:
+        raise RuntimeError("Review figure position misses the foreground turf")
+    bpy.context.scene["vr_review_figure"] = tuple(figure)
+    bpy.context.scene["vr_review_figure_base"] = True
     bpy.context.scene["vr_review_hero"] = (-29,9,.81,-10)
     bpy.context.scene["vr_review_base"] = (*foot.xy,6.5,-54,23,.34)
