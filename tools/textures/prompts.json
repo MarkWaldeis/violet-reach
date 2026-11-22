@@ -1,0 +1,23 @@
+{
+  "_common_ground": "Seamless tileable texture. Photographed straight down from directly above: orthographic top-down view, camera exactly perpendicular to the ground, no perspective, no horizon, no sky. Even soft overcast diffuse lighting, no cast shadows, no directional sunlight, no highlights, no vignette. No objects, no people, no plants other than described, no text, no watermark, no border. Uniform density and brightness across the whole frame so it repeats without visible seams. Covers about 3 by 3 meters of ground. Square 1:1, high-resolution photogrammetry albedo scan, realistic, natural muted colors.",
+  "_common_detail": "Seamless tileable macro texture. Photographed straight-on, camera exactly perpendicular to the surface, no perspective, no horizon, no background. Even soft diffuse lighting, no cast shadows, no directional light, no specular highlights. No objects, no text, no watermark, no border. Uniform detail across the whole frame. Square 1:1, high-resolution photogrammetry surface scan, realistic.",
+  "ground": {
+    "grass": "Dense short meadow grass seen from above, blades packed tightly, small gaps of brown earth showing between tufts, a few dry yellowish blades mixed in. Muted olive green (around #696F44), not saturated, not lime, not neon.",
+    "grass_dry": "Dry savanna grass seen from above, dense tangle of dried straw blades, partly flattened, pale olive-ochre and khaki tones (around #635C30 to #8A7F4A), a little dark earth visible between.",
+    "soil": "Forest floor seen from above: loose dark brown humus soil (around #665548) with scattered small decomposed brown leaf litter fragments, a few tiny twigs and small pebbles, mostly bare earth.",
+    "sand": "Pale fine dry beach sand seen from above, light warm beige (around #B6A176), very subtle soft wind ripples, a few scattered tiny darker grains, flat and even.",
+    "sand_wet": "Wet compact beach sand seen from above just after a wave retreated, dark damp grey-brown sand (around #6E665A), smooth, slightly glossy-looking, tiny pores and faint water-flow marks, no puddles.",
+    "gravel_path": "Compacted gravel footpath seen from above: small rounded and angular pale limestone pebbles 1 to 3 cm in light beige-grey grit and dust (around #A89A80), densely packed, packed earth between stones.",
+    "chalk_rock": "Flat weathered white chalk limestone bedrock surface seen from above, cream-white to pale beige (around #BCB296 and #DCCDB1), fine parallel horizontal sedimentary layer lines running left to right across the whole image, small cracks, pits and pores.",
+    "strata_rock": "Flat cut face of layered sedimentary rock, alternating horizontal bands running left to right of pale cream limestone and darker taupe grey-brown layers (around #9B8E7E and #BCB296), bands of varying thickness, weathered rough surface, small fractures.",
+    "moss": "Thick continuous cushion of dense dark olive green forest moss seen from above (around #3D4C2B), fine feathery moss texture, a few small brownish dry patches, no flowers, no leaves."
+  },
+  "detail": {
+    "stone_white": "Close-up macro of a smooth pale ivory limestone surface (around #E8DABE), about 50 cm wide area, fine pores, tiny pits, subtle chisel marks and very fine hairline cracks, matte.",
+    "rock_chalk": "Close-up of a rough broken natural chalk rock surface, cream-white (around #BCB296), about 1 meter wide area, granular crumbly texture, small fractures and chips, faint horizontal layering.",
+    "sandstone": "Close-up of warm natural sandstone surface (around #D3B490), about 1 meter wide area, fine sand grain, eroded thin horizontal bedding lines, small pits, matte.",
+    "bark": "Close-up of old tree bark filling the frame, seen straight-on, deep vertical furrows and ridges running top to bottom, dark brown (around #41321D), about 60 cm wide area, no moss, no branches.",
+    "crystal": "Close-up of a violet amethyst crystal rock surface filling the frame (around #8553C6), many flat angular facets of different sizes, fine parallel growth striations on the facets, small chips, matte-satin.",
+    "foliage": "Close-up of a leaf surface filling the entire frame, muted olive green (around #313C1D), fine branching vein network with a midrib-free uniform pattern of secondary and tertiary veins, slightly waxy, no leaf edges visible."
+  }
+}

@@ -1,0 +1,67 @@
+{
+ "name": "moss",
+ "kind": "ground",
+ "src": "art/textures/src/moss__acg_Moss003.jpg",
+ "src_size": [
+  2048,
+  2048
+ ],
+ "seam_before": [
+  1.004,
+  0.979
+ ],
+ "tiling": "source already tileable",
+ "seam_after": [
+  1.019,
+  0.979
+ ],
+ "mean_before_match": "#41592B",
+ "palette": "moss",
+ "palette_hex": "#3D4C2B",
+ "match": 0.7,
+ "delta_e": 2.76,
+ "mean": "#3E502B",
+ "roughness_mean": 0.95,
+ "files": {
+  "1k/moss_albedo.webp": 356970,
+  "1k/moss_normal.webp": 494798,
+  "1k/moss_orh.webp": 392962,
+  "2k/moss_albedo.webp": 1189286,
+  "2k/moss_normal.webp": 1458450,
+  "2k/moss_orh.webp": 770674
+ },
+ "args": {
+  "name": "moss",
+  "kind": "ground",
+  "out": null,
+  "crop": null,
+  "repeat_x": 1,
+  "rotate": 0,
+  "work": 2048,
+  "flatten_radius": 0.1,
+  "flatten": 1.0,
+  "flatten_chroma": 0.6,
+  "tile": "auto",
+  "tile_threshold": 1.35,
+  "tile_band": 0.1,
+  "directional": false,
+  "palette": "moss",
+  "match": 0.7,
+  "saturation": 0.85,
+  "freq": "0.15,0.3,0.55,0.8,1,1,0.85,0.6",
+  "height_invert": false,
+  "height_gamma": 1.0,
+  "strength": 4.0,
+  "roughness": 0.95,
+  "rough_var": 0.04,
+  "rough_invert": false,
+  "rough_height": 0.0,
+  "ao": 0.65,
+  "sizes": null,
+  "q_albedo": 85,
+  "q_normal": 92,
+  "q_orh": 90,
+  "q2k_normal": 88,
+  "q2k_orh": 84
+ }
+}

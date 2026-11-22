@@ -1,0 +1,154 @@
+{
+ "doc": {
+  "layout": "<1k|2k>/<name>_{albedo,normal,orh}.webp",
+  "albedo": "sRGB, RGB",
+  "normal": "linear, RGB = n*0.5+0.5, Tangentenraum OpenGL (+Y oben)",
+  "orh": "linear, R=Verdeckung G=Rauheit B=Hoehe (0..1)"
+ },
+ "textures": {
+  "grass": {
+   "tile_m": 3.0,
+   "mean_srgb": "#676F41",
+   "palette": "grass_green",
+   "palette_srgb": "#696F44",
+   "delta_e": 1.84,
+   "roughness_mean": 0.9,
+   "files": [
+    "1k/grass_albedo.webp",
+    "1k/grass_normal.webp",
+    "1k/grass_orh.webp",
+    "2k/grass_albedo.webp",
+    "2k/grass_normal.webp",
+    "2k/grass_orh.webp"
+   ]
+  },
+  "grass_dry": {
+   "tile_m": 3.0,
+   "mean_srgb": "#635C30",
+   "palette": "grass_dry",
+   "palette_srgb": "#635C30",
+   "delta_e": 0.0,
+   "roughness_mean": 0.92,
+   "files": [
+    "1k/grass_dry_albedo.webp",
+    "1k/grass_dry_normal.webp",
+    "1k/grass_dry_orh.webp",
+    "2k/grass_dry_albedo.webp",
+    "2k/grass_dry_normal.webp",
+    "2k/grass_dry_orh.webp"
+   ]
+  },
+  "soil": {
+   "tile_m": 2.5,
+   "mean_srgb": "#715C4A",
+   "palette": "soil",
+   "palette_srgb": "#665548",
+   "delta_e": 4.72,
+   "roughness_mean": 0.92,
+   "files": [
+    "1k/soil_albedo.webp",
+    "1k/soil_normal.webp",
+    "1k/soil_orh.webp",
+    "2k/soil_albedo.webp",
+    "2k/soil_normal.webp",
+    "2k/soil_orh.webp"
+   ]
+  },
+  "sand": {
+   "tile_m": 3.0,
+   "mean_srgb": "#B1A177",
+   "palette": "path_sand",
+   "palette_srgb": "#B6A176",
+   "delta_e": 2.36,
+   "roughness_mean": 0.9,
+   "files": [
+    "1k/sand_albedo.webp",
+    "1k/sand_normal.webp",
+    "1k/sand_orh.webp",
+    "2k/sand_albedo.webp",
+    "2k/sand_normal.webp",
+    "2k/sand_orh.webp"
+   ]
+  },
+  "sand_wet": {
+   "tile_m": 3.0,
+   "mean_srgb": "#9A8D77",
+   "palette": "path_sand:0.5+shore_wet:0.5",
+   "palette_srgb": "#92866D",
+   "delta_e": 3.21,
+   "roughness_mean": 0.38,
+   "files": [
+    "1k/sand_wet_albedo.webp",
+    "1k/sand_wet_normal.webp",
+    "1k/sand_wet_orh.webp",
+    "2k/sand_wet_albedo.webp",
+    "2k/sand_wet_normal.webp",
+    "2k/sand_wet_orh.webp"
+   ]
+  },
+  "gravel_path": {
+   "tile_m": 2.0,
+   "mean_srgb": "#C1B392",
+   "palette": "path_sand:0.5+canyon_chalk:0.5",
+   "palette_srgb": "#B9AA87",
+   "delta_e": 3.41,
+   "roughness_mean": 0.799,
+   "files": [
+    "1k/gravel_path_albedo.webp",
+    "1k/gravel_path_normal.webp",
+    "1k/gravel_path_orh.webp",
+    "2k/gravel_path_albedo.webp",
+    "2k/gravel_path_normal.webp",
+    "2k/gravel_path_orh.webp"
+   ]
+  },
+  "chalk_rock": {
+   "tile_m": 4.0,
+   "mean_srgb": "#B0A893",
+   "palette": "canyon_chalk",
+   "palette_srgb": "#BCB296",
+   "delta_e": 5.32,
+   "roughness_mean": 0.82,
+   "files": [
+    "1k/chalk_rock_albedo.webp",
+    "1k/chalk_rock_normal.webp",
+    "1k/chalk_rock_orh.webp",
+    "2k/chalk_rock_albedo.webp",
+    "2k/chalk_rock_normal.webp",
+    "2k/chalk_rock_orh.webp"
+   ]
+  },
+  "strata_rock": {
+   "tile_m": 4.0,
+   "mean_srgb": "#B2A996",
+   "palette": "canyon_chalk:0.6+canyon_strata:0.4",
+   "palette_srgb": "#B0A58D",
+   "delta_e": 3.29,
+   "roughness_mean": 0.84,
+   "files": [
+    "1k/strata_rock_albedo.webp",
+    "1k/strata_rock_normal.webp",
+    "1k/strata_rock_orh.webp",
+    "2k/strata_rock_albedo.webp",
+    "2k/strata_rock_normal.webp",
+    "2k/strata_rock_orh.webp"
+   ]
+  },
+  "moss": {
+   "tile_m": 2.0,
+   "mean_srgb": "#3E502B",
+   "palette": "moss",
+   "palette_srgb": "#3D4C2B",
+   "delta_e": 2.76,
+   "roughness_mean": 0.95,
+   "files": [
+    "1k/moss_albedo.webp",
+    "1k/moss_normal.webp",
+    "1k/moss_orh.webp",
+    "2k/moss_albedo.webp",
+    "2k/moss_normal.webp",
+    "2k/moss_orh.webp"
+   ]
+  }
+ }
+}

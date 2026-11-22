@@ -1,0 +1,81 @@
+{
+ "doc": {
+  "layout": "<klasse>_{normal,rough}.webp, 1024",
+  "normal": "linear, RGB = n*0.5+0.5, Tangentenraum OpenGL (+Y oben)",
+  "rough": "linear, Graustufe (als RGB gespeichert, R lesen)"
+ },
+ "textures": {
+  "stone_white": {
+   "tile_m": 0.5,
+   "mean_srgb": "#9F9783",
+   "palette": "monument_white",
+   "palette_srgb": "#E8DABE",
+   "delta_e": 25.23,
+   "roughness_mean": 0.78,
+   "files": [
+    "stone_white_normal.webp",
+    "stone_white_rough.webp"
+   ]
+  },
+  "rock_chalk": {
+   "tile_m": 1.0,
+   "mean_srgb": "#BBBBB9",
+   "palette": "canyon_chalk",
+   "palette_srgb": "#BCB296",
+   "delta_e": 14.58,
+   "roughness_mean": 0.85,
+   "files": [
+    "rock_chalk_normal.webp",
+    "rock_chalk_rough.webp"
+   ]
+  },
+  "sandstone": {
+   "tile_m": 1.0,
+   "mean_srgb": "#826B41",
+   "palette": "sandstone",
+   "palette_srgb": "#D3B490",
+   "delta_e": 29.1,
+   "roughness_mean": 0.88,
+   "files": [
+    "sandstone_normal.webp",
+    "sandstone_rough.webp"
+   ]
+  },
+  "bark": {
+   "tile_m": 0.6,
+   "mean_srgb": "#8D7E56",
+   "palette": "bark",
+   "palette_srgb": "#41321D",
+   "delta_e": 32.48,
+   "roughness_mean": 0.9,
+   "files": [
+    "bark_normal.webp",
+    "bark_rough.webp"
+   ]
+  },
+  "crystal": {
+   "tile_m": 0.4,
+   "mean_srgb": "#697F76",
+   "palette": "violet_body",
+   "palette_srgb": "#8553C6",
+   "delta_e": 77.11,
+   "roughness_mean": 0.252,
+   "files": [
+    "crystal_normal.webp",
+    "crystal_rough.webp"
+   ]
+  },
+  "foliage": {
+   "tile_m": 0.15,
+   "mean_srgb": "#607A25",
+   "palette": "leaf_green",
+   "palette_srgb": "#313C1D",
+   "delta_e": 35.94,
+   "roughness_mean": 0.55,
+   "files": [
+    "foliage_normal.webp",
+    "foliage_rough.webp"
+   ]
+  }
+ }
+}

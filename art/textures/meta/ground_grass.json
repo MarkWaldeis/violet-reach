@@ -1,0 +1,67 @@
+{
+ "name": "grass",
+ "kind": "ground",
+ "src": "art/textures/src/grass__acg_Grass004.jpg",
+ "src_size": [
+  2048,
+  2048
+ ],
+ "seam_before": [
+  1.172,
+  1.177
+ ],
+ "tiling": "source already tileable",
+ "seam_after": [
+  1.174,
+  1.174
+ ],
+ "mean_before_match": "#656F3D",
+ "palette": "grass_green",
+ "palette_hex": "#696F44",
+ "match": 0.6,
+ "delta_e": 1.84,
+ "mean": "#676F41",
+ "roughness_mean": 0.9,
+ "files": {
+  "1k/grass_albedo.webp": 416854,
+  "1k/grass_normal.webp": 444816,
+  "1k/grass_orh.webp": 324954,
+  "2k/grass_albedo.webp": 1240014,
+  "2k/grass_normal.webp": 1217356,
+  "2k/grass_orh.webp": 630390
+ },
+ "args": {
+  "name": "grass",
+  "kind": "ground",
+  "out": null,
+  "crop": null,
+  "repeat_x": 1,
+  "rotate": 0,
+  "work": 2048,
+  "flatten_radius": 0.1,
+  "flatten": 1.0,
+  "flatten_chroma": 0.6,
+  "tile": "auto",
+  "tile_threshold": 1.35,
+  "tile_band": 0.1,
+  "directional": false,
+  "palette": "grass_green",
+  "match": 0.6,
+  "saturation": 0.9,
+  "freq": "0.15,0.3,0.55,0.8,1,1,0.85,0.6",
+  "height_invert": false,
+  "height_gamma": 1.0,
+  "strength": 3.5,
+  "roughness": 0.9,
+  "rough_var": 0.06,
+  "rough_invert": false,
+  "rough_height": 0.0,
+  "ao": 0.6,
+  "sizes": null,
+  "q_albedo": 85,
+  "q_normal": 92,
+  "q_orh": 90,
+  "q2k_normal": 88,
+  "q2k_orh": 84
+ }
+}

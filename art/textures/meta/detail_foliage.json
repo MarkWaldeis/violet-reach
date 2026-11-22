@@ -1,0 +1,74 @@
+{
+ "name": "foliage",
+ "kind": "detail",
+ "src": "art/textures/src/foliage__acg_Leaf001.jpg",
+ "src_size": [
+  287,
+  287
+ ],
+ "seam_before": [
+  67.107,
+  42.282
+ ],
+ "tiling": {
+  "band_px": 102,
+  "overlap_px": 61,
+  "src_col": 341,
+  "src_row": 217,
+  "row_shift": 773
+ },
+ "seam_after": [
+  2.161,
+  1.6
+ ],
+ "mean_before_match": "#607A25",
+ "palette": "leaf_green",
+ "palette_hex": "#313C1D",
+ "match": 0.0,
+ "delta_e": 35.94,
+ "mean": "#607A25",
+ "roughness_mean": 0.55,
+ "files": {
+  "foliage_normal.webp": 65592,
+  "foliage_rough.webp": 55920
+ },
+ "args": {
+  "name": "foliage",
+  "kind": "detail",
+  "out": null,
+  "crop": [
+   0.29,
+   0.385,
+   0.43,
+   0.525
+  ],
+  "repeat_x": 1,
+  "rotate": 0,
+  "work": 1024,
+  "flatten_radius": 0.1,
+  "flatten": 1.0,
+  "flatten_chroma": 0.6,
+  "tile": "force",
+  "tile_threshold": 1.35,
+  "tile_band": 0.1,
+  "directional": false,
+  "palette": "leaf_green",
+  "match": 0.0,
+  "saturation": 1.0,
+  "freq": "0.15,0.3,0.55,0.8,1,1,0.85,0.6",
+  "height_invert": false,
+  "height_gamma": 1.0,
+  "strength": 2.0,
+  "roughness": 0.55,
+  "rough_var": 0.1,
+  "rough_invert": false,
+  "rough_height": 0.0,
+  "ao": 0.55,
+  "sizes": null,
+  "q_albedo": 85,
+  "q_normal": 92,
+  "q_orh": 90,
+  "q2k_normal": 88,
+  "q2k_orh": 84
+ }
+}

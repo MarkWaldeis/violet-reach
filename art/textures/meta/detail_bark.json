@@ -1,0 +1,63 @@
+{
+ "name": "bark",
+ "kind": "detail",
+ "src": "art/textures/src/bark__acg_Bark012.jpg",
+ "src_size": [
+  2048,
+  2048
+ ],
+ "seam_before": [
+  1.064,
+  1.025
+ ],
+ "tiling": "source already tileable",
+ "seam_after": [
+  1.062,
+  1.024
+ ],
+ "mean_before_match": "#8D7E56",
+ "palette": "bark",
+ "palette_hex": "#41321D",
+ "match": 0.0,
+ "delta_e": 32.48,
+ "mean": "#8D7E56",
+ "roughness_mean": 0.9,
+ "files": {
+  "bark_normal.webp": 374574,
+  "bark_rough.webp": 180296
+ },
+ "args": {
+  "name": "bark",
+  "kind": "detail",
+  "out": null,
+  "crop": null,
+  "repeat_x": 1,
+  "rotate": 0,
+  "work": 2048,
+  "flatten_radius": 0.1,
+  "flatten": 1.0,
+  "flatten_chroma": 0.6,
+  "tile": "auto",
+  "tile_threshold": 1.35,
+  "tile_band": 0.1,
+  "directional": false,
+  "palette": "bark",
+  "match": 0.0,
+  "saturation": 1.0,
+  "freq": "0.05,0.1,0.25,0.5,0.85,1,1,0.9",
+  "height_invert": false,
+  "height_gamma": 1.0,
+  "strength": 7.0,
+  "roughness": 0.9,
+  "rough_var": 0.06,
+  "rough_invert": false,
+  "rough_height": 0.0,
+  "ao": 0.55,
+  "sizes": null,
+  "q_albedo": 85,
+  "q_normal": 92,
+  "q_orh": 90,
+  "q2k_normal": 88,
+  "q2k_orh": 84
+ }
+}
