@@ -1,0 +1,27 @@
+{
+  "asset": "boulder_chalk_a",
+  "class": "B",
+  "image": {
+    "task_id": "01a204cb-c8b8-74b3-b9d4-f54f80744c4f",
+    "resource": "text-to-image",
+    "ai_model": "gpt-image-2-5-flare",
+    "prompt": "A large weathered chalk limestone boulder, about 2.6 m long and 1.6 m high, blocky angular shape with stepped horizontal sedimentary layers and vertical fracture cracks, sharp broken faces with softly worn edges, pale chalky off-white and grey-beige stone with slightly darker horizontal bands, a few small dark pits, flat underside. single isolated object, whole object visible, nothing cropped, at least 10 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 80 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, plain neutral light grey background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
+    "aspect_ratio": "1:1",
+    "remove_background": true,
+    "credits": 9,
+    "file": "boulder_chalk_a/image/chosen.png",
+    "sha256": "4c82ab3fe3a6a1c0317a310b82690c396596f318d3af37a8b4bb8b10cea91b9b"
+  },
+  "model": {
+    "task_id": "01a204cd-41c5-7003-b634-efc8acfc12ac",
+    "resource": "image-to-3d",
+    "model_type": "smart-topology",
+    "target_polycount": 30000,
+    "texture_model": "meshy-7",
+    "enable_pbr": true,
+    "texture_resolution": "4k",
+    "credits": 15,
+    "file": "boulder_chalk_a/model/B-v2/model.glb",
+    "sha256": "679a2aa372ae485a1ff6969504043390002597dfef11cd14fea8c002c13334a7"
+  }
+}

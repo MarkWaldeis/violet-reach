@@ -1,0 +1,26 @@
+{
+  "asset": "ruin_wall_a",
+  "class": "A",
+  "image": {
+    "task_id": "01a204cb-e8e2-73b1-b539-00da3bde734d",
+    "resource": "text-to-image",
+    "ai_model": "gpt-image-2-5-flare",
+    "prompt": "A ruined section of an ancient wall built from large smooth pale ivory limestone ashlar blocks with fine joints, about 8 m long, 4.5 m high and 1.4 m thick, the top edge broken and stepped down unevenly toward one end, chipped block edges, small pores and subtle weathering stains, solid and thick with visible depth, straight flat base. single isolated object, whole object visible, nothing cropped, at least 10 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 80 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, plain neutral light grey background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
+    "aspect_ratio": "1:1",
+    "remove_background": true,
+    "credits": 9,
+    "file": "ruin_wall_a/image/chosen.png",
+    "sha256": "3697a34e851be4578d57d567596ab33ea6583fa30c0ab3f0489f646f9359534d"
+  },
+  "model": {
+    "task_id": "01a204cd-728d-7153-bae7-629305636793",
+    "resource": "image-to-3d",
+    "model_type": "standard",
+    "texture_model": "meshy-7",
+    "enable_pbr": true,
+    "texture_resolution": "4k",
+    "credits": 30,
+    "file": "ruin_wall_a/model/A-v2/model.glb",
+    "sha256": "ea47fc49dc96ab7eb6a590ddac453382605231c6cfcb96d972c0ed1bab749dcd"
+  }
+}

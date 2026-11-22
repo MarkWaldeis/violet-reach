@@ -73,6 +73,19 @@
       "bytes": 4050624
     },
     {
+      "id": "ruin_wall_a",
+      "category": "monuments",
+      "title": "Ruinenmauer Kalkstein A",
+      "file": "ruin_wall_a.glb",
+      "size_m": [
+        6.23,
+        1.111,
+        4.588
+      ],
+      "bytes": 5086340,
+      "material_class": "stone_white"
+    },
+    {
       "id": "stair_terrace_a",
       "category": "monuments",
       "title": "The Spillway Stair",
@@ -83,6 +96,19 @@
         6.509
       ],
       "bytes": 4181124
+    },
+    {
+      "id": "boulder_chalk_a",
+      "category": "rocks",
+      "title": "Kreidefels-Brocken A",
+      "file": "boulder_chalk_a.glb",
+      "size_m": [
+        2.604,
+        1.662,
+        1.738
+      ],
+      "bytes": 1007300,
+      "material_class": "rock_chalk"
     },
     {
       "id": "lake_shore_a",
@@ -179,6 +205,19 @@
         6.958
       ],
       "bytes": 6480716
+    },
+    {
+      "id": "trunk_acacia_a",
+      "category": "vegetation",
+      "title": "Schirmakazie Stamm A",
+      "file": "trunk_acacia_a.glb",
+      "size_m": [
+        11.645,
+        9.7,
+        10.588
+      ],
+      "bytes": 4725736,
+      "material_class": "bark"
     }
   ]
 }

@@ -1,0 +1,27 @@
+{
+  "asset": "trunk_acacia_a",
+  "class": "B",
+  "image": {
+    "task_id": "01a204cb-d8ab-76b7-9331-da50775f866a",
+    "resource": "text-to-image",
+    "ai_model": "gpt-image-2-5-flare",
+    "prompt": "A bare umbrella thorn acacia tree with no leaves at all, only the trunk and main branches, about 10 m tall, a single thick slightly leaning trunk with visible root flare that forks into four main limbs which spread outward and upward and split into thick branches ending in a wide flat horizontal umbrella-shaped top, no foliage, no thin twigs, dark grey-brown deeply furrowed bark. single isolated object, whole object visible, nothing cropped, at least 10 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 80 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, plain neutral light grey background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
+    "aspect_ratio": "1:1",
+    "remove_background": true,
+    "credits": 9,
+    "file": "trunk_acacia_a/image/chosen.png",
+    "sha256": "96470ef9374448fc0bf4adfc1b3c371482a0982b3717ca584f7a8d810b812316"
+  },
+  "model": {
+    "task_id": "01a204cd-63c4-7293-bb41-2535c9353b30",
+    "resource": "image-to-3d",
+    "model_type": "smart-topology",
+    "target_polycount": 30000,
+    "texture_model": "meshy-7",
+    "enable_pbr": true,
+    "texture_resolution": "4k",
+    "credits": 15,
+    "file": "trunk_acacia_a/model/B-v2/model.glb",
+    "sha256": "67e59c58157d7c101a9391d9fe9c60c078bfeb57b65f14a9a01a0e372e4c6624"
+  }
+}

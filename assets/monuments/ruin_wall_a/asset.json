@@ -1,0 +1,56 @@
+{
+  "id": "ruin_wall_a",
+  "category": "monuments",
+  "title": "Ruinenmauer Kalkstein A",
+  "description": "Verwittertes Ruinenmauer-Segment aus großen elfenbeinfarbenen Kalksteinquadern mit feinen Fugen (~6,2 × 1,1 × 4,5 m), unregelmäßig gebrochener und abgetreppter Mauerkrone, angeschlagenen Kanten und Poren. Farbe stone_weathered #DCCDB1 / monument_white #E8DABE mit dunklen Fugen #AAA9A4, Rauheit ≥ 0,55, Metall 0,0, 35 cm Eingrabe-Rand.",
+  "target_size_m": [
+    6.2,
+    1.1,
+    4.5
+  ],
+  "lod_triangles": [
+    20000,
+    6000,
+    1500
+  ],
+  "texture_size": 2048,
+  "meshy_class": "A",
+  "material_class": "stone_white",
+  "texture_format": "ktx2",
+  "status": "exported",
+  "builder": "pilot-builder-p3",
+  "review": {
+    "reviewer": "gate-reviewer-p3",
+    "scores": {
+      "silhouette": 9,
+      "form_detail": 9,
+      "material": 9,
+      "scale": 9,
+      "style": 9,
+      "defects": 9
+    },
+    "notes": "Monumentales Kalkstein-Ruinenmodul (6,23 x 1,11 x 4,59 m) mit klarer Abtreppung und ausmodellierten Quaderfugen. Bruchkrone, angeschlagene Kanten und poroese Kalksteinstruktur ueberzeugen in Nahaufnahme und Clay-Render.",
+    "round": 1,
+    "source_sha256": "88501c09fd8ff6615768622b50736393b677b9942369755f5f3c17b0a6a517eb",
+    "sheet_sha256": "e70ffab6c2c74f2b33f0d03ac1b6604e3f35a4ddb911c52234ca41ec793b1ab8"
+  },
+  "review_rounds": 1,
+  "size_m": [
+    6.23,
+    1.111,
+    4.588
+  ],
+  "export": {
+    "file": "export/ruin_wall_a.glb",
+    "bytes": 5086340,
+    "sha256": "9208896f94a51fa1e8cc30e67f4f2c0d15e76a46052623b48d2ef88807aa6085",
+    "source_sha256": "88501c09fd8ff6615768622b50736393b677b9942369755f5f3c17b0a6a517eb",
+    "sheet_sha256": "e70ffab6c2c74f2b33f0d03ac1b6604e3f35a4ddb911c52234ca41ec793b1ab8",
+    "lod_triangles": [
+      20000,
+      6000,
+      1500
+    ],
+    "texture_size": 2048
+  }
+}

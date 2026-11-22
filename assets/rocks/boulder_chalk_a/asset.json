@@ -1,0 +1,56 @@
+{
+  "id": "boulder_chalk_a",
+  "category": "rocks",
+  "title": "Kreidefels-Brocken A",
+  "description": "Kantig-stufiger Kreidefels-Brocken (~2,6 × 2,0 × 1,6 m) mit waagrechten Schichtbänken, senkrechten Bruchrissen, verwitterten Kanten und Poren. Farbe canyon_chalk #BCB296 mit dunkleren Schichtbändern #9B8E7E und hellen Bruchflächen #E8DABE, Rauheit ≥ 0,60, Metall 0,0, 30 cm Eingrabe-Rand für Hanglagen.",
+  "target_size_m": [
+    2.6,
+    2.0,
+    1.6
+  ],
+  "lod_triangles": [
+    30000,
+    8000,
+    2000
+  ],
+  "texture_size": 1024,
+  "meshy_class": "B",
+  "material_class": "rock_chalk",
+  "texture_format": "ktx2",
+  "status": "exported",
+  "builder": "pilot-builder-p3",
+  "review": {
+    "reviewer": "gate-reviewer-p3",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 9,
+      "material": 9,
+      "scale": 9,
+      "style": 9,
+      "defects": 9
+    },
+    "notes": "Klar geschichteter Kreidefels-Brocken (2,60 x 1,66 x 1,74 m) mit ausmodellierten horizontalen Schichtbaenken und senkrechten Bruchkanten. Glaubwuerdige Nahoberflaeche, mattes Kreide-/Kalksteinmaterial gemaess STYLE.md, frei von Mesh- oder Sockeldefekten.",
+    "round": 1,
+    "source_sha256": "059fcbdd46efc0f7fa92b0e597e724ef349478b864d4815463260d527fefb98a",
+    "sheet_sha256": "1cd7d46caed2990eb6664c793f24c78b33d1e64fc471565f51845250fc5b9454"
+  },
+  "review_rounds": 1,
+  "size_m": [
+    2.604,
+    1.662,
+    1.738
+  ],
+  "export": {
+    "file": "export/boulder_chalk_a.glb",
+    "bytes": 1007300,
+    "sha256": "aa84c04ebe662db00ea7cc02cb2ea0c9b2940a40aa1f83f8e7c721fa48526ff7",
+    "source_sha256": "059fcbdd46efc0f7fa92b0e597e724ef349478b864d4815463260d527fefb98a",
+    "sheet_sha256": "1cd7d46caed2990eb6664c793f24c78b33d1e64fc471565f51845250fc5b9454",
+    "lod_triangles": [
+      30000,
+      8000,
+      2000
+    ],
+    "texture_size": 1024
+  }
+}
