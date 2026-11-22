@@ -14,8 +14,22 @@
     2400
   ],
   "texture_size": 4096,
-  "status": "blender_review",
+  "status": "approved",
   "builder": "devin-501e5a510b5c43f2b6ce7952cf05094b",
-  "review": null,
-  "review_rounds": 3
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 8,
+      "scale": 8,
+      "style": 8,
+      "defects": 8
+    },
+    "notes": "Extra round (stair only), checked against the two round-3 points. (1) Paving pits: fixed. The evenly spaced dark pit pattern is gone; the slabs vary in size and joint layout, and the wear shows as chipped nosings and a few cracks (hero.jpg, closeup_upper). (2) Ground skirt: fixed. An irregular soil and turf apron with grass sprigs now runs round the whole base, so the stair no longer stands on the ground plane with a hard edge (hero.jpg, turn_200, turn_290, closeup_base). Polish, not blocking: the apron is flat and evenly thin with sparse sprigs, and the soil does not rise against the wall feet; there are small dark slits under the top coping (closeup_base); the right flank is still a stepped stack of pilaster boxes.",
+    "round": 4,
+    "source_sha256": "e2543561211b980d87d7c4c6d078a55a3b1766cbe3ac0c822206858284936449",
+    "sheet_sha256": "bbee391b8fbe2ad07a4a1867a7ce9f94787975046124f53dcd668ca5ade9203d"
+  },
+  "review_rounds": 4
 }
