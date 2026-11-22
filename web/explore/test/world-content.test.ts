@@ -40,8 +40,10 @@ test("colonnade has only three standing, individually tilted columns", () => {
   assert.equal(columns.length, 3);
   for (const p of columns) {
     const tilt = Math.acos(Math.cos(p.pitch) * Math.cos(p.roll));
-    assert.ok(tilt >= 3 * Math.PI / 180 && tilt <= 12 * Math.PI / 180);
+    assert.ok(tilt >= 6 * Math.PI / 180 && tilt <= 10 * Math.PI / 180);
   }
+  const distances = columns.flatMap((a: { x: number; z: number }, i: number) => columns.slice(i + 1).map((b: { x: number; z: number }) => Math.hypot(a.x - b.x, a.z - b.z)));
+  assert.ok(Math.max(...distances) > Math.min(...distances) * 1.8);
 });
 
 test("shore path frames the gate and reaches the terrace without the dead uphill spur", () => {
