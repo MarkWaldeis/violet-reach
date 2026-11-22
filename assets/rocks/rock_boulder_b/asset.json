@@ -2,7 +2,7 @@
   "id": "rock_boulder_b",
   "category": "rocks",
   "title": "Bemooster Sandsteinfindling B",
-  "description": "Asymmetrischer warmer Sandsteinfindling mit acht großen Bruchfacetten, millimeterfeiner Oberflächenrauheit und kleinen Kantenabplatzern. Vier geneigte Schichtlippen und wandernde keilförmige Klüfte laufen unregelmäßig aus. Flache unregelmäßige Wabenmulden liegen nur auf einer schattigen Seite. Dunkle olivfarbene Moosschalen wachsen aus den Oberseiten; ein kantiger angelehnter Bruchblock und elf unterschiedlich große scharfkantige Splitter liegen am Fuß.",
+  "description": "Neu aufgebauter asymmetrischer Sandsteinbruchblock mit großen ebenen Bruchflächen, schräg gestuftem gebrochenem Dach und geneigten Schichtlippen. Feines geometrisches Sandkorn, flache Schichtspuren und auskeilende unregelmäßige Klüfte. Mehrere eingewachsene Wabenmulden auf der schattigen Unterseite. Dünne weich auslaufende olivfarbene Moospolster auf nördlichen Oberseiten; ein aus derselben Bruchfläche gelöster Block und vierzehn unterschiedlich große, teils eingesunkene Splitter häufen sich hangabwärts am Fuß.",
   "target_size_m": [
     3.2,
     2.6,
@@ -14,22 +14,8 @@
     1500
   ],
   "texture_size": 2048,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-376742566d344b90aa5a22ec7e9cc164",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 7,
-      "form_detail": 6,
-      "material": 6,
-      "scale": 8,
-      "style": 6,
-      "defects": 6
-    },
-    "notes": "Round 1. Defects: (1) silhouette/style: overall this is a rounded faceted lump, which STYLE.md rules out ('kein gleichmäßiges Noise auf einer Kugel'). The eight fracture planes are blended into a smooth hull, so no face or edge reads from more than one or two angles. Make 3-4 large flat fracture faces meet at crisp edges and give it a clear stepped top, with the bedding lips as real ledges. (2) form_detail/material: the shaded faces are flat, featureless grey clay (closeup_base). The fissures are uniform carved grooves with a constant width, laid out in a regular crosshatch, and the single tafoni patch reads as a pasted crumbly decal (hero.jpg). Add sandstone grain and bedding as fine detail and taper the fissures irregularly. Spread the tafoni as several smaller hollows in the shaded underside. (3) Moss: dark, lumpy caterpillar strips with blunt walls standing on the stone (closeup.jpg). Make it a thin olive cushion that blends into the stone, gathered in hollows and on the north top, and lighter at the edges. (4) defects: the fallen block is a smooth convex polyhedron and the 11 rubble pieces are near-identical small polyhedra scattered evenly in a ring around the boulder. Make the fallen block match a fracture face of the main body, and cluster the rubble downslope of it, partly buried.",
-    "round": 1,
-    "source_sha256": "f3d2c27301fe5ca7029c59e521e46c4448b3c0d9ff1aa879875918cd055bb470",
-    "sheet_sha256": "574c090e6fadd53193549fa4b72cd85db6365d0e396ecedd5a4a0b589075a93d"
-  },
+  "review": null,
   "review_rounds": 1
 }

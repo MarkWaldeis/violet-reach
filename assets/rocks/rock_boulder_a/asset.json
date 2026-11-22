@@ -2,7 +2,7 @@
   "id": "rock_boulder_a",
   "category": "rocks",
   "title": "Geschichteter Kalkfindling A",
-  "description": "Länglicher zusammenhängender Kalkfindling mit geneigten Schichtbänken, zurückgesetzten dunklen Lagerfugen und schräg abgebrochener Oberseite. Modellierte feine Laminationen, stufige Abplatzungen und gezackte Sackklüfte mit eingeklemmtem Geröll. Helle kreidige lokale Variante von canyon_layered für Canyonränder und lichte Hänge.",
+  "description": "Zusammenhängender Kalkfindling mit unregelmäßig erodiertem, eingesunkenem Fuß und verstürzten Blöcken. Stark wechselnde, seitlich auskeilende Schichtmächtigkeiten mit Überhängen und versetzten Sackklüften. Ruhige helle Bruchflächen; richtungs-, maßstabs- und keimvariierte Verwitterung nur in Lagerfugen und unter Schichtlippen. Warme Kreide- und Ockertöne einer lokalen canyon_layered-Variante.",
   "target_size_m": [
     7.5,
     5.0,
@@ -14,22 +14,8 @@
     2500
   ],
   "texture_size": 2048,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-376742566d344b90aa5a22ec7e9cc164",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 8,
-      "form_detail": 8,
-      "material": 8,
-      "scale": 8,
-      "style": 7,
-      "defects": 7
-    },
-    "notes": "Round 1. Close. It is the right idea for STYLE.md 'Felsen': modelled horizontal chalk beds cut by long vertical clefts, a broken sloping top with a corner notch, light fracture faces with darker joints, and the 7.8 m scale reads well beside the figure (hero.jpg, closeup.jpg). Defects: (1) style/defects: the two lowest beds are flat stepped plinths with long straight chamfered edges and regular polygon outlines (closeup_base, turn_155/245/290), so the foot reads as a cut pedestal and not as rock. Break the foot beds with irregular outlines, undercut and partly buried edges, a few fallen blocks and soil or grass contact, so the boulder sits in the ground instead of on a base. (2) The beds above are nearly the same thickness and stack like a layered cake. Vary them (for example 0.4 / 1.2 / 0.7 / 1.6 m), let one or two pinch out or overhang, and offset the clefts between beds. (3) material: a uniform dark dash/scratch pattern covers every face at the same scale (closeup_base). Keep it only as fine detail in the joints and under ledges, and let the large fracture faces stay calm and lighter, per 'Große helle Bruchflächen'.",
-    "round": 1,
-    "source_sha256": "91af4405089080d3bc0e25738a4c8243c3ea9646e1d355006c168d998f725a18",
-    "sheet_sha256": "32487aa9cf8e28d9e3b067cbceeefd82e12525b8514ef6378fe2936a9959adb4"
-  },
+  "review": null,
   "review_rounds": 1
 }

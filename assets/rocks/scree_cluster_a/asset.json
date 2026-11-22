@@ -1,0 +1,20 @@
+{
+  "id": "scree_cluster_a",
+  "category": "rocks",
+  "title": "Kalkschuttfächer A",
+  "description": "Dichter Kalkschuttfächer mit 320 einzigartigen Bruchstücken: drei geneigte, zwischen mittleren Steinen eingebettete Schichtplatten, ein gefallener Großblock, 76 mittlere Steine und 240 Splitter mit ausdünnendem Schuttfuß. Zahlreiche Schnittflächen, sekundäre Muschelbrüche, flache Bruchstufen und kräftige Kantenabplatzer gliedern die Oberflächen. Warme Kreide- und Ockertöne, sichtbare Bänderungen und dunkle erdige Basisspalten verbinden den aufgebankten Schutt mit den Canyonfelsen.",
+  "target_size_m": [
+    6,
+    4.5,
+    1.8
+  ],
+  "lod_triangles": [
+    9000,
+    3500,
+    1000
+  ],
+  "texture_size": 2048,
+  "status": "blender_review",
+  "builder": "devin-376742566d344b90aa5a22ec7e9cc164",
+  "review": null
+}

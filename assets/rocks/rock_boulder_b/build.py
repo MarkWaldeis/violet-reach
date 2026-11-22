@@ -44,7 +44,7 @@ def materials():
         nt.links.new(coord.outputs["Object"], tex.inputs["Vector"])
         ramp = nt.nodes.new("ShaderNodeValToRGB")
         # Local copies: palette ochre/sandstone bands, and pure olive fibre tips without a pale edge mix.
-        colors = (("accent_ochre", .38), ("sandstone", .46)) if key == "sandstone" else (("moss", .55), ("moss", 1.15))
+        colors = (("accent_ochre", .50), ("sandstone", .70)) if key == "sandstone" else (("moss", .65), ("moss", 1.05))
         for el, (color, gain) in zip(ramp.color_ramp.elements, colors):
             el.color = tuple(v * gain for v in palette[color]["linear_rgb"]) + (1,)
         if key == "sandstone":
@@ -61,6 +61,14 @@ def materials():
         else:
             nt.links.new(tex.outputs["Fac"], ramp.inputs[0])
         nt.links.new(ramp.outputs[0], bsdf.inputs["Base Color"])
+        if key=="mossy_rock":
+            edge=nt.nodes.new("ShaderNodeAttribute")
+            edge.attribute_name="moss_edge"
+            tips=nt.nodes.new("ShaderNodeMixRGB")
+            tips.inputs[2].default_value=tuple(v*1.15 for v in palette["moss"]["linear_rgb"])+(1,)
+            nt.links.new(edge.outputs["Fac"],tips.inputs[0])
+            nt.links.new(ramp.outputs[0],tips.inputs[1])
+            nt.links.new(tips.outputs[0],bsdf.inputs["Base Color"])
         bump = nt.nodes.new("ShaderNodeBump")
         bump.inputs["Distance"].default_value = .003 if key == "sandstone" else .004
         bump.inputs["Strength"].default_value = .35
@@ -76,37 +84,6 @@ def cut_plane(bm, point, normal):
                           plane_co=point, plane_no=normal, clear_outer=True, dist=.00001)
     bmesh.ops.holes_fill(bm, edges=[e for e in bm.edges if e.is_boundary])
     bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
-
-
-def hull(name, size, rng, material, count=56):
-    bm = bmesh.new()
-    for _ in range(count):
-        z = rng.uniform(-1, 1)
-        a = rng.uniform(0, math.tau)
-        radius = rng.uniform(.84, 1.12)
-        bm.verts.new((math.sqrt(1-z*z)*math.cos(a)*radius,
-                      math.sqrt(1-z*z)*math.sin(a)*radius, z*radius))
-    bmesh.ops.convex_hull(bm, input=list(bm.verts), use_existing_faces=False)
-    bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
-    for axis, width in enumerate(size):
-        lo = min(v.co[axis] for v in bm.verts)
-        hi = max(v.co[axis] for v in bm.verts)
-        for v in bm.verts:
-            v.co[axis] = (v.co[axis]-lo)/(hi-lo)*width-width/2
-    cut_plane(bm, (0, -size[1]*.37, 0), (.06, -1, .05))
-    for _ in range(3):
-        a = rng.uniform(0, math.tau)
-        normal = Vector((math.cos(a), math.sin(a), rng.uniform(-.2, .4)))
-        point = Vector((normal.x*size[0]*.44, normal.y*size[1]*.44, 0))
-        cut_plane(bm, point, normal)
-    cut_plane(bm, (0, 0, -size[2]*.46), (0, 0, -1))
-    mesh = bpy.data.meshes.new(name)
-    bm.to_mesh(mesh)
-    bm.free()
-    obj = bpy.data.objects.new(name, mesh)
-    obj.data.materials.append(material)
-    vrlib.link_to_source(obj)
-    return obj
 
 
 def subtract(obj, cutter):
@@ -133,72 +110,65 @@ def weather(obj, voxel, amplitude):
     bm = bmesh.new()
     bm.from_mesh(obj.data)
     bm.normal_update()
-    upper = [v for v in bm.verts if v.co.z > .35*amplitude and v.normal.z > .35]
-    bmesh.ops.smooth_vert(bm, verts=upper, factor=.55, use_axis_x=True,
+    bmesh.ops.smooth_vert(bm, verts=list(bm.verts), factor=.25, use_axis_x=True,
                           use_axis_y=True, use_axis_z=True)
     bm.normal_update()
     for v in bm.verts:
         p, n = v.co.copy(), v.normal.copy()
-        broad = .07*noise.noise(p*(.85/amplitude))
-        cell = noise.noise(p*(4.5/amplitude))*3
-        fraction = cell-math.floor(cell)
-        transition = max(0, min(1, (fraction-.3)/.4))
-        transition = transition*transition*(3-2*transition)
-        chip = .035*(math.floor(cell)+transition)/3
-        shear = max(0, -n.y)
-        v.co += n*(broad*amplitude*(1-.55*shear) + chip*amplitude*(.6+.4*shear))
-    bmesh.ops.smooth_vert(bm, verts=list(bm.verts), factor=.22, use_axis_x=True,
-                          use_axis_y=True, use_axis_z=True)
+        grain=.0018*noise.noise(p*83)+.0006*noise.noise(p*173)
+        phase=(p.z+.1*p.x+.04*p.y+.004*noise.noise(p*5))*12
+        lamination=max(0,1-abs(phase-round(phase))/.18)
+        lamination*=max(0,noise.noise(p*5+Vector((4,2,8)))+.2)
+        sheltered=max(0,n.x,n.y)
+        relief=0
+        if sheltered>.4:
+            for x,y,z in ((1.4,-.1,.52),(1.4,.55,.85),(.5,1.0,.65),(-.8,.9,1.05)):
+                q=Vector(((p.x-x)/.33,(p.y-y)/.28,(p.z-z)/.24))
+                relief=max(relief,.045*max(0,1-q.length_squared)**.65)
+        cell=noise.noise(p*3.2)*3
+        fraction=cell-math.floor(cell)
+        transition=max(0,min(1,(fraction-.25)/.5))
+        transition=transition*transition*(3-2*transition)
+        meso=.012*(math.floor(cell)+transition)/3
+        v.co+=n*((grain+meso-.002*lamination)*min(1,amplitude/.4)-relief)
     bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
     bm.to_mesh(obj.data)
     bm.free()
-    remesh = obj.modifiers.new("Geschlossene_Bruchkanten", "REMESH")
-    remesh.mode, remesh.voxel_size = "VOXEL", voxel*.65
-    bpy.ops.object.modifier_apply(modifier=remesh.name)
     for face in obj.data.polygons:
         face.use_smooth = True
-    obj.data.set_sharp_from_angle(angle=math.radians(85))
+    obj.data.set_sharp_from_angle(angle=math.radians(22))
     obj.data.update()
     bpy.context.view_layer.update()
 
 
 def tafoni(body, rng, stone):
     tree = BVHTree.FromObject(body, bpy.context.evaluated_depsgraph_get())
-    for i in range(7):
-        y = -.1 + (i % 4)*.21 + rng.uniform(-.04, .04)
-        z = .02 + (i // 4)*.2 + rng.uniform(-.04, .04)
-        hit, _, _, _ = tree.ray_cast(Vector((4, y, z)), Vector((-1, 0, 0)))
-        if hit is None:
+    outward=Vector((1.02,.58,.1181)).normalized()
+    tangent=Vector((-outward.y,outward.x,0)).normalized()
+    cells=[]
+    for i,(y,z) in enumerate(((-.1,.6),(.12,.65),(.25,.52),(.48,.65),(.28,.84),(.03,.9))):
+        y+=rng.uniform(-.025,.025)
+        z+=rng.uniform(-.025,.025)
+        hit,normal,_,_=tree.ray_cast(Vector((4,y,z)),Vector((-1,0,0)))
+        if hit is None or normal.dot(outward)<.8:
             continue
-        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=3, radius=1)
-        cutter = bpy.context.object
-        for v in cutter.data.vertices:
-            p = v.co.copy()
-            v.co *= 1 + .32*noise.noise(p*4 + Vector((i*3, 1, 4)))
-            v.co.x *= .18 + .015*(i % 3)
-            v.co.y *= .19 + .035*(i % 3)
-            v.co.z *= .12 + .025*(i % 2)
-            v.co.y += .04*math.sin(p.z*7+i)
-        cutter.location = (hit.x+.06, y, z)
-        subtract(body, cutter)
-
-
-def fracture_planes(body, rng):
-    planes = []
-    bm = bmesh.new()
-    bm.from_mesh(body.data)
-    for i in range(8):
-        a = math.tau*i/8 + rng.uniform(-.09, .09)
-        normal = Vector((math.cos(a), math.sin(a), rng.uniform(-.28, .32))).normalized()
-        support = math.sqrt((1.6*normal.x)**2 + (1.3*normal.y)**2)
-        distance = support*rng.uniform(.76, .83)
-        point = normal*distance
-        cut_plane(bm, point, normal)
-        planes.append((normal, distance))
-    bm.to_mesh(body.data)
-    bm.free()
+        cells.append((hit,rng.uniform(.17,.25),rng.uniform(.11,.18),rng.uniform(.11,.15),i))
+    normals=[v.normal.copy() for v in body.data.vertices]
+    for vertex,normal in zip(body.data.vertices,normals):
+        p=vertex.co.copy()
+        facing=max(0,min(1,(normal.dot(outward)-.7)/.2))
+        if not facing:
+            continue
+        depth=0
+        for centre,width,height,amplitude,index in cells:
+            q=p-centre
+            warp=.32*noise.noise(p*14+Vector((index*3,1,4)))
+            radius=abs(q.dot(tangent)/width)**1.4+abs(q.z/height)**1.65
+            bowl=max(0,1-radius+warp)
+            depth=max(depth,amplitude*bowl**.7)
+        vertex.co-=outward*depth*facing
     body.data.update()
-    return planes
+    body["tafoni_cells"]=len(cells)
 
 
 def tapered_wedge(name, centre, along, across, outward, start, end, depth, width,
@@ -237,66 +207,6 @@ def tapered_wedge(name, centre, along, across, outward, start, end, depth, width
     return link_mesh(name, verts, faces, stone)
 
 
-def bedding_ledges(body, planes, stone):
-    bed_normal = Vector((-.17, -.07, 1)).normalized()
-    for bed, level in enumerate((-.57, -.18, .25, .6)):
-        for index, (normal, distance) in enumerate(planes):
-            tangent = normal.cross(bed_normal).normalized()
-            centre = normal*distance
-            centre += bed_normal*((level-bed_normal.dot(centre))/(1-bed_normal.dot(normal)**2))
-            centre -= normal*(normal.dot(centre)-distance)
-            outward = (normal-bed_normal*normal.dot(bed_normal)).normalized()
-            edge_points = [tangent.dot(v.co-centre) for v in body.data.vertices
-                           if abs(normal.dot(v.co)-distance)<.0001]
-            if not edge_points:
-                continue
-            start, end = min(edge_points)+.015, max(edge_points)-.015
-            if index % 3 == bed % 3:
-                end = start+(end-start)*.78
-            if end-start < .14:
-                continue
-            recess = .035+.025*(.5+.5*math.sin(index*2.3+bed*1.7))
-            cutter = tapered_wedge(f"Schichtlippe_{bed}_{index}",centre,tangent,bed_normal,
-                                   outward,start,end,recess,.085,index+bed*9,stone,bedding=True)
-            subtract(body, cutter)
-
-
-def split_cracks(body, planes, stone):
-    for i, (plane, offset, lean, height) in enumerate(((0,.42,.28,1.15),
-                                                     (1,-.2,-.22,.9),
-                                                     (5,.15,.25,1.05))):
-        normal, distance = planes[plane]
-        tangent = normal.cross(Vector((0,0,1))).normalized()
-        vertical = tangent.cross(normal).normalized()
-        centre = normal*distance+tangent*offset
-        cutter = tapered_wedge(f"Kluft_{i}",centre,vertical,tangent,normal,-height/2,
-                               height/2,.13,.055,i*7+2,stone,lean=lean)
-        subtract(body, cutter)
-
-
-def facet_chips(body, planes, stone):
-    rng = random.Random(SEED+901)
-    bpy.context.view_layer.update()
-    tree = BVHTree.FromObject(body,bpy.context.evaluated_depsgraph_get())
-    for i, (a, da) in enumerate(planes):
-        b, db = planes[(i+1)%len(planes)]
-        z = rng.uniform(-.52,.47)
-        determinant = a.x*b.y-a.y*b.x
-        if abs(determinant)<.05:
-            continue
-        x = ((da-a.z*z)*b.y-a.y*(db-b.z*z))/determinant
-        y = (a.x*(db-b.z*z)-(da-a.z*z)*b.x)/determinant
-        p = Vector((x,y,z))
-        hit, _, _, distance = tree.find_nearest(p)
-        if hit is None or distance>.035:
-            continue
-        size = rng.uniform(.045,.09)
-        cutter = hull(f"Kantenabplatzer_{i}",(size,size*.85,size*.7),rng,stone,18)
-        cutter.location = p+(a+b).normalized()*size*.12
-        cutter.rotation_euler = (rng.random(),rng.random(),rng.random())
-        subtract(body,cutter)
-
-
 def moss_shell(body, material):
     mesh = body.data
     normals = [v.normal.copy() for v in mesh.vertices]
@@ -308,13 +218,14 @@ def moss_shell(body, material):
     for _ in range(4):
         normals = [(normals[i]+sum((normals[j] for j in neighbors), Vector())).normalized()
                    for i, neighbors in enumerate(adjacent)]
-    candidates = [f for f in mesh.polygons if f.normal.z > .6 and f.center.z > .25
-                  and sum(normals[i].z for i in f.vertices)/len(f.vertices) > .65]
+    candidates = [f for f in mesh.polygons if f.normal.z > .7 and f.center.z > .9 and f.center.y>-.35
+                  and sum(normals[i].z for i in f.vertices)/len(f.vertices) > .7]
+    if not candidates:
+        raise RuntimeError("No upward north-side faces for moss")
     def field(p):
-        tuft = .4 if .025 < abs(p.x+.3) < .065 and p.y > .5 else 0
-        return noise.noise(p*2.7 + Vector((3, 8, 1))) + .1*noise.noise(p*9) + tuft
+        return noise.noise(p*2.0 + Vector((3, 8, 1))) + .18*noise.noise(p*5)
     ranked = sorted(candidates, key=lambda f: field(f.center), reverse=True)
-    target = sum(f.area for f in candidates)*.30
+    target = sum(f.area for f in candidates)*.40
     chosen, area = [], 0
     for face in ranked:
         chosen.append(face)
@@ -353,23 +264,26 @@ def moss_shell(body, material):
     boundary = {i for edge, count in edges.items() if count == 1 for i in edge}
     distance = {i: 0 for i in boundary}
     frontier = boundary
-    for step in range(1, 5):
+    for step in range(1, 9):
         frontier = {j for i in frontier for j in neighbors[i] if j not in distance}
         distance.update({i: step for i in frontier})
     verts = []
     for j, i in enumerate(used):
         v = mesh.vertices[i]
         p = v.co.copy()
-        taper = min(1, distance.get(j, 5)/3)
-        clump = .015*noise.noise(p*30)+.003*noise.noise(p*155)
-        verts.append(p+normals[i]*(.0008+taper*(.043+clump)))
-    verts.extend(mesh.vertices[i].co-normals[i]*.006 for i in used)
+        taper = min(1, distance.get(j, 9)/6)
+        clump = .008*noise.noise(p*30)+.0015*noise.noise(p*155)
+        verts.append(p+normals[i]*(.0004+taper*(.03+clump)))
+    verts.extend(mesh.vertices[i].co-normals[i]*.004 for i in used)
     n = len(used)
     faces = top_faces + [tuple(n+i for i in reversed(f)) for f in top_faces]
     for (a, b), count in edges.items():
         if count == 1:
             faces.append((a, b, b+n, a+n))
     obj = link_mesh("Angewachsene_Moosschale", verts, faces, material)
+    edge_attribute=obj.data.attributes.new("moss_edge","FLOAT","POINT")
+    for j in range(len(verts)):
+        edge_attribute.data[j].value=1-min(1,distance.get(j%n,9)/6)
     bm = bmesh.new()
     bm.from_mesh(obj.data)
     bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
@@ -380,51 +294,146 @@ def moss_shell(body, material):
     print("MOSS_SURFACE_COVERAGE", round(area/sum(f.area for f in candidates)*100, 1))
 
 
+def prism(name, outline, bottom, top, material):
+    n=len(outline)
+    verts=[(x,y,z) for z in (bottom,top) for x,y in outline]
+    faces=[tuple(reversed(range(n))),tuple(range(n,n*2))]
+    faces.extend((i,(i+1)%n,(i+1)%n+n,i+n) for i in range(n))
+    return link_mesh(name,verts,faces,material)
+
+
+def split_fragment(body, point, normal):
+    fragment=body.copy()
+    fragment.data=body.data.copy()
+    fragment.name="Abgespaltener_Bruchblock"
+    vrlib.link_to_source(fragment)
+    for obj,direction in ((body,normal),(fragment,-normal)):
+        bm=bmesh.new()
+        bm.from_mesh(obj.data)
+        cut_plane(bm,point,direction)
+        bm.to_mesh(obj.data)
+        bm.free()
+        obj.data.update()
+        obj["split_normal"]=tuple(normal)
+    return fragment
+
+
+def natural_fissures(body,stone):
+    front=Vector((-.47,-1.75,.1242)).normalized()
+    right=Vector((1.02,.58,.1181)).normalized()
+    df=front.dot(Vector((-1.3,-.48,-.025)))
+    dr=right.dot(Vector((1.45,-.12,-.025)))
+    for i,(normal,distance,level) in enumerate(((front,df,.66),(right,dr,1.08))):
+        tangent=Vector((-normal.y,normal.x,0))
+        across=Vector((-.12,-.04,1)).normalized()
+        horizontal=Vector((normal.x,normal.y,0))
+        centre=horizontal*((distance-normal.z*level)/horizontal.length_squared)+Vector((0,0,level))
+        cutter=tapered_wedge(f"Gebrochene_Schichtlippe_{i}",centre,tangent,across,normal,
+                             -.85,.65,.05,.045,3+i*9,stone,bedding=True)
+        subtract(body,cutter)
+    for i,(normal,distance,offset) in enumerate(((front,df,.45),(right,dr,-.1))):
+        tangent=Vector((-normal.y,normal.x,0))
+        horizontal=Vector((normal.x,normal.y,0))
+        centre=horizontal*((distance-normal.z)/horizontal.length_squared)+tangent*offset+Vector((0,0,1.0))
+        along=(Vector((0,0,1))+tangent*(.17 if i==0 else -.22)).normalized()
+        cutter=tapered_wedge(f"Auskeilende_Bruchkluft_{i}",centre,along,tangent,normal,
+                             -.65,.6,.13,.035,17+i*13,stone)
+        subtract(body,cutter)
+
+
 def build():
-    rng = random.Random(SEED)
+    rng=random.Random(SEED)
     noise.seed_set(SEED)
-    stone, moss = materials()
-    body = hull("Sandstein_Hauptmasse", (3.2, 2.6, 2.0), rng, stone)
-    bpy.context.view_layer.update()
-    cleft = hull("Spaltriss_Schneider", (.085, 1.3, 1.1), rng, stone, 30)
-    cleft.location = (-.3, .85, .65)
-    subtract(body, cleft)
-    weather(body, .02, 1)
-    planes = fracture_planes(body, rng)
-    bpy.context.view_layer.update()
-    tafoni(body, rng, stone)
-    bedding_ledges(body, planes, stone)
-    split_cracks(body, planes, stone)
-    facet_chips(body, planes, stone)
-    bm = bmesh.new()
+    stone,moss=materials()
+    outline=[(-1.3,-.48),(.45,-.95),(1.45,-.12),(.87,.9),(-.55,.8),(-1.38,.25)]
+    body=prism("Sandstein_Hauptmasse",outline,-.025,2.05,stone)
+    for vertex in body.data.vertices:
+        if vertex.co.z>2:
+            vertex.co.x=vertex.co.x*.88-.12
+            vertex.co.y=vertex.co.y*.88+.08
+    bm=bmesh.new()
     bm.from_mesh(body.data)
-    bmesh.ops.remove_doubles(bm, verts=list(bm.verts), dist=.00001)
-    bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
+    cut_plane(bm,(0,0,1.86),Vector((-.12,.04,1)).normalized())
+    cut_plane(bm,(-.5,0,1.75),Vector((-.5,-.15,1)).normalized())
+    cut_plane(bm,(-.7,.6,1.65),Vector((-.3,.7,1)).normalized())
+    for normal in (Vector((-.15,-1,.12)),Vector((-1,-.15,-.1)),Vector((-.6,.7,.3))):
+        normal.normalize()
+        support=max(normal.dot(v.co) for v in bm.verts)
+        cut_plane(bm,normal*(support-.10),normal)
     bm.to_mesh(body.data)
     bm.free()
+    notch=prism("Gebrochene_Dachstufe",[(-.1,-1.8),(2,-1.8),(2,1.8),(.25,1.8),(.05,.75),(.25,.35),(-.12,-.15),(.12,-.5)],1.35,3,stone)
+    for vertex in notch.data.vertices:
+        vertex.co.z+=.12*vertex.co.x+.04*vertex.co.y
+    subtract(body,notch)
+    block=split_fragment(body,Vector((.85,-.45,.35)),Vector((1,-1,-1.8)).normalized())
+    bm=bmesh.new()
+    bm.from_mesh(body.data)
+    sites=[e.verts[0].co.lerp(e.verts[1].co,rng.uniform(.15,.85)) for e in bm.edges
+           if e.calc_face_angle()>.45 and e.calc_length()>.4 and min(v.co.z for v in e.verts)>.8]
+    bm.free()
+    weather(body,.018,1)
+    weather(block,.018,1)
+    for site in rng.sample(sites,min(10,len(sites))):
+        bm=bmesh.new()
+        radius=rng.uniform(.06,.12)
+        for _ in range(18):
+            bm.verts.new(site+Vector(tuple(rng.uniform(-radius,radius) for _ in range(3))))
+        bmesh.ops.convex_hull(bm,input=list(bm.verts),use_existing_faces=False)
+        bmesh.ops.delete(bm,geom=[v for v in bm.verts if not v.link_faces],context="VERTS")
+        cutter=link_mesh("Kantenabplatzer",[],[],stone)
+        bm.to_mesh(cutter.data)
+        bm.free()
+        subtract(body,cutter)
+    bpy.context.view_layer.update()
+    natural_fissures(body,stone)
+    tafoni(body,rng,stone)
     for face in body.data.polygons:
-        face.use_smooth = face.area < .018
-    body.data.set_sharp_from_angle(angle=math.radians(18))
+        face.use_smooth=True
+    body.data.set_sharp_from_angle(angle=math.radians(22))
     bpy.context.view_layer.update()
-    moss_shell(body, moss)
-    body.location.z = .96
-    bpy.data.objects["Angewachsene_Moosschale"].location.z = .96
-    block = hull("Abgespaltener_Bruchblock", (.78, .66, .8), rng, stone)
-    block.rotation_euler = (.18, -.24, -.18)
-    block.location = (.65, -1.0, .4)
-    bpy.context.view_layer.objects.active = block
+    moss_shell(body,moss)
+    pivot=sum((v.co for v in block.data.vertices),Vector())/len(block.data.vertices)
+    for v in block.data.vertices:
+        v.co-=pivot
+    block.location=pivot+Vector((.18,-.38,0))
+    block.rotation_euler=(.25,-.45,-.18)
+    bpy.context.view_layer.update()
+    block.location.z+=-.04-min((block.matrix_world@v.co).z for v in block.data.vertices)
     block.select_set(True)
-    body.select_set(False)
-    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    bpy.context.view_layer.objects.active=block
+    bpy.ops.object.transform_apply(location=False,rotation=True,scale=True)
     block.select_set(False)
-    for i in range(11):
-        size = (.3,.25,.18,.12,.28,.08,.22,.15,.3,.1,.2)[i]
-        obj = hull(f"Bruchsplitter_{i:02d}", (size, size*rng.uniform(.6,.95), size*rng.uniform(.45,.8)), rng, stone, 18)
-        angle = math.tau*i/11+rng.uniform(-.2,.2)
-        obj.location = (math.cos(angle)*rng.uniform(1.25,1.5), math.sin(angle)*rng.uniform(1.08,1.3), size*.25)
     bpy.context.view_layer.update()
-    lo, hi = vrlib.world_bounds(vrlib.source_objects())
-    shift = Vector(((lo.x+hi.x)/2, (lo.y+hi.y)/2, lo.z+.025))
+    support=BVHTree.FromObject(block,bpy.context.evaluated_depsgraph_get())
+    for i,size in enumerate((.42,.31,.12,.07,.24,.16,.36,.09,.19,.27,.11,.06,.22,.14)):
+        points=[]
+        for j in range(6):
+            angle=math.tau*j/6+rng.uniform(-.23,.23)
+            radius=size*rng.uniform(.35,.58)
+            points.append((radius*math.cos(angle),radius*math.sin(angle)*rng.uniform(.4,.8)))
+        shard=prism(f"Bruchsplitter_{i:02d}",points,-size*.14,size*rng.uniform(.22,.55),stone)
+        bm=bmesh.new()
+        bm.from_mesh(shard.data)
+        cut_plane(bm,(0,0,size*.2),Vector((.4,-.2,1)).normalized())
+        bm.to_mesh(shard.data)
+        bm.free()
+        weather(shard,max(.004,size*.035),size)
+        shard.location=(rng.uniform(.05,1.45),rng.uniform(-1.5,-1.1),0)
+        shard.rotation_euler=(rng.uniform(-.15,.15),rng.uniform(-.2,.2),rng.uniform(-math.pi,math.pi))
+        bpy.context.view_layer.update()
+        inverse=block.matrix_world.inverted()
+        offset=-math.inf
+        for vertex in shard.data.vertices:
+            p=shard.matrix_world@vertex.co
+            ray=inverse@Vector((p.x,p.y,3))
+            hit=support.ray_cast(ray,Vector((0,0,-1)))[0]
+            floor=(block.matrix_world@hit).z if hit is not None else -.025
+            offset=max(offset,floor-p.z)
+        shard.location.z+=offset-.003
+    bpy.context.view_layer.update()
+    lo,hi=vrlib.world_bounds(vrlib.source_objects())
+    shift=Vector(((lo.x+hi.x)/2,(lo.y+hi.y)/2,lo.z+.025))
     for obj in vrlib.source_objects():
-        obj.location -= shift
-    vrlib.use_cycles_cpu(bpy.context.scene, 32)
+        obj.location-=shift
+    vrlib.use_cycles_cpu(bpy.context.scene,32)

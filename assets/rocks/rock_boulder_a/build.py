@@ -52,11 +52,21 @@ def finish(bm, name, rng, stone, joint, detail=3, bed=True, slump=False):
     obj.select_set(True)
     if name == "Zusammenhaengender_Kalkfindling":
         carve_clefts(obj)
-    bevel = obj.modifiers.new("Scharfe Abplatzungen", "BEVEL")
-    bevel.width, bevel.segments = .035, 2
-    bpy.ops.object.modifier_apply(modifier=bevel.name)
+    if name != "Zusammenhaengender_Kalkfindling":
+        bevel = obj.modifiers.new("Scharfe Abplatzungen", "BEVEL")
+        bevel.width, bevel.segments = .012, 1
+        bpy.ops.object.modifier_apply(modifier=bevel.name)
     tri = obj.modifiers.new("Bruchfacetten", "TRIANGULATE")
     bpy.ops.object.modifier_apply(modifier=tri.name)
+    clean=bmesh.new()
+    clean.from_mesh(obj.data)
+    flaps=[f for f in clean.faces if sum(e.is_boundary for e in f.edges)>=2
+           and any(len(e.link_faces)>2 for e in f.edges)]
+    if flaps:
+        bmesh.ops.delete(clean,geom=flaps,context="FACES_ONLY")
+        bmesh.ops.delete(clean,geom=[v for v in clean.verts if not v.link_faces],context="VERTS")
+        clean.to_mesh(obj.data)
+    clean.free()
     sub = obj.modifiers.new("Feine Kalksplitter", "SUBSURF")
     sub.subdivision_type, sub.levels = "SIMPLE", detail
     bpy.ops.object.modifier_apply(modifier=sub.name)
@@ -68,13 +78,15 @@ def finish(bm, name, rng, stone, joint, detail=3, bed=True, slump=False):
         p = v.co + offset
         coarse = round(noise.noise(p * 2.8) * 3) / 3
         fine = round(noise.noise(p * 9) * 4) / 4
-        depth = .055 * coarse + .008 * fine
+        joint_distance=min(abs(v.co.z-level) for level in (.45,1.65,2.35,3.95))
+        sheltered=max(math.exp(-(joint_distance/.12)**2),max(0,-normal.z))
+        depth = (.018+.037*sheltered)*coarse+(.002+.006*sheltered)*fine
         if bed:
             wave = .015*math.sin(v.co.x*2.7 + v.co.y*1.8) + .008*noise.noise(p*3)
             phase = (v.co.z + wave) / .17 + .15*math.sin(v.co.z*5)
             groove = max(0, 1 - abs(phase-round(phase))/.16)
             broken = max(0, min(1, (noise.noise(Vector((v.co.x*2, v.co.y*2, round(phase)*2)))+.3)*2))
-            depth -= .026 * groove * broken * (1-abs(normal.z))
+            depth -= .026 * groove * broken * (1-abs(normal.z))*sheltered
         v.co += normal * depth
         if slump:
             v.co = pivot + slant @ (v.co - pivot) + Vector((.08, .12, -.06))
@@ -111,7 +123,7 @@ def carve_clefts(obj):
         for j in range(levels):
             t = j/(levels-1)
             z = bottom + t*(top-bottom)
-            centre = pos + .075*math.sin(j*2.1+index) + .045*math.sin(j*.8)
+            centre = pos + .075*math.sin(j*2.1+index) + .045*math.sin(j*.8)+.16*math.sin(z*1.9+index)
             width = .035 + .095*t
             for along, across in ((reach,centre-width),(5,centre-width),(5,centre+width),(reach,centre+width)):
                 verts.append((along,across,z) if axis == "X" else (across,along,z))
@@ -161,15 +173,63 @@ def materials():
     coord = nt.nodes.new("ShaderNodeTexCoord")
     split = nt.nodes.new("ShaderNodeSeparateXYZ")
     nt.links.new(coord.outputs["Object"], split.inputs[0])
+    geometry=nt.nodes.new("ShaderNodeNewGeometry")
+    facing=nt.nodes.new("ShaderNodeSeparateXYZ")
+    nt.links.new(geometry.outputs["Normal"],facing.inputs[0])
+    sheltered=nt.nodes.new("ShaderNodeMapRange")
+    sheltered.inputs["From Min"].default_value=-.7
+    sheltered.inputs["From Max"].default_value=-.05
+    sheltered.inputs["To Min"].default_value=1
+    sheltered.inputs["To Max"].default_value=0
+    nt.links.new(facing.outputs["Z"],sheltered.inputs["Value"])
+    joint_face=nt.nodes.new("ShaderNodeAttribute")
+    joint_face.attribute_name="joint_weather"
+    maximum=nt.nodes.new("ShaderNodeMath")
+    maximum.operation="MAXIMUM"
+    nt.links.new(sheltered.outputs["Result"],maximum.inputs[0])
+    nt.links.new(joint_face.outputs["Fac"],maximum.inputs[1])
+    cavity=maximum.outputs[0]
+    calm=nt.nodes.new("ShaderNodeMath")
+    calm.operation="MULTIPLY_ADD"
+    calm.inputs[1].default_value=-.58
+    calm.inputs[2].default_value=.94
+    nt.links.new(cavity,calm.inputs[0])
+    nt.links.new(calm.outputs[0],lift.inputs[0])
+    face_id=nt.nodes.new("ShaderNodeAttribute")
+    face_id.attribute_name="weather_face"
+    face_rotation=nt.nodes.new("ShaderNodeMath")
+    face_rotation.operation="MULTIPLY"
+    face_rotation.inputs[1].default_value=1.137
+    nt.links.new(face_id.outputs["Fac"],face_rotation.inputs[0])
+    rotation=nt.nodes.new("ShaderNodeCombineXYZ")
+    nt.links.new(face_rotation.outputs[0],rotation.inputs["Z"])
+    mapping=nt.nodes.new("ShaderNodeMapping")
+    nt.links.new(coord.outputs["Object"],mapping.inputs["Vector"])
+    nt.links.new(rotation.outputs[0],mapping.inputs["Rotation"])
+    face_scale=nt.nodes.new("ShaderNodeMapRange")
+    face_scale.inputs["From Max"].default_value=60
+    face_scale.inputs["To Min"].default_value=.75
+    face_scale.inputs["To Max"].default_value=1.8
+    nt.links.new(face_id.outputs["Fac"],face_scale.inputs["Value"])
+    nt.links.new(face_scale.outputs["Result"],mapping.inputs["Scale"])
+    location=nt.nodes.new("ShaderNodeCombineXYZ")
+    nt.links.new(face_id.outputs["Fac"],location.inputs["X"])
+    nt.links.new(face_rotation.outputs[0],location.inputs["Y"])
+    nt.links.new(location.outputs[0],mapping.inputs["Location"])
+    for node in list(nt.nodes):
+        if node.type in {"TEX_NOISE","TEX_VORONOI"}:
+            nt.links.new(mapping.outputs[0],node.inputs["Vector"])
+        if node.type=="BUMP":
+            nt.links.new(cavity,node.inputs["Strength"])
     height = nt.nodes.new("ShaderNodeMath")
     height.operation = "DIVIDE"
-    height.inputs[1].default_value = 5
-    nt.links.new(split.outputs["Z"], height.inputs[0])
+    height.inputs[1].default_value = 60
+    nt.links.new(face_id.outputs["Fac"], height.inputs[0])
     tones = nt.nodes.new("ShaderNodeValToRGB")
     tones.color_ramp.interpolation = "CONSTANT"
-    entries = [(0,(1.04,1.01,.95,1)),(.17,(.86,.80,.69,1)),
-               (.29,(1.1,1.06,.99,1)),(.54,(.88,.83,.74,1)),
-               (.76,(1.06,1.02,.95,1))]
+    entries = [(0,(1.04,1.01,.95,1)),(.2,(.86,.80,.69,1)),
+               (.4,(1.1,1.06,.99,1)),(.6,(.88,.83,.74,1)),
+               (.8,(1.06,1.02,.95,1))]
     for element, (position,tone) in zip(tones.color_ramp.elements, entries[:2]):
         element.position, element.color = position,tone
     for position,tone in entries[2:]:
@@ -234,19 +294,18 @@ def build():
                (2.7,-1.95),(3.65,-.7),(3.35,.2),(3.45,1.25),
                (1.6,2.12),(-.7,2),(-1.3,2.3),(-3.55,1.1)]
     # z, positive-X retreat, Y contraction, recessed joint depth.
-    profiles = [(-.04,0,1,0),(.7,.05,1,0),(.79,.08,.99,.12),
-                (.88,.55,.86,0),(1.28,.6,.86,0),(1.36,.65,.86,.1),
-                (1.45,1.15,.72,0),(2.38,1.2,.72,0),(2.48,1.35,.72,.18),
-                (2.62,1.3,.72,.13),(2.7,1.65,.59,0),(3.6,1.7,.59,0),
-                (3.69,1.8,.59,.12),(3.8,2.0,.55,0),(4.2,2.45,.53,0),
-                (4.55,2.8,.5,0)]
+    profiles = [(-.04,.2,.96,0),(.34,.08,.99,0),(.45,.15,.98,.15),
+                (.53,.35,.94,0),(1.53,.45,.92,0),(1.65,.5,.92,.1),
+                (1.73,.9,.82,0),(2.2,.95,.81,0),(2.35,1,.81,.18),
+                (2.43,.65,.90,.06),(3.78,.8,.85,0),(3.95,1.25,.73,.15),
+                (4.02,1.45,.68,0),(4.55,2.65,.52,0)]
     perimeter = []
     corner_rng = random.Random(SEED + 51)
     corners = [[(corner_rng.uniform(-.42,.42), corner_rng.uniform(-.3,.3))
                 for _ in outline] for _ in range(5)]
 
     def corner_shift(edge, t, z):
-        bed = sum(z > boundary for boundary in (.84,1.4,2.66,3.75))
+        bed = sum(z > boundary for boundary in (.45,1.65,2.35,3.95))
         a, b = corners[bed][edge], corners[bed][(edge+1)%len(outline)]
         return (a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t)
 
@@ -256,6 +315,7 @@ def build():
                            a[1]+(b[1]-a[1])*j/steps, edge, j/steps) for j in range(steps)))
     bm = bmesh.new()
     rings = []
+    ring_levels=[]
     for lower, upper in zip(profiles, profiles[1:]):
         count = max(1, math.ceil((upper[0]-lower[0])/.12))
         for j in range(count):
@@ -271,32 +331,51 @@ def build():
                 radial = Vector((xx+.7, yy, 0)).normalized()
                 xx -= radial.x*recess
                 yy -= radial.y*recess
+                if z<.55:
+                    erosion=(1-z/.55)*(.12+.24*abs(noise.noise(Vector((x*2.1,y*2.1,edge*.8)))))
+                    xx-=radial.x*erosion
+                    yy-=radial.y*erosion
                 zz = z - max(0,xx+.7)*max(0,z-3.75)*.32
+                pinch=max(0,min(1,(xx-.5)/2.4))
+                zz-=max(0,min(.7,z-1.65))*.65*pinch
                 ring.append(bm.verts.new((xx,yy,zz)))
             rings.append(ring)
+            ring_levels.append(z)
     last = profiles[-1]
     top = []
     for x,y,edge,along in perimeter:
         dx,dy = corner_shift(edge,along,last[0])
         x,y = x+dx,y+dy
         top.append(bm.verts.new((x-last[1]*max(0,min(1,(x+3.65)/7.3))**1.2,
-                                y*last[2],last[0]-max(0,x+.7)*.26)))
+                                y*last[2],last[0]-max(0,x+.7)*.26-.455*max(0,min(1,(x-.5)/2.4)))))
     rings.append(top)
-    for low, high in zip(rings, rings[1:]):
+    weather_face=bm.faces.layers.int.new("weather_face")
+    joint_weather=bm.faces.layers.float.new("joint_weather")
+    for row,(low, high) in enumerate(zip(rings, rings[1:])):
         for k in range(len(perimeter)):
             n = (k+1)%len(perimeter)
             face = bm.faces.new((low[k],low[n],high[n],high[k]))
-            if any(abs(low[k].co.z-z)<.065 for z in (.79,1.36,2.53,3.69)):
+            face[weather_face]=perimeter[k][2]+len(outline)*sum(ring_levels[row]>z for z in (.45,1.65,2.35,3.95))
+            face[joint_weather]=float(any(abs(ring_levels[row]-z)<.11 for z in (.45,1.65,2.35,3.95)))
+            if face[joint_weather]:
                 face.material_index = 1
     bm.faces.new(list(reversed(rings[0])))
     bm.faces.new(rings[-1])
     body = finish(bm, "Zusammenhaengender_Kalkfindling", rng, stone, joint, detail=2)
     bpy.context.view_layer.update()
     surface = BVHTree.FromObject(body, bpy.context.evaluated_depsgraph_get())
-    for i in range(25):
+    for i in range(32):
         angle = rng.uniform(0, math.tau)
         x, y = math.cos(angle)*rng.uniform(2.8,3.6), math.sin(angle)*rng.uniform(2,2.35)
         radius = rng.uniform(.06,.39)
+        if i>=25:
+            angle=rng.uniform(3.4,5.9)
+            x,y=math.cos(angle)*rng.uniform(2.5,3.2),math.sin(angle)*rng.uniform(1.8,2.25)
+            radius=rng.uniform(.3,.58)
+            direction=Vector((math.cos(angle),math.sin(angle),0))
+            hit=surface.ray_cast(direction*9+Vector((0,0,.2)),-direction)[0]
+            if hit is not None:
+                x,y=hit.x+direction.x*radius*.8,hit.y+direction.y*radius*.8
         base = .005
         if i < 3:
             x, y, radius, base = 2.25+i*.13, -.64+i*.05, .11+i*.015, 2.1+i*.09
