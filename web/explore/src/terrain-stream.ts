@@ -5,8 +5,6 @@ import {
 } from "./heightfield.ts";
 import { buildTerrainMesh, lodStride, stitchedHeight } from "./terrain-mesh.ts";
 import { type Bounds } from "./slice.ts";
-import { relaxBankTiles } from "./runtime-banks.ts";
-import type { WaterRegion } from "./hydrology.ts";
 
 const FETCH_LIMIT = 4;
 const ACTIVE_LIMIT = 180;
@@ -66,13 +64,6 @@ export class TerrainStream {
         this.#pinned.set(key, decodeTile(await response.arrayBuffer(), m));
       }
     }));
-  }
-
-  async shapeBanks(region: WaterRegion) {
-    if (this.#active.size) throw new Error("Uferformung muss vor dem Geländeaufbau erfolgen");
-    const b = region.bounds;
-    await this.preloadHeights({ minX: b.minX - 128, minZ: b.minZ - 128, maxX: b.maxX + 128, maxZ: b.maxZ + 128 });
-    this.#pinned = relaxBankTiles(this.manifest, this.#pinned, region);
   }
 
   fullHeightAt(x: number, z: number): number | undefined {

@@ -104,8 +104,22 @@ def main():
         outline, level = lake['outline'], lake['water_y']
         require(len(outline) >= 16 and math.isfinite(level), 'Invalid lake')
         def river_mouth(x,z):
-            return any(math.hypot(x-p[0],z-p[1]) < p[3]*1.5
-                       for river in water['rivers'] for p in river['polyline'])
+            x,z = round((x+4096)/2)*2-4096,round((z+4096)/2)*2-4096
+            for river in water['rivers']:
+                for a,b in zip(river['polyline'],river['polyline'][1:]):
+                    dx,dz = b[0]-a[0],b[1]-a[1]
+                    t = max(0,min(1,((x-a[0])*dx+(z-a[1])*dz)/(dx*dx+dz*dz or 1)))
+                    width = a[3]+t*(b[3]-a[3])
+                    distance = math.hypot(x-a[0]-t*dx,z-a[1]-t*dz)
+                    bank = max(0,distance-width*.5)
+                    river_level = a[2]+t*(b[2]-a[2])
+                    ceiling = river_level-.35+.035*bank+.35*(bank-12+12*math.exp(-bank/12))+.0015*max(bank-100,0)**2
+                    if distance < width*.5:
+                        t = distance/(width*.5)
+                        ceiling = river_level-2.5+2.15*t*t*(3-2*t)
+                    if ceiling <= level+.1:
+                        return True
+            return False
         shore = [(x,z) for x,z in outline if not river_mouth(x,z)]
         require(len(shore) >= len(outline)*.7, 'Insufficient dry shoreline')
         require(all(sample(x, z) > level for x, z in shore), f'Lake shoreline submerged: {lake["name"]}')

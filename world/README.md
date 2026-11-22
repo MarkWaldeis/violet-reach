@@ -30,7 +30,7 @@ Begrenzungsrechtecke, Charakter und geplante Landmarken stehen in
 3. **Dornengang** — schmaler Pass zwischen steilen Parallelgraten.
 4. **Weißwall** — rund 490 m hohe, durchgehende Abbruchkante eines breiten westlichen Hochlands mit Weißfall-Übergang.
 5. **Mondsichel** — sichelförmiger Grat um ein geschütztes Tal.
-6. **Spiegelsee** — ungefähr rundes Seebecken mit Buchten, unregelmäßigen Strand- und Schilfzonen, Wiesen und sanftem Wanderstart.
+6. **Spiegelsee** — unregelmäßiges Seebecken mit eingeschnittenen Buchten, Landzungen, Strand- und Schilfzonen, Wiesen und sanftem Wanderstart.
 
 `hydrology.json`: Flusslinien `[x,z,water_y,width]`, Seen mit `water_y` und
 Uferpolygon `[x,z]`. Uferpolygone liegen am trockenen äußeren Ufersaum, die
@@ -42,7 +42,15 @@ Materialmaske, noch keine platzierten Bäume.
 
 Das Skript kombiniert domain-verzerrtes fraktales Rauschen, explizite regionale
 Formen, zwei konservative Hangtransport-Durchgänge, breite erodierte Täler
-und parabelförmige Gerinne. Dies ist künstlerische Makroerosion, keine
+und weich mäandrierende Gerinne mit breiten Mündungsfächern. Stetige, absenkende
+Segmentprofile werden per Minimum kombiniert: kein späterer Zufluss hebt ein
+vorheriges Flussbett an. An der 2,5 m tiefen Sohle schließt ein flacher Nasssaum
+an; die Böschung geht innerhalb der ersten 100 m weich auf rund 21° über und
+schließt außerhalb dieses Uferkorridors an die vorhandenen Bergflanken an.
+Seeufer werden bei Bedarf sanft angehoben, damit niedrige Canyonböden nicht
+durch den trockenen Ufersaum brechen. Die Seebecken nutzen dieselben
+Böschungen und stärker gegliederte, mit 384 Punkten exportierte Uferkonturen.
+Dies ist künstlerische Makroerosion, keine
 vollständige hydrodynamische Simulation. Der Bergrand bleibt innerhalb der
 Weltgrenze. `--draft` interpoliert die grobe Vorschau ins gleiche Exportformat;
 für die endgültige Welt ohne diesen Schalter bauen.

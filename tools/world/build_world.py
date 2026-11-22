@@ -34,12 +34,24 @@ def canyon_center(y):
 
 
 def lake_radius(theta, radius):
-    return radius*(1+.085*np.sin(3*theta+.4)+.055*np.sin(5*theta-1.3)
-                   +.025*np.sin(9*theta)+.16*np.exp(-((np.sin((theta-2.5)/2))/.23)**2))
+    def cove(angle, width):
+        return np.exp(-(np.sin((theta-angle)/2)/width)**2)
+    return radius*(1+.09*np.sin(3*theta+.4)+.06*np.sin(5*theta-1.3)
+                   +.035*np.sin(9*theta)+.025*np.sin(13*theta+.8)
+                   -.18*cove(2.25,.15)-.12*cove(.4,.12)-.10*cove(4.6,.16)
+                   +.12*cove(3.5,.20))
 
 
 def lake_signed_distance(x, y, cx, cy, radius):
-    return np.hypot(x-cx,y-cy)-lake_radius(np.arctan2(y-cy,x-cx),radius)
+    theta = np.arctan2(y-cy,x-cx)
+    r = lake_radius(theta,radius)
+    derivative = (lake_radius(theta+.001,radius)-lake_radius(theta-.001,radius))/.002
+    return (np.hypot(x-cx,y-cy)-r)/np.sqrt(1+(derivative/r)**2)
+
+
+def bank_rise(distance):
+    d = np.maximum(distance,0)
+    return .035*d+.35*(d-12+12*np.exp(-d/12))+.0015*np.maximum(d-100,0)**2
 
 
 def gorge_distance(x, y):
@@ -168,11 +180,15 @@ def hydrology():
         normal = np.column_stack((-tangent[:,1],tangent[:,0]))
         normal /= np.linalg.norm(normal,axis=1)[:,None]
         curvature = np.linalg.norm(np.gradient(normal,axis=0),axis=1)
-        meander = (34*np.sin(distance/210)+18*noise(distance,np.zeros_like(distance),135,83))*np.sin(np.pi*distance/distance[-1])**2/(1+curvature*8)
+        taper = smoothstep(distance/100)*smoothstep((distance[-1]-distance)/100)
+        meander = (55*np.sin(distance/90)+28*np.sin(distance/160+.7)
+                   +12*noise(distance,np.zeros_like(distance),60,83))*taper/(1+curvature*3)
         p[:,:2] += normal*meander[:,None]
         p[:,3] *= (1+.16*np.sin(distance/160)+.07*np.sin(distance/63)+np.minimum(curvature, .2))
         for _,cx,cy,r,level in lakes:
-            inside = lake_signed_distance(p[:,0],p[:,1],cx,cy,r)<120
+            shore = lake_signed_distance(p[:,0],p[:,1],cx,cy,r)
+            p[:,3] *= 1+1.8*smoothstep((220-shore)/280)
+            inside = shore<120
             p[inside,2] = level
         p[:,2] = np.minimum.accumulate(p[:,2])
     return paths, lakes
@@ -184,49 +200,29 @@ def carve(h, axis, rivers, lakes):
     for _,cx,cy,r,level in lakes:
         d = lake_signed_distance(xx,yy,cx,cy,r)
         bank = np.maximum(d,0)
-        target = level+np.where(d<0,np.maximum(d*.12,-22),.11*bank+.00035*bank*bank)
-        weight = smoothstep((r*.65-d)/(r*.45))
-        h[:] = h*(1-weight)+target*weight
+        target = level+np.where(d<0,-22*smoothstep(-d/180),bank_rise(bank))
+        shore = smoothstep((180-abs(d))/100)
+        h[:] = np.minimum(h,target)*(1-shore)+target*shore
     del xx,yy
-    channel_ceiling = np.full(h.shape,np.inf,dtype=np.float32)
     for _, points in rivers:
-        distance = np.full(h.shape,np.inf,dtype=np.float32)
-        water = np.zeros(h.shape,dtype=np.float32)
-        widths = np.ones(h.shape,dtype=np.float32)
+        maximum = float(h.max())
         for p,q in zip(points[:-1],points[1:]):
-            pad = max(p[3],q[3])*4+210
-            lo = np.maximum(0, np.floor((np.minimum(p[:2],q[:2])-pad+4096)/spacing).astype(int))
-            hi = np.minimum(len(axis), np.ceil((np.maximum(p[:2],q[:2])+pad+4096)/spacing).astype(int)+1)
-            xx,yy = np.meshgrid(axis[lo[0]:hi[0]],axis[lo[1]:hi[1]])
+            pad = max(p[3],q[3])*.5+max(100,(maximum-min(p[2],q[2])+6)/.385+12)
+            lo = np.maximum(0, np.floor((np.minimum(p[:2],q[:2])-pad-axis[0])/spacing).astype(int))
+            hi = np.minimum(len(axis), np.ceil((np.maximum(p[:2],q[:2])+pad-axis[0])/spacing).astype(int)+1)
             vec = q[:2]-p[:2]
-            t = np.clip(((xx-p[0])*vec[0]+(yy-p[1])*vec[1])/np.dot(vec,vec),0,1)
-            d = np.sqrt((xx-p[0]-t*vec[0])**2+(yy-p[1]-t*vec[1])**2)
-            level, width = p[2]+t*(q[2]-p[2]), p[3]+t*(q[3]-p[3])
-            cut = np.s_[lo[1]:hi[1],lo[0]:hi[0]]
-            nearer = d<distance[cut]
-            distance[cut] = np.where(nearer,d,distance[cut])
-            water[cut] = np.where(nearer,level,water[cut])
-            widths[cut] = np.where(nearer,width,widths[cut])
-        # Evaluate each sample once using its nearest centreline segment.
-        # Row blocks bound temporary memory on the full-resolution grid.
-        for row in range(0,len(axis),128):
-            cut = np.s_[row:row+128,:]
-            d,level,width = np.minimum(distance[cut],1e9),water[cut],widths[cut]
-            a = h[cut]
-            weight = smoothstep((width*4+200-d)/(width*3+200))
-            bank = np.maximum(d-width*.5,0)
-            bed = np.where(d<width*.5,level-6+6*(d/(width*.5))**2,
-                           level+.035*bank+.0005*bank*bank)
-            a[:] = a*(1-weight)+bed*weight
-            channel_ceiling[cut] = np.minimum(channel_ceiling[cut],np.where(d<width*.8,bed,np.inf))
-    # Shared floodplains may overlap, but a later tributary cannot dam an earlier one.
-    np.minimum(h,channel_ceiling,out=h)
-    # River banks must not create emergent causeways inside a flat lake.
-    for _,cx,cy,r,level in lakes:
-        for row in range(0,len(axis),128):
-            d = lake_signed_distance(axis[None,:],axis[row:row+128,None],cx,cy,r)
-            a = h[row:row+128]
-            a[:] = np.where(d<0,np.minimum(a,level-.7),a)
+            for row in range(lo[1],hi[1],128):
+                end = min(row+128,hi[1])
+                xx,yy = axis[None,lo[0]:hi[0]],axis[row:end,None]
+                t = np.clip(((xx-p[0])*vec[0]+(yy-p[1])*vec[1])/np.dot(vec,vec),0,1)
+                d = np.sqrt((xx-p[0]-t*vec[0])**2+(yy-p[1]-t*vec[1])**2)
+                level, width = p[2]+t*(q[2]-p[2]), p[3]+t*(q[3]-p[3])
+                bank = np.maximum(d-width*.5,0)
+                bed = np.where(d<width*.5,level-2.5+2.15*smoothstep(d/(width*.5)),
+                               level-.35+bank_rise(bank))
+                cut = np.s_[row:end,lo[0]:hi[0]]
+                # Compose continuous envelopes, not nearest-segment Voronoi cells.
+                h[cut] = np.minimum(h[cut],bed)
     return h
 
 
@@ -265,7 +261,7 @@ def export(h, axis, rivers, lakes, draft, blender_version):
     lake_records = []
     for n,cx,cy,r,level in lakes:
         # Shore polygon is outside the waterline (where terrain > level).
-        outline = [[cx+(lake_radius(t,r)+18)*math.cos(t),-cy-(lake_radius(t,r)+18)*math.sin(t)] for t in np.linspace(0,2*math.pi,97)[:-1]]
+        outline = [[cx+(lake_radius(t,r)+18)*math.cos(t),-cy-(lake_radius(t,r)+18)*math.sin(t)] for t in np.linspace(0,2*math.pi,385)[:-1]]
         lake_records.append(dict(name=n,water_y=level,outline=outline))
     write_json(OUT/'hydrology.json',dict(convention=AXES,river_point_format=['x','z','water_y','width'],rivers=[dict(name=n,polyline=[[float(x),float(-y),float(z),float(w)] for x,y,z,w in p]) for n,p in rivers],lakes=lake_records,waterfall=dict(river='Weißfall',position=[-1540,-440],description='Weißwall: steiler Abschnitt von 595 m auf 250 m; später Wasserfallgeometrie ergänzen.')))
 

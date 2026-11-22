@@ -56,16 +56,11 @@ Alle Terrain-LODs teilen dieselben vollständigen Rand-Samples; horizontale
 im Slice-Modus als grober Horizont geladen werden, die Slice-Kacheln zuerst.
 Der Gehboden interpoliert auch die Übergangsdreiecke.
 
-**Runtime-Uferformung:** Vor Meshaufbau und Objektplatzierung wird ein gemeinsames
-Höhenmosaik des dargestellten Gewässergebiets mit 128 m Puffer geladen. Innerhalb
-von 50 m Abstand zum nassen Ufersaum werden Böschungen deterministisch abgesenkt
-und in bis zu 32 synchronen Nachbarschaftsdurchgängen auf 32° Talus begrenzt.
-Tiefe Flusssohlen und alte Rinnen am Seeufer werden bis höchstens 0,75 m unter
-den Wasserstand aufgefüllt. Tiefes Seeinneres bleibt unverändert. Die Sohle bleibt nass,
-außerhalb der Korridore bleiben die Originalhöhen unverändert. Gemeinsame
-Kachelränder stammen aus demselben Mosaik, unabhängig von der Ladereihenfolge.
-Render-LODs, Gehboden, Wasseratlas und Platzierungs-Sampler lesen anschließend
-diese geformten Höhen. Die R16-Quelldateien werden niemals verändert.
+**Uferformung im Weltgenerator:** Mäander, Mündungsfächer, flache Nasssäume und
+sanfte Böschungen werden in `tools/world/build_world.py` gemeinsam mit den
+See-Buchten erzeugt. Stetige, absenkende Profile überlagern sich ohne harte
+Gerinnegrenzen. Die frühere Runtime-Uferglättung entfällt; Render-LODs, Gehboden,
+Wasseratlas und Platzierungs-Sampler lesen dieselben unveränderten R16-Exporte.
 
 `hydrology.json` liefert Seen und Flussbänder: der ganze Spiegelsee sowie alle
 Gewässer im Ausschnitt. Die Seeoberfläche liegt 3 m innerhalb des Uferpolygons;

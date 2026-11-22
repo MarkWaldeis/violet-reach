@@ -75,17 +75,14 @@ test("slice preload surfaces missing tiles", async (t) => {
   terrain.dispose(); material.dispose();
 });
 
-test("render and full-resolution ground share runtime-shaped heights before objects load", async (t) => {
+test("render and full-resolution ground share unmodified exported heights", async (t) => {
   const m = { version: 1 as const, tilesX: 3, tilesZ: 1, tileSize: 128, samples: 65, originX: 0, originZ: 0, minHeight: 0, maxHeight: 100 };
   t.mock.method(globalThis, "fetch", async () => new Response(new Uint16Array(m.samples ** 2).fill(13107).buffer));
   const material = new MeshBasicMaterial(), terrain = new TerrainStream(m, new URL("https://terrain.test/manifest.json"), material);
   const bounds = { minX: 0, minZ: 0, maxX: 384, maxZ: 128 };
   await terrain.preloadSlice(bounds);
   assert.equal(terrain.fullHeightAt(128, 64), 20);
-  await terrain.shapeBanks({ bounds, lakes: [], segments: [{ a: [128, -100, 10, 12], b: [128, 228, 10, 12] }] });
-  assert.ok(terrain.fullHeightAt(128, 64)! < 10);
   terrain.update(128, 64, 0);
   assert.ok(Math.abs(terrain.heightAt(128, 64)! - terrain.fullHeightAt(128, 64)!) < 0.00001);
-  await assert.rejects(terrain.shapeBanks({ bounds, lakes: [], segments: [] }), /vor dem Geländeaufbau/);
   terrain.dispose(); material.dispose();
 });

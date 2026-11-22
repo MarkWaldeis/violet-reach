@@ -67,8 +67,7 @@ async function main() {
     terrain.manifest.spawn = slice.spawn[params.has("walk") ? "walk" : "fly"];
     await terrain.preloadSlice(slice.bounds);
     const region = selectWater(await readJSON<Hydrology>("./hydrology.json"), slice.bounds);
-    status.textContent = "Ufer werden zur Laufzeit geformt …";
-    await terrain.shapeBanks(region);
+    status.textContent = "Gewässer und Ufermaterialien werden geladen …";
     const surface = await surfaceData(region, slice, terrain);
     groundMaterial.copy(terrainMaterial(surface));
     scene.add(waterSurface(region, surface));
