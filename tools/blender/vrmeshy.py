@@ -226,6 +226,7 @@ def _replace_image(img, px, suffix):
     # Assigning colorspace clears the pixel buffer — it must come before the write.
     new.colorspace_settings.name = img.colorspace_settings.name
     new.pixels.foreach_set(px.astype(np.float32).ravel())
+    new.pack()
     return new
 
 
