@@ -77,15 +77,6 @@
       "y_offset": -1.051795
     },
     {
-      "asset": "column_white_a",
-      "x": 560,
-      "z": 1448,
-      "yaw": 3.25,
-      "roll": 1.5707963267948966,
-      "scale": 0.94,
-      "y_offset": 0.360047
-    },
-    {
       "asset": "tree_broadleaf_a",
       "scatter": {
         "seed": 17001,
