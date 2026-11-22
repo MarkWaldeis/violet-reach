@@ -43,7 +43,7 @@ export function selectWater(hydrology: Hydrology, slice: Bounds): WaterRegion {
   return { lakes, segments, bounds: full };
 }
 
-export function waterSample(region: WaterRegion, x: number, z: number) {
+export function waterSample(region: Pick<WaterRegion, "lakes" | "segments">, x: number, z: number) {
   let distance = Infinity, height = 0, lakeDistance = Infinity;
   for (const lake of region.lakes) {
     const shore = polygonDistance(x, z, lake.outline);
@@ -57,6 +57,11 @@ export function waterSample(region: WaterRegion, x: number, z: number) {
     if (d < distance) { distance = d; height = a[2] + sample.t * (b[2] - a[2]); }
   }
   return { distance, height, lakeDistance };
+}
+
+export function placementWaterAt(hydrology: Hydrology) {
+  const segments = hydrology.rivers.flatMap((river) => river.polyline.slice(1).map((b, i) => ({ a: river.polyline[i], b })));
+  return (x: number, z: number) => waterSample({ lakes: hydrology.lakes, segments }, x, z).height;
 }
 
 export function pathMask(paths: Slice["paths"], x: number, z: number) {

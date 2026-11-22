@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { expandPlacements, type ScatterPlacement } from "../src/placements.ts";
+import { placementWaterAt, waterSample } from "../src/hydrology.ts";
 
 const entry: ScatterPlacement = { asset: "crystal", scatter: {
   seed: 42, count: 100, rect: { minX: 0, minZ: 0, maxX: 100, maxZ: 100 },
@@ -9,6 +10,18 @@ const entry: ScatterPlacement = { asset: "crystal", scatter: {
 } };
 const ground = () => ({ height: 185, slope: 10, normal: [0, 1, 0] as [number, number, number] });
 const water = () => 180;
+
+test("scatter water reference matches interpolated segment level and width, not the nearest endpoint", () => {
+  const polyline: [number, number, number, number][] = [[0, 0, 20, 4], [100, 0, 10, 20]];
+  const sample = placementWaterAt({ lakes: [], rivers: [{ name: "Slope", polyline }] });
+  assert.equal(sample(75, 2), 12.5);
+  assert.equal(waterSample({ lakes: [], segments: [{ a: polyline[0], b: polyline[1] }] }, 75, 2).distance, -6);
+  const scatter: ScatterPlacement = { asset: "crystal", scatter: { ...entry.scatter, count: 1, rect: { minX: 74, maxX: 76, minZ: 0, maxZ: 1 } } };
+  assert.throws(() => expandPlacements([scatter], () => ({ ...ground(), height: 11 }), sample), /constraints exhausted/);
+  const accepted = expandPlacements([scatter], () => ({ ...ground(), height: 15 }), sample);
+  assert.ok(accepted.every((p) => p.y - sample(p.x, p.z) >= 1));
+  assert.equal(placementWaterAt({ lakes: [], rivers: [] })(0, 0), 0);
+});
 
 test("single placement follows terrain plus offset; empty documents produce no instances", () => {
   assert.deepEqual(expandPlacements([], ground, water), []);

@@ -2,11 +2,7 @@ import { expandPlacements, type Placement } from "./placements.ts";
 import { inBounds, readJSON, type Slice } from "./slice.ts";
 import type { TerrainStream } from "./terrain-stream.ts";
 import { InstanceAssets } from "./instance-assets.ts";
-
-interface Hydrology {
-  lakes: { water_y: number; outline: [number, number][] }[];
-  rivers: { polyline: [number, number, number, number][] }[];
-}
+import { placementWaterAt, type Hydrology } from "./hydrology.ts";
 
 export async function sliceAssets(slice: Slice, terrain: TerrainStream, params: URLSearchParams) {
   const [document, hydrology] = await Promise.all([
@@ -19,19 +15,7 @@ export async function sliceAssets(slice: Slice, terrain: TerrainStream, params: 
     seed: 73129, count: stress, rect: slice.bounds, min_spacing: 1, max_slope: 60,
     min_height_above_water: 0.5, max_height_above_water: 10000, scale: [0.8, 1.2],
   } });
-  // Nearest hydrology sample is the reference water plane, also on dry slopes.
-  const waterPoints = [
-    ...hydrology.lakes.flatMap((lake) => lake.outline.map(([x, z]) => ({ x, z, y: lake.water_y }))),
-    ...hydrology.rivers.flatMap((river) => river.polyline.map(([x, z, y]) => ({ x, z, y }))),
-  ];
-  const waterAt = (x: number, z: number) => {
-    let distance = Infinity, height = 0;
-    for (const p of waterPoints) {
-      const d = (p.x - x) ** 2 + (p.z - z) ** 2;
-      if (d < distance) { distance = d; height = p.y; }
-    }
-    return height;
-  };
+  const waterAt = placementWaterAt(hydrology);
   const groundAt = (x: number, z: number) => {
     const height = terrain.fullHeightAt(x, z);
     if (height === undefined) return undefined;
