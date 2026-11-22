@@ -6,8 +6,22 @@ import { execFileSync } from "node:child_process";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const json = (path) => JSON.parse(readFileSync(path, "utf8"));
 
+function gateCheck(repo) {
+  const vr = resolve(repo, "tools/vr.py");
+  let missing;
+  for (const [cmd, args] of [["python3", []], ["python", []], ["py", ["-3"]]]) {
+    try {
+      return execFileSync(cmd, [...args, vr, "check"], { cwd: repo, stdio: "pipe" });
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+      missing = error;
+    }
+  }
+  throw missing;
+}
+
 export function worldFiles(repo = root) {
-  execFileSync("python3", [resolve(repo, "tools/vr.py"), "check"], { cwd: repo, stdio: "pipe" });
+  gateCheck(repo);
   const files = new Map();
   const terrain = resolve(repo, "world/terrain/runtime");
   for (const name of readdirSync(terrain)) {
