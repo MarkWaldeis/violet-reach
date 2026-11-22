@@ -2,11 +2,11 @@
   "id": "rock_boulder_b",
   "category": "rocks",
   "title": "Bemooster Kalkfindling B",
-  "description": "Heller gebrochener Kalkfels nach dem anerkannten Steinrezept von lake_shore_a: breite Bruchflächen, zwei auskeilende tiefe Klüfte, feine geometrische Schichtung und unregelmäßige geschützte Verwitterungsmulden. Ein kompakter, mindestens 25 Zentimeter starker Bruchblock und zwölf verschiedene Splitter lagern am Fuß. Geschlossene dünne Olivpolster folgen Vertiefungen auf der geschützten Oberseite; ein flacher Feinkieskragen mit modelliertem Kalkgrus und einzelnen Grasbüscheln bindet den breiten Fuß an den Boden.",
+  "description": "Niedriger, breiter asymmetrischer Kalkfindling nach lake_shore_a mit scharf geschnittenen Bruchflächen, stark reduzierter Weichverformung, feinen geometrischen Abplatzungen und zwei flachen, auskeilenden grauen Schmutzklüften. Ein kompakter, mindestens 25 Zentimeter starker Bruchblock und zwölf verschiedene Splitter lagern am Fuß. Dünne erhabene Olivpolster folgen geschützten Oberseiten; Feinkies und einzelne Grasbüschel binden den Fuß an den Boden.",
   "target_size_m": [
     3.2,
     2.6,
-    2.0
+    1.6
   ],
   "lod_triangles": [
     16000,

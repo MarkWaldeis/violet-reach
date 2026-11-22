@@ -471,10 +471,10 @@ def grass_tufts(points, material, seed):
         for _ in range(9):
             angle=rng.uniform(0,math.tau)
             p=Vector(point)+Vector((rng.uniform(-.07,.07),rng.uniform(-.07,.07),-.01))
-            width=rng.uniform(.008,.018)
+            width=rng.uniform(.018,.038)
             side=Vector((math.cos(angle)*width,math.sin(angle)*width,0))
             n=len(verts)
-            verts.extend((p-side,p+side,p+Vector((.002,-.002,.001)),p+Vector((rng.uniform(-.07,.07),rng.uniform(-.07,.07),rng.uniform(.22,.48)))))
+            verts.extend((p-side,p+side,p+Vector((.002,-.002,.001)),p+Vector((rng.uniform(-.07,.07),rng.uniform(-.07,.07),rng.uniform(.55,1.15) if ASSET=="rock_pillar_a" else rng.uniform(.38,.78)))))
             faces.extend(((n,n+2,n+1),(n,n+1,n+3),(n+1,n+2,n+3),(n+2,n,n+3)))
     return link_mesh("Randgras",verts,faces,material)
 
@@ -651,6 +651,11 @@ def grass_material():
     nt=mat.node_tree
     bsdf=nt.nodes.get("Principled BSDF")
     original=bsdf.inputs["Base Color"].links[0].from_socket
+    fresh=nt.nodes.new("ShaderNodeMixRGB")
+    fresh.inputs[0].default_value=.48
+    fresh.inputs[2].default_value=tuple(v*1.25 for v in vrmat.load_palette()["grass_green"]["linear_rgb"])+(1,)
+    nt.links.new(original,fresh.inputs[1])
+    original=fresh.outputs[0]
     edge=nt.nodes.new("ShaderNodeAttribute")
     edge.attribute_name="moss_edge"
     blend=nt.nodes.new("ShaderNodeMixRGB")
@@ -673,8 +678,12 @@ def pillar_surface(donor):
     for j in range(rows+1):
         h=j/rows
         z=h*height-.035
-        section=low.z+(high.z-low.z)*(.40+.16*h+.04*math.sin(z*.13))
-        taper=1.08-.25*h-.06*math.exp(-((h-.52)/.16)**2)
+        section=low.z+(high.z-low.z)*(.28+.34*h+.04*math.sin(z*.13))
+        profile=((0,1.38),(.09,1.10),(.24,.88),(.36,1.04),(.52,.62),(.64,.78),(.77,.86),(.88,.81),(.96,1.12),(1,1.26))
+        segment=next(k for k in range(len(profile)-1) if h<=profile[k+1][0])
+        (za,ra),(zb,rb)=profile[segment:segment+2]
+        blend_h=(h-za)/(zb-za)
+        taper=ra+(rb-ra)*(.72*blend_h+.28*smooth(blend_h))
         for i in range(columns):
             angle=math.tau*i/columns
             radial=Vector((math.cos(angle),math.sin(angle),0))
@@ -683,24 +692,30 @@ def pillar_surface(donor):
                 raise RuntimeError("Reference stone has no closed pillar section")
             p=Vector((point.x*taper,point.y*taper,z))
             band=next((k for k,b in enumerate(heights[1:]) if z<b),len(heights)-2)
-            exposure=smooth((n3(math.cos(angle)*1.4+band*.7,math.sin(angle)*1.4,SEED*.01)-.03)/.28)
-            strength=.95 if band%4 in (1,2) else .10
-            lip=bench_offset(z,angle,heights)*exposure*strength
+            a,b=heights[band:band+2]
+            dip=z+.45*math.sin(angle*2+band*.7)
+            t=(dip-a)/(b-a)
+            continuity=smooth((math.sin(angle+band*1.72)+.45)/.85)
+            strength=.70 if band%4 in (0,2) else .10
+            lip=-continuity*strength*(smooth((t-.14)/.055)-smooth((t-.84)/.075))
             u,v,w=math.cos(angle)*3,math.sin(angle)*3,z*.18
             distances=noise.voronoi(Vector((u*2.1+SEED*.013,v*2.7,w*2.5)))[0]
             chip=1-smooth((distances[1]-distances[0])/.29)
             medium=n3(u*5.75,v*5.75,w*5.75+SEED*.013)
             relief=.035*medium-.12*chip*smooth(.24+1.25*medium)
             p+=radial*(lip+relief)*smooth(h/.04)
+            p.x*=1+.14*math.sin(angle+1.5)*math.sin(h*7+.4)
+            p.y*=1+.09*math.sin(angle*2-h*11)
             for k,centre in enumerate((.3,2.6,4.9)):
-                path=centre+.035*math.sin(z*.19+k)
+                path=centre+.14*math.sin(z*.13+k)+.035*math.sin(z*.46-k)
                 delta=math.atan2(math.sin(angle-path),math.cos(angle-path))
                 width=.035+.02*math.sin(z*.13+k)**2
-                taper_crack=smooth((h-.05)/.08)*(1-smooth((h-.90)/.06))
-                p-=radial*(.85*max(0,1-abs(delta)/width)*taper_crack)
+                start,end=((.06,.67),(.28,.94),(.12,.83))[k]
+                taper_crack=smooth((h-start)/.10)*(1-smooth((h-end)/.09))
+                p-=radial*(.50*max(0,1-abs(delta)/width)*taper_crack)
             p.z+=math.sin(math.pi*h)**2*(.26*math.sin(angle*2+z*.2)+.13*n3(u,v,z*.4))
-            p.x+=.8*math.sin(h*5.1)+.4*math.sin(h*13)
-            p.y+=.5*math.sin(h*7+1)
+            p.x+=2.0*math.sin(h*5.1)+.5*math.sin(h*13)
+            p.y+=1.2*math.sin(h*7+1)
             if j==rows:
                 p.z+=.16*n3(p.x*.35,p.y*.35,SEED*.01)
             verts.append(tuple(p))
@@ -752,13 +767,14 @@ def pillar_surface(donor):
 def plant_terraces(body, mode):
     bpy.context.view_layer.update()
     material=grass_material()
-    threshold=body.dimensions.z*.88 if mode=="pillar" else 1.5
-    turf=turf_shell(body,material,"Grasige_Terrassen",coverage=.85 if mode=="pillar" else .68,
-                    thickness=.065,min_height=threshold,normal_z=.38 if mode=="pillar" else .55)
+    threshold=body.dimensions.z-2.0 if mode=="pillar" else 1.2
+    turf=turf_shell(body,material,"Grasige_Terrassen",coverage=.98,
+                    thickness=.16 if mode=="pillar" else .12,min_height=threshold,
+                    normal_z=-.12 if mode=="pillar" else .48)
     bpy.context.view_layer.update()
-    faces=[f for f in turf.data.polygons if f.normal.z>.45 and f.center.z>threshold]
+    faces=[f for f in turf.data.polygons if f.normal.z>.30 and f.center.z>threshold]
     rng=random.Random(SEED+71)
-    points=[turf.matrix_world@f.center for f in rng.sample(faces,min(150,len(faces)))]
+    points=[turf.matrix_world@f.center for f in rng.sample(faces,min(900,len(faces)))]
     grass_tufts(points,material,SEED+71)
 
 
@@ -778,12 +794,12 @@ def build_asset():
     body=pillar_surface(body)
     soil=vrmat.get("dirt_path").copy()
     soil.name=ASSET+"_Verwitterungsboden"
-    bed=fines_bed("Bodenkontakt",(10.5,9.2),soil,.42)
+    bed=fines_bed("Bodenkontakt",(11.8,10.2),soil,.42)
     for i in range(12):
         angle=math.tau*i/12+rng.uniform(-.15,.15)
-        size=rng.uniform(.7,2.0)
+        size=rng.uniform(1.1,2.8)
         rock=fractured_rock(f"Fussschutt_{i:02d}",(size,size*.65,size*.5),SEED+30+i,chalk_material(SEED+30+i),cuts=8,weathering=.2,strata=.4)
-        rock.location=(8.6*math.cos(angle),7.6*math.sin(angle),0)
+        rock.location=(9.0*math.cos(angle),8.0*math.sin(angle),0)
         rock.rotation_euler=(rng.uniform(-.3,.3),rng.uniform(-.3,.3),rng.uniform(-math.pi,math.pi))
         seat_on_bed(rock,bed,.07)
     plant_terraces(body,"pillar")

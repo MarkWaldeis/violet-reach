@@ -96,6 +96,13 @@ elif asset in ("cliff_strata_a","rock_pillar_a"):
     else:
         assert 12<size.x<18.1 and 58<size.z<62,size
         assert main["landmark_mode"]=="pillar"
+        points=np.array([tuple(v.co) for v in main.data.vertices])
+        h=(points[:,2]-points[:,2].min())/size.z
+        base=np.ptp(points[h<.12,0])
+        waist=np.ptp(points[(h>.45)&(h<.58),0])
+        cap=np.ptp(points[h>.94,0])
+        assert waist<base*.85 and cap>waist*1.15,(base,waist,cap)
+        print("PILLAR_BASE_WAIST_CAP_M:",tuple(round(float(v),3) for v in (base,waist,cap)))
     try:
         builder.strata_heights(0)
         raise AssertionError("Zero-height strata accepted")

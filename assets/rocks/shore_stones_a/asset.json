@@ -2,7 +2,7 @@
   "id": "shore_stones_a",
   "category": "rocks",
   "title": "Wassergerundete Ufersteine A",
-  "description": "Ufergruppe aus zwölf unterschiedlich geformten wassergerundeten Kalksteinen und 28 kleineren Kieseln nach dem lokal kopierten Stein- und Materialrezept von lake_shore_a. Flache Wurfsteine wechseln mit größeren unregelmäßigen Brocken. Alle Steine sind teilweise im geschlossenen Kies- und Sandbett eingebettet und liegen ohne gegenseitige Durchdringungen. Zur Wasserseite in negativer Y-Richtung werden Steine und modellierter Feinkies dunkler und glatter; auch das Sandbett besitzt einen dunkleren kapillaren Feuchtesaum.",
+  "description": "Ufergruppe aus zwölf wassergerundeten Kalksteinen und 28 Kieseln mit unverändert kopierten Mesh-, ico-, cobble- und Materialfunktionen aus lake_shore_a. Nur Proportionen, Platzierung und zusätzliche Feuchteattribute ändern sich: alle Steine besitzen dunklere glänzendere Basen; wasserseitige Oberflächen in negativer Y-Richtung bleiben feucht, landeinwärts liegen hellere trockene Oberseiten. Flache Wurfsteine wechseln mit größeren unregelmäßigen Brocken in geschlossenem nassem Kiesbett mit sichtbarem modelliertem Feinkies.",
   "target_size_m": [
     5,
     4,

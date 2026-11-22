@@ -471,10 +471,10 @@ def grass_tufts(points, material, seed):
         for _ in range(9):
             angle=rng.uniform(0,math.tau)
             p=Vector(point)+Vector((rng.uniform(-.07,.07),rng.uniform(-.07,.07),-.01))
-            width=rng.uniform(.008,.018)
+            width=rng.uniform(.018,.038)
             side=Vector((math.cos(angle)*width,math.sin(angle)*width,0))
             n=len(verts)
-            verts.extend((p-side,p+side,p+Vector((.002,-.002,.001)),p+Vector((rng.uniform(-.07,.07),rng.uniform(-.07,.07),rng.uniform(.22,.48)))))
+            verts.extend((p-side,p+side,p+Vector((.002,-.002,.001)),p+Vector((rng.uniform(-.07,.07),rng.uniform(-.07,.07),rng.uniform(.55,1.15) if ASSET=="rock_pillar_a" else rng.uniform(.38,.78)))))
             faces.extend(((n,n+2,n+1),(n,n+1,n+3),(n+1,n+2,n+3),(n+2,n,n+3)))
     return link_mesh("Randgras",verts,faces,material)
 
@@ -734,13 +734,14 @@ def landmark(body, width, depth, height, mode):
 def plant_terraces(body, mode):
     bpy.context.view_layer.update()
     material=grass_material()
-    threshold=body.dimensions.z*.88 if mode=="pillar" else 1.5
-    turf=turf_shell(body,material,"Grasige_Terrassen",coverage=.85 if mode=="pillar" else .68,
-                    thickness=.065,min_height=threshold,normal_z=.38 if mode=="pillar" else .55)
+    threshold=body.dimensions.z-2.0 if mode=="pillar" else 1.2
+    turf=turf_shell(body,material,"Grasige_Terrassen",coverage=.98,
+                    thickness=.16 if mode=="pillar" else .12,min_height=threshold,
+                    normal_z=-.12 if mode=="pillar" else .48)
     bpy.context.view_layer.update()
-    faces=[f for f in turf.data.polygons if f.normal.z>.45 and f.center.z>threshold]
+    faces=[f for f in turf.data.polygons if f.normal.z>.30 and f.center.z>threshold]
     rng=random.Random(SEED+71)
-    points=[turf.matrix_world@f.center for f in rng.sample(faces,min(150,len(faces)))]
+    points=[turf.matrix_world@f.center for f in rng.sample(faces,min(900,len(faces)))]
     grass_tufts(points,material,SEED+71)
 
 
@@ -755,87 +756,94 @@ def finish():
 
 
 def wall_surface(donor):
-    lo,hi=vrlib.world_bounds([donor])
-    for v in donor.data.vertices:
-        v.co.x=(v.co.x-(lo.x+hi.x)/2)*52/(hi.x-lo.x)
-        v.co.y=(v.co.y-(lo.y+hi.y)/2)*10/(hi.y-lo.y)
-        v.co.z=(v.co.z-lo.z)*45/(hi.z-lo.z)-.035
-    donor.data.update()
-    tree=BVHTree.FromObject(donor,bpy.context.evaluated_depsgraph_get())
     heights=strata_heights(45)
-    nx,nz=840,900
-    verts=[]
-    for j in range(nz+1):
-        for i in range(nx+1):
-            x=-20+40*i/nx
-            phase=math.tau*i/nx
-            top=44.4+.45*math.sin(phase)+.22*math.sin(phase*3+.6)
-            z=-.035+(top+.035)*j/nz
-            hit=tree.ray_cast(Vector((x,30,z)),Vector((0,-1,0)))[0]
-            hull=hit.y*.08 if hit is not None else 0
-            q=Vector((math.sin(phase)*2.8,math.cos(phase)*2.8,z/4.5))+Vector((SEED*.013,4,8))
-            distances,sites=noise.voronoi(q)
-            weights=[math.exp(-(d-distances[0])/.075) for d in distances[:3]]
-            cell=sum(w*(noise.cell(sites[k])*2-1) for k,w in enumerate(weights))/sum(weights)
-            y=4.6+.38*cell+hull*math.sin(phase*.5)**2
-            u,v,w=math.sin(phase)*3,math.cos(phase)*3,z*.18
-            seam=noise.voronoi(Vector((u*2.1+SEED*.013,v*2.7,w*2.5)))[0]
-            chip=1-smooth((seam[1]-seam[0])/.29)
-            medium=n3(5.75*u,5.75*v,5.75*w+SEED*.013)
-            y+=.06*medium-.13*chip*smooth(.44+1.25*medium-.2)
-            warped_z=z+.8*math.sin(phase+z*.14)+.35*math.sin(phase*2-z*.11)
-            y+=bench_offset(warped_z,phase,heights)
-            for k,centre in enumerate((-12,-3.5,7,14)):
-                path=centre+.40*math.sin(z*.19+k)+.12*math.sin(z*.63+k)
-                window=smooth((z-1)/4)*(1-smooth((z-40)/4))
-                y-=max(0,1-abs(x-path)/.28)*window*1.25
-            y+=.008*noise.noise(Vector((math.sin(phase)*20,math.cos(phase)*20,z*9)))
-            verts.append((x,y,z))
+    rng=random.Random(SEED+412)
+    joints=[]
+    for band,(a,b) in enumerate(zip(heights,heights[1:])):
+        for k in range(rng.randint(2,5)):
+            joints.append((rng.uniform(-18,18),a+rng.uniform(.03,.42)*(b-a),
+                           min(44.4,b+rng.uniform(-.20,.55)*(b-a)),
+                           rng.uniform(.30,.65),rng.uniform(.35,.85),rng.uniform(0,6)))
+    nx,ny,nz=480,96,640
+    perimeter=([(i,0) for i in range(nx+1)]+[(nx,k) for k in range(1,ny+1)]
+               +[(i,ny) for i in range(nx-1,-1,-1)]+[(0,k) for k in range(ny-1,0,-1)])
+    count=len(perimeter)
+    def surface(i,k,h):
+        u,t=i/nx,k/ny
+        phase=math.tau*u
+        z=-.035+h*(44.55+.42*math.sin(phase)+.21*math.sin(3*phase+.7))
+        side_distances,side_sites=noise.voronoi(Vector((t*3.1,z*.15,SEED*.013)))
+        weights=[math.exp(-(d-side_distances[0])/.10) for d in side_distances[:3]]
+        side_cell=sum(w*(noise.cell(side_sites[i])*2-1) for i,w in enumerate(weights))/sum(weights)
+        side=.54*side_cell+.08*n3(t*15,z*.8,SEED*.013)
+        x=-20+40*u+math.sin(math.pi*t)**.8*side
+        q=Vector((math.sin(phase)*3,math.cos(phase)*3,z*.24))
+        coarse=n3(q.x+SEED*.013,q.y,q.z)
+        chip=noise.voronoi(q*2.7)[0]
+        relief=.045*n3(q.x*5.75,q.y*5.75,q.z*5.75+SEED*.013)
+        relief-=.025*(1-smooth((chip[1]-chip[0])/.25))
+        warp=z+.55*math.sin(phase*2+z*.12)+.23*math.sin(phase*5-z*.20)
+        band=next((j for j,b in enumerate(heights[1:]) if warp<b),len(heights)-2)
+        a,b=heights[band:band+2]
+        f=(warp-a)/(b-a)
+        continuity=smooth((math.sin(phase*(1+band%3)+band*2.17)+.30)/.85)
+        lip=(.55+1.05*continuity)*continuity
+        bench=lip*(smooth((f-.62)/.12)-smooth((f-.85)/.10))
+        under=-.22*continuity*math.exp(-((f-.50)/.12)**2)
+        front=4.35+.48*coarse+relief+bench+under
+        for centre,start,end,width,depth,seed in joints:
+            path=centre+.58*math.sin(z*.23+seed)+.19*math.sin(z*.71-seed)
+            window=smooth((z-start)/.65)*(1-smooth((z-end)/.65))
+            width*=.65+.35*math.sin(z*.53+seed)**2
+            front-=depth*window*max(0,1-abs(x-path)/width)*math.sin(math.pi*u)**2
+        back=-4.25-.47*n3(q.x+31,q.y-17,q.z*.7)-.75*relief-.55*bench
+        y=front*(1-t)+back*t
+        z+=h*(1-h)*.10*n3(q.x*.7,q.y*.7+t*4,z*.5)
+        return (x,y,z)
+    verts=[surface(i,k,j/nz) for j in range(nz+1) for i,k in perimeter]
     faces=[]
     for j in range(nz):
-        for i in range(nx):
-            a=j*(nx+1)+i
-            faces.append((a,a+nx+1,a+nx+2,a+1))
-    boundary=list(range(nx+1))+[j*(nx+1)+nx for j in range(1,nz+1)]
-    boundary += [nz*(nx+1)+i for i in range(nx-1,-1,-1)]
-    boundary += [j*(nx+1) for j in range(nz-1,0,-1)]
-    count=len(boundary)
-    previous=boundary
-    for step in range(1,25):
-        t=step/24
-        ring=[]
-        for index in boundary:
-            x,y,z=verts[index]
-            ring.append(len(verts))
-            verts.append((x,y*(1-t)-4.5*t,z))
         for i in range(count):
-            j=(i+1)%count
-            faces.append((previous[i],previous[j],ring[j],ring[i]))
-        previous=ring
-    faces.append(tuple(reversed(previous)))
-    obj=link_mesh("Canyonwand_Neu",verts,faces,donor.data.materials[0])
+            a=j*count+i
+            b=j*count+(i+1)%count
+            faces.append((a,b,b+count,a+count))
+    lookup={p:i for i,p in enumerate(perimeter)}
+    for h,offset in ((0,0),(1,nz*count)):
+        grid={}
+        for k in range(ny+1):
+            for i in range(nx+1):
+                if (i,k) in lookup:
+                    grid[i,k]=offset+lookup[i,k]
+                else:
+                    grid[i,k]=len(verts)
+                    verts.append(surface(i,k,h))
+        for k in range(ny):
+            for i in range(nx):
+                face=(grid[i,k],grid[i+1,k],grid[i+1,k+1],grid[i,k+1])
+                faces.append(face if h else tuple(reversed(face)))
+    obj=link_mesh("Canyonwand",verts,faces,donor.data.materials[0])
     transfer_stone_attributes(donor,obj)
     for key in donor.keys():
         obj[key]=donor[key]
     bpy.data.objects.remove(donor,do_unlink=True)
-    obj.name="Canyonwand"
-    obj["strata_heights_m"]=heights
-    obj["tile_pitch_m"]=40.0
-    obj["front_columns"]=nx+1
-    obj["front_rows"]=nz+1
-    obj["landmark_mode"]="wall"
     mats=[chalk_material(SEED+200+i) for i in range(6)]
     obj.data.materials.clear()
-    for mat in mats:
-        obj.data.materials.append(mat)
+    for material in mats:
+        obj.data.materials.append(material)
     for face in obj.data.polygons:
-        x,z=face.center.x,face.center.z
-        phase=math.tau*(x+20)/40
-        warped_z=z+.8*math.sin(phase+z*.14)+.35*math.sin(phase*2-z*.11)
-        index=next((i for i,b in enumerate(heights[1:]) if warped_z<b),len(heights)-2)
-        face.material_index=index%6
+        band=next((i for i,b in enumerate(heights[1:]) if face.center.z<b),len(heights)-2)
+        face.material_index=band%6
         face.use_smooth=True
-    obj.data.set_sharp_from_angle(angle=math.radians(35))
+    obj.data.set_sharp_from_angle(angle=math.radians(34))
+    obj["strata_heights_m"]=heights
+    obj["tile_pitch_m"]=40.0
+    obj["perimeter_columns"]=count
+    obj["wall_rows"]=nz+1
+    obj["side_steps"]=ny
+    obj["front_steps"]=nx
+    obj["joint_count"]=len(joints)
+    obj["closed_rock_back"]=True
+    obj["landmark_mode"]="wall"
     return obj
 
 def build_asset():

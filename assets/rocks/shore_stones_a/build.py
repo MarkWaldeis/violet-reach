@@ -120,12 +120,11 @@ def ico(level):
 
 
 def eased_min(a, b, radius):
-    radius=max(.000001,radius*_EDGE_FACTOR*(.30 if radius<.09 else 1))
     gap = max(0, radius - abs(a-b))
     return min(a, b) - gap*gap/(4*radius)
 
 
-def cobble(m, p, template, x, d, r, flat, rng, form=None, fracture_count=None):
+def cobble(m, p, template, x, d, r, flat, rng, form=None):
     coords, faces = template
     offset = len(m.verts)
     a = rng.uniform(0, math.tau)
@@ -139,7 +138,7 @@ def cobble(m, p, template, x, d, r, flat, rng, form=None, fracture_count=None):
     y = waterline(x)+d
     cuts = []
     strike = rng.uniform(0, math.tau)
-    count = rng.randint(4, 6) if fracture_count is None else fracture_count
+    count = rng.randint(4, 6)
     for j in range(count):
         theta = strike + j*math.tau/count + rng.uniform(-.26,.26)
         rise = rng.uniform(-.27, .29)
@@ -173,9 +172,6 @@ def cobble(m, p, template, x, d, r, flat, rng, form=None, fracture_count=None):
         chip = 1 - smooth((seam[1]-seam[0])/.29)
         coarse = n3(2.1*u, 2.1*v+seed, 2.1*w)
         medium = n3(5.75*u, 5.75*v, 5.75*w+seed)
-        if ASSET=="rock_boulder_b":
-            phase=(medium+1)*4
-            medium=(math.floor(phase)+smooth((phase%1-.25)/.5))/4-1
         fine = n3(15*u+seed, 15*v, 15*w)
         radial = 1 + (.13 if form == "worn" else .09)*coarse
         for nx, ny, nz, upper in cuts:
@@ -204,7 +200,6 @@ def cobble(m, p, template, x, d, r, flat, rng, form=None, fracture_count=None):
         wet_rgb = scale(blend(dry, p["shore_wet"], .33), .37+.14*coarse)
         m.colors.append(blend(dry, wet_rgb, wet))
     m.faces.extend(tuple(offset+i for i in face) for face in faces)
-    return cuts
 
 
 BOTTOM = -.058
@@ -220,58 +215,30 @@ def waterline(x):
 
 
 def stone_material(name, wet=False):
-    mat=socket_material("river_stones",name,"stone_tones",.96,
-                        "stone_saturation",(.50,.15) if wet else (.69,.23))
-    nt=mat.node_tree
-    bsdf=nt.nodes["Principled BSDF"]
-    original=bsdf.inputs["Base Color"].links[0].from_socket
-    variation=nt.nodes.new("ShaderNodeMixRGB")
-    variation.blend_type="MULTIPLY"
-    variation.inputs[0].default_value=1
-    rng=random.Random(name)
-    gain=rng.uniform(.92,1.07)
-    variation.inputs[2].default_value=(gain*rng.uniform(.98,1.03),gain,gain*rng.uniform(.94,1.02),1)
-    nt.links.new(original,variation.inputs[1])
-    nt.links.new(variation.outputs[0],bsdf.inputs["Base Color"])
-    return mat
+    return socket_material("river_stones",name,"stone_tones",.96,
+                           "stone_saturation",(.69,.23))
 
 def fractured_rock(name, size, seed, material, cuts=7, split=False,
                     weathering=1.0, strata=.48, tafoni=False, fissures=False):
-    if len(size) != 3 or min(size) <= 0 or not 4 <= cuts <= 8 or split:
-        raise ValueError("Positive dimensions, 4-8 fractures and separate thick chunks required")
-    global _EDGE_FACTOR
-    level = 8 if max(size) > 10 else 7 if max(size) > 1.5 else 6 if max(size) > .4 else 4
-    form = "worn" if ASSET == "shore_stones_a" else ("slab" if size[2] < min(size[:2])*.45 else "split")
-    palette = {k: v["linear_rgb"] for k, v in vrmat.load_palette().items()}
-    mesh = Mesh()
-    _EDGE_FACTOR = min(1, 3/max(size))
-    try:
-        planes = cobble(mesh, palette, ico(level), 0, 3, 1, 1, random.Random(seed), form, cuts)
-    finally:
-        _EDGE_FACTOR = 1
-    lo = Vector(tuple(min(p[i] for p in mesh.verts) for i in range(3)))
-    hi = Vector(tuple(max(p[i] for p in mesh.verts) for i in range(3)))
-    centre = (lo+hi)*.5
-    mesh.verts = [tuple((p[i]-centre[i])*size[i]/(hi[i]-lo[i]) for i in range(3)) for p in mesh.verts]
-    base = min(p[2] for p in mesh.verts)
-    mesh.verts = [(x, y, z-base-.035) for x, y, z in mesh.verts]
-    pale = .38 if ASSET == "shore_stones_a" else .74
-    mesh.colors = [blend(color, palette["canyon_chalk"], pale) for color in mesh.colors]
-    obj = mesh.object(name, (material,), "stone_tones", "stone_saturation")
-    obj.data.update()
-    tones = obj.data.color_attributes["stone_tones"]
-    normals=[vertex.normal.copy() for vertex in obj.data.vertices]
-    for vertex,normal in zip(obj.data.vertices,normals):
-        gain = .93+.10*max(0, normal.z)-.18*max(0, -normal.z)
-        color = tones.data[vertex.index].color
-        tones.data[vertex.index].color = tuple(c*gain for c in color[:3])+(1,)
-    obj.data.set_sharp_from_angle(angle=math.radians(24))
-    obj["stone_piece"] = True
-    obj["lake_shore_recipe"] = "pr9/lake_shore_a"
-    obj["recipe_seed"] = seed
-    obj["ico_subdivisions"] = level
-    obj["fracture_planes"] = [tuple(row[:3]) for row in planes]
-    obj["split_normal"] = tuple(planes[-1][:3])
+    if len(size)!=3 or min(size)<=0 or not 4<=cuts<=8 or split:
+        raise ValueError("Positive dimensions and 4-8 fractures required")
+    palette={k:v["linear_rgb"] for k,v in vrmat.load_palette().items()}
+    mesh=Mesh()
+    radius=size[0]*.66
+    form=("slab" if size[2]<size[0]*.32 else "worn" if seed%3 else "split")
+    level=6 if radius>.20 else 4
+    cobble(mesh,palette,ico(level),0,.28,radius,size[2]/radius*.82,random.Random(seed),form)
+    lo=Vector(tuple(min(p[i] for p in mesh.verts) for i in range(3)))
+    hi=Vector(tuple(max(p[i] for p in mesh.verts) for i in range(3)))
+    centre=(lo+hi)*.5
+    mesh.verts=[(x-centre.x,(y-centre.y)*size[1]/size[0],z-lo.z-.035) for x,y,z in mesh.verts]
+    obj=mesh.object(name,(material,),"stone_tones","stone_saturation")
+    obj["stone_piece"]=True
+    obj["lake_shore_recipe"]="pr9/lake_shore_a"
+    obj["recipe_seed"]=seed
+    obj["ico_subdivisions"]=level
+    obj["exact_reference_generator"]=True
+    obj["reference_form"]=form
     return obj
 
 
@@ -396,30 +363,32 @@ def add_grit():
 
 
 def shore_wetness():
-    if ASSET != "shore_stones_a":
-        return
-    palette = vrmat.load_palette()
+    palette=vrmat.load_palette()
     for obj in vrlib.source_objects():
         if obj.get("gravel_apron"):
             tones=obj.data.color_attributes.new(name="bank_tones",type="FLOAT_COLOR",domain="POINT")
             wet=obj.data.attributes.new("ground_moisture","FLOAT","POINT")
             for vertex in obj.data.vertices:
                 p=obj.matrix_world@vertex.co
-                factor=1-smooth((p.y+1.65)/3.3)
+                factor=.50+.48*(1-smooth((p.y+1.6)/3.2))
                 dry=palette["path_sand"]["linear_rgb"]
-                soaked=scale(blend(palette["soil"]["linear_rgb"],dry,.45),.60)
+                soaked=scale(blend(palette["soil"]["linear_rgb"],palette["shore_wet"]["linear_rgb"],.5),.68)
                 tones.data[vertex.index].color=blend(dry,soaked,factor)+(1,)
                 wet.data[vertex.index].value=factor
-        tones = obj.data.color_attributes.get("stone_tones")
-        wet = obj.data.attributes.get("stone_saturation")
+        tones=obj.data.color_attributes.get("stone_tones")
+        wet=obj.data.attributes.get("stone_saturation")
         if tones is None or wet is None:
             continue
+        lo,hi=vrlib.world_bounds([obj])
         for vertex in obj.data.vertices:
-            p = obj.matrix_world@vertex.co
-            factor = 1-smooth((p.y+1.65)/3.3)
-            color = tones.data[vertex.index].color
-            tones.data[vertex.index].color = blend(color[:3], scale(palette["shore_wet"]["linear_rgb"], .46), factor*.76)+(1,)
-            wet.data[vertex.index].value = factor
+            p=obj.matrix_world@vertex.co
+            water=1-smooth((p.y+1.6)/3.2)
+            bottom=1-smooth((p.z-lo.z)/max(.08,(hi.z-lo.z)*.62))
+            factor=max(bottom*.92,water*.82)
+            color=tones.data[vertex.index].color
+            wet_tone=scale(blend(palette["shore_wet"]["linear_rgb"],palette["moss"]["linear_rgb"],.12),.52)
+            tones.data[vertex.index].color=blend(color[:3],wet_tone,factor*.78)+(1,)
+            wet.data[vertex.index].value=factor
 
 
 def finalize_reference_asset():
@@ -755,19 +724,7 @@ def wet_material(seed, bed=False):
                            "ground_moisture",(.84,.31)) if bed else stone_material(ASSET+"_Feuchte_Kiesel_"+str(seed),True)
 
 def rounded_stone(name,size,seed,material):
-    rock=fractured_rock(name,size,seed,material,cuts=6,weathering=.12,strata=3)
-    bpy.context.view_layer.objects.active=rock
-    smooth_modifier=rock.modifiers.new("Wassergerundete_Kanten","SMOOTH")
-    smooth_modifier.factor=.5
-    smooth_modifier.iterations=2
-    bpy.ops.object.modifier_apply(modifier=smooth_modifier.name)
-    modifier=rock.modifiers.new("Dichte_gerundete_Oberflaeche","SUBSURF")
-    modifier.levels=1
-    bpy.ops.object.modifier_apply(modifier=modifier.name)
-    for face in rock.data.polygons:
-        face.use_smooth=True
-    rock["water_rounding_iterations"]=2
-    return rock
+    return fractured_rock(name,size,seed,material)
 
 
 def build_asset():

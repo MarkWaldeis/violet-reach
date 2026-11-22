@@ -86,7 +86,7 @@ def moss_shell(body, material, name="Angewachsene_Moosschale", coverage=.7, thic
         x,y=rng.uniform(low.x,high.x),rng.uniform(max(-.05,low.y),high.y)
         result=tree.ray_cast(Vector((x,y,high.z+1)),Vector((0,0,-1)))
         p,n=result[:2]
-        if p is None or p.z<1.1 or n.z<.68:
+        if p is None or p.z<.85 or n.z<.68:
             continue
         heights=[]
         for i in range(8):
@@ -298,15 +298,15 @@ def cobble(m, p, template, x, d, r, flat, rng, form=None, fracture_count=None):
             phase=(medium+1)*4
             medium=(math.floor(phase)+smooth((phase%1-.25)/.5))/4-1
         fine = n3(15*u+seed, 15*v, 15*w)
-        radial = 1 + (.13 if form == "worn" else .09)*coarse
+        radial = 1 + (.13 if form == "worn" else .022)*coarse
         for nx, ny, nz, upper in cuts:
             dot = nx*u+ny*v+nz*w
             if dot > .28:
-                radial = eased_min(radial, upper/dot, .035 if form != "worn" else .095)
+                radial = eased_min(radial, upper/dot, .008 if form != "worn" else .095)
         lamina = math.sin((19+7*weather)*(w+.22*u-.14*v) + .76*coarse)
         breakout = smooth(.44 + 1.25*medium - .43*weather)
-        radial *= (1 + (.026+.016*weather)*medium + .013*fine
-                   - .043*chip*breakout + (.019 if form == "slab" else .010)*lamina)
+        radial *= (1 + (.003+.003*weather)*medium + .0015*fine
+                   - .014*chip*breakout + (.004 if form == "slab" else .002)*lamina)
         u1, v1 = (u*radial + lean*w*.48)*r, v*radial*r*elongation
         px, py = x+ca*u1-sa*v1, y+sa*u1+ca*v1
         z = z0 + r*flat*(w*radial + lean*u*.41)
@@ -361,7 +361,7 @@ def fractured_rock(name, size, seed, material, cuts=7, split=False,
     if len(size) != 3 or min(size) <= 0 or not 4 <= cuts <= 8 or split:
         raise ValueError("Positive dimensions, 4-8 fractures and separate thick chunks required")
     global _EDGE_FACTOR
-    level = 8 if max(size) > 10 else 7 if max(size) > 1.5 else 6 if max(size) > .4 else 4
+    level = 8 if max(size) > 2 else 7 if max(size) > 1.5 else 6 if max(size) > .4 else 4
     form = "worn" if ASSET == "shore_stones_a" else ("slab" if size[2] < min(size[:2])*.45 else "split")
     palette = {k: v["linear_rgb"] for k, v in vrmat.load_palette().items()}
     mesh = Mesh()
@@ -608,18 +608,18 @@ def cut_cleft(body, outward, phase):
     tangent=Vector((-outward.y,outward.x,0))
     lo,hi=vrlib.world_bounds([body])
     verts=[]
-    sections=44
+    sections=140
     for i in range(sections):
         t=i/(sections-1)
-        z=lo.z+(hi.z-lo.z)*(.12+.77*t)
+        z=lo.z+(hi.z-lo.z)*(.18+.58*t)
         wander=.12*math.sin(z*3+phase)+.02*math.sin(z*9+phase)
         origin=outward*5+tangent*wander+Vector((0,0,z))
         hit=tree.ray_cast(origin,-outward)[0]
         if hit is None:
             raise RuntimeError("Cleft missed the main rock")
         taper=math.sin(math.pi*t)**.65
-        width=.002+.065*taper*(.85+.15*math.sin(z*7))
-        depth=.003+.30*taper
+        width=.003+.14*taper*(.85+.15*math.sin(z*7))
+        depth=.002+.085*taper
         verts.extend((hit+outward*.18-tangent*width,
                       hit+outward*.18+tangent*width,hit-outward*depth))
     faces=[(2,1,0)]
@@ -628,6 +628,12 @@ def cut_cleft(body, outward, phase):
         faces.extend((a+j,a+(j+1)%3,b+(j+1)%3,b+j) for j in range(3))
     faces.append(tuple(range((sections-1)*3,sections*3)))
     cutter=link_mesh("Auskeilende_Kluft",verts,faces,body.data.materials[0])
+    tones=cutter.data.color_attributes.new(name="stone_tones",type="FLOAT_COLOR",domain="POINT")
+    palette=vrmat.load_palette()
+    recess=tuple((a*.88+b*.12)*.78 for a,b in zip(palette["canyon_chalk"]["linear_rgb"],palette["soil"]["linear_rgb"]))
+    for value in tones.data:
+        value.color=recess+(1,)
+    cutter.data.attributes.new("stone_saturation","FLOAT","POINT")
     bpy.context.view_layer.objects.active=body
     modifier=body.modifiers.new("Tiefe_saubere_Sackkluft","BOOLEAN")
     modifier.operation="DIFFERENCE"
@@ -642,6 +648,10 @@ def cut_cleft(body, outward, phase):
     bm.to_mesh(body.data)
     bm.free()
     body.data.update()
+    tones=body.data.color_attributes["stone_tones"]
+    for value in tones.data:
+        if max(value.color[:3])<.04:
+            value.color=recess+(1,)
 
 
 def feather(value):
@@ -735,11 +745,18 @@ def build_asset():
     stone,moss=materials()
     soil=vrmat.get("dirt_path").copy()
     soil.name="rock_boulder_b_Sandiger_Feinkies"
-    body=fractured_rock("Sandstein_Hauptmasse",(3.2,2.65,2.1),SEED,stone,
-                              split=False,tafoni=False,fissures=False)
+    body=fractured_rock("Sandstein_Hauptmasse",(3.2,2.6,1.6),SEED,stone,
+                              cuts=5,split=False,tafoni=False,fissures=False)
     block=compact_fallen_block(stone)
     block.name="Abgespaltener_Bruchblock"
-    irregular_hollows(body)
+    bm=bmesh.new()
+    bm.from_mesh(body.data)
+    cut_plane(bm,(1.05,.1,1.17),Vector((.67,.19,.72)).normalized())
+    cut_plane(bm,(-1.13,-.22,.96),Vector((-.74,-.31,.60)).normalized())
+    bm.to_mesh(body.data)
+    bm.free()
+    body.data.update()
+    body.data.set_sharp_from_angle(angle=math.radians(16))
     cut_cleft(body,(.85,.5,0),.2)
     cut_cleft(body,(-.6,.8,0),2.3)
     body["fissure_count"]=2

@@ -88,10 +88,23 @@ elif asset in ("cliff_strata_a","rock_pillar_a"):
     assert all(1<=y-x<=6 for x,y in zip(heights,heights[1:])),heights
     assert any("gras" in obj.name.lower() for obj in objects)
     if asset=="cliff_strata_a":
-        assert 39.9<size.x<40.1 and 44<size.z<46 and 8<size.y<12,size
-        nx,nz=main["front_columns"],main["front_rows"]
-        error=max(abs(main.data.vertices[j*nx].co[k]-main.data.vertices[j*nx+nx-1].co[k]) for j in range(nz) for k in (1,2))
+        assert main["tile_pitch_m"]==40
+        assert 39.9<size.x<42 and 44<size.z<46 and 8<size.y<13,size
+        nx,ny,nz=main["front_steps"],main["side_steps"],main["wall_rows"]
+        columns=main["perimeter_columns"]
+        error=0
+        for row in range(nz):
+            for k in range(ny+1):
+                left=0 if k==0 else 2*nx+ny if k==ny else columns-k
+                a=main.data.vertices[row*columns+left].co
+                b=main.data.vertices[row*columns+nx+k].co
+                error=max(error,abs(b.x-a.x-40),abs(a.y-b.y),abs(a.z-b.z))
         assert error<.0001,error
+        assert main["closed_rock_back"] and main["joint_count"]>=20
+        points=np.array([tuple(v.co) for v in main.data.vertices])
+        assert np.std(points[points[:,1]<-3,1])>.10
+        side=points[points[:,0]>19.5]
+        assert np.ptp(side[:,0])>.25
         print("TILE_PROFILE_MAX_ERROR_M:",error)
     else:
         assert 12<size.x<18.1 and 58<size.z<62,size

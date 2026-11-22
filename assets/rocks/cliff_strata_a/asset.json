@@ -2,7 +2,7 @@
   "id": "cliff_strata_a",
   "category": "rocks",
   "title": "Modulare geschichtete Canyonwand A",
-  "description": "Geschlossene modulare Kalkwand mit hochaufgelöster Bruchfront und lokal kopiertem Stein- und Materialrezept von lake_shore_a. Wechselnde ein bis sechs Meter mächtige, auskeilende Schichtbänke bilden echte Vorsprünge und Unterschneidungen zwischen langen Vertikalbrüchen. Linke und rechte Randprofile stimmen bei 40 Metern Wiederholungsmaß überein. Modellierte Grasnarben und Büschel besiedeln Bänke und Oberkante; gefallene Bruchstücke und ein flacher Kalkgruskragen betten den Fuß ein.",
+  "description": "Geschlossene modulare Kalkwand mit lokal kopiertem Stein- und Materialrezept von lake_shore_a. Unregelmäßig verteilte, je Schicht versetzte und auskeilende Teilklüfte gliedern die Front. Wechselnd tiefe und unterbrochene Schichtbänke tragen modellierte Grasnarben und Büschel. Auch Rückseite und Seiten sind geometrisch gebrochen. Die zueinander passenden Randprofile greifen bei 40 Metern Wiederholungsmaß ineinander; gefallene Bruchstücke und ein flacher Kalkgruskragen betten den Fuß ein.",
   "target_size_m": [
     40,
     10,

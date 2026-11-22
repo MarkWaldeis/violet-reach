@@ -39,7 +39,7 @@ assert len(stones)=={"rock_boulder_b":14,"cliff_strata_a":15,"rock_pillar_a":13,
 assert len({obj["recipe_seed"] for obj in stones})==len(stones),"Repeated seeds"
 for obj in stones:
     assert obj["lake_shore_recipe"]=="pr9/lake_shore_a"
-    assert 4<=len(obj["fracture_planes"])<=11
+    assert obj["exact_reference_generator"]
     assert obj.data.color_attributes["stone_tones"].domain=="POINT"
     assert obj.data.attributes["stone_saturation"].domain=="POINT"
     assert sum(f.use_smooth for f in obj.data.polygons)/len(obj.data.polygons)>.9,obj.name
@@ -107,10 +107,17 @@ else:
     wet,dry=[],[]
     for obj in stones:
         factors=obj.data.attributes["stone_saturation"].data
+        a,b=vrlib.world_bounds([obj])
+        base=[]
         for v in obj.data.vertices:
-            y=(obj.matrix_world@v.co).y
-            if y<-.8:wet.append(factors[v.index].value)
-            if y>.8:dry.append(factors[v.index].value)
+            p=obj.matrix_world@v.co
+            if p.z<a.z+(b.z-a.z)*.15:
+                base.append(factors[v.index].value)
+            if p.z<a.z+(b.z-a.z)*.75:
+                continue
+            if p.y<-.8:wet.append(factors[v.index].value)
+            if p.y>.8:dry.append(factors[v.index].value)
+        assert base and sum(base)/len(base)>.65,obj.name
     assert wet and dry and sum(wet)/len(wet)>sum(dry)/len(dry)+.4
     assert bed.data.color_attributes.get("bank_tones")
     assert bed.data.attributes.get("ground_moisture")

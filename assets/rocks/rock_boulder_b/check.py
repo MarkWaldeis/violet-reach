@@ -61,7 +61,13 @@ a,b=vrlib.world_bounds([main])
 size=b-a
 assert len(main.data.vertices)>10000
 if asset=="rock_boulder_b":
-    assert 2.8<size.x<3.5 and 1.8<size.z<2.3,size
+    assert 2.8<size.x<3.5 and 1.4<size.z<1.75 and size.x>size.z*1.7,size
+    assert min(max(value.color[:3]) for value in main.data.color_attributes["stone_tones"].data)>.04
+    planar={}
+    for face in main.data.polygons:
+        normal=tuple(round(v,2) for v in face.normal)
+        planar[normal]=planar.get(normal,0)+face.area
+    assert sum(area>.20 for area in planar.values())>=2,planar
     assert main["fissure_count"]==2
     block=next(obj for obj in stones if obj.get("replacement_kind"))
     points=np.array([tuple(v.co) for v in block.data.vertices])
