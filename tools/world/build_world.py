@@ -54,6 +54,36 @@ def bank_rise(distance):
     return .035*d+.35*(d-12+12*np.exp(-d/12))+.0015*np.maximum(d-100,0)**2
 
 
+def lake_distance(x, y, lake, rivers):
+    _,cx,cy,r,level = lake
+    base = lake_signed_distance(x,y,cx,cy,r)
+    mouths = np.full_like(base,np.inf)
+    for _,points in rivers:
+        for a,b in zip(points[:-1],points[1:]):
+            if abs(a[2]-level)>.001 or abs(b[2]-level)>.001:
+                continue
+            shore = lake_signed_distance(*((a[:2]+b[:2])*.5),cx,cy,r)
+            if shore>180 or shore<-max(a[3],b[3]):
+                continue
+            delta = b[:2]-a[:2]
+            t = np.clip(((x-a[0])*delta[0]+(y-a[1])*delta[1])/np.dot(delta,delta),0,1)
+            d = np.hypot(x-a[0]-t*delta[0],y-a[1]-t*delta[1])-(a[3]+t*(b[3]-a[3]))*.5
+            mouths = np.minimum(mouths,d)
+    blend = np.maximum(1-abs(base-mouths)/60,0)
+    return np.minimum(base,mouths)-15*blend*blend
+
+
+def lake_outline(lake, rivers, inset=18):
+    _,cx,cy,r,_ = lake
+    theta = np.linspace(0,2*np.pi,384,endpoint=False)
+    lo,hi = np.zeros_like(theta),np.full_like(theta,r*1.8+400)
+    for _ in range(24):
+        radius = (lo+hi)*.5
+        inside = lake_distance(cx+radius*np.cos(theta),cy+radius*np.sin(theta),lake,rivers)<inset
+        lo,hi = np.where(inside,radius,lo),np.where(inside,hi,radius)
+    return np.column_stack((cx+hi*np.cos(theta),cy+hi*np.sin(theta)))
+
+
 def gorge_distance(x, y):
     sx=(x+2450-150*np.sin((y-2000)/450))/850
     sy=(y-2300)/1260
@@ -188,7 +218,7 @@ def hydrology():
         for _,cx,cy,r,level in lakes:
             shore = lake_signed_distance(p[:,0],p[:,1],cx,cy,r)
             p[:,3] *= 1+1.8*smoothstep((220-shore)/280)
-            inside = shore<120
+            inside = shore<300
             p[inside,2] = level
         p[:,2] = np.minimum.accumulate(p[:,2])
     return paths, lakes
@@ -197,8 +227,9 @@ def hydrology():
 def carve(h, axis, rivers, lakes):
     spacing = float(axis[1]-axis[0])
     xx,yy = np.meshgrid(axis,axis)
-    for _,cx,cy,r,level in lakes:
-        d = lake_signed_distance(xx,yy,cx,cy,r)
+    for lake in lakes:
+        _,cx,cy,r,level = lake
+        d = lake_distance(xx,yy,lake,rivers)
         bank = np.maximum(d,0)
         target = level+np.where(d<0,-22*smoothstep(-d/180),bank_rise(bank))
         shore = smoothstep((180-abs(d))/100)
@@ -259,9 +290,10 @@ def export(h, axis, rivers, lakes, draft, blender_version):
         records.append(dict(id=id_,name=name,index=i,centre=[cx,-cy],bbox=[float(ra[cols.min()]),float(ra[rows.min()]),float(ra[cols.max()]),float(ra[rows.max()])],description=desc))
     write_json(OUT/'regions/regions.json',dict(convention=AXES,map='regions.png',row_direction='+Z (north to south)',regions=records))
     lake_records = []
-    for n,cx,cy,r,level in lakes:
+    for lake in lakes:
+        n,cx,cy,r,level = lake
         # Shore polygon is outside the waterline (where terrain > level).
-        outline = [[cx+(lake_radius(t,r)+18)*math.cos(t),-cy-(lake_radius(t,r)+18)*math.sin(t)] for t in np.linspace(0,2*math.pi,385)[:-1]]
+        outline = [[float(x),float(-y)] for x,y in lake_outline(lake,rivers)]
         lake_records.append(dict(name=n,water_y=level,outline=outline))
     write_json(OUT/'hydrology.json',dict(convention=AXES,river_point_format=['x','z','water_y','width'],rivers=[dict(name=n,polyline=[[float(x),float(-y),float(z),float(w)] for x,y,z,w in p]) for n,p in rivers],lakes=lake_records,waterfall=dict(river='Weißfall',position=[-1540,-440],description='Weißwall: steiler Abschnitt von 595 m auf 250 m; später Wasserfallgeometrie ergänzen.')))
 
@@ -298,8 +330,9 @@ def build_scene(h, axis, rivers, lakes, draft):
     color = color*(1-rock)+np.array([.72,.74,.69])*strata*rock
     snow = np.clip((heights-850)/230,0,.7)[...,None]
     color = color*(1-snow)+np.array([.72,.76,.71])*snow
-    for _,cx,cy,r,level in lakes:
-        d = lake_signed_distance(xx,yy,cx,cy,r)
+    for lake in lakes:
+        _,cx,cy,r,level = lake
+        d = lake_distance(xx,yy,lake,rivers)
         shore = (d>0)&(d<22+20*noise(xx,yy,85,66))&(heights>level)&(heights<level+7)&(slope<.3)
         color[shore]=[.61,.57,.37]
         reeds = (d>0)&(d<45)&(heights<level+5)&(noise(xx,yy,120,67)>.1)
@@ -336,9 +369,11 @@ def build_scene(h, axis, rivers, lakes, draft):
                 xy=point[:2]+normal*point[3]*.5*side
                 verts.append([*xy,point[2]+.5])
         surface(name,verts,[(2*i,2*i+1,2*i+3,2*i+2) for i in range(len(p)-1)])
-    for name,cx,cy,r,level in lakes:
-        verts=[(cx,cy,level+.8)]+[(cx+lake_radius(t,r)*math.cos(t),cy+lake_radius(t,r)*math.sin(t),level+.8) for t in np.linspace(0,2*math.pi,256,endpoint=False)]
-        surface(name,verts,[(0,i+1,(i+1)%256+1) for i in range(256)])
+    for lake in lakes:
+        name,cx,cy,r,level = lake
+        outline = lake_outline(lake,rivers,inset=0)
+        verts=[(cx,cy,level+.8)]+[(float(x),float(y),level+.8) for x,y in outline]
+        surface(name,verts,[(0,i+1,(i+1)%len(outline)+1) for i in range(len(outline))])
     scene=bpy.context.scene
     scene.render.engine='CYCLES'; scene.cycles.device='CPU'; scene.cycles.samples=24 if draft else 48
     scene.cycles.use_denoising=True

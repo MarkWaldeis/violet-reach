@@ -50,6 +50,9 @@ schließt außerhalb dieses Uferkorridors an die vorhandenen Bergflanken an.
 Seeufer werden bei Bedarf sanft angehoben, damit niedrige Canyonböden nicht
 durch den trockenen Ufersaum brechen. Die Seebecken nutzen dieselben
 Böschungen und stärker gegliederte, mit 384 Punkten exportierte Uferkonturen.
+Flache Mündungsabschnitte werden über eine 60-m-Smooth-Union in das Seebecken
+eingebunden. Höhenfeld, Uferpolygon und Review-Wasser lesen dieselbe gerundete
+Distanzfunktion; dadurch treffen Fluss und See nicht als rechtwinklige Flächen aufeinander.
 Dies ist künstlerische Makroerosion, keine
 vollständige hydrodynamische Simulation. Der Bergrand bleibt innerhalb der
 Weltgrenze. `--draft` interpoliert die grobe Vorschau ins gleiche Exportformat;

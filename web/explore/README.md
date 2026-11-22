@@ -79,6 +79,11 @@ Uferzunge am Weißfall-Zufluss; das nominelle Flussende liegt bereits im See.
 Wegabstände werden analytisch berechnet, damit schmale Wege nicht durch den
 4-m-Atlas unterbrochen werden. Weiche Kanten, großflächige Gras-/Boden-/Felsmischungen und nahes Normaldetail
 nutzen direkt `art/palette.json`, ebenso Wasser, Himmel und Dunst.
+Sonniges Gelbgrün, strohige Trockenwiesen und offene Erde wechseln auf etwa
+200-, 50- und 10-m-Skalen. Höhe über Wasser, Nordexposition und die aus vier
+Höhenatlas-Nachbarn ermittelte Muldenlage steuern feuchtes Moos. Ab etwa 35–40°
+werden helle, höhengeschichtete Kalk-/Strataflächen sichtbar. Direkt am Wasser
+folgt auf den dunklen Nasssaum ein sandfarbener Strand; Wege haben erdige Ränder.
 
 `CSMShadowNode` erzeugt drei weich überblendete 2048²-Kaskaden bis 1100 m.
 Der gleiche Node-Pfad funktioniert mit dem WebGPU- und WebGL2-Backend des
@@ -88,6 +93,8 @@ Himmel und langsam ziehende Wolkenbänder sind prozedural im bildfüllenden
 Hintergrund, ohne entfernte Himmelskugel oder Nebelkarten. Die Blickrichtung
 wird pro Pixel aus der inversen Kameraprojektion rekonstruiert. Höhenabhängiger
 Taldunst erhält mehrkilometrige Sichtachsen ohne weltprojizierte Wolkenflecken.
+Die Ferne wird cremefarben heller, mit zusätzlichem Streulicht in Sonnenrichtung;
+Wolkenbänke erhalten weiche, unregelmäßige Licht- und Schattenseiten.
 Ausgabe: sRGB, AgX; kein Bloom.
 
 ## Blender-Höhenkarte anbinden
