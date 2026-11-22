@@ -85,3 +85,15 @@ schließen an die rund 180,14 m hohen Uferterrassen an. Der bestehende Fußpfad
 führt bis zur südwestlichen Landung, ein zweiter kurzer Abschnitt von der
 nordöstlichen Landung zurück in die Wiese. Die Laufkamera folgt weiterhin dem
 Gelände, nicht der Brückentreppe; Objektkollision ist noch nicht implementiert.
+
+## Freigegebenes Ufermodul
+
+`lake_shore_a` liegt einmal bei `(626.5187, 1540.5455)`, Maßstab `1`,
+Yaw `0.705398`, `y_offset: 0.03238`. Die rund 21,2 × 7,68 m große
+Sand-, Kies- und Grasbank folgt dem Nordufer; die Wasserseite zeigt nach
+Südost. Ihr Ursprung liegt bei 180,03 m, die tiefste Kante unter Wasser.
+Die Platzierung ist gegenüber der ersten Probe etwas seewärts versetzt.
+Ein Höhenvergleich mit dem tatsächlichen exportierten LOD0-Mesh hält das
+Gelände unter der inneren Strandfläche; der auslaufende Grasrand bleibt
+zum Anschluss an die natürliche Böschung eingebettet. Keine Geländeänderung,
+keine gestreckten Achsen und kein Insel-Asset.

@@ -23,6 +23,18 @@
         3.514
       ],
       "bytes": 3316836
+    },
+    {
+      "id": "lake_shore_a",
+      "category": "shore",
+      "title": "Shinglewake Shore",
+      "file": "lake_shore_a.glb",
+      "size_m": [
+        21.2,
+        7.678,
+        1.145
+      ],
+      "bytes": 3825952
     }
   ]
 }
