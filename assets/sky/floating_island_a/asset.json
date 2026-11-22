@@ -14,8 +14,22 @@
     2600
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-4076f9d9c7794015bd813c73729bed6b",
-  "review": null,
-  "review_rounds": 1
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 7,
+      "scale": 8,
+      "style": 8,
+      "defects": 7
+    },
+    "notes": "Round 2. Round-1 points: strata FIXED. There are now 5 distinct overhanging beds with crisp lips and vertical faults (closeup_base, hero.jpg), and form_detail now reaches 8. Soil rim PARTLY fixed: there is a soil band with hanging roots. Tree groups FIXED: there are 3 groves with air between them. Fragments FIXED: they are now bedded blocks that match the body. Remaining defects: (1) material: the cliff still turns bluish-grey and camouflage-mottled on the cool side (turn_245, turn_290). The summit grass in closeup.jpg is still a soft, blurry texture with large grey-brown blotches and no readable turf or tufts at the scale figure. Warm the limestone on the shaded side (ivory/ochre, not blue). Replace the blotches with grass_ground at metre scale and add tuft clusters near the figure. (2) defects: the soil rim is one smooth extruded brown ribbon of constant thickness with a clean edge, so it reads as a plastic strip. Vary its thickness (0.5-3 m), break it with eroded notches, and let grass and turf hang over it. The roots are thin uniform wires; give them taper and branching. The summit rocks sit in neat dotted rows (closeup.jpg); scatter them in irregular groups. The cliff surface repeats the same small crescent dimple stamp everywhere (closeup_base), which is the visible repetition STYLE.md lists as a defect. Vary its scale or remove it.",
+    "round": 2,
+    "source_sha256": "8c43a7e63770aed27c3112547c445aa8f36362b48814085b5b878e880691ab23",
+    "sheet_sha256": "7eed9fcdbd04cbb489906b9c5e4f9c5b3da6ee07361031b797f307c95425a7c9"
+  },
+  "review_rounds": 2
 }
