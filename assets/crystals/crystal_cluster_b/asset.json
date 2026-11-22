@@ -1,0 +1,35 @@
+{
+  "id": "crystal_cluster_b",
+  "category": "crystals",
+  "title": "Fault-Grown Violet Cluster",
+  "description": "A splayed cluster of chipped violet prisms rooted in a split limestone shelf and exposed mineral earth; reference: ref_07_violet_crater.",
+  "target_size_m": [
+    5,
+    3.65,
+    3
+  ],
+  "lod_triangles": [
+    7400,
+    2600,
+    840
+  ],
+  "texture_size": 2048,
+  "status": "approved",
+  "builder": "devin-79c81cd3e9c64cc49f913648e628a347",
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 8,
+      "scale": 8,
+      "style": 8,
+      "defects": 8
+    },
+    "notes": "Round 2: approved. Reuses the approved proof make_crystal() and crystal_material() (accepted by lead decision): faceted prisms of varied size and tilt, with crisp terminations and the same internal facet patches and growth striations as crystal_violet_cluster_a. Base: layered grey limestone with bed planes, irregular moss and fractured edges, matching the reference (closeup_base). The scale reads well next to the figure. Polish, not blocking: a dark shadow pocket under the main prism at its foot (closeup_base) could get a small rock fillet or soil.",
+    "round": 2,
+    "source_sha256": "ec07311bf0157fa75d3f90120c6411b3d97d3c3ade10123adf7cb6ef6f2de8a5",
+    "sheet_sha256": "e97c4f09a54e78d2956cd4ae3b28ba7adc1e08cf5a6e4009b3c4e4af965d245d"
+  },
+  "review_rounds": 2
+}
