@@ -14,22 +14,8 @@
     1200
   ],
   "texture_size": 2048,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-501e5a510b5c43f2b6ce7952cf05094b",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 8,
-      "form_detail": 7,
-      "material": 7,
-      "scale": 8,
-      "style": 8,
-      "defects": 7
-    },
-    "notes": "Round 2. Fixed: the grey mottling is gone, flutes are now cut in with fillets, drum heights vary, the capital has an echinus and abacus. Not fixed: (1) there are still no chips, cracks or broken edges anywhere on the shaft or base (round-1 point 2). (2) At the drum joints the flute edges wobble and misalign, so the seams look lumpy instead of crisp; the shaft silhouette shows its polygon facets. (3) The capital is thin and plain for an 18 m column; add a neck ring and a deeper echinus profile. (4) The surface is a uniform sandpaper grain with no local weathering at the base, joints or weather side.",
-    "round": 2,
-    "source_sha256": "0896608280eb4040f919fff185ec57d054a6879c550a5a307ef5b5151cc97481",
-    "sheet_sha256": "5504debd4a381f1cd99edb7cc18a71021c05b8fd3bea062af25828444ec9377b"
-  },
+  "review": null,
   "review_rounds": 2
 }

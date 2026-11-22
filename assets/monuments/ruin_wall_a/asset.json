@@ -14,22 +14,8 @@
     1300
   ],
   "texture_size": 2048,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-501e5a510b5c43f2b6ce7952cf05094b",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 7,
-      "form_detail": 7,
-      "material": 7,
-      "scale": 8,
-      "style": 7,
-      "defects": 7
-    },
-    "notes": "Round 2. Fixed: blocks now have sharp broken faces, some are tilted or shifted, course heights vary, there is rubble at the foot, the grey mottling is gone. Not fixed: (1) the profile is still one straight diagonal from the high end to the low end, so it still reads as a staircase next to the real stair (round-1 point 1); add gaps, a mid-wall remnant and an irregular break line. (2) The upper slabs lie tilted on top and cantilever off the wall with no support (they would slide off), and some slabs interpenetrate (closeup.jpg). (3) Black voids show between courses. (4) The material is uniformly clean, with no dirt or moss at the foot or joints. (5) The rubble is tiny, uniform chips that don't match the missing blocks.",
-    "round": 2,
-    "source_sha256": "fb719355d87aacf9a26a034f7dadca812755db19bcd2682b287734f62df9bc67",
-    "sheet_sha256": "ddcd385ccaa34ffbc176138ff1c183973e0bdca0d27c9798eba0e9a726c2e333"
-  },
+  "review": null,
   "review_rounds": 2
 }

@@ -14,22 +14,8 @@
     2400
   ],
   "texture_size": 4096,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-501e5a510b5c43f2b6ce7952cf05094b",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 7,
-      "form_detail": 7,
-      "material": 7,
-      "scale": 8,
-      "style": 7,
-      "defects": 7
-    },
-    "notes": "Round 2, still close. Fixed: pilaster buttresses on the stair-side walls, varied block sizes, intermediate landings, the grey mottling is gone, localized vertical staining under the copings. Builder's close call (tread wear): at sheet and close-up resolution the treads still read as crisp new edges; the slight nosing rounding is not visible and there is no worn dip in the middle of the steps, so it does not yet count as fixed; make the wear clearly readable (deeper centre dip, chipped nosings). Not fixed: (1) the back and the far side are still a plain box wall without pilasters or structure (sheet tiles 4-5, round-1 point 3). (2) Thin blue lines show through several joints under the copings (closeup_base tile), i.e. gaps between blocks. (3) Still no broken corners and no transition into the terrain (embedded base, plants in joints).",
-    "round": 2,
-    "source_sha256": "ccbfa6551ffe082ed3796187e26d4d541af3cae963f4c8c8d13efeaa67fb5cfa",
-    "sheet_sha256": "225da824d6f26e56b5a60e17a359a942591abe27e68c8c7c67c5469bb6aa28e5"
-  },
+  "review": null,
   "review_rounds": 2
 }

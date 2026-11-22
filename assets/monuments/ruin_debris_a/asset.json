@@ -14,22 +14,8 @@
     950
   ],
   "texture_size": 2048,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-501e5a510b5c43f2b6ce7952cf05094b",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 7,
-      "form_detail": 7,
-      "material": 6,
-      "scale": 8,
-      "style": 7,
-      "defects": 7
-    },
-    "notes": "Round 2. Fixed: the drums are now hard cylinders with cut flutes, break faces are rough, the fragments are angular blocks, the drums are grouped. Not fixed: (1) the flutes read as broad shallow facets on a 10-12-sided polygon; raise the segment count and deepen the flutes with crisp fillets. (2) One drum end has an unexplained hollow cavity (closeup.jpg left drum). (3) Material: a uniform black pepper speckle covers every piece (terrazzo/foam look) instead of clean limestone with dirt only in recesses and at ground contact. (4) Pieces rest on the ground with no embedding, soil or grass contact (round-1 point 3). (5) There is still no fall line of one toppled column and no capital or cornice fragment with a readable profile (round-1 points 2 and 4).",
-    "round": 2,
-    "source_sha256": "53d18456da2685d8196df76b4d8eca07896459c8f8ba695c735dd3f5c21f3d5e",
-    "sheet_sha256": "b9caa3384d0a7ecc8713503d27a8db34216274ee81ae1cbcb9be54411229bdaa"
-  },
+  "review": null,
   "review_rounds": 2
 }

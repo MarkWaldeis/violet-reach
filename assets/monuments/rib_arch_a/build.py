@@ -1,94 +1,81 @@
-"""Six hooked, keeled limestone blades on a shared terraced foundation."""
+"""A dominant limestone vault and capped blades on a shared court."""
 import math
 import random
 
 import bpy
-from mathutils import Vector
+from mathutils import Matrix, Vector
 
 import vrlib
 import vrmat
 
 
 def limestone(name):
+    if name in ("mossy_rock", "dirt_path", "grass_ground"):
+        return vrmat.get(name)
     local_name = f"rib_arch_a.{name}"
     mat = bpy.data.materials.get(local_name)
     if mat is not None:
         return mat
     mat = vrmat.get(name).copy()
     mat.name = local_name
-    tree = mat.node_tree
-    nodes, links = tree.nodes, tree.links
+    nodes, links = mat.node_tree.nodes, mat.node_tree.links
     surface = nodes["Principled BSDF"]
-    weathered = name == "monument_weathered"
     palette = vrmat.load_palette()
-    white = palette["monument_white"]["linear_rgb"]
-    patina = palette["stone_weathered"]["linear_rgb"]
-    coords = next(n for n in nodes if n.type == "TEX_COORD").outputs["Object"]
-    grain_scale = .30
+    cream = palette["monument_white"]["linear_rgb"]
+    cool = tuple(c*k for c,k in zip(cream, (.88, .94, 1.065)))
+    pale = tuple(c*k for c,k in zip(cream, (1.035, 1.001, .945)))
+    seam = palette["stone_weathered"]["linear_rgb"]
+    coords = next(node for node in nodes if node.type == "TEX_COORD").outputs["Object"]
 
-    def noise(scale, detail):
+    def noise(scale, detail, vector=coords):
         node = nodes.new("ShaderNodeTexNoise")
         node.inputs["Scale"].default_value = scale
         node.inputs["Detail"].default_value = detail
-        links.new(coords, node.inputs["Vector"])
+        links.new(vector, node.inputs["Vector"])
         return node.outputs["Fac"]
 
-    def ramp(source, lo, hi, low, high):
+    def ramp(source, low, high, colors):
         node = nodes.new("ShaderNodeValToRGB")
-        for stop, position, color in zip(node.color_ramp.elements, (lo, hi), (low, high)):
-            stop.position = position
-            stop.color = (*(color if isinstance(color, tuple) else (color,) * 3), 1)
+        for stop, pos, color in zip(node.color_ramp.elements, (low, high), colors):
+            stop.position, stop.color = pos, (*color, 1)
         links.new(source, node.inputs["Fac"])
         return node.outputs["Color"]
 
-    def mix(factor, first, second, blend="MIX"):
+    def mix(factor, a, b):
         node = nodes.new("ShaderNodeMixRGB")
-        node.blend_type = blend
-        if isinstance(factor, (int, float)):
-            node.inputs["Fac"].default_value = factor
+        if isinstance(factor, float):
+            node.inputs[0].default_value = factor
         else:
-            links.new(factor, node.inputs["Fac"])
-        for value, socket in zip((first, second), ("Color1", "Color2")):
+            links.new(factor, node.inputs[0])
+        for socket, value in zip(node.inputs[1:3], (a,b)):
             if isinstance(value, tuple):
-                node.inputs[socket].default_value = (*value, 1)
+                socket.default_value = (*value,1)
             else:
-                links.new(value, node.inputs[socket])
+                links.new(value, socket)
         return node.outputs["Color"]
 
-    cool = tuple(c * k for c, k in zip(white, (.94, .974, 1.020)))
-    cream = tuple(c * k for c, k in zip(white, (1.005, .965, .895)))
-    temperature = noise(.34 * grain_scale, 2)
-    tone = ramp(temperature, .15, .86, cool, cream)
-    random_tint = nodes.new("ShaderNodeObjectInfo").outputs["Random"]
-    tone = mix(.24, tone, ramp(random_tint, 0, 1, cream, cool))
-
-    pores = next(n for n in nodes if n.type == "TEX_VORONOI")
-    pores.inputs["Scale"].default_value = 27 * grain_scale
-    grain = noise(13 * grain_scale, 2)
-    pits = ramp(pores.outputs["Distance"], .12, .31, .36, 1)
-    deposits = ramp(grain, .23, .79, .80, 1)
-    tone = mix(.72, tone, mix(.54, deposits, pits, "MULTIPLY"), "MULTIPLY")
-
+    variation = noise(.37, 3)
+    tone = ramp(variation, .23, .79, (cool, pale))
+    random_tone = nodes.new("ShaderNodeObjectInfo").outputs["Random"]
+    tone = mix(.18, tone, ramp(random_tone, 0, 1, (cool, pale)))
     ao = nodes.new("ShaderNodeAmbientOcclusion")
-    ao.samples = 6
-    ao.inputs["Distance"].default_value = (.36 if weathered else .19) / grain_scale
-    strength = .68 if weathered else .36
-    grime = tuple(a * (1-strength) + b * strength for a, b in zip(white, patina))
-    links.new(mix(ao.outputs["AO"], grime, tone), surface.inputs["Base Color"])
-    links.new(ramp(grain, .22, .79, .65, .96), surface.inputs["Roughness"])
-    surface.inputs["Specular IOR Level"].default_value = .29
-
-    def bump(height, depth, strength):
-        node = nodes.new("ShaderNodeBump")
-        node.inputs["Distance"].default_value = depth / grain_scale
-        node.inputs["Strength"].default_value = strength
-        links.new(height, node.inputs["Height"])
-        return node
-
-    sand = bump(noise(69 * grain_scale, 2), .006, .58)
-    etch = bump(mix(.78, grain, pits, "MULTIPLY"), .035, .8)
-    links.new(sand.outputs["Normal"], etch.inputs["Normal"])
-    links.new(etch.outputs["Normal"], surface.inputs["Normal"])
+    ao.samples = 4
+    old = name == "monument_weathered"
+    ao.inputs["Distance"].default_value = .42 if old else .14
+    joint = tuple(.74*a+.26*b for a,b in zip(seam, cream))
+    tone = mix(ao.outputs["AO"], joint, tone)
+    if old:
+        patina = palette["monument_shadow"]["linear_rgb"]
+        weathered = tuple(.38*a+.62*b for a,b in zip(seam,patina))
+        tone = mix(.48, tone, ramp(noise(2.3, 3), .28, .68, (weathered, pale)))
+    links.new(tone, surface.inputs["Base Color"])
+    links.new(ramp(noise(8, 2), .16, .86, ((.72,.72,.72),(.93,.93,.93))), surface.inputs["Roughness"])
+    surface.inputs["Specular IOR Level"].default_value = .27
+    bump = nodes.new("ShaderNodeBump")
+    bump.inputs["Distance"].default_value = .023
+    bump.inputs["Strength"].default_value = .42
+    links.new(noise(10, 2), bump.inputs["Height"])
+    links.new(bump.outputs["Normal"], surface.inputs["Normal"])
     return mat
 
 
@@ -102,22 +89,6 @@ def mesh(name, vertices, faces, stone):
     return obj
 
 
-def podium(name, outline, bands, stone, anchor=(0, 0)):
-    vertices = [(anchor[0] + x * scale, anchor[1] + y * scale, z)
-                for z, scale in bands for x, y in outline]
-    n = len(outline)
-    faces = [tuple(reversed(range(n)))]
-    for i in range(len(bands) - 1):
-        for j in range(n):
-            a, b = i * n + j, i * n + (j + 1) % n
-            faces.append((a, b, b + n, a + n))
-    faces.append(tuple(range(len(vertices) - n, len(vertices))))
-    obj = mesh(name, vertices, faces, stone)
-    bevel = obj.modifiers.new("Rounded arrises", "BEVEL")
-    bevel.width, bevel.segments = .14, 4
-    obj.modifiers.new("Dressed face normals", "WEIGHTED_NORMAL")
-
-
 PROFILE = (
     (.09, -.72), (.15, -.58), (.22, -.40), (.42, -.40), (.48, -.32),
     (.50, -.19), (.50, .17), (.47, .28), (.42, .35), (.25, .41), (0, .43),
@@ -126,115 +97,148 @@ PROFILE = (
 )
 
 
-def sail(index, x, y, height, reach, fan, width, depth, rng):
-    turn = 1.79 + .05 * index
+def rib(name, spine, width, depth, rng):
+    white = "monument_white"
+    cuts = [0]
+    while cuts[-1] < .88:
+        cuts.append(min(.93,cuts[-1]+rng.uniform(.058,.112)))
+    if cuts[-1]>.90:
+        cuts.pop()
+    cuts.append(1)
+    run = list(zip(cuts,cuts[1:]))
+    phase = rng.uniform(0,math.tau)
 
-    def spine(t):
-        return Vector((
-            x + reach * (.17 * math.sin(math.pi * t) - t ** 2.4),
-            y + fan * (.39 * t + .61 * t ** 1.85),
-            3.75 + height * math.sin(turn * t),
-        ))
-
-    def sweep(name, start, end, rings, bed, stone):
+    def sweep(label, lo, hi, inset, final=False):
+        slots = 26 if not inset else 130
+        loss_site = rng.randrange(len(PROFILE))
         vertices = []
-        notch = rng.randrange(len(PROFILE)) if not bed else 0
-        spall = rng.uniform(.1, .22) if not bed else 0
-        skew = rng.uniform(-.001, .001) if not bed else 0
-        for progress, flare in rings:
-            t = start + (end - start) * progress
+        for row in range(slots+1):
+            u = row/slots
+            t = lo+(hi-lo)*u
             point = spine(t)
-            tangent = (spine(t + .0001) - spine(max(0, t - .0001))).normalized()
-            roll = (.30 + .19 * t) * fan / 19
-            flank = Vector((math.sin(roll), math.cos(roll), 0))
+            tangent = (spine(t+.0001)-spine(t-.0001)).normalized()
+            flank = Vector((0,1,0))
             normal = tangent.cross(flank).normalized()
-            flank = normal.cross(tangent)
-            taper = 1 - .37 * t ** 1.35 - .13 * t ** 4 + .08 * math.exp(-((t-.970)/.053)**4)
-            blade = 1 + .34 * min(1, t / .14) - .15 * t ** 4
-            w, d = ((.69, .55) if bed else (1, 1))
-            for k, (a, b) in enumerate(PROFILE):
-                chip = 1
-                if not bed:
-                    distance = abs(math.remainder(k - notch, len(PROFILE)))
-                    chip -= spall * max(0, 1 - distance / 2.4) * max(0, 1 - progress / .16)
-                    distance = abs(math.remainder(k - notch - 8, len(PROFILE)))
-                    chip -= spall * .65 * max(0, 1 - distance / 1.7) * max(0, (progress - .86) / .14)
-                if not bed:
-                    chip += .009 * math.sin(k * 1.9 + progress * 17 + start * 94)
-                vertices.append(point + tangent * skew * height * a
-                                + (a * width * blade * w * flank + b * depth * d * normal)
-                                * (taper * flare * chip))
-        n = len(PROFILE)
-        faces = [tuple(reversed(range(n)))]
-        for i in range(len(rings) - 1):
+            flank = normal.cross(tangent).normalized()
+            flare = (.19*math.exp(-((t-.07)/.11)**2)+.19*math.exp(-((t-.94)/.13)**2)
+                     + (.14*math.exp(-((u-.66)/.46)**4) if final else 0))
+            size = (1+flare) * (.925 if inset else 1)
+            for j,(a,b) in enumerate(PROFILE):
+                k = abs(math.remainder(j-loss_site,len(PROFILE)))
+                spall = max(0,1-k/2.6)*max(0,1-u*6)*.11 if not inset else 0
+                ridge = (.015*math.sin(phase+4*j+u*5)+.008*math.sin(9*j+u*18)
+                         + .004*math.sin(17*j-u*43)) if not inset else 0
+                dressing = .018*math.sin(3*j+u*16+phase)*math.sin(math.pi*u) if not inset else 0
+                vertices.append(point+(flank*a*width+normal*b*depth)*size*(1-spall+ridge+dressing))
+        n=len(PROFILE)
+        faces=[tuple(reversed(range(n)))]
+        for i in range(slots):
             for j in range(n):
-                a, b = i * n + j, i * n + (j + 1) % n
-                faces.append((a, b, b + n, a + n))
-        faces.append(tuple(range(len(vertices) - n, len(vertices))))
-        obj = mesh(name, vertices, faces, stone)
-        for p in obj.data.polygons[1:-1]:
-            p.use_smooth = True
-        obj.data.set_sharp_from_angle(angle=math.radians(28))
+                a,b=i*n+j,i*n+(j+1)%n
+                faces.append((a,b,b+n,a+n))
+        faces.append(tuple(range(len(vertices)-n,len(vertices))))
+        obj = mesh(label,vertices,faces,white)
+        for poly in obj.data.polygons[1:-1]:
+            poly.use_smooth = True
+        obj.data.set_sharp_from_angle(angle=math.radians(25))
 
-    sweep(f"Sail {index} recessed bed", 0, .995, [(j / 140, 1) for j in range(141)],
-          True, "monument_weathered")
-    start = 0
-    course = 0
-    while start < 1:
-        end = start + rng.uniform(.052, .126) + .095 * start
-        if end > .92:
-            end = 1
-        gap = rng.uniform(.0016, .0025)
-        crown = 1.035 if end == 1 else rng.uniform(.96, 1.07)
-        shoulder = rng.uniform(.015, .045)
-        rings = [(j / 22, crown + shoulder * abs(2*j/22-1) ** 2) for j in range(23)]
-        rings[0] = (0, crown + shoulder - .035)
-        rings[-1] = (1, crown + shoulder - .035)
-        sweep(f"Sail {index} dressed course {course:02}", start + (gap if start else 0),
-              end - (gap if end < 1 else 0), rings, False,
-              "monument_white")
-        start = end
-        course += 1
+    sweep(f"{name} pale solid seam core",.003,.995,True)
+    for i,(lo,hi) in enumerate(run):
+        gap = rng.uniform(.00027,.00052)
+        sweep(f"{name} {'capstone' if i==len(run)-1 else 'segment'} {i+1}",
+              lo+(gap if lo else 0),hi-(gap if hi<1 else 0),False,i==len(run)-1)
 
-    def footing(name, x0, x1, y0, y1, bands):
-        c = .34
-        shape = [(x0+c,y0), (x1-c,y0), (x1,y0+c), (x1,y1-c),
-                 (x1-c,y1), (x0+c,y1), (x0,y1-c), (x0,y0+c)]
-        anchor = ((x0+x1)/2, (y0+y1)/2)
-        for i, (low, high, lower, upper) in enumerate(bands):
-            loop = [(u-anchor[0], v-anchor[1]) for u, v in shape]
-            podium(f"Sail {index} {name} {i}", loop,
-                   [(low, lower), (low+.07, lower), (high-.11, upper), (high, upper*.98)],
-                   "monument_weathered" if i == 0 else "monument_white", anchor)
 
-    flank = width / 2 + .32
-    for left, right in ((x-3.74, x+1.8), (x+4.63, x+6.58)):
-        footing("split root", left, right, y-flank, y+flank,
-                [(4.43, 5.08, 1.10, 1.07), (5.055, 6.14, 1.055, 1.015),
-                 (6.115, 7.47, 1.02, .94)])
-    footing("root crown", x-3.77, x+6.66, y-flank-.50, y+flank+.50,
-            [(7.43, 8.04, 1, 1.012), (8.015, 9.51, 1.012, .83)])
+def foundation(name, x, y, width, depth, bands, rng, stone):
+    n=54
+    phase=rng.uniform(0,math.tau)
+    vertices=[]
+    for z,sx,sy in bands:
+        for j in range(n):
+            a=math.tau*j/n
+            ca,sa=math.cos(a),math.sin(a)
+            peen = 1+.022*math.sin(7*a+phase+.3*z)+.009*math.sin(18*a+.6*z)+.004*math.cos(27*a-z)
+            outline_x=math.copysign(abs(ca)**.66,ca)*width*.5
+            outline_y=math.copysign(abs(sa)**.66,sa)*depth*.5
+            vertices.append((x+outline_x*peen*sx,y+outline_y*peen*sy,z))
+    faces=[tuple(reversed(range(n)))]
+    for i in range(len(bands)-1):
+        for j in range(n):
+            a,b=i*n+j,i*n+(j+1)%n
+            faces.append((a,b,b+n,a+n))
+    faces.append(tuple(range(len(vertices)-n,len(vertices))))
+    obj=mesh(name,vertices,faces,stone)
+    for poly in obj.data.polygons[1:-1]:
+        poly.use_smooth=True
+    obj.data.set_sharp_from_angle(angle=math.radians(38))
+
+
+def review_figure(x,y,z):
+    guide = bpy.data.collections.new("Scale reference • not part of the asset")
+    bpy.context.scene.collection.children.link(guide)
+    cloth = bpy.data.materials.new("Scale reference vermilion")
+    cloth.diffuse_color = (.52,.024,.018,1)
+    cloth.use_nodes = True
+    cloth.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = cloth.diffuse_color
+
+    def limb(a,b,r0,r1):
+        p,q = Vector((x+a[0],y+a[1],z+a[2])),Vector((x+b[0],y+b[1],z+b[2]))
+        d = q-p
+        bpy.ops.mesh.primitive_cone_add(vertices=16,radius1=r0,radius2=r1,depth=d.length,location=(p+q)*.5)
+        obj=bpy.context.object
+        obj.rotation_euler=d.to_track_quat("Z","Y").to_euler()
+        for collection in list(obj.users_collection):
+            collection.objects.unlink(obj)
+        guide.objects.link(obj)
+        obj.data.materials.append(cloth)
+
+    limb((0,0,.79),(0,0,1.51),.225,.188)
+    limb((0,0,1.49),(0,0,1.79),.116,.089)
+    for side in (-1,1):
+        limb((.098*side,0,.85),(.127*side,.02*side,.014),.082,.063)
+        limb((.13*side,0,1.45),(.255*side,.04,1.05),.086,.061)
 
 
 def build():
-    rng = random.Random(38445)
-    outline = [(-32, -37), (3, -37), (17, -33), (24, -21), (26, -3), (24, 17),
-               (21, 33), (10, 38), (-9, 38), (-25, 33), (-35, 16), (-36, -20)]
-    podium("Flood-worn foundation", outline, [(-.025, 1), (.86, 1), (1.00, .993), (1.34, .993)],
-           "monument_weathered")
-    podium("Lower terrace and scotia", outline, [(1.30, .943), (1.45, .943), (1.64, .921),
-                                                (2.02, .921), (2.15, .933)], "monument_white")
-    podium("Middle terrace", outline, [(2.12, .884), (2.38, .884), (2.73, .867),
-                                       (3.10, .867), (3.28, .879)], "monument_white")
-    podium("Raised rib court", outline, [(3.25, .827), (3.73, .827), (4.04, .812),
-                                         (4.43, .812), (4.57, .823)], "monument_white")
-    ribbons = [
-        (-7.7, -22.0, 29, 14, -16, 5.6, 2.2),
-        (-5.1, -13.8, 40, 23, -12, 6.8, 2.55),
-        (-1.7, -5.0, 55, 32, -6, 8.3, 3.20),
-        (3.2, 4.4, 74, 48, 3, 9.5, 3.75),
-        (7.1, 13.8, 63, 39, 11, 8.6, 3.30),
-        (7.7, 22.0, 43, 25, 19, 6.8, 2.60),
-    ]
-    for index, spec in enumerate(ribbons, 1):
-        sail(index, *spec, rng)
+    rng=random.Random(38445)
+    white,old="monument_white","monument_weathered"
+    foundation("Common buried court",0,0,77,66,[(-.30,1,1),(.38,1,1),(.56,.97,.98)],rng,old)
+    foundation("Shared crowned inner court",0,-3,65,49,[(.48,1,1),(.72,1,1),(1.02,.95,.96)],rng,white)
+    for side in (-1,1):
+        x=side*25
+        foundation(f"Buried splayed root block {side}",x,0,22,48,
+                   [(-.25,1,1),(.85,1,1),(1.42,.98,.98),(2.9,.92,.955)],rng,old)
+        foundation(f"Weathered recessed root collar {side}",x,0,21,46,
+                   [(2.89,.964,.995),(3.27,.948,.978),(3.57,.952,.981),(4.13,.946,.976)],rng,old)
+        foundation(f"Massive rising limestone root body {side}",x,0,21,46,
+                   [(4.10,.946,.976),(4.40,.946,.966),(6.70,.92,.91),
+                    (8.95,.87,.86),(11.70,.74,.79),(13.10,.66,.74),(13.67,.62,.68)],rng,white)
+        for j in range(12):
+            y=-25+4.5*j
+            px=x+side*rng.uniform(8.8,10.9)
+            r=rng.uniform(1.4,2.7)
+            foundation(f"Root ground talus {side} {j}",px,y,r,rng.uniform(1.8,3.7),
+                       [(-.20,1,1),(.18,1,1),(rng.uniform(.28,.75),.67,.70)],rng,
+                       "mossy_rock" if j%3 else "dirt_path")
+    def arch(t):
+        return Vector((-25.5*math.cos(math.pi*t),-5+2.8*math.sin(math.pi*t),11.6+62*math.sin(math.pi*t)))
+    rib("Dominant through arch",arch,9.8,9.6,rng)
+    for i,(x,y,side,reach,h,fan,w,d) in enumerate((
+            (-25,-16,1,32,54,-7,8.3,7.1),(25,11,-1,25,46,9,7.7,6.0),
+            (-25,8,1,12,32,7,6.5,5.6))):
+        def blade(t):
+            return Vector((x+side*(reach*max(0,t)**2.3-4*math.sin(math.pi*t)),
+                           y+fan*max(0,t)**1.5,10.7+h*math.sin(1.37*t)))
+        rib(f"Capped fan blade {i+1}",blade,w,d,rng)
+
+    for side in (-1,1):
+        foundation(f"Walk gate embedded pier {side}",side*4.3,-27.0,4.6,7.2,
+                   [(-.18,1,1),(.43,1,1),(1.1,.95,.96),(2.75,.85,.93),(3.22,.83,.88)],rng,old)
+    def portal(t):
+        return Vector((-4.25*math.cos(math.pi*t),-27,2.94+4.3*math.sin(math.pi*t)))
+    rib("Pedestrian outer-court vault",portal,5.8,2.28,rng)
+    foundation("Entry walk sill",0,-32.7,6.2,7.7,[(-.19,1,1),(.17,1,1),(.31,.92,.96)],rng,white)
+    orient=Matrix.Rotation(math.pi/2,4,"Z")
+    for obj in vrlib.source_objects():
+        obj.data.transform(orient)
+    review_figure(34.5,-1.1,.31)

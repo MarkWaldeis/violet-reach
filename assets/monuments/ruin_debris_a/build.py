@@ -3,7 +3,7 @@ import math
 import random
 
 import bpy
-from mathutils import Euler, Vector
+from mathutils import Euler, Matrix, Vector
 from mathutils.geometry import delaunay_2d_cdt
 
 import vrlib
@@ -11,89 +11,76 @@ import vrmat
 
 
 def limestone(name):
+    if name in ("mossy_rock", "dirt_path", "grass_ground"):
+        return vrmat.get(name)
     local_name = f"ruin_debris_a.{name}"
     mat = bpy.data.materials.get(local_name)
     if mat is not None:
         return mat
     mat = vrmat.get(name).copy()
     mat.name = local_name
-    tree = mat.node_tree
-    nodes, links = tree.nodes, tree.links
+    nodes, links = mat.node_tree.nodes, mat.node_tree.links
     surface = nodes["Principled BSDF"]
-    weathered = name == "monument_weathered"
     palette = vrmat.load_palette()
-    white = palette["monument_white"]["linear_rgb"]
-    patina = palette["stone_weathered"]["linear_rgb"]
-    coords = next(n for n in nodes if n.type == "TEX_COORD").outputs["Object"]
-    grain_scale = 1
+    cream = palette["monument_white"]["linear_rgb"]
+    cool = tuple(c*k for c,k in zip(cream, (.88, .94, 1.065)))
+    pale = tuple(c*k for c,k in zip(cream, (1.035, 1.001, .945)))
+    seam = palette["stone_weathered"]["linear_rgb"]
+    coords = next(node for node in nodes if node.type == "TEX_COORD").outputs["Object"]
 
-    def noise(scale, detail):
+    def noise(scale, detail, vector=coords):
         node = nodes.new("ShaderNodeTexNoise")
         node.inputs["Scale"].default_value = scale
         node.inputs["Detail"].default_value = detail
-        links.new(coords, node.inputs["Vector"])
+        links.new(vector, node.inputs["Vector"])
         return node.outputs["Fac"]
 
-    def ramp(source, lo, hi, low, high):
+    def ramp(source, low, high, colors):
         node = nodes.new("ShaderNodeValToRGB")
-        for stop, position, color in zip(node.color_ramp.elements, (lo, hi), (low, high)):
-            stop.position = position
-            stop.color = (*(color if isinstance(color, tuple) else (color,) * 3), 1)
+        for stop, pos, color in zip(node.color_ramp.elements, (low, high), colors):
+            stop.position, stop.color = pos, (*color, 1)
         links.new(source, node.inputs["Fac"])
         return node.outputs["Color"]
 
-    def mix(factor, first, second, blend="MIX"):
+    def mix(factor, a, b):
         node = nodes.new("ShaderNodeMixRGB")
-        node.blend_type = blend
-        if isinstance(factor, (int, float)):
-            node.inputs["Fac"].default_value = factor
+        if isinstance(factor, float):
+            node.inputs[0].default_value = factor
         else:
-            links.new(factor, node.inputs["Fac"])
-        for value, socket in zip((first, second), ("Color1", "Color2")):
+            links.new(factor, node.inputs[0])
+        for socket, value in zip(node.inputs[1:3], (a,b)):
             if isinstance(value, tuple):
-                node.inputs[socket].default_value = (*value, 1)
+                socket.default_value = (*value,1)
             else:
-                links.new(value, node.inputs[socket])
+                links.new(value, socket)
         return node.outputs["Color"]
 
-    cool = tuple(c * k for c, k in zip(white, (.94, .974, 1.020)))
-    cream = tuple(c * k for c, k in zip(white, (1.005, .965, .895)))
-    temperature = noise(.34 * grain_scale, 2)
-    tone = ramp(temperature, .15, .86, cool, cream)
-    random_tint = nodes.new("ShaderNodeObjectInfo").outputs["Random"]
-    tone = mix(.24, tone, ramp(random_tint, 0, 1, cream, cool))
-
-    pores = next(n for n in nodes if n.type == "TEX_VORONOI")
-    pores.inputs["Scale"].default_value = 27 * grain_scale
-    grain = noise(13 * grain_scale, 2)
-    pits = ramp(pores.outputs["Distance"], .12, .31, .36, 1)
-    deposits = ramp(grain, .23, .79, .80, 1)
-    tone = mix(.72, tone, mix(.54, deposits, pits, "MULTIPLY"), "MULTIPLY")
-
+    variation = noise(.87, 3)
+    tone = ramp(variation, .23, .79, (cool, pale))
+    random_tone = nodes.new("ShaderNodeObjectInfo").outputs["Random"]
+    tone = mix(.18, tone, ramp(random_tone, 0, 1, (cool, pale)))
     ao = nodes.new("ShaderNodeAmbientOcclusion")
-    ao.samples = 6
-    ao.inputs["Distance"].default_value = (.36 if weathered else .19) / grain_scale
-    strength = .68 if weathered else .36
-    grime = tuple(a * (1-strength) + b * strength for a, b in zip(white, patina))
-    links.new(mix(ao.outputs["AO"], grime, tone), surface.inputs["Base Color"])
-    links.new(ramp(grain, .22, .79, .65, .96), surface.inputs["Roughness"])
-    surface.inputs["Specular IOR Level"].default_value = .29
-
-    def bump(height, depth, strength):
-        node = nodes.new("ShaderNodeBump")
-        node.inputs["Distance"].default_value = depth / grain_scale
-        node.inputs["Strength"].default_value = strength
-        links.new(height, node.inputs["Height"])
-        return node
-
-    sand = bump(noise(69 * grain_scale, 2), .006, .58)
-    etch = bump(mix(.78, grain, pits, "MULTIPLY"), .035, .8)
-    links.new(sand.outputs["Normal"], etch.inputs["Normal"])
-    links.new(etch.outputs["Normal"], surface.inputs["Normal"])
+    ao.samples = 4
+    old = name == "monument_weathered"
+    ao.inputs["Distance"].default_value = .19 if old else .065
+    joint = tuple(.74*a+.26*b for a,b in zip(seam, cream))
+    tone = mix(ao.outputs["AO"], joint, tone)
+    if old:
+        patina = palette["monument_shadow"]["linear_rgb"]
+        weathered = tuple(.38*a+.62*b for a,b in zip(seam,patina))
+        tone = mix(.48, tone, ramp(noise(2.3, 3), .28, .68, (weathered, pale)))
+    links.new(tone, surface.inputs["Base Color"])
+    links.new(ramp(noise(8, 2), .16, .86, ((.72,.72,.72),(.93,.93,.93))), surface.inputs["Roughness"])
+    surface.inputs["Specular IOR Level"].default_value = .27
+    bump = nodes.new("ShaderNodeBump")
+    bump.inputs["Distance"].default_value = .023
+    bump.inputs["Strength"].default_value = .42
+    links.new(noise(10, 2), bump.inputs["Height"])
+    links.new(bump.outputs["Normal"], surface.inputs["Normal"])
     return mat
 
 
-def stone(name, vertices, faces, position, rotation, material, smooth=(), old_faces=(), lift=-.026):
+def stone(name, vertices, faces, position, rotation, material, smooth=(), lift=-.026):
     # Seat each piece after rotation, so fractured tips do not hang above the ground.
     matrix = Euler(rotation).to_matrix()
     transformed = [matrix @ Vector(vertex) for vertex in vertices]
@@ -106,35 +93,37 @@ def stone(name, vertices, faces, position, rotation, material, smooth=(), old_fa
     obj = bpy.data.objects.new(name, mesh)
     vrlib.link_to_source(obj)
     obj.data.materials.append(limestone(material))
-    if old_faces:
-        obj.data.materials.append(limestone("monument_weathered"))
     for polygon in mesh.polygons:
         polygon.use_smooth = polygon.index in smooth
-        polygon.material_index = int(polygon.index in old_faces)
     mesh.set_sharp_from_angle(angle=math.radians(35))
     return obj
 
 
 def drum(name, position, rotation, r, h, cracked, rng):
-    n = 288
+    n = 512
+    phase_variation = rng.uniform(0,math.tau)
     vertices, faces = [], []
     def fault(x, y):
         return (.25*x - .13*y + .29*min(0, x + .47*y + .35*r)
                 - .33*max(0, .60*x-y-.30*r) + .11*abs(.84*x+.34*y-.18*r))
 
-    levels = (0, .014, .049, .13, .24, .37, .52, .66, .78, .88, .944, .98, 1)
+    levels = (0, .014, .049, .08, .112, .16, .21, .255, .31, .37, .43, .50, .56, .62,
+              .69, .74, .78, .83, .88, .92, .944, .98, 1)
     rows = len(levels)
     for k, t in enumerate(levels):
         for j in range(n):
             a = math.tau * j / n
-            phase = j * 12 / n
-            slot = abs(phase-round(phase))/.345
-            flute_run = min(1, .18 + 5.8*t, .17 + 3.8*(1-t))
-            flutes = .128 * math.sqrt(max(0,1-slot*slot)) * flute_run if cracked else 0
+            phase = j*16/n
+            slot = abs(phase-round(phase))/.36
+            flute_run = min(1,8.7*t,.20+4.6*(1-t))
+            flutes = r*.237*(1-slot**4)**.69*flute_run if cracked and slot < 1 else 0
             radius = r * (1 - .055 * t) - flutes
-            radius += .003 * math.cos(17 * a - t * 5)
+            radius += (.011*math.sin(7*a+phase_variation+4*t) + .004*math.cos(17*a-t*5)
+                       + .003*math.sin(37*a+19*t))
             if not cracked:
-                radius += r * (.15 if .13 <= t <= .24 else .09 if .78 <= t <= .88 else 0)
+                bell = .11+.52*math.sin(math.pi*min(1,t/.78)/2)**2
+                fillet = .11*math.exp(-((t-.12)/.078)**2)+.115*math.exp(-((t-.78)/.052)**2)
+                radius += r*(bell+fillet+.10*math.cos(a*8)*math.sin(math.pi*t)**2)
             radius -= (.025 * r if k in (0, rows - 1) else 0)
             if k >= rows-3:
                 for center, depth, arc in ((.57,.21,.34), (2.61,.11,.19), (4.09,.27,.63)):
@@ -148,7 +137,6 @@ def drum(name, position, rotation, r, h, cracked, rng):
             faces.append((a, b, b + n, a + n))
     smooth = range(len(faces))
     faces.append(tuple(reversed(range(n))))
-    damaged = len(faces)
     if cracked:
         rim = (rows - 1) * n
         outline = [Vector((x,y)) for x,y,_ in vertices[rim:]]
@@ -165,19 +153,20 @@ def drum(name, position, rotation, r, h, cracked, rng):
             if ids and ids[0] < n:
                 indices.append(rim + ids[0])
                 continue
-            trough = max(0, .64 - math.hypot(x/r-.16,(y/r+.13)*1.32))
-            step = min(0, -.105+1.34*abs(y-.25*x+.17*r))
-            z = h/2 + fault(x,y) - .43*r*trough + step + rng.uniform(-.025,.025)
+            cap = max(0,1-math.hypot(x,y)/r)
+            broken_plane=.17*abs(.62*x+.12*y+.10*r)-.24*max(0,.31*x-y+.16*r)
+            z = h/2+fault(x,y)+cap*(broken_plane+.043*math.sin(18*x+9*y)+.011*math.sin(37*y-26*x))
+            z += cap*rng.uniform(-.014,.014)
             indices.append(len(vertices))
             vertices.append((x,y,z))
         faces.extend(tuple(indices[j] for j in face) for face in pieces)
     else:
         faces.append(tuple(range((rows - 1) * n, rows * n)))
     stone(name, vertices, faces, position, rotation, "monument_white", smooth,
-          range(damaged, len(faces)) if cracked else ())
+          lift=-.30 if cracked else -.27)
 
 
-def rubble(name, position, dims, rng, dressed, lift=-.025):
+def rubble(name, position, dims, rng, dressed, lift=-.13, material=None):
     w, d, h = (a / 2 for a in dims)
     vertices = []
     shape = ((-.87,-1),(.71,-1),(1,-.81),(1,.68),(.73,1),(-.85,1),(-1,.83),(-1,-.88))
@@ -200,8 +189,7 @@ def rubble(name, position, dims, rng, dressed, lift=-.025):
     faces.extend(((24,25,26,27), (24,27,28,29), (24,29,30,31)))
     obj = stone(name, vertices, faces, position, (rng.uniform(-.22, .22), rng.uniform(-.17, .17),
                                                   rng.uniform(-math.pi, math.pi)),
-                "monument_white" if dressed else "monument_weathered",
-                old_faces=range(len(faces)-3,len(faces)) if dressed else (), lift=lift)
+                material or ("monument_white" if dressed else "monument_weathered"), lift=lift)
     bevel = obj.modifiers.new("Small edge losses", "BEVEL")
     bevel.width, bevel.segments = min(dims) * .026, 2
     bevel.angle_limit = math.radians(19)
@@ -210,10 +198,13 @@ def rubble(name, position, dims, rng, dressed, lift=-.025):
 
 def build():
     rng = random.Random(7301)
-    drum("Fractured fluted drum", (-1.73,-.40), (1.36,.25,1.83), 1.13, 2.18, True, rng)
-    drum("Separated shaft drum", (.72,.22), (1.39,-.34,1.91), 1.02, 1.57, True, rng)
-    drum("Broken neck moulding", (2.47,.77), (.99,.16,1.15), .81, .59, False, rng)
-    rubble("Dislodged cornice shingle wedged on shaft", (.85,-.39), (.91,.52,.26), rng, True, lift=.42)
+    drum("Main shaft on the fall line", (-2.11,-.38), (1.48,.13,1.78), 1.10, 2.42, True, rng)
+    drum("Separated shaft on the fall line", (.49,.16), (1.50,-.15,1.71), .94, 1.76, True, rng)
+    drum("Fallen bell capital with torus and astragal", (2.58,.64), (1.35,.16,1.73), .83, .84, False, rng)
+    rubble("Broken abacus slab", (3.42,1.22), (1.14,.79,.37), rng, True, lift=-.17)
+    for i,(x,y) in enumerate(((-2.23,-1.09),(-.90,-.64),(-.21,.71),(.83,-.58),(2.42,-.05),(2.98,1.35))):
+        rubble(f"Ground contact and scree {i}", (x,y), (1.0,.66,.38), rng, False,
+               lift=-.20, material="dirt_path" if i%2 else "mossy_rock")
     for i, (x, y, a, b, c) in enumerate((
         (-2.65, 1.37, 1.36, .93, .72), (-3.38, .16, 1.08, .76, .61),
         (-.47, -1.99, 1.56, .84, .62), (.82, -1.29, .99, .77, .47),
@@ -229,3 +220,6 @@ def build():
                                (.78, -.6), (1.63, -.89), (-.44, 1.35))):
         a = rng.uniform(.14, .39)
         rubble(f"Spall {i}", (x, y), (a, a * rng.uniform(.61, .89), a * rng.uniform(.35, .65)), rng, False)
+    orient=Matrix.Rotation(math.radians(62),4,"Z")
+    for obj in vrlib.source_objects():
+        obj.data.transform(orient)

@@ -9,166 +9,162 @@ import vrmat
 
 
 def limestone(name):
+    if name in ("mossy_rock", "dirt_path", "grass_ground"):
+        return vrmat.get(name)
     local_name = f"column_white_a.{name}"
     mat = bpy.data.materials.get(local_name)
     if mat is not None:
         return mat
     mat = vrmat.get(name).copy()
     mat.name = local_name
-    tree = mat.node_tree
-    nodes, links = tree.nodes, tree.links
+    nodes, links = mat.node_tree.nodes, mat.node_tree.links
     surface = nodes["Principled BSDF"]
-    weathered = name == "monument_weathered"
     palette = vrmat.load_palette()
-    white = palette["monument_white"]["linear_rgb"]
-    patina = palette["stone_weathered"]["linear_rgb"]
-    coords = next(n for n in nodes if n.type == "TEX_COORD").outputs["Object"]
-    grain_scale = 1
+    cream = palette["monument_white"]["linear_rgb"]
+    cool = tuple(c*k for c,k in zip(cream, (.88, .94, 1.065)))
+    pale = tuple(c*k for c,k in zip(cream, (1.035, 1.001, .945)))
+    seam = palette["stone_weathered"]["linear_rgb"]
+    coords = next(node for node in nodes if node.type == "TEX_COORD").outputs["Object"]
 
-    def noise(scale, detail):
+    def noise(scale, detail, vector=coords):
         node = nodes.new("ShaderNodeTexNoise")
         node.inputs["Scale"].default_value = scale
         node.inputs["Detail"].default_value = detail
-        links.new(coords, node.inputs["Vector"])
+        links.new(vector, node.inputs["Vector"])
         return node.outputs["Fac"]
 
-    def ramp(source, lo, hi, low, high):
+    def ramp(source, low, high, colors):
         node = nodes.new("ShaderNodeValToRGB")
-        for stop, position, color in zip(node.color_ramp.elements, (lo, hi), (low, high)):
-            stop.position = position
-            stop.color = (*(color if isinstance(color, tuple) else (color,) * 3), 1)
+        for stop, pos, color in zip(node.color_ramp.elements, (low, high), colors):
+            stop.position, stop.color = pos, (*color, 1)
         links.new(source, node.inputs["Fac"])
         return node.outputs["Color"]
 
-    def mix(factor, first, second, blend="MIX"):
+    def mix(factor, a, b):
         node = nodes.new("ShaderNodeMixRGB")
-        node.blend_type = blend
-        if isinstance(factor, (int, float)):
-            node.inputs["Fac"].default_value = factor
+        if isinstance(factor, float):
+            node.inputs[0].default_value = factor
         else:
-            links.new(factor, node.inputs["Fac"])
-        for value, socket in zip((first, second), ("Color1", "Color2")):
+            links.new(factor, node.inputs[0])
+        for socket, value in zip(node.inputs[1:3], (a,b)):
             if isinstance(value, tuple):
-                node.inputs[socket].default_value = (*value, 1)
+                socket.default_value = (*value,1)
             else:
-                links.new(value, node.inputs[socket])
+                links.new(value, socket)
         return node.outputs["Color"]
 
-    cool = tuple(c * k for c, k in zip(white, (.94, .974, 1.020)))
-    cream = tuple(c * k for c, k in zip(white, (1.005, .965, .895)))
-    temperature = noise(.34 * grain_scale, 2)
-    tone = ramp(temperature, .15, .86, cool, cream)
-    random_tint = nodes.new("ShaderNodeObjectInfo").outputs["Random"]
-    tone = mix(.24, tone, ramp(random_tint, 0, 1, cream, cool))
-
-    pores = next(n for n in nodes if n.type == "TEX_VORONOI")
-    pores.inputs["Scale"].default_value = 27 * grain_scale
-    grain = noise(13 * grain_scale, 2)
-    pits = ramp(pores.outputs["Distance"], .12, .31, .36, 1)
-    deposits = ramp(grain, .23, .79, .80, 1)
-    tone = mix(.72, tone, mix(.54, deposits, pits, "MULTIPLY"), "MULTIPLY")
-
+    variation = noise(.87, 3)
+    tone = ramp(variation, .23, .79, (cool, pale))
+    random_tone = nodes.new("ShaderNodeObjectInfo").outputs["Random"]
+    tone = mix(.18, tone, ramp(random_tone, 0, 1, (cool, pale)))
     ao = nodes.new("ShaderNodeAmbientOcclusion")
-    ao.samples = 6
-    ao.inputs["Distance"].default_value = (.36 if weathered else .19) / grain_scale
-    strength = .68 if weathered else .36
-    grime = tuple(a * (1-strength) + b * strength for a, b in zip(white, patina))
-    links.new(mix(ao.outputs["AO"], grime, tone), surface.inputs["Base Color"])
-    links.new(ramp(grain, .22, .79, .65, .96), surface.inputs["Roughness"])
-    surface.inputs["Specular IOR Level"].default_value = .29
-
-    def bump(height, depth, strength):
-        node = nodes.new("ShaderNodeBump")
-        node.inputs["Distance"].default_value = depth / grain_scale
-        node.inputs["Strength"].default_value = strength
-        links.new(height, node.inputs["Height"])
-        return node
-
-    sand = bump(noise(69 * grain_scale, 2), .006, .58)
-    etch = bump(mix(.78, grain, pits, "MULTIPLY"), .035, .8)
-    links.new(sand.outputs["Normal"], etch.inputs["Normal"])
-    links.new(etch.outputs["Normal"], surface.inputs["Normal"])
+    ao.samples = 4
+    old = name == "monument_weathered"
+    ao.inputs["Distance"].default_value = .19 if old else .065
+    joint = tuple(.74*a+.26*b for a,b in zip(seam, cream))
+    tone = mix(ao.outputs["AO"], joint, tone)
+    if old:
+        patina = palette["monument_shadow"]["linear_rgb"]
+        weathered = tuple(.38*a+.62*b for a,b in zip(seam,patina))
+        tone = mix(.73, tone, ramp(noise(2.3, 3), .39, .68, (weathered, pale)))
+    links.new(tone, surface.inputs["Base Color"])
+    links.new(ramp(noise(8, 2), .16, .86, ((.72,.72,.72),(.93,.93,.93))), surface.inputs["Roughness"])
+    surface.inputs["Specular IOR Level"].default_value = .27
+    bump = nodes.new("ShaderNodeBump")
+    bump.inputs["Distance"].default_value = .023
+    bump.inputs["Strength"].default_value = .42
+    links.new(noise(10, 2), bump.inputs["Height"])
+    links.new(bump.outputs["Normal"], surface.inputs["Normal"])
     return mat
 
 
-def turn_stone(name, profile, rng, stone, fluted=False, wear=.01, sides=288,
-               shift=(0, 0), chip=None, petals=0):
-    vertices = []
-    frequency = 12
-    for j, (z, radius, flute) in enumerate(profile):
+def turn_stone(name, profile, rng, stone, fluted=False, sides=512, damage=(), petal=0, phase=0):
+    verts = []
+    for z, radius, cut in profile:
+        span = (z-profile[0][0])/(profile[-1][0]-profile[0][0])
         for i in range(sides):
-            theta = i * math.tau / sides
-            pitch = i * frequency / sides
-            slot = abs(pitch - round(pitch)) / .36
-            hollow = math.sqrt(max(0, 1 - slot * slot))
-            surface = (.52 * math.sin(7 * theta + z * .82) +
-                       .3 * math.sin(17 * theta - z) + .18 * math.sin(37 * theta + z * 2.2))
-            r = radius - (flute * hollow if fluted else 0) + wear * surface
-            if petals:
-                r += petals * max(0, math.cos(8 * theta)) ** 2 * math.sin(math.pi * j / (len(profile)-1))
-            ring_z = z
-            if chip is not None and j >= len(profile) - 4:
-                a = abs(math.remainder(theta - chip, math.tau))
-                loss = max(0, 1 - abs(a - .035 * (len(profile)-1-j)) / .255)
-                r -= .15 * loss * (j - len(profile) + 4) / 3
-                ring_z -= (.05 * loss if j == len(profile) - 1 else 0)
-            r += rng.uniform(-wear * .08, wear * .08)
-            vertices.append((shift[0] + r * math.cos(theta), shift[1] + r * math.sin(theta), ring_z))
+            a = math.tau*i/sides
+            sector = i*16/sides
+            distance = abs(sector-round(sector))/.362
+            flute = ((1-distance**4)**.72 if distance < 1 else 0) * cut if fluted else 0
+            r = radius-flute
+            r += (.010*math.sin(7*a+.8*z+phase)+.004*math.cos(23*a-z*2)+.002*math.sin(43*a+z*3)) * math.sin(math.pi*span)
+            r += petal*math.sin(math.pi*span)**2 * (.52+.48*math.cos(8*a))**3
+            for ca,cz,arc,height,loss,slope in damage:
+                u = (z-cz)/height
+                fault = ca+slope*u+.05*math.sin(5*u)
+                edge = abs(math.remainder(a-fault,math.tau))/arc
+                r -= loss*max(0,1-abs(u))*max(0,1-edge)
+            verts.append((r*math.cos(a),r*math.sin(a),z))
     faces = [tuple(reversed(range(sides)))]
-    for j in range(len(profile) - 1):
-        for i in range(sides):
-            a, b = j * sides + i, j * sides + (i + 1) % sides
-            faces.append((a, b, b + sides, a + sides))
-    faces.append(tuple(range(len(vertices) - sides, len(vertices))))
+    for k in range(len(profile)-1):
+        for j in range(sides):
+            a,b = k*sides+j,k*sides+(j+1)%sides
+            faces.append((a,b,b+sides,a+sides))
+    faces.append(tuple(range(len(verts)-sides,len(verts))))
     mesh = bpy.data.meshes.new(name)
-    mesh.from_pydata(vertices, [], faces)
+    mesh.from_pydata(verts,[],faces)
     mesh.update()
-    obj = bpy.data.objects.new(name, mesh)
+    obj = bpy.data.objects.new(name,mesh)
     vrlib.link_to_source(obj)
     obj.data.materials.append(limestone(stone))
-    for poly in mesh.polygons[1:-1]:
-        poly.use_smooth = True
-    mesh.set_sharp_from_angle(angle=math.radians(22 if fluted else 35))
+    for face in mesh.polygons[1:-1]:
+        face.use_smooth=True
+    mesh.set_sharp_from_angle(angle=math.radians(38))
 
 
 def build():
-    rng = random.Random(66517)
-    white = "monument_white"
-    old = "monument_weathered"
-    turn_stone("Dressed circular ground course",
-               [(-.028, 2.35, 0), (.09, 2.42, 0), (.32, 2.42, 0), (.40, 2.36, 0),
-                (.47, 2.23, 0), (.58, 2.23, 0), (.63, 2.17, 0)], rng, old, wear=.021,
-               chip=.27)
-    turn_stone("Scotia and foot moulding",
-               [(.606, 2.09, 0), (.67, 2.13, 0), (.81, 2.13, 0), (.94, 2.03, 0),
-                (1.02, 1.90, 0), (1.12, 1.85, 0), (1.24, 1.87, 0),
-                (1.32, 1.94, 0), (1.41, 1.88, 0), (1.48, 1.75, 0)], rng, old, wear=.027)
-    heights = (1.46, 3.01, 5.46, 7.66, 9.14, 12.03, 13.81, 16.15, 17.0)
-    turn_stone("Recessed bed of drum joints", [(1.4, 1.32, 0), (8, 1.24, 0),
-                                                 (16.6, .78, 0), (17.05, .91, 0)], rng, old, sides=64)
-    for i, (lo, hi) in enumerate(zip(heights, heights[1:])):
-        rings = []
-        rows = (0, .015, .047, .09, .14, .22, .32, .45, .56, .68, .78, .88, .93, .97, .987, 1)
-        for j, u in enumerate(rows):
-            z = lo + .01 + (hi - lo - .026) * u
-            t = (z - 1.46) / 15.55
-            r = 1.68 - .61 * t + .105 * math.sin(t * math.pi)
-            flute = .275 * math.sin(math.pi * min(1, t * 11, (1 - t) * 13) / 2)
-            if j in (0, len(rows) - 1):
-                r -= .017
-            rings.append((z, r, flute))
-        turn_stone(f"Shaft drum {i + 1}", rings, rng, white,
-                   fluted=True, wear=.006, shift=(.023 * math.sin(i * 2), .025 * math.cos(i * 1.3)),
-                   chip=(.74, -.4, 2.12, -1.3, 1.64, -.1, -2.2, 2.75)[i])
+    rng=random.Random(66517)
+    white,old="monument_white","monument_weathered"
+    turn_stone("Weathered buried foot", [(-.21,2.48,0),(.12,2.49,0),(.25,2.49,0),(.43,2.44,0),
+               (.53,2.37,0),(.60,2.27,0)], rng, old, damage=((.33,.40,.26,.32,.25,.2),(2.1,.51,.28,.26,.19,.22)))
+    turn_stone("Chipped lower torus and scotia",[(.59,2.25,0),(.66,2.30,0),(.76,2.34,0),(.86,2.31,0),
+               (.98,2.21,0),(1.07,2.00,0),(1.16,1.94,0),(1.24,1.96,0),(1.31,2.01,0),
+               (1.39,1.96,0),(1.50,1.73,0)],rng,white,damage=((.74,.84,.23,.31,.24,.17),(-1.3,1.13,.14,.25,.18,-.30)))
+    heights=(1.48,2.94,5.42,7.61,9.05,11.94,13.76,15.53,16.51)
 
-    turn_stone("Neck and double astragal",
-               [(16.95, 1.035, 0), (16.98, 1.15, 0), (17.035, 1.17, 0),
-                (17.09, 1.11, 0), (17.132, 1.11, 0), (17.16, 1.19, 0),
-                (17.223, 1.19, 0), (17.25, 1.12, 0)], rng, white, wear=.006)
-    turn_stone("Eight folded stone brackets",
-               [(17.23, 1.11, 0), (17.30, 1.17, 0), (17.43, 1.28, 0), (17.55, 1.42, 0),
-                (17.69, 1.59, 0), (17.81, 1.71, 0), (17.90, 1.77, 0)], rng, white,
-               wear=.012, petals=.27)
-    turn_stone("Twice-stepped octagonal abacus",
-               [(17.86, 1.83, 0), (17.89, 1.93, 0), (17.98, 1.93, 0), (18.04, 2.08, 0),
-                (18.22, 2.08, 0), (18.29, 1.98, 0)], rng, white, wear=.012, sides=8)
+    def radii(z):
+        t=(z-1.48)/15.03
+        depth=.255*min(1,max(0,t)*12,max(0,1-t)*11)
+        return 1.70-.61*t+.103*math.sin(math.pi*t),depth
+
+    for i,(lo,hi) in enumerate(zip(heights,heights[1:])):
+        z0,z1=lo+.009,hi-.009
+        phase=rng.uniform(0,math.tau)
+        samples=sorted({z0,z0+.025,z1-.025,z1,*(z0+(z1-z0)*j/43 for j in range(1,43))})
+        profile=[]
+        for z in samples:
+            radius,depth=radii(z)
+            edge=.018 if z in (z0,z1) else 0
+            profile.append((z,radius-edge,depth))
+        alpha=(.62,1.14,-.71,.56,2.12,.44,-1.75,.9)[i]
+        loss=(.18,.08,.17,.10,.20,.10,.15,.13)[i]
+        damage=((alpha,z1,.24,.25,loss,.20),
+                (alpha+.30,lo+.54*(hi-lo),.071,.48*(hi-lo),.102,.41),
+                (alpha-1.4,lo+.25*(hi-lo),.115,.24,.09,-.17))
+        turn_stone(f"Aligned shaft drum {i+1}",profile,rng,white,True,damage=damage,phase=phase)
+        radius,depth=radii(lo)
+        turn_stone(f"Recessed fluted bedding {i+1}",[(lo-.018,radius-.066,depth),
+                   (lo+.018,radius-.066,depth)],rng,old,True,phase=0)
+    turn_stone("Necking and raised double neck ring",[(16.49,1.09,0),(16.57,1.15,0),(16.63,1.23,0),
+               (16.76,1.23,0),(16.82,1.16,0),(16.93,1.16,0),(16.99,1.31,0),(17.11,1.31,0)],rng,white,
+               damage=((.58,16.76,.18,.16,.17,.26),))
+    turn_stone("Deep ribbed bell echinus",[(17.09,1.20,0),(17.18,1.22,0),(17.29,1.25,0),(17.40,1.32,0),
+               (17.53,1.44,0),(17.68,1.61,0),(17.81,1.82,0),(17.91,1.98,0),(17.99,2.01,0)],
+               rng,white,petal=.25,damage=((.9,17.90,.16,.24,.14,-.42),))
+    turn_stone("Deep stepped abacus",[(17.97,2.02,0),(18.04,2.13,0),(18.13,2.18,0),
+               (18.29,2.18,0),(18.36,2.09,0)],rng,white,damage=((.49,18.33,.18,.24,.22,-.25),))
+    for i in range(9):
+        a=.27+i*.63
+        x,y=2.45*math.cos(a),2.45*math.sin(a)
+        local=rng.uniform(.12,.33)
+        n=12
+        verts=[(x+local*s*math.cos(j*math.tau/n),y+local*s*math.sin(j*math.tau/n),z)
+               for z,s in ((-.14,1),(.06,1),(.14,.57)) for j in range(n)]
+        polygons=[tuple(reversed(range(n)))]+[(k*n+j,k*n+(j+1)%n,(k+1)*n+(j+1)%n,(k+1)*n+j)
+                  for k in range(2) for j in range(n)]+[tuple(range(2*n,3*n))]
+        data=bpy.data.meshes.new(f"Root talus {i}")
+        data.from_pydata(verts,[],polygons)
+        obj=bpy.data.objects.new(data.name,data)
+        vrlib.link_to_source(obj)
+        data.materials.append(limestone("mossy_rock" if i%3 else "dirt_path"))

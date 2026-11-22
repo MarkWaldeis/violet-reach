@@ -14,22 +14,8 @@
     4500
   ],
   "texture_size": 4096,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-501e5a510b5c43f2b6ce7952cf05094b",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 7,
-      "form_detail": 7,
-      "material": 7,
-      "scale": 6,
-      "style": 7,
-      "defects": 7
-    },
-    "notes": "Round 2. Fixed: blocks are longer and vary in length, joints are fine recesses instead of pillow bulges, rib widths differ, rib backs have a crest, the full-surface grey mottling is gone. Builder's close call (blade thickness): the free tips are now thicker with rounded ends, but every rib still curls into a thin tapering hook, so the fan of six still reads as a grass tuft rather than one or two dominant ribs (round-1 point 2); close one or two ribs into arches or end them in a heavy capstone. Not fixed: (1) the 80 m ribs still stand on a low 4-step plinth, each on a ~1.5 m block; there are no massive root bodies and no walkable opening near the figure (round-1 point 3). (2) The material is uniformly clean with a sandpaper grain everywhere and no localized weathering at the rib feet or joints; the joints show as orange-brown gaps. (3) The scale figure is still barely findable on the sheet.",
-    "round": 2,
-    "source_sha256": "28b5f3fabdb250f65bbc8fc0362425883611777c48bde68e25e40de4e58a29c0",
-    "sheet_sha256": "1dfaad44e5a11af443854b7e3bef47778e4dc9d42dc30c9a3ceaec1f4985b16a"
-  },
+  "review": null,
   "review_rounds": 2
 }
