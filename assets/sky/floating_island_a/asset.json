@@ -14,22 +14,8 @@
     2600
   ],
   "texture_size": 2048,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-4076f9d9c7794015bd813c73729bed6b",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 8,
-      "form_detail": 8,
-      "material": 8,
-      "scale": 8,
-      "style": 8,
-      "defects": 7
-    },
-    "notes": "Round 3 (final). Round-2 points: (1) bluish shaded cliff FIXED. The limestone mix is now warm ivory/ochre in bed_color, and turn_245/290 read tan, not blue. (2) Summit grass FIXED enough: finer olive turf with straw patches and real tuft clusters around the figure (closeup.jpg). (3) Soil rim FIXED: its thickness varies, it has eroded notches and gaps, and grass blades hang over the edge. (4) Roots PARTLY fixed: they now taper and branch, but at review size they still read as thin dark lines hanging off the rim (closeup.jpg, right and left of the rim). (5) Summit rocks NOT fixed: they now sit on an elliptical ring around each grove (cos/sin placement in cover()). In closeup.jpg, top right, white rocks and round bushes alternate along one curved line like a garden border. (6) Crescent dimple stamp REMOVED, but closeup_base now shows a soft fuzzy grain over every face, so the bed lips read as foam or felt rather than broken limestone. Small round pits remain on the left bed. Remaining fixes (defects 7): scatter the summit rocks in irregular clumps half buried in turf, with no ring or row, and keep the shrubs separate from the rocks. Make the hanging roots 2-3x thicker at the rim, fewer and shorter, and tucked into the soil scarps. Replace the uniform fuzzy grain with crisp fracture planes on the bed lips and keep the fine grain in the recesses. Renderer: vr_review_neutral_sky (this asset only) swaps the sky lighting for a warm neutral grey on non-camera rays. It is opt-in, so other sheets are unchanged, but this island is now lit differently from the rest of the slice. The material fix is real in build.py, but before export check the island once under the standard studio lighting.",
-    "round": 3,
-    "source_sha256": "de5db81d9536aa2c31eb78cacdde19e22340a88d06bd8e648a5142e157ecd9e6",
-    "sheet_sha256": "67fc1f2409a85b8d6588487fde71472d275d8fd089b042ee6843a594f0fbae13"
-  },
+  "review": null,
   "review_rounds": 3
 }
