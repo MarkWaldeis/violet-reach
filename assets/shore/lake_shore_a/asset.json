@@ -14,7 +14,22 @@
     2800
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-4076f9d9c7794015bd813c73729bed6b",
-  "review": null
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 7,
+      "material": 7,
+      "scale": 8,
+      "style": 7,
+      "defects": 7
+    },
+    "notes": "Round 1 (new build). Clear improvement: soil band with exposed roots under the grass edge, wet rock bases at the water, sand-to-grass transition no longer jagged, scale reads well. Defects: (1) form_detail: every rock is the same noise-displaced blob (baked-potato shapes in closeup.jpg and closeup_base), with no flat fracture planes, edges or bedding; mix angular split boulders with flat-topped slabs and partly buried stones. The grass is sparse thin blades on a flat green underlay, so it reads as painted; add dense tufts of varied height with a few dry clumps, per ref_14/ref_09. (2) material: the wet strip is only a faint darkening a few centimetres wide; make a 0.5-1.5 m darker, slightly glossy wet sand band that follows the waterline, with a thin pale foam/sediment line. All rocks are the same blue-grey; vary them warm/cool and lighter where dry. (3) defects: pebbles are still scattered evenly as single dots over the whole beach; concentrate them in drift lines along the waterline and at rock bases, and leave the upper sand mostly clean. The preview water is an opaque teal slab with visible side walls; that is fine as context, but the shore should not depend on it: show the submerged sand slope through shallow transparent water so the water connection reads.",
+    "round": 1,
+    "source_sha256": "83e92eedee7038fee2019b391338cfb97a3ae6dcbf108cf0849f66897b4c64fb",
+    "sheet_sha256": "29bc62964f26f5943c7f223959b83c6ad6b495c4e75566fb44aa6844443298f6"
+  },
+  "review_rounds": 1
 }
