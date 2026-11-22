@@ -14,22 +14,22 @@
     3100
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-ac377e3f64b249c4a59d5943f70f2061",
   "review": {
     "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
     "scores": {
-      "silhouette": 7,
-      "form_detail": 6,
-      "material": 6,
+      "silhouette": 8,
+      "form_detail": 7,
+      "material": 7,
       "scale": 7,
-      "style": 6,
-      "defects": 5
+      "style": 7,
+      "defects": 7
     },
-    "notes": "Round 2, checked against the round-1 points. Fixed: the ribs now close into three arches and the free knobs are gone. Still failing or new: each arch is one smooth tube of even thickness bent over and back down, so the group reads as giant croquet hoops rather than paired ribs meeting overhead (hero, turn_200); the six footings are low-poly pyramidal cones with flat triangular facets and loose white boulders, not buttressed stone (closeup_base). Defect: the front footing has a small arched doorway with a paved path leading into it (closeup_base); remove it, nothing in the plan calls for an entrance. Material: a fine grey speckle like terrazzo or concrete covers every rib evenly, with no weathering gradient (closeup_upper). Fix: vary the rib section (thicker and flattened at the foot, tapering to the crown, with a slight twist) and let two ribs overlap at each crown; model the footings as fractured buttresses with large planes, secondary chips and soil and turf banked against them; replace the speckle with ivory limestone graded darker towards the foot, with rain streaks on the outer face. The articulated scale figure and the vr_review_hero/vr_review_base camera options added to render_sheet.py are opt-in and only used by this asset.",
-    "round": 2,
-    "source_sha256": "f26ba8a887147543361b206bc6e324a535a4855a078595fbbd8c08d73fe84aec",
-    "sheet_sha256": "63ab7192d559c0ff04e013d60ee348a4932933d844795bf46318b7a0a248296c"
+    "notes": "Round 3 (final). Fixed: the ribs now cross in overlapping pairs at the apex, the doorway and path are gone, and the terrazzo speckle is gone (hero, turn tiles, closeup_base). Still failing: every rib is still one smooth, evenly tapering tube like an elephant tusk, with no change of section, no fractures and no weathering, so the group reads as polished ivory rather than ancient limestone (closeup_upper); the footings are loose angular shards stood around each rib foot rather than a buttress the rib grows out of, and the turf is a flat blotchy disc with a hard edge (closeup_base); at 80 m the scale figure is still only a dot in the hero. Fix: vary the rib section along its length with flattened faces and broken arrises, add fractures and localized grime, rain streaks and lichen, merge the shards into a single splayed buttress the rib flows into, bank the turf irregularly into the terrain, and frame the hero so the figure reads.",
+    "round": 3,
+    "source_sha256": "f488423df94347badd5948b24bac6fa6b9f84e54190ffd92063fb75fbc787df6",
+    "sheet_sha256": "faac7876ad5e79694f0d462ed2d934db3ef459cfffda074240edf5a739d9a614"
   },
-  "review_rounds": 2
+  "review_rounds": 3
 }
