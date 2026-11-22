@@ -281,7 +281,7 @@ def branch(mesh, start, end, radius):
     mesh.face(rings[1])
 
 
-def blob(mesh, centre, size, seed, flat=False):
+def blob(mesh, centre, size, seed, flat=False, orientation=None):
     bm = bmesh.new()
     bmesh.ops.create_icosphere(bm, subdivisions=2, radius=1)
     for v in bm.verts:
@@ -289,14 +289,28 @@ def blob(mesh, centre, size, seed, flat=False):
         if flat:
             p.z *= .75
         variation = 1+.4*noise.noise(p*4.7+Vector((seed*.13, 4, 7)))+.16*noise.noise(p*13+Vector((1, seed, 4)))
-        v.co = Vector(centre)+Vector((p.x*size[0], p.y*size[1], p.z*size[2]))*variation
+        offset = Vector((p.x*size[0], p.y*size[1], p.z*size[2]))*variation
+        if orientation is not None:
+            offset = orientation @ offset
+        v.co = Vector(centre)+offset
     for face in bm.faces:
         mesh.face([v.co.copy() for v in face.verts])
     bm.free()
 
 
-def leafy_mass(mesh, centre, size, seed):
+def leafy_mass(mesh, centre, size, seed, canopy=False):
     rng = random.Random(seed)
+    if canopy:
+        for _ in range(rng.randint(11, 17)):
+            p = Vector(centre)+Vector((rng.uniform(-.95, .95)*size[0],
+                                       rng.uniform(-.95, .95)*size[1],
+                                       rng.uniform(-.35, .5)*size[2]))
+            scale = rng.uniform(.32, .5)
+            normal = Vector((rng.uniform(.2, .65), rng.uniform(-.85, -.3), rng.uniform(.5, .9))).normalized()
+            blob(mesh, p, (size[0]*scale, size[1]*scale*rng.uniform(.65, 1.1),
+                           size[2]*rng.uniform(.055, .12)), rng.randrange(100000),
+                 orientation=Vector((0, 0, 1)).rotation_difference(normal))
+        return
     blob(mesh, centre, size, seed)
     for _ in range(rng.randint(5, 9)):
         direction = Vector((rng.uniform(-1, 1), rng.uniform(-1, 1), rng.uniform(-.65, 1))).normalized()
@@ -545,7 +559,7 @@ def vegetation():
                     leafy_mass(crowns[variant], centre,
                                (s*rng.uniform(.8, 1.45), s*rng.uniform(.7, 1.2),
                                 s*(rng.uniform(.6, .95) if tree_type == 0 else rng.uniform(.85, 1.5))),
-                               rng.randrange(100000))
+                               rng.randrange(100000), canopy=True)
     for cx, cy in ((-91, -20), (39, -34), (5, 27), (80, 6), (-24, 12)):
         for _ in range(18):
             x, y = rng.gauss(cx, 5), rng.gauss(cy, 4)
@@ -572,7 +586,7 @@ def vegetation():
         boulder(stones, stone_bases, (x, y, summit(x, y)-s*.02), s, rng)
     trunks.object("Forked acacia trunks", "tree_bark")
     for i, crown in enumerate(crowns):
-        crown.object("Open irregular leafy canopies %d" % i, "foliage_leaf", smooth=True)
+        crown.object("Open irregular leafy canopies %d" % i, "grass_ground", smooth=True)
     for i, shrub in enumerate(shrubs):
         shrub.object("Varied leafy shrub masses %d" % i, "foliage_leaf", smooth=True)
     stones.object("Half buried fractured weathered limestone", "mossy_rock")
@@ -636,7 +650,7 @@ def build():
     fragments()
     scene = bpy.context.scene
     scene["vr_review_floating"] = True
-    scene["vr_review_figure"] = (0, 0, -1000)
+    scene["vr_review_figure"] = (-44, -72, summit(-44, -72)+.05)
     scene["vr_review_turn"] = (0, 0, 86, 247, 16, 600)
     scene["vr_closeup_upper"] = (-35, -53, 147, 247, 22, 115)
     scene["vr_closeup_base"] = (-22, 2, 46, 247, 5, 195)
