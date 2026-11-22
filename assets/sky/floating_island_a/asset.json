@@ -4,9 +4,9 @@
   "title": "Driftward Plateau",
   "description": "An asymmetric faulted limestone island with a long keel, detached fragments and a grass-capped summit. The keel starts near Z=0.",
   "target_size_m": [
-    330,
-    190,
-    165
+    335,
+    195,
+    168
   ],
   "lod_triangles": [
     27000,
@@ -14,22 +14,8 @@
     2600
   ],
   "texture_size": 2048,
-  "status": "modeling",
-  "builder": "devin-4076f9d9c7794015bd813c73729bed6b",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 8,
-      "form_detail": 7,
-      "material": 7,
-      "scale": 8,
-      "style": 7,
-      "defects": 7
-    },
-    "notes": "Extra round (after final round 3), standard sheet lighting. The renderer is back to its round-2 state (the neutral-sky option is removed), so this sheet is lit like every other asset. Checked against the three round-3 points: (1) summit rocks: fixed. The ring borders are gone; the stones sit in loose irregular clumps (closeup.jpg). They are still small, similar flat beans with no partly buried larger blocks, but that is acceptable at this scale. (2) roots: changed, not fixed. There are fewer, thicker roots, but they now stick straight out of the soil rim as blunt rounded capsules ending in thin wiry claws (closeup.jpg left and centre, closeup_upper). They read as sausages or logs pushed into the wall, not roots growing out of soil and splaying down the face. Let them emerge flush from the soil band, taper continuously and hug the rock, with no rounded end caps. (3) bed faces: partly fixed. The ledges have crisp breakouts and the felt-like grain on exposed faces is gone. But the ledge tops are now smoothed into soft rounded clay, and the recesses show clusters of round pits again (closeup_base upper left and centre left). Round pits are still not fracture detail; use angular spalls and joint steps. (4) New regression under standard lighting, material/style: the cliff is now saturated butter-yellow ochre (hero.jpg, all turns), from the new up-facing pigment multiply in tint() (1.14, .95, .30). STYLE.md asks for 'vorwiegend heller geschichteter Stein' (canyon_chalk/canyon_strata) and ref_03 shows pale ivory limestone. The round-3 render was close to that under the neutral sky; under the standard studio the island now reads as sponge cake, and it would clash with the ivory monuments and bridge in the slice. Bring it back to pale ivory and grey-cream, with warm sandstone only as a band or regional accent. Rejected: form_detail 7, material 7, style 7, defects 7.",
-    "round": 4,
-    "source_sha256": "79f18f93e391278845bd35715f77c866a51bcff1a8379e2f9efb7962d223036e",
-    "sheet_sha256": "de909a113980f5445c33b15c50991c6ccd19bf52d42cf56a6c93228fdec8355c"
-  },
+  "status": "blender_review",
+  "builder": "devin-8d8786f1f7144ea59f31fe8bffc2bd4c",
+  "review": null,
   "review_rounds": 4
 }
