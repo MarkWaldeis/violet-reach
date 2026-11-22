@@ -14,7 +14,22 @@
     2500
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-ac377e3f64b249c4a59d5943f70f2061",
-  "review": null
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 7,
+      "scale": 8,
+      "style": 8,
+      "defects": 8
+    },
+    "notes": "Round 1 of the new budget, judged against the PR #6 round-3 notes. All three points are fixed: the round arch now springs from profiled impost blocks on masonry piers instead of discs on cylinders; the floor is a paved threshold with steps tied into the pier bases and turf; and the arch joints are tight lines with small chips, no black slots (hero.jpg, closeup_upper, closeup_base). Fails only on material: the whole gate is one clean, even ivory from foot to crown, with no local weathering, which STYLE.md requires for white monuments. Fix: dark rain streaks below the impost mouldings and the crown, grime and lichen at the pier feet and in the lower joints, worn and darker treads in the middle of the threshold; leave the upper faces clean. Polish, not blocking: the extrados voussoirs on the side face read as thin stacked planks; vary their depth.",
+    "round": 1,
+    "source_sha256": "1c8f6e8fa4feb80b0b558978600abbb72fa23b0f6637c538ce3ed42370630758",
+    "sheet_sha256": "36e2c7221c6731709f8117edf82d1e7a4015dd70080d9ab9465c6dca9e6c8015"
+  },
+  "review_rounds": 1
 }
