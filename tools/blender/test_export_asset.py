@@ -42,9 +42,16 @@ for name, colour in (("Green", (.08, .31, .12, 1)), ("Dry", (.7, .45, .15, 1))):
 for polygon, index in zip(mesh.polygons, indices):
     polygon.material_index = index
 
+bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=4, radius=.3, location=(2, 0, 1))
+trunk = bpy.context.object
+for collection in list(trunk.users_collection):
+    collection.objects.unlink(trunk)
+source.objects.link(trunk)
+trunk.data.materials.append(mesh.materials[0])
+
 with tempfile.TemporaryDirectory() as folder:
     asset = Path(folder)
-    (asset / "asset.json").write_text(json.dumps({"id": "leaf", "texture_size": 128, "lod_triangles": [128, 32, 8]}))
+    (asset / "asset.json").write_text(json.dumps({"id": "leaf", "category": "vegetation", "texture_size": 128, "lod_triangles": [128, 32, 8]}))
     sys.argv = ["blender", "--", folder, folder]
     result = runpy.run_path(str(Path(__file__).with_name("export_asset.py")))
     counts = [vrlib.triangle_count([obj]) for obj in result["lods"]]

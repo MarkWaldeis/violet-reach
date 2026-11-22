@@ -75,7 +75,7 @@
     {
       "id": "grass_tuft_a",
       "category": "vegetation",
-      "title": "Grasbüschel A",
+      "title": "Grasb\u00fcschel A",
       "file": "grass_tuft_a.glb",
       "size_m": [
         0.579,
@@ -118,7 +118,7 @@
         13.306,
         15.624
       ],
-      "bytes": 5442380
+      "bytes": 7008920
     },
     {
       "id": "tree_broadleaf_b",
@@ -130,7 +130,7 @@
         6.727,
         11.031
       ],
-      "bytes": 6819112
+      "bytes": 6896908
     },
     {
       "id": "tree_broadleaf_c",
@@ -142,7 +142,7 @@
         5.244,
         6.958
       ],
-      "bytes": 6820488
+      "bytes": 6480716
     }
   ]
 }

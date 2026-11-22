@@ -64,10 +64,10 @@ def decimate(obj, target):
     remove = []
     if floor > target * 1.25:
         for _, vertices, count in sorted(candidates, key=lambda item: item[0]):
-            if triangles <= target:
+            if floor <= target * .75:
                 break
             remove.extend(vertices)
-            triangles -= count
+            floor -= min(2, count)
     bmesh.ops.delete(mesh, geom=remove, context="VERTS")
     mesh.to_mesh(obj.data)
     obj.data.update()
@@ -152,10 +152,11 @@ lod0.data.materials.append(bake_mat)
 for poly in lod0.data.polygons:
     poly.material_index = 0
 
-bake("basecolor", "DIFFUSE", "sRGB", project=False, pass_filter={"COLOR"})
+project_materials = meta.get("category") != "vegetation"
+bake("basecolor", "DIFFUSE", "sRGB", project=project_materials, pass_filter={"COLOR"})
 bake("normal", "NORMAL", "Non-Color")
-bake("roughness", "ROUGHNESS", "Non-Color", project=False)
-bake("emission", "EMIT", "sRGB", project=False)
+bake("roughness", "ROUGHNESS", "Non-Color", project=project_materials)
+bake("emission", "EMIT", "sRGB", project=project_materials)
 scene.cycles.samples = 64
 bake("occlusion", "AO", "Non-Color")
 

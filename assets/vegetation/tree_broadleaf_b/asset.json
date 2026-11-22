@@ -39,8 +39,8 @@
   ],
   "export": {
     "file": "export/tree_broadleaf_b.glb",
-    "bytes": 6819112,
-    "sha256": "675cd677cbede8d626f89be07409883d598c42cb7b6e7adfbe2e37dc39c080b8",
+    "bytes": 6896908,
+    "sha256": "31ac83e5bc9ff17b373a374ebd689c7c19dfd439601cdb39312dc3d7139d891c",
     "source_sha256": "2c2dd93814d5db32054c805418302bcaca34e5ad6b6bec9fb2012280b668a6dd",
     "sheet_sha256": "0450622536674996eafeaa1a82467faaf712bfcc224410445206ccbae0be5c64",
     "lod_triangles": [
