@@ -14,22 +14,22 @@
     3100
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-ac377e3f64b249c4a59d5943f70f2061",
   "review": {
     "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
     "scores": {
       "silhouette": 8,
       "form_detail": 7,
-      "material": 7,
-      "scale": 7,
+      "material": 8,
+      "scale": 8,
       "style": 7,
       "defects": 7
     },
-    "notes": "Round 3 (final). Fixed: the ribs now cross in overlapping pairs at the apex, the doorway and path are gone, and the terrazzo speckle is gone (hero, turn tiles, closeup_base). Still failing: every rib is still one smooth, evenly tapering tube like an elephant tusk, with no change of section, no fractures and no weathering, so the group reads as polished ivory rather than ancient limestone (closeup_upper); the footings are loose angular shards stood around each rib foot rather than a buttress the rib grows out of, and the turf is a flat blotchy disc with a hard edge (closeup_base); at 80 m the scale figure is still only a dot in the hero. Fix: vary the rib section along its length with flattened faces and broken arrises, add fractures and localized grime, rain streaks and lichen, merge the shards into a single splayed buttress the rib flows into, bank the turf irregularly into the terrain, and frame the hero so the figure reads.",
-    "round": 3,
-    "source_sha256": "f488423df94347badd5948b24bac6fa6b9f84e54190ffd92063fb75fbc787df6",
-    "sheet_sha256": "faac7876ad5e79694f0d462ed2d934db3ef459cfffda074240edf5a739d9a614"
+    "notes": "Lead extra round (final). Fixed: the smooth polished tubes are gone; the ribs are now rough, eroded limestone with weathering (grime and lichen at the feet, streaks, darker recesses), and each foot flares into a fused buttress root instead of loose shards (t9, closeup). The figure now stands at the rib foot in the base view, so scale reads. Still failing: (1) defects 7: each rib stands in a smooth olive turf cone with a lobed star outline and a clean hard edge on the ground, sprinkled with black specks for grass (t9, hero), the same placeholder-base problem rejected on the vegetation; (2) form_detail/style 7: one even crumpled-noise relief of the same frequency covers every rib from foot to crown, like papier-mache, with no bedding lines, larger fracture planes or smoother wind-worn crowns. Fix: replace the cones with a low, irregular soil-and-turf patch that fades into the ground, with real grass tufts, scree and chalk chips; add 2-3 scales of relief (horizontal bedding bands and a few large fracture faces on the lower third, smoother worn surfaces toward the crown).",
+    "round": 4,
+    "source_sha256": "ba7a1fe95fc81b1a5919e695cea9e117ada1974c8d188c226a7c697e44dc03c3",
+    "sheet_sha256": "639ec2df67fea89261dc5f1a1ef3ebf51827cfeab13f7a50adf7b4e02b07ed29"
   },
-  "review_rounds": 3
+  "review_rounds": 4
 }
