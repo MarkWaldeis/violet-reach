@@ -13,6 +13,18 @@
       "bytes": 3806124
     },
     {
+      "id": "crystal_cluster_b",
+      "category": "crystals",
+      "title": "Fault-Grown Violet Cluster",
+      "file": "crystal_cluster_b.glb",
+      "size_m": [
+        3.617,
+        2.979,
+        2.98
+      ],
+      "bytes": 2597012
+    },
+    {
       "id": "crystal_violet_cluster_a",
       "category": "crystals",
       "title": "Violetter Kristallhaufen A",
@@ -87,7 +99,7 @@
     {
       "id": "grass_tuft_a",
       "category": "vegetation",
-      "title": "Grasb\u00fcschel A",
+      "title": "Grasbüschel A",
       "file": "grass_tuft_a.glb",
       "size_m": [
         0.579,

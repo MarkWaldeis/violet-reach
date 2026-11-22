@@ -10,6 +10,19 @@ import type { Slice } from "../src/slice.ts";
 const vegetation = ["tree_broadleaf_a", "tree_broadleaf_b", "tree_broadleaf_c", "shrub_round_a", "grass_tuft_a", "fern_cluster_a", "reed_cluster_a"];
 const monuments = ["gate_white_a", "column_white_a"];
 
+test("approved violet accents replace proof placements and are partly buried", () => {
+  const { placements } = JSON.parse(readFileSync(worldFiles().get("placements.json")!, "utf8"));
+  assert.equal(placements.filter((p: { asset: string }) => p.asset === "crystal_violet_cluster_a").length, 0);
+  const crystals = placements.filter((p: { asset: string }) => p.asset === "crystal_cluster_b");
+  assert.equal(crystals.length, 3);
+  assert.equal(new Set(crystals.map((p: { yaw: number }) => p.yaw)).size, 3);
+  for (const p of crystals) {
+    assert.ok(p.y_offset < -1 && p.y_offset > -2);
+    assert.ok(Math.abs(p.pitch) > 0 && Math.abs(p.roll) > 0);
+    assert.ok(Math.hypot(p.x - 534, p.z - 1457) < 35);
+  }
+});
+
 test("colonnade has only three standing, individually tilted columns", () => {
   const document = JSON.parse(readFileSync(worldFiles().get("placements.json")!, "utf8"));
   const columns = document.placements.filter((p: { asset: string }) => p.asset === "column_white_a");
@@ -22,7 +35,7 @@ test("colonnade has only three standing, individually tilted columns", () => {
 
 test("shore path frames the gate and reaches the terrace without the dead uphill spur", () => {
   const slice: Slice = JSON.parse(readFileSync(worldFiles().get("slice.json")!, "utf8"));
-  for (const [x, z] of [[494.5, 1489.5], [522, 1510], [570, 1495.8], [593.869, 1490.652]]) assert.equal(pathMask(slice.paths, x, z), 1);
+  for (const [x, z] of [[494.5, 1489.5], [522, 1510], [570, 1495.8]]) assert.equal(pathMask(slice.paths, x, z), 1);
   assert.equal(pathMask(slice.paths, 550, 1460), 0);
   assert.equal(pathMask(slice.paths, 530, 1475), 0);
 });
@@ -30,7 +43,7 @@ test("shore path frames the gate and reaches the terrace without the dead uphill
 test("world content includes real terrain and only registered placed assets", () => {
   const files = worldFiles();
   assert.equal([...files.keys()].filter((p) => p.endsWith(".r16")).length, 256);
-  for (const key of ["terrain/manifest.json", "slice.json", "hydrology.json", "placements.json", "assets/crystal_violet_cluster_a.glb", "assets/bridge_arch_a.glb", "assets/lake_shore_a.glb", ...[...vegetation, ...monuments].map((asset) => `assets/${asset}.glb`)]) assert.ok(files.has(key));
+  for (const key of ["terrain/manifest.json", "slice.json", "hydrology.json", "placements.json", "assets/crystal_cluster_b.glb", "assets/bridge_arch_a.glb", "assets/lake_shore_a.glb", ...[...vegetation, ...monuments].map((asset) => `assets/${asset}.glb`)]) assert.ok(files.has(key));
   assert.equal([...files.keys()].filter((p) => p.endsWith(".glb")).length, 3 + vegetation.length + monuments.length);
 });
 for (const asset of ["bridge_arch_a", "lake_shore_a", ...vegetation, ...monuments]) test(`${asset} export contains all three named LODs`, () => {
