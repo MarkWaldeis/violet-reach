@@ -25,9 +25,9 @@ export function terrainMaterial(surface?: SurfaceData) {
     hollow = smoothstep(0.15, 1.8, neighbours.sub(field.r)).mul(border);
     damp = smoothstep(2, 28, p.y.sub(field.g)).oneMinus().mul(smoothstep(15, 100, field.b).oneMinus()).mul(border);
   }
-  const broad = mx_noise_float(planar.mul(0.0048)).mul(1.1).add(0.5);
-  const patches = mx_noise_float(planar.mul(0.021).add(vec2(71, -39))).mul(1.3).add(0.5);
-  const small = mx_noise_float(planar.mul(0.11).add(vec2(-19, 58))).mul(1.2).add(0.5);
+  const broad = mx_noise_float(planar.mul(0.0125)).mul(1.1).add(0.5);
+  const patches = mx_noise_float(planar.mul(0.046).add(vec2(71, -39))).mul(1.3).add(0.5);
+  const small = mx_noise_float(planar.mul(0.16).add(vec2(-19, 58))).mul(1.2).add(0.5);
   const maps = groundDetails();
   const uv = planar.mul(0.65), secondaryUV = vec2(planar.x.mul(0.8).add(planar.y.mul(0.6)), planar.y.mul(0.8).sub(planar.x.mul(0.6))).mul(1.37).add(vec2(17.3, 9.2));
   const sampleDetail = (map: DataTexture) => {
@@ -43,7 +43,7 @@ export function terrainMaterial(surface?: SurfaceData) {
   const meadow = smoothstep(0.43, 0.64, broad.add(patches.sub(0.5).mul(0.24)))
     .mul(smoothstep(0.75, 0.95, up)).mul(sunny.mul(0.5).add(0.5));
   let ground = mix(green, straw, meadow);
-  const bare = smoothstep(0.68, 0.94, patches.add(small.sub(0.5).mul(0.3))).mul(0.7)
+  const bare = smoothstep(0.68, 0.94, patches.add(small.sub(0.5).mul(0.3))).mul(0.55)
     .add(smoothstep(0.07, 0.17, slope).mul(0.15)).clamp();
   ground = mix(ground, color(swatch("soil")), bare);
   let surfaceDetail = mix(grassDetail, soilDetail, bare);
