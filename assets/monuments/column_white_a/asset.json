@@ -14,14 +14,28 @@
     1900
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-10557958564a4a9894cdbd6bc867cb9f",
-  "review": null,
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 7,
+      "scale": 8,
+      "style": 8,
+      "defects": 8
+    },
+    "notes": "Round 3 (final). Geometry stays good: cut crack, scalloped drum joints, chipped plinth with turf and loose chips (hero, closeup_base). Still failing on material: the torus still carries the same dark marble-like blotches, and the shaft and capital are clean even ivory; the rain streaks under the echinus are barely visible at full size and there is no lichen in the flute bottoms or plinth corners (closeup_upper, closeup_base). Fix: soft grime graded up from the plinth, clearly visible rain streaks below the abacus and echinus, lichen in lower flute bottoms and plinth corners, darker drum joints, and replace the torus blotches with even, local dirt.",
+    "round": 3,
+    "source_sha256": "8a4a23d9ad83b2de5669e6fd2b3b7c5e62fd831c59218a412dde5a0aad1295ae",
+    "sheet_sha256": "e86873d57121b3e0e5e44a9ef1ad6890ae0ebe60a65ec3daa238083f5ea48bcb"
+  },
   "references": [
     "art/reference/ref_01_white_monuments_sky.jpg",
     "art/reference/ref_03_canyon_cliffs.jpg",
     "art/reference/ref_04_white_ribbed_arches.jpg",
     "art/reference/ref_08_ribbed_crown.jpg"
   ],
-  "review_rounds": 2
+  "review_rounds": 3
 }

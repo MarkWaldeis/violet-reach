@@ -14,14 +14,28 @@
     2100
   ],
   "texture_size": 4096,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-10557958564a4a9894cdbd6bc867cb9f",
-  "review": null,
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 6,
+      "material": 6,
+      "scale": 8,
+      "style": 6,
+      "defects": 6
+    },
+    "notes": "Round 3 (final). Fixed: the drums now lie on their sides, and a column base with torus is present. Still failing: the drums have a stair-stepped, terraced profile, so two of them read as stepped blocks rather than fluted cylinders (closeup_upper, closeup_base); the break faces are smooth, flat cuts; the pieces still sit in one row across the frame instead of along a fall line, and they rest on the turf instead of sinking into it; the stone is clean white with grey smudges. Fix: true cylindrical drums with concave Doric flutes and sharp arrises, rough fracture faces with chips, a fall-line layout with drums partly sunk into the turf, and local grime and lichen.",
+    "round": 3,
+    "source_sha256": "327a71711b41118e46f8a829acb1b7ff05473e5efb603c7c1594b8e9454c088b",
+    "sheet_sha256": "3086d1d6a6f573c816b867c6c4975b7d31c5844e9627dd999f4e0a01b9e8ad0d"
+  },
   "references": [
     "art/reference/ref_01_white_monuments_sky.jpg",
     "art/reference/ref_03_canyon_cliffs.jpg",
     "art/reference/ref_06_weathered_wall.jpg",
     "art/reference/ref_08_ribbed_crown.jpg"
   ],
-  "review_rounds": 2
+  "review_rounds": 3
 }
