@@ -1,0 +1,20 @@
+{
+  "id": "gate_white_a",
+  "category": "monuments",
+  "title": "Floodmark Gate",
+  "description": "A Romanesque limestone gate with three concentric orders, battered ashlar piers and a paved ford threshold.",
+  "target_size_m": [
+    18,
+    46,
+    33
+  ],
+  "lod_triangles": [
+    23000,
+    8200,
+    2500
+  ],
+  "texture_size": 2048,
+  "status": "blender_review",
+  "builder": "devin-ac377e3f64b249c4a59d5943f70f2061",
+  "review": null
+}
