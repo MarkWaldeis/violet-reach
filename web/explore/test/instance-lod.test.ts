@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { assetRenderOptions, chunkVisible, instanceLOD, instanceTint, lodDistances, spatialChunks } from "../src/instance-lod.ts";
+import { aerialLODDistances, assetRenderOptions, chunkVisible, instanceLOD, instanceTint, lodDistances, spatialChunks } from "../src/instance-lod.ts";
 
 test("asset rendering overrides preserve defaults and validate finite distance, quality and shadow limits", () => {
-  assert.deepEqual(assetRenderOptions(2), { maxDistance: 80, lodScale: 1, lodRatio: 3, tintVariation: 0, shadowLODs: 2, maxLOD: Number.MAX_SAFE_INTEGER });
-  assert.deepEqual(assetRenderOptions(2, { maxDistance: 100 }, { maxDistance: 30, lodScale: 0.5, shadowLODs: 1, maxLOD: 1 }), { maxDistance: 100, lodScale: 0.5, lodRatio: 3, tintVariation: 0, shadowLODs: 1, maxLOD: 1 });
+  assert.deepEqual(assetRenderOptions(2), { maxDistance: 80, lodScale: 1, lodRatio: 3, aerialLODScale: 1, tintVariation: 0, shadowLODs: 2, maxLOD: Number.MAX_SAFE_INTEGER });
+  assert.deepEqual(assetRenderOptions(2, { maxDistance: 100 }, { maxDistance: 30, lodScale: 0.5, shadowLODs: 1, maxLOD: 1 }), { maxDistance: 100, lodScale: 0.5, lodRatio: 3, aerialLODScale: 1, tintVariation: 0, shadowLODs: 1, maxLOD: 1 });
   for (const options of [{ maxDistance: 0 }, { maxDistance: Infinity }, { lodScale: -1 }, { lodScale: NaN }, { shadowLODs: 1.5 }, { shadowLODs: -1 }, { maxLOD: -1 }, { maxLOD: 1.5 }, { maxLOD: Infinity }]) {
     assert.throws(() => assetRenderOptions(2, {}, options), /Invalid asset/);
   }
@@ -20,6 +20,22 @@ test("asset rendering overrides preserve defaults and validate finite distance, 
   assert.equal(wide[0], regular[0]);
   assert.equal(wide[1], regular[1] * 4);
   assert.equal(wide[2], 600);
+  assert.equal(assetRenderOptions(2, { aerialLODScale: 1.5 }, { aerialLODScale: 2 }).aerialLODScale, 1.5);
+  for (const aerialLODScale of [0, -1, NaN, Infinity]) assert.throws(() => assetRenderOptions(2, {}, { aerialLODScale }), /Invalid asset/);
+});
+
+test("aerial canopy quality preserves close LOD, ground views and culling distance", () => {
+  const d = [10, 100, 1000];
+  assert.deepEqual(aerialLODDistances(d, 160), d);
+  for (const height of [-5, 0, 40]) assert.deepEqual(aerialLODDistances(d, height, 2), d);
+  assert.deepEqual(aerialLODDistances(d, 90, 2), [10, 150, 1000]);
+  assert.deepEqual(aerialLODDistances(d, 160, 2), [10, 200, 1000]);
+  assert.deepEqual(aerialLODDistances([10, 900, 1000], 160, 2), [10, 1000, 1000]);
+  assert.deepEqual(aerialLODDistances(d, 160, 0.01), [10, 10, 1000]);
+  assert.deepEqual(aerialLODDistances([], 160, 2), []);
+  assert.deepEqual(aerialLODDistances([100], 160, 2), [100]);
+  assert.deepEqual(d, [10, 100, 1000]);
+  for (const [height, scale] of [[NaN, 2], [Infinity, 2], [160, NaN], [160, 0]]) assert.throws(() => aerialLODDistances(d, height, scale), /Invalid aerial/);
 });
 
 test("instance tint is reproducible, bounded and neutral by default", () => {

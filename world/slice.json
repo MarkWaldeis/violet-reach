@@ -25,7 +25,8 @@
     "tree_broadleaf_a": {
       "maxDistance": 1600,
       "lodScale": 0.11,
-      "lodRatio": 27,
+      "lodRatio": 12,
+      "aerialLODScale": 2.5,
       "maxLOD": 2,
       "shadowLODs": 1,
       "tintVariation": 0.09
@@ -33,7 +34,8 @@
     "tree_broadleaf_b": {
       "maxDistance": 1600,
       "lodScale": 0.12,
-      "lodRatio": 35,
+      "lodRatio": 12,
+      "aerialLODScale": 2.5,
       "maxLOD": 2,
       "shadowLODs": 1,
       "tintVariation": 0.09
@@ -41,13 +43,14 @@
     "tree_broadleaf_c": {
       "maxDistance": 1600,
       "lodScale": 0.14,
-      "lodRatio": 35,
+      "lodRatio": 12,
+      "aerialLODScale": 2.5,
       "maxLOD": 2,
       "shadowLODs": 1,
       "tintVariation": 0.09
     },
     "shrub_round_a": {
-      "maxDistance": 160,
+      "maxDistance": 260,
       "lodScale": 0.2,
       "shadowLODs": 0,
       "tintVariation": 0.12
@@ -67,7 +70,7 @@
       "tintVariation": 0.1
     },
     "reed_cluster_a": {
-      "maxDistance": 12,
+      "maxDistance": 14,
       "lodScale": 0.25,
       "shadowLODs": 0,
       "tintVariation": 0.08

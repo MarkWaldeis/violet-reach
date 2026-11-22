@@ -6,11 +6,11 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import type { InstancePlacement } from "./placements.ts";
 import { placementRotation } from "./placement-rotation.ts";
-import { assetRenderOptions, chunkVisible, instanceLOD, instanceTint, lodDistances, spatialChunks, type AssetRenderOptions, type Chunk } from "./instance-lod.ts";
+import { aerialLODDistances, assetRenderOptions, chunkVisible, instanceLOD, instanceTint, lodDistances, spatialChunks, type AssetRenderOptions, type Chunk } from "./instance-lod.ts";
 
 interface Instance extends InstancePlacement { matrix: Matrix4; tint: Color; sphere: { centre: Vector3; radius: number }; lod: number }
 interface Part { mesh: InstancedMesh; local: Matrix4 }
-interface AssetBatch { parts: Part[][]; chunks: Chunk<Instance>[]; size: number; maxDistance: number; lodScale: number; lodRatio: number }
+interface AssetBatch { parts: Part[][]; chunks: Chunk<Instance>[]; size: number; maxDistance: number; lodScale: number; lodRatio: number; aerialLODScale: number }
 
 export class InstanceAssets {
   readonly group = new Group();
@@ -78,14 +78,14 @@ export class InstanceAssets {
         return parts;
       });
       const chunks = spatialChunks(instances, (p) => rootRadius * p.scale);
-      result.#batches.push({ parts, chunks, size, maxDistance: settings.maxDistance, lodScale: settings.lodScale, lodRatio: settings.lodRatio });
+      result.#batches.push({ parts, chunks, size, maxDistance: settings.maxDistance, lodScale: settings.lodScale, lodRatio: settings.lodRatio, aerialLODScale: settings.aerialLODScale });
     }
     result.stats.assets = result.#batches.length;
     result.stats.total = placements.length;
     return result;
   }
 
-  update(camera: PerspectiveCamera, viewportHeight: number, now: number) {
+  update(camera: PerspectiveCamera, viewportHeight: number, now: number, heightAboveGround = 0) {
     if (now - this.#updated < 100) return;
     this.#updated = now;
     camera.updateMatrixWorld();
@@ -95,7 +95,7 @@ export class InstanceAssets {
     const counts: number[] = [];
     let visibleChunks = 0, chunks = 0;
     for (const batch of this.#batches) {
-      const distances = lodDistances(batch.size * batch.lodScale, batch.parts.length, viewportHeight, camera.fov, batch.maxDistance, batch.lodRatio);
+      const distances = aerialLODDistances(lodDistances(batch.size * batch.lodScale, batch.parts.length, viewportHeight, camera.fov, batch.maxDistance, batch.lodRatio), heightAboveGround, batch.aerialLODScale);
       const written = batch.parts.map(() => 0);
       for (const chunk of batch.chunks) {
         chunks++;

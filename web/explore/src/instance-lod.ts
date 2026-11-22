@@ -1,24 +1,32 @@
 export interface Point3 { x: number; y: number; z: number }
 export interface Plane extends Point3 { constant: number }
 export interface Chunk<T> { centre: Point3; radius: number; items: T[] }
-export interface AssetRenderOptions { maxDistance?: number; lodScale?: number; lodRatio?: number; tintVariation?: number; shadowLODs?: number; maxLOD?: number }
+export interface AssetRenderOptions { maxDistance?: number; lodScale?: number; lodRatio?: number; aerialLODScale?: number; tintVariation?: number; shadowLODs?: number; maxLOD?: number }
 
 export function assetRenderOptions(size: number, global: AssetRenderOptions = {}, asset: AssetRenderOptions = {}) {
   const maxDistance = global.maxDistance ?? asset.maxDistance ?? size * 40;
   const lodScale = global.lodScale ?? asset.lodScale ?? 1;
   const lodRatio = global.lodRatio ?? asset.lodRatio ?? 3;
+  const aerialLODScale = global.aerialLODScale ?? asset.aerialLODScale ?? 1;
   const tintVariation = global.tintVariation ?? asset.tintVariation ?? 0;
   const shadowLODs = global.shadowLODs ?? asset.shadowLODs ?? 2;
   const maxLOD = global.maxLOD ?? asset.maxLOD ?? Number.MAX_SAFE_INTEGER;
-  if (![size, maxDistance, lodScale].every((n) => Number.isFinite(n) && n > 0) || !Number.isFinite(lodRatio) || lodRatio < 1 || !Number.isFinite(tintVariation) || tintVariation < 0 || tintVariation > 1 || !Number.isSafeInteger(shadowLODs) || shadowLODs < 0 || !Number.isSafeInteger(maxLOD) || maxLOD < 0) {
+  if (![size, maxDistance, lodScale, aerialLODScale].every((n) => Number.isFinite(n) && n > 0) || !Number.isFinite(lodRatio) || lodRatio < 1 || !Number.isFinite(tintVariation) || tintVariation < 0 || tintVariation > 1 || !Number.isSafeInteger(shadowLODs) || shadowLODs < 0 || !Number.isSafeInteger(maxLOD) || maxLOD < 0) {
     throw new Error("Invalid asset distance, LOD or shadow settings");
   }
-  return { maxDistance, lodScale, lodRatio, tintVariation, shadowLODs, maxLOD };
+  return { maxDistance, lodScale, lodRatio, aerialLODScale, tintVariation, shadowLODs, maxLOD };
 }
 
 export function lodDistances(size: number, levels: number, viewportHeight: number, fov: number, maxDistance = size * 40, ratio = 3) {
   const focalLength = viewportHeight / (2 * Math.tan(fov * Math.PI / 360));
   return Array.from({ length: levels }, (_, i) => i === levels - 1 ? maxDistance : Math.min(maxDistance, size * focalLength / (180 / ratio ** i)));
+}
+
+export function aerialLODDistances(distances: number[], heightAboveGround: number, scale = 1) {
+  if (!Number.isFinite(heightAboveGround) || !Number.isFinite(scale) || scale <= 0) throw new Error("Invalid aerial LOD settings");
+  const t = Math.max(0, Math.min(1, (heightAboveGround - 40) / 100));
+  const factor = 1 + t * t * (3 - 2 * t) * (scale - 1);
+  return distances.map((d, i) => i === 0 || i === distances.length - 1 ? d : Math.max(distances[0], Math.min(distances.at(-1)!, d * factor)));
 }
 
 export function instanceTint(x: number, z: number, variation = 0): [number, number, number] {

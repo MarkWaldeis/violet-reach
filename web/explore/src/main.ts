@@ -164,7 +164,8 @@ async function main() {
       }
     }
     if (ready) nav.update(dt);
-    assets?.update(camera, stage.clientHeight, now);
+    const fullHeight = terrain.fullHeightAt(position.x, position.z);
+    assets?.update(camera, stage.clientHeight, now, fullHeight === undefined ? 0 : Math.max(0, position.y - fullHeight));
     renderer.render(scene, camera);
     frames++;
 
