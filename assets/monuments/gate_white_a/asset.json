@@ -14,8 +14,22 @@
     2200
   ],
   "texture_size": 4096,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-501e5a510b5c43f2b6ce7952cf05094b",
-  "review": null,
-  "review_rounds": 1
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 7,
+      "material": 7,
+      "scale": 8,
+      "style": 7,
+      "defects": 7
+    },
+    "notes": "Round 2. Fixed: the Gothic pointed arch is now a stilted round arch, the stone has visible texture, pier courses are staggered, voussoirs have sharp edges. Not fixed: (1) the voussoir faces carry a heavy crumpled-paper bump displacement while the piers and intrados stay smooth, so the arch looks like a different material; use one consistent rough-dressed limestone and keep the bumps to chipped edges. (2) Joint lines between voussoirs are jagged torn edges rather than clean, slightly recessed joints. (3) The tapered piers with stacked buttress slabs still read Gothic; simplify them into large smooth masses per STYLE.md. (4) There is no local weathering at the pier feet (monument_weathered). (5) The passage floor is still thin plates laid on the ground (closeup_base tile), not bound into the plinth (round-1 point 4). (6) The keystone is barely emphasized.",
+    "round": 2,
+    "source_sha256": "5b02a0dcabfb8a244419c83110c6f425927359d9e16660e2278619da09a3780e",
+    "sheet_sha256": "16e8361998d9f4551f0bca1f4bdc8d698aa548d275acac38ab1a8ff00c0c8cbb"
+  },
+  "review_rounds": 2
 }
