@@ -14,8 +14,22 @@
     3100
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-ac377e3f64b249c4a59d5943f70f2061",
-  "review": null,
-  "review_rounds": 1
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 6,
+      "material": 6,
+      "scale": 7,
+      "style": 6,
+      "defects": 5
+    },
+    "notes": "Round 2, checked against the round-1 points. Fixed: the ribs now close into three arches and the free knobs are gone. Still failing or new: each arch is one smooth tube of even thickness bent over and back down, so the group reads as giant croquet hoops rather than paired ribs meeting overhead (hero, turn_200); the six footings are low-poly pyramidal cones with flat triangular facets and loose white boulders, not buttressed stone (closeup_base). Defect: the front footing has a small arched doorway with a paved path leading into it (closeup_base); remove it, nothing in the plan calls for an entrance. Material: a fine grey speckle like terrazzo or concrete covers every rib evenly, with no weathering gradient (closeup_upper). Fix: vary the rib section (thicker and flattened at the foot, tapering to the crown, with a slight twist) and let two ribs overlap at each crown; model the footings as fractured buttresses with large planes, secondary chips and soil and turf banked against them; replace the speckle with ivory limestone graded darker towards the foot, with rain streaks on the outer face. The articulated scale figure and the vr_review_hero/vr_review_base camera options added to render_sheet.py are opt-in and only used by this asset.",
+    "round": 2,
+    "source_sha256": "f26ba8a887147543361b206bc6e324a535a4855a078595fbbd8c08d73fe84aec",
+    "sheet_sha256": "63ab7192d559c0ff04e013d60ee348a4932933d844795bf46318b7a0a248296c"
+  },
+  "review_rounds": 2
 }

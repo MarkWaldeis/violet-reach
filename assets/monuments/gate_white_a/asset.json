@@ -14,8 +14,22 @@
     2500
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-ac377e3f64b249c4a59d5943f70f2061",
-  "review": null,
-  "review_rounds": 1
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 7,
+      "scale": 8,
+      "style": 8,
+      "defects": 8
+    },
+    "notes": "Round 2 (weathering only). The sheet was re-rendered: source and sheet hashes are new and vr.py check passes. But the weathering does not read: compared with the round-1 sheet, the turn tiles differ by under 1 grey level on average and closeup_base by about 3 (sips/BMP pixel diff), and at full size the gate still looks one clean, even ivory (hero, closeup_upper, closeup_base). The rain, foot-damp and tread masks multiply tints into only part of a 0-0.6/0.7 ramp under a noise threshold, so almost nothing survives. Fix: make the effects visible at review distance: rain streaks under the impost mouldings and the crown about 20-30% darker in a clear vertical pattern; a green-grey damp band about 1-2 m high at the pier feet with lichen spots; visibly darker, smoother worn tread in the middle of the threshold. Geometry stays as approved-level (8 on form).",
+    "round": 2,
+    "source_sha256": "cbec3ff4d1b45339caec4d8af6296ba5ba28a4cc5ff50d9b7d67a5459b1d55a3",
+    "sheet_sha256": "e013c9b3e64e38ce4bbfce8dff47ea3aca0bd5b50a3494d40028029d8ccd6b1b"
+  },
+  "review_rounds": 2
 }
