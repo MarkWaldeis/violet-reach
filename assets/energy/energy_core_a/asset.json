@@ -14,8 +14,22 @@
     2100
   ],
   "texture_size": 4096,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-b06222e48d554ae4a6a116ad07645e06",
-  "review": null,
-  "review_rounds": 1
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 5,
+      "material": 6,
+      "scale": 8,
+      "style": 6,
+      "defects": 6
+    },
+    "notes": "Round 2. Fixed: the transmission is gone (the seed is opaque now), the sail joints are tighter and the limestone is ivory instead of camouflage grey. Still open: (1) form_detail, worse than round 1: the seed is now a smooth jelly-bean blob with soft pink-violet gradients (hero.jpg, closeup.jpg). It has no readable structure: no plates, ribs or petals with sharp edges, and no openings onto a bright heart. (2) material: no narrow bright filaments on a dark violet base as in the violet_energy swatch; the gradient goes up to lilac pink, which reads as soft plastic, not energy. (3) currents: still uniform-width tubes with no visible bright inner line and no taper. One still loops back and crosses in front of the lower seed (closeup.jpg, turn_020). (4) style/defects: the sail socket on the rear sail is still tinted pink/mauve with a pink stain (closeup.jpg, closeup_base right), and the flat octagonal paving slabs at the sail feet look like CG placeholders. Fix: model a faceted or plated seed with gaps through which one bright core shows, emissive filaments on dark violet, tapered currents with a bright core that never cross the front of the seed, neutral ivory sockets, and irregular broken slabs.",
+    "round": 2,
+    "source_sha256": "8e2d936c0d91f53f7f24c154b1e4138484eecf034cb09a7c42c8b002feb11865",
+    "sheet_sha256": "ad7573f9690eea3eb5f8fe0b363bd3fd570bcf7c5fc6770f72e9b85f1e77fcd2"
+  },
+  "review_rounds": 2
 }

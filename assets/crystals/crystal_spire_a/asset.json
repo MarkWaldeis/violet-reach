@@ -14,8 +14,22 @@
     1150
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-b06222e48d554ae4a6a116ad07645e06",
-  "review": null,
-  "review_rounds": 1
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 7,
+      "material": 6,
+      "scale": 8,
+      "style": 7,
+      "defects": 7
+    },
+    "notes": "Round 2. Fixed: the main shaft tapers and its faces are large and flat in the wire view, and the limestone base is still good. Still open: (1) material, not fixed: uniform saturated purple with soft vertical streaks along every shaft, no dark core, no inner bands and no veins (hero.jpg, closeup.jpg). Two side crystals on the right read cobalt blue next to the purple ones. (2) form_detail/defects: starburst shading on every termination cap (closeup.jpg lower left and right, closeup_base), so the caps look like smoothed cones. All tips are pristine, with no chips or growth steps. (3) defects: the fracture is a ledge that juts out of the main shaft like a sleeve or collar (hero.jpg, closeup.jpg), with no glow. Fix: dark core plus inner bands along the c-axis, one violet hue, flat-shaded faces, chipped tips, and a recessed, irregular, faintly glowing fracture.",
+    "round": 2,
+    "source_sha256": "050f60acb40d661e68fb5e297e145e89a85934628e4ce900c4c112555a42b2de",
+    "sheet_sha256": "3e6fba60d73cb80711e1293b2f7f60eee389d7c74bfe1445c439d217fd5aed84"
+  },
+  "review_rounds": 2
 }
