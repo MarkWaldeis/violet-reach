@@ -14,8 +14,22 @@
     1150
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "approved",
   "builder": "devin-79c81cd3e9c64cc49f913648e628a347",
-  "review": null,
-  "review_rounds": 3
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 8,
+      "scale": 8,
+      "style": 8,
+      "defects": 8
+    },
+    "notes": "Lead extra round: approved. The crystal is unchanged from round 3 (same make_crystal/crystal_material code; the diff only touches support_material and outcrop), and it already passed then. The base now uses cluster_b's approved support_material and outcrop code, identical line for line: the camouflage blotches, stretched side texture and painted black cracks are gone. The limestone is a narrow grey tone range with irregular moss on the upward faces, soil-dark AO in recesses, and fractured blocks of varied height (closeup_base, all turns). Polish, not blocking: the moss patches read slightly soft and smudged up close.",
+    "round": 4,
+    "source_sha256": "37bf0f20c444b77664a09754cbd560ff0f9bf0548f1c12542e3ce265cc5a5550",
+    "sheet_sha256": "a8397dfa687fb655cf9cf24a6329b0dca2acfe16fce554ba0649eeb543769b8f"
+  },
+  "review_rounds": 4
 }

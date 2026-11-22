@@ -14,8 +14,22 @@
     2100
   ],
   "texture_size": 4096,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-79c81cd3e9c64cc49f913648e628a347",
-  "review": null,
-  "review_rounds": 2
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 6,
+      "material": 6,
+      "scale": 8,
+      "style": 7,
+      "defects": 6
+    },
+    "notes": "Round 3 (last): rejected, needs escalation. Fixed: the white top-facet triangle is gone; the core now sits in a rubble socket instead of balancing on one stub (no more launch-pad read); the soil patch has an irregular edge. Still failing: (1) material 6: the core crystals are still smooth bodies with one soft radial glow gradient, with no dark body and no emissive filaments inside them; STYLE asks violet_energy for mostly emissive, saturated flowing filaments with narrow bright cores on dark violet (closeup, closeup_upper). (2) defects 6: the 'filaments' are opaque matte pale-lavender ribbons of even width that rise from the menhir tops and hook over like handles, with no glow and no bright core (closeup_base, all turns); thin white slivers stick out of two crystal tips like stray needles (closeup, upper left and right). (3) form_detail 6: the menhirs are smooth, soap-like faceted slabs with clean flat cut tops, and the socket rubble is white crumpled lumps like papier-mache with no fracture planes (closeup_base). (4) style 7: the pale menhirs and lumps are brighter than the crystals and pull attention from the core. Fix: dark violet core body with internal emissive filament veins (narrow bright cores, saturated falloff), filaments as emissive strands that flow from the stones into the core instead of handles, remove the tip slivers, and build the menhirs and socket rubble from cluster_b's support material and fractured outcrop recipe.",
+    "round": 3,
+    "source_sha256": "e8ec84d5ac264080e31be3ce1f0532c07f587e6aa313260eb172b87fbb20be6b",
+    "sheet_sha256": "d417dc0979621a13617c14bca9e7057c8507adc5ec47e4a386d815bb0e1294f5"
+  },
+  "review_rounds": 3
 }
