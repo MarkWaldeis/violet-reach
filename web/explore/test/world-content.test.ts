@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { worldFiles } from "../scripts/world-content.mjs";
@@ -8,8 +8,15 @@ import { worldFiles } from "../scripts/world-content.mjs";
 test("world content includes real terrain and only registered placed assets", () => {
   const files = worldFiles();
   assert.equal([...files.keys()].filter((p) => p.endsWith(".r16")).length, 256);
-  for (const key of ["terrain/manifest.json", "slice.json", "hydrology.json", "placements.json", "assets/crystal_violet_cluster_a.glb"]) assert.ok(files.has(key));
-  assert.equal([...files.keys()].filter((p) => p.endsWith(".glb")).length, 1);
+  for (const key of ["terrain/manifest.json", "slice.json", "hydrology.json", "placements.json", "assets/crystal_violet_cluster_a.glb", "assets/bridge_arch_a.glb"]) assert.ok(files.has(key));
+  assert.equal([...files.keys()].filter((p) => p.endsWith(".glb")).length, 2);
+});
+test("the placed bridge export contains all three named LODs", () => {
+  const glb = readFileSync(worldFiles().get("assets/bridge_arch_a.glb")!);
+  assert.equal(glb.toString("ascii", 0, 4), "glTF");
+  const document = JSON.parse(glb.toString("utf8", 20, 20 + glb.readUInt32LE(12)));
+  assert.deepEqual(document.nodes.map((node: { name?: string }) => node.name).filter((name?: string) => name?.startsWith("bridge_arch_a_LOD")).sort(),
+    ["bridge_arch_a_LOD0", "bridge_arch_a_LOD1", "bridge_arch_a_LOD2"]);
 });
 test("world content rejects non-exported and unknown assets, empty placements work, failed gate propagates", () => {
   const repo = mkdtempSync(resolve(tmpdir(), "vr-content-"));

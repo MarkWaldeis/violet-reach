@@ -2,6 +2,7 @@
   "placements": [
     {"asset": "crystal_violet_cluster_a", "x": 400, "z": 1350, "yaw": 0.4, "scale": 1},
     {"asset": "crystal_violet_cluster_a", "x": 450, "z": 1320, "yaw": 2.1, "scale": 0.8},
-    {"asset": "crystal_violet_cluster_a", "x": 500, "z": 1340, "yaw": 4.2, "scale": 1.15, "y_offset": -0.1}
+    {"asset": "crystal_violet_cluster_a", "x": 500, "z": 1340, "yaw": 4.2, "scale": 1.15, "y_offset": -0.1},
+    {"asset": "bridge_arch_a", "x": 500, "z": 1524, "yaw": -0.03491, "scale": 1, "y_offset": 0.16}
   ]
 }

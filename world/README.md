@@ -65,3 +65,22 @@ Maskenkonturen statt Pixelkanten. `terrain.blend` ist lokal regenerierbar
 und nicht versioniert. Die Mesh-Vorschau hat 1025² Vertices; die Runtime-
 Höhenfelder behalten volle Auflösung. Die Render zeigen den Weltentwurf,
 nicht die spätere Vegetations- und Monumentproduktion.
+
+## Erster Brückenübergang im Slice
+
+`bridge_arch_a` steht einmal bei `(500, 1524)`, Maßstab `1`, Yaw `-0.03491`.
+Die freigegebene Geometrie bleibt unverändert: 25 m lichte Öffnung,
+40,94 m Gesamtlänge einschließlich Flügel und Landungen. Weißfall und
+Dornbach sind im Slice bereits mindestens rund 42 m breit und passen nicht
+unter diesen Bogen. Statt die Brücke zu strecken oder das Gelände zu ändern,
+quert sie eine etwa 22 m breite, nur rund 0,1 m tiefe Einbuchtung am Nordufer
+des Spiegelsees, östlich des Weißfall-Mündungsfächers. Die Achse läuft nahezu
+Ost-West quer zur südwärts offenen Einbuchtung; beide Bogenfüße liegen am
+Ufersaum. Das ist kein Übergang über den ganzen Fluss.
+
+`y_offset: 0.16` setzt den Ursprung bei rund 180,058 m (Wasser: 180 m);
+die tiefste Fundamentkante erreicht den Wasserspiegel, die Landungsmitten
+schließen bis auf etwa 0,1 m an die R16-Uferhöhen an. Der bestehende Fußpfad
+führt bis zur westlichen Landung, ein zweiter kurzer Abschnitt von der
+östlichen Landung zurück in die Wiese. Die Laufkamera folgt weiterhin dem
+Gelände, nicht der Brückentreppe; Objektkollision ist noch nicht implementiert.
