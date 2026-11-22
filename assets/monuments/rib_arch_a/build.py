@@ -160,7 +160,7 @@ def foundation(name, x, y, width, depth, bands, rng, stone):
             peen = 1+.022*math.sin(7*a+phase+.3*z)+.009*math.sin(18*a+.6*z)+.004*math.cos(27*a-z)
             outline_x=math.copysign(abs(ca)**.66,ca)*width*.5
             outline_y=math.copysign(abs(sa)**.66,sa)*depth*.5
-            vertices.append((x+outline_x*peen*sx,y+outline_y*peen*sy,z))
+            vertices.append((x+outline_x*peen*sx,y+outline_y*peen*sy,max(-.059,z)))
     faces=[tuple(reversed(range(n)))]
     for i in range(len(bands)-1):
         for j in range(n):

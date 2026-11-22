@@ -86,7 +86,11 @@ def stone(name, vertices, faces, position, rotation, material, smooth=(), lift=-
     transformed = [matrix @ Vector(vertex) for vertex in vertices]
     low = min(v.z for v in transformed)
     x, y = position
-    vertices = [(v.x + x, v.y + y, v.z - low + lift) for v in transformed]
+    burial_scale = -.059 / lift if lift < -.059 else 1
+    vertices = []
+    for v in transformed:
+        z = v.z - low + lift
+        vertices.append((v.x + x, v.y + y, z if z >= 0 else z * burial_scale))
     mesh = bpy.data.meshes.new(name)
     mesh.from_pydata(vertices, [], faces)
     mesh.update()

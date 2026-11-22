@@ -80,6 +80,7 @@ def limestone(name):
 
 def ashlar(name, bounds, rng, material, break_at=None, end_cut=0):
     x0,x1,y0,y1,z0,z1=bounds
+    z0=max(-.059,z0)
     length,depth=x1-x0,y1-y0
     phase=rng.uniform(0,math.tau)
     bevel=min(.075,length*.17,depth*.17)

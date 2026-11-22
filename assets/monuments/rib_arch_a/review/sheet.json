@@ -3,11 +3,11 @@
   "size_m": [
     70.101,
     77.799,
-    78.077
+    77.836
   ],
   "objects": 96,
   "samples": 64,
-  "render_seconds": 503.2,
+  "render_seconds": 526.2,
   "blender": "5.3.0",
   "tiles": [
     "turn_020",
@@ -23,6 +23,6 @@
     "wire",
     "clay"
   ],
-  "source_sha256": "de26b38b0fa581f19fa9bb595d657d7fd871f8035397c2804f4c5347e5d53cd0",
-  "sheet_sha256": "14fdb24b3019b2a9bae05c950b5da38fb5c5d1ea485fd7a943575e03c6914a91"
+  "source_sha256": "bed9a08e8a92f71f420c04700a0186c41fb39ad5132175c405dfbfd8d98aeca0",
+  "sheet_sha256": "7a36cc78006378612750cce4f053fa4c8db6d17aebd3661a8d87eeeb4498275d"
 }

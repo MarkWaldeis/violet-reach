@@ -116,7 +116,7 @@ def turn_stone(name, profile, rng, stone, fluted=False, sides=512, damage=(), pe
 def build():
     rng=random.Random(66517)
     white,old="monument_white","monument_weathered"
-    turn_stone("Weathered buried foot", [(-.21,2.48,0),(.12,2.49,0),(.25,2.49,0),(.43,2.44,0),
+    turn_stone("Weathered buried foot", [(-.059,2.48,0),(.12,2.49,0),(.25,2.49,0),(.43,2.44,0),
                (.53,2.37,0),(.60,2.27,0)], rng, old, damage=((.33,.40,.26,.32,.25,.2),(2.1,.51,.28,.26,.19,.22)))
     turn_stone("Chipped lower torus and scotia",[(.59,2.25,0),(.66,2.30,0),(.76,2.34,0),(.86,2.31,0),
                (.98,2.21,0),(1.07,2.00,0),(1.16,1.94,0),(1.24,1.96,0),(1.31,2.01,0),
@@ -160,7 +160,7 @@ def build():
         local=rng.uniform(.12,.33)
         n=12
         verts=[(x+local*s*math.cos(j*math.tau/n),y+local*s*math.sin(j*math.tau/n),z)
-               for z,s in ((-.14,1),(.06,1),(.14,.57)) for j in range(n)]
+               for z,s in ((-.059,1),(.06,1),(.14,.57)) for j in range(n)]
         polygons=[tuple(reversed(range(n)))]+[(k*n+j,k*n+(j+1)%n,(k+1)*n+(j+1)%n,(k+1)*n+j)
                   for k in range(2) for j in range(n)]+[tuple(range(2*n,3*n))]
         data=bpy.data.meshes.new(f"Root talus {i}")

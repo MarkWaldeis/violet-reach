@@ -129,6 +129,8 @@ def tread_mesh(bounds, chip, damaged_edge, sink):
 
 def ashlar(name, bounds, rng, stone, wear=.022, chip=0, coping_z=None):
     x0, x1, y0, y1, z0, z1 = bounds
+    bevel_width = wear*.51
+    z0 = max(-.059 + bevel_width, z0)
     chip = max(chip, min(.026 + .012*abs(math.sin(4*x0 + 7*y0 + 13*z0)), (z1-z0)*.19))
     chamfer = min(wear * 1.9, (z1 - z0) * .22)
     footprint = [(x0 + chamfer, y0), (x1 - chamfer, y0), (x1, y0 + chamfer),
@@ -149,7 +151,7 @@ def ashlar(name, bounds, rng, stone, wear=.022, chip=0, coping_z=None):
     faces.append(tuple(range(n,len(vertices))))
     obj = masonry(name, vertices, faces, stone, coping_z)
     bevel = obj.modifiers.new("Soft quarry edges", "BEVEL")
-    bevel.width, bevel.segments = wear*.51, 2
+    bevel.width, bevel.segments = bevel_width, 2
     bevel.limit_method, bevel.angle_limit = "ANGLE", math.radians(20)
     obj.modifiers.new("Dressed face normals", "WEIGHTED_NORMAL")
 

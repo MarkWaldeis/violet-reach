@@ -211,11 +211,11 @@ def round_course(name, x, profile, rng, stone):
 def build():
     rng = random.Random(6327)
     white, old = "monument_white", "monument_weathered"
-    ashlar("One solid passage floor and pier foundation", -.31, .39, (-24.1,24.1), (-23.9,23.9),
+    ashlar("One solid passage floor and pier foundation", -.059, .39, (-24.1,24.1), (-23.9,23.9),
            16.6, 1.39, .092, rng, white)
     for sign, label in ((-1,"West"), (1,"East")):
         x = sign*17.41
-        round_course(f"{label} buried circular plinth", x, [(-.29,7.3),(.34,7.43),(.72,7.43),
+        round_course(f"{label} buried circular plinth", x, [(-.059,7.3),(.34,7.43),(.72,7.43),
                      (1.02,7.18),(1.24,6.68),(1.53,6.63),(1.65,6.29)], rng, old)
         round_course(f"{label} torus at the foot", x, [(1.63,6.31),(1.74,6.49),(1.94,6.54),
                      (2.12,6.42),(2.23,6.05)], rng, white)
