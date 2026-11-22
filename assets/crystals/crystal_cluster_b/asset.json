@@ -14,22 +14,22 @@
     1200
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-a193abe14f544701aef56a91e66901c2",
   "review": {
     "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
     "scores": {
-      "silhouette": 6,
-      "form_detail": 5,
-      "material": 5,
+      "silhouette": 8,
+      "form_detail": 7,
+      "material": 6,
       "scale": 8,
-      "style": 5,
-      "defects": 6
+      "style": 7,
+      "defects": 7
     },
-    "notes": "Abgelehnt. (1) Form: alle Kristalle sind gerundete Ellipsoide mit zufälliger Dreiecksfacettierung (Low-Poly-Kiesel), keine gerichteten Prismenflächen, keine Wachstumslinien, keine scharfen Endspitzen; Hauptkörper und Gegengewichte haben dieselbe Eiform. Fix: hexagonale/rhombische Prismen mit planaren Längsflächen, gezielt geneigten Terminationsflächen und Stufen/Absätzen entlang der Wachstumsachse modellieren. (2) Material: Ton kippt ins Indigo/Blau statt Violett (vgl. swatches/violet_crystal.png und ref 07); keine inneren Bänder, keine schwach leuchtenden Risse sichtbar; Voronoi-Zellen laufen quer zu den Geometriefacetten. Fix: Farbe auf violet_body/violet_shadow zurückführen, Zellen entlang der Wachstumsachse ausrichten, wenige emissive Risse. (3) Defekte: in closeup.jpg zeigt der linke Kristall tiefschwarze konkave Facetten, die wie Löcher/gekippte Normalen wirken; Normalen und Konkavitäten prüfen. (4) Kalksteinsockel: flache weiche Platten ohne Bruchkanten oder Schichtung, Geröll sind identische Klötzchen. Fix: Bruchkanten, Fugen, abgeplatzte Ecken, variierte Geröllgrößen. Maßstab zur 1,8-m-Figur passt.",
-    "round": 1,
-    "source_sha256": "a1f7eed5d9f4f2c285f1244366181ce9a0ffa46610efaa36564da72e7cb20b57",
-    "sheet_sha256": "69010b8ee498215cbdc1238ea83e7a72e7d9c6db3078c29038d3eddc804a7bf1"
+    "notes": "Round 2. Fixed: crystals are now directional hexagonal prisms with pyramidal tips (no more ellipsoids); limestone shelf is now layered plates with chipped edges and varied rubble; no black hole-like facets. Not fixed: (1) material is a flat, saturated light purple with vertical streaks; the brief asks for dark violet opaque gemstone with lighter facets and inner bands - darken the base, give each facet its own value, put the bands inside the crystal instead of on the surface. (2) The growth bands are raised outer collars at even spacing, so every prism reads like bamboo; replace them with uneven, inset growth steps and vary spacing per crystal. (3) Tips are all clean, perfect points; break or chip 2-3 terminations and add small secondary crystals at the base. (4) Emissive cracks are hair-thin and only visible on two crystals in the close-up; make 2-3 cracks per large crystal readable in the hero shot while keeping emission restrained.",
+    "round": 2,
+    "source_sha256": "6d6dcbbda3b664bca994c3bb2b6b86ae8b33808362d4e40e4f52f8bff924d7a1",
+    "sheet_sha256": "373bd4428f3fa920a234c55c0a40bdf075a40bf9b34fb801fe06b9798917ec2e"
   },
-  "review_rounds": 1
+  "review_rounds": 2
 }

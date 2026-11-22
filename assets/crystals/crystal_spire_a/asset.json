@@ -14,22 +14,22 @@
     1100
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-a193abe14f544701aef56a91e66901c2",
   "review": {
     "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
     "scores": {
-      "silhouette": 7,
-      "form_detail": 5,
-      "material": 4,
+      "silhouette": 8,
+      "form_detail": 7,
+      "material": 6,
       "scale": 8,
-      "style": 5,
-      "defects": 6
+      "style": 7,
+      "defects": 7
     },
-    "notes": "Abgelehnt. (1) Material: das Voronoi-Muster von violet_crystal liest sich auf der 7-m-Klinge als Tarnfleckenmuster (hell/dunkle Zellen ohne Bezug zu den Flächen), dominiert die Form und kippt ins Blau; keine inneren Bänder, keine Risse. Fix: Zellgröße an die Objektgröße anpassen (größere, längs gestreckte Zellen), Farbwerte entlang realer Facetten führen, Ton zurück zu violet_body. (2) Form: Drahtgitter zeigt eine einfache Prismenklinge mit wenigen Flächen; keine Absätze, Wachstumsstufen, Kantenbrüche oder Nebenspitzen am Hauptkörper. Fix: Längsfacetten mit Stufen, Kantenabplatzungen und Terminationsflächen modellieren. (3) Fels: die Verwerfung (gehobene/abgesenkte Bank) ist nicht lesbar; die Bänke sind weiche, gleichförmig glatte Kissen ohne Schichtfugen, Geröll wirkt wie dunkle Low-Poly-Klumpen. Fix: klar versetzte Schichtpakete mit scharfer Bruchkante und sichtbaren Fugen. (4) Übergang Kristall/Fels: Kristallfuß steckt ohne Bruchkranz im Stein. Maßstab passt.",
-    "round": 1,
-    "source_sha256": "62268c03dd86f8cde4c044b481468546db8b5fdca588be261a9377ca0603e53a",
-    "sheet_sha256": "307e0b89b0b3c327fa452ae6da5ce89741d3b19260261032be31ad13bf810811"
+    "notes": "Round 2. Fixed: spire is a proper prism blade with side crystals; the camouflage pattern is gone; base fault banks are now layered shale plates with a fracture ring and rubble. Not fixed: (1) closeup.jpg shows the material as flat blue-violet with long vertical streaks over the whole blade (reads as a stretched texture) and a bluish top facet; no lighter facets or inner bands - darken to the violet_crystal base, add lighter facet values and internal bands. (2) Main blade termination is still a clean point with no stepped growth or broken edge; the raised collar rings at even spacing look like bamboo joints - make growth steps inset and uneven, chip the edges. (3) The top surfaces of the base slabs show the same wood-grain streaking (closeup_base tile); use a proper rock/limestone pattern at metre scale. (4) Emissive cracks are barely visible; make a few read in the hero view.",
+    "round": 2,
+    "source_sha256": "9177a5243583cf9d787eb332e8fa987d32a498f3f6e40c8039efe25c1efaaf41",
+    "sheet_sha256": "4d7942223ecacc9ac2e57a0dd20b7213b5147dce1f558591858245684fd71cdf"
   },
-  "review_rounds": 1
+  "review_rounds": 2
 }

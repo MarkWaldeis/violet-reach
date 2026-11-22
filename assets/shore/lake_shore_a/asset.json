@@ -14,22 +14,22 @@
     1800
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-a193abe14f544701aef56a91e66901c2",
   "review": {
     "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
     "scores": {
-      "silhouette": 5,
-      "form_detail": 4,
-      "material": 5,
-      "scale": 7,
-      "style": 5,
-      "defects": 4
+      "silhouette": 7,
+      "form_detail": 6,
+      "material": 6,
+      "scale": 8,
+      "style": 6,
+      "defects": 7
     },
-    "notes": "Abgelehnt. (1) Defekt: die Grenze Gras/Sand ist eine treppenförmige Sägezahnkante (Kachel 10 und hero.jpg) – Materialmaske folgt den Gitterzellen. Fix: Übergang über geglättete Vertex-/Noise-Maske oder eigene Kantengeometrie, unregelmäßig weich. (2) Wasser/nasser Rand: kein nasser, dunklerer und glatterer Uferstreifen (shore_wet) und kein Wasseranschluss bei Z=0; der Prüfling zeigt nicht, wie das Ufer ins Wasser läuft. Fix: Wasserlinie mit nassem Sandband 1–3 m, Wasserebene auf dem Prüfblatt mitrendern. (3) Steine: alle Kiesel sind glatte, blau glänzende Gelkugeln, nass und trocken identisch, ohne Bruchkanten (Ablehnungsfall). Fix: abgeflachte, unregelmäßige Geröllformen, trockene Steine matter und heller, nur wassernahe glänzend. (4) Gras: einzelne gleichförmige Halmbüschel gleichmäßig gestreut, Böschung ist eine glatte grüne Wurst ohne Erde oder Wurzelkante. Fix: Büschelgruppen mit Größenstaffelung, offene Erde, kleine Abbruchkante. (5) closeup.jpg ist eine flache Seitenansicht ohne Aussage; Nahaufnahme auf die Wasserlinie richten. Maßstab plausibel.",
-    "round": 1,
-    "source_sha256": "85971de7602efd3fce93abf4c9fccd9142c52811f1b0cbeb4fb0e8be4f4d50f9",
-    "sheet_sha256": "79419d3c5750fca9d387432a2c6e739d301c65a1009b855c0f7fe162865602b5"
+    "notes": "Round 2. Fixed: the grass/sand edge is now a smooth natural transition; the water is rendered and the close-up shows the waterline; grass is in varied clumps. Not fixed: (1) there is no darker wet sand strip along the waterline (closeup.jpg) - sand is the same dry beige right up to the water; add a 0.5-1.5 m darker, slightly glossy wet band. (2) Rocks are low-poly faceted boxes with flat planes and all the same light grey; wet and dry stones look identical. Round and vary them, and make stones in/at the water darker and glossier. (3) The small pebbles are scattered evenly like confetti across the whole beach; cluster them along the waterline and drift lines. (4) The water is a saturated flat blue; shift towards the blue-green of water_opaque with a shallower, lighter band at the shore. (5) The embankment is still a smooth green ramp; add exposed roots/soil breaks and stones in the bank.",
+    "round": 2,
+    "source_sha256": "6c43f7a39159c8005488a835564fb3f14f65c25ab202f8d2a90ec6aee77d8614",
+    "sheet_sha256": "9d273ba09583b152b600beb1d3a7cce45c8ed8a9578f15bc85a9331c6c27af10"
   },
-  "review_rounds": 1
+  "review_rounds": 2
 }

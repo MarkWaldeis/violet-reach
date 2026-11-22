@@ -14,22 +14,22 @@
     2600
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-a193abe14f544701aef56a91e66901c2",
   "review": {
     "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
     "scores": {
-      "silhouette": 7,
-      "form_detail": 6,
-      "material": 5,
+      "silhouette": 8,
+      "form_detail": 7,
+      "material": 7,
       "scale": 8,
-      "style": 6,
-      "defects": 6
+      "style": 7,
+      "defects": 7
     },
-    "notes": "Abgelehnt. (1) Material Kern: violet_energy liest sich als weiß-blaue Blitzadern auf dunkelblauem Grund (closeup.jpg): Adern fast weiß, Grundton Indigo statt Violett, glattes Ei ohne Facetten oder Innenstruktur – genau der Ablehnungsfall 'fast weiß durch Emission'. Fix: Filamente gesättigt violett mit nur schmalem hellem Kern, Emission reduzieren, Kern mit gerichteten Facetten oder Schalen statt glatter Ellipse. (2) Freie Filamente: dünne Bandspiralen wirken wie lose Drähte, durchstoßen bzw. kleben an der Kernoberfläche. Fix: dickere, abgesetzte Bögen mit klarem Abstand oder weglassen. (3) Rippen: drei nahezu gleich breite, gleich gebogene Hörner mit gleichmäßiger Blockteilung (Ablehnungsfall 'gleich breite Rippen'); kein Höhen-/Stärkenrhythmus wie in ref 04/08, keine Brüche/Abplatzungen, Kalkstein wirkt an den Rippen grau gefleckt. Fix: unterschiedliche Höhen und Stärken, Verjüngung variieren, Fugen versetzen, lokale Verwitterung statt Vollflächenflecken. (4) Kein sichtbarer Bezug Kern–Sockel (Schwebeachse, Lichtsäule o. Ä.). Sockel mit Ringstufen und Fugen ist gut und kann bleiben.",
-    "round": 1,
-    "source_sha256": "4978842b5ba256f7b15f6b78e6047af96a7f25b974e0d697be2c561c84bc5e47",
-    "sheet_sha256": "29109b9bc33c8b96421f7d297e5a36d63a8702f764cdbf291d426c0332925728"
+    "notes": "Round 2. Fixed: core is now a faceted violet crystal instead of a white-glowing egg; ribs are tapered horn shapes of different heights with joints and a weathered band only at the base; plinth with ring steps is a clear improvement. Not fixed: (1) the core is a coarse flat-shaded lozenge with blocky light rectangles on two faces that look painted on; model proper facets/inner bands and give it a restrained inner glow from the core outwards. (2) The four filaments are flat ribbon strips (paper/plastic look) floating loosely beside the core, and one passes in front of it in the close-up; make them thin, tapered energy strands with bright narrow cores that clearly orbit or emerge from the core. (3) The thin strands from the core to the floor end in a flat purple disc in the step hole; give them a proper emitter (socket, crystal seat) at the floor. (4) Ribs still have very even block joints and no chips; add 1-2 broken/chipped rib blocks and vary block lengths.",
+    "round": 2,
+    "source_sha256": "c182ffded5b03535b6c9ffb6ce8944e9961354c3bc4a25b8ad3129491ac5ca87",
+    "sheet_sha256": "d00182848ad4a09f808f404055263de396114b1d46459e16395cbadb70f33587"
   },
-  "review_rounds": 1
+  "review_rounds": 2
 }
