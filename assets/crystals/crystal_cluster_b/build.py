@@ -108,21 +108,7 @@ def rock_material():
     L.new(cracked.outputs["Color"], mossy.inputs["Color1"])
     L.new(moss_col.outputs["Color"], mossy.inputs["Color2"])
 
-    # Violet crystal dust close to the cluster centre.
-    dist = N.new("ShaderNodeVectorMath")
-    dist.operation = "LENGTH"
-    L.new(geo.outputs["Position"], dist.inputs[0])
-    dust_mask = N.new("ShaderNodeMapRange")
-    dust_mask.inputs["From Min"].default_value = 0.5
-    dust_mask.inputs["From Max"].default_value = 1.7
-    dust_mask.inputs["To Min"].default_value = 0.55
-    dust_mask.inputs["To Max"].default_value = 0.0
-    L.new(dist.outputs["Value"], dust_mask.inputs["Value"])
-    dusty = N.new("ShaderNodeMixRGB")
-    dusty.inputs["Color2"].default_value = (0.20, 0.07, 0.36, 1)
-    L.new(dust_mask.outputs["Result"], dusty.inputs["Fac"])
-    L.new(mossy.outputs["Color"], dusty.inputs["Color1"])
-    L.new(dusty.outputs["Color"], bsdf.inputs["Base Color"])
+    L.new(mossy.outputs["Color"], bsdf.inputs["Base Color"])
 
     rough = N.new("ShaderNodeMapRange")
     rough.inputs["To Min"].default_value = 0.72
@@ -177,7 +163,10 @@ def crystal_material():
     tint.inputs["Fac"].default_value = 0.45
     L.new(fract.outputs["Color"], tint.inputs["Color1"])
     L.new(body.outputs["Color"], tint.inputs["Color2"])
-    L.new(tint.outputs["Color"], bsdf.inputs["Base Color"])
+    hue = N.new("ShaderNodeHueSaturation")
+    hue.inputs["Hue"].default_value = 0.52
+    L.new(tint.outputs["Color"], hue.inputs["Color"])
+    L.new(hue.outputs["Color"], bsdf.inputs["Base Color"])
 
     veins = N.new("ShaderNodeTexNoise")
     veins.inputs["Scale"].default_value = 2.4
@@ -218,18 +207,6 @@ def crystal_material():
     bsdf.inputs["Coat Roughness"].default_value = 0.04
     bsdf.inputs["IOR"].default_value = 1.6
 
-    # Growth striations running along the crystal axis.
-    stria = N.new("ShaderNodeTexWave")
-    stria.bands_direction = "Z"
-    stria.inputs["Scale"].default_value = 5
-    stria.inputs["Distortion"].default_value = 2.2
-    stria.inputs["Detail"].default_value = 3
-    L.new(coords.outputs["Object"], stria.inputs["Vector"])
-    bump = N.new("ShaderNodeBump")
-    bump.inputs["Strength"].default_value = 0.05
-    bump.inputs["Distance"].default_value = 0.01
-    L.new(stria.outputs["Fac"], bump.inputs["Height"])
-    L.new(bump.outputs["Normal"], bsdf.inputs["Normal"])
     return mat
 
 
@@ -302,7 +279,7 @@ def make_crystal(name, rng, radius, height, mat, chip=None):
         cut = bmesh.ops.bisect_plane(
             bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:],
             plane_co=(0, 0, height * chip),
-            plane_no=Vector((0.32, -0.24, 1)).normalized(), clear_outer=True)
+            plane_no=Vector((0.85, -0.55, 1)).normalized(), clear_outer=True)
         edges = [e for e in cut["geom_cut"] if isinstance(e, bmesh.types.BMEdge) and e.is_boundary]
         bmesh.ops.holes_fill(bm, edges=edges)
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
@@ -349,27 +326,27 @@ def build():
     limestone.name = "Chalk limestone breaks"
     crystal = crystal_material()
 
-    base = make_rock("rock_base", rng, 1.9, 0.25, 7, rock)
-    base.location = (0, 0, 0.12)
+    base = make_rock("rock_base", rng, 1.75, 0.40, 7, rock)
+    base.location = (0, 0, 0.17)
     for i, (angle, dist, radius) in enumerate([(0.6, 1.35, 0.62), (2.7, 1.2, 0.78), (4.4, 1.3, 0.55), (5.5, 0.95, 0.5)]):
-        lump = make_rock(f"rock_lump_{i}", rng, radius, rng.uniform(0.4, 0.6), 6, rock if i % 2 else limestone)
-        lump.location = (math.cos(angle) * dist, math.sin(angle) * dist, radius * 0.16)
+        lump = make_rock(f"rock_lump_{i}", rng, radius, rng.uniform(0.6, 0.85), 6, rock if i % 2 else limestone)
+        lump.location = (math.cos(angle) * dist, math.sin(angle) * dist, radius * 0.28)
         lump.rotation_euler = Euler((rng.uniform(-0.3, 0.3), rng.uniform(-0.3, 0.3), rng.uniform(0, 6.28)))
     for i in range(9):
         angle, dist, radius = rng.uniform(0, math.tau), rng.uniform(1.5, 2.1), rng.uniform(0.09, 0.2)
         pebble = make_rock(f"rock_pebble_{i}", rng, radius, rng.uniform(0.55, 0.8), 4, rock)
         pebble.location = (math.cos(angle) * dist, math.sin(angle) * dist, radius * 0.25)
 
-    main = make_crystal("crystal_main", rng, 0.43, 2.8, crystal, chip=0.95)
-    place(main, rng, 2.2, 0.24, math.radians(12), 0.25)
+    main = make_crystal("crystal_main", rng, 0.43, 2.8, crystal, chip=0.97)
+    place(main, rng, 2.2, 0.24, math.radians(12), 0.35)
 
     for i in range(5):
         angle = math.tau * i / 5 + rng.uniform(-0.25, 0.25)
-        height = [1.25, 2.05, 1.65, 2.3, 1.1][i]
-        chip = {0: 0.96, 1: 0.64, 3: 0.92}.get(i)
-        c = make_crystal(f"crystal_mid_{i}", rng, height * rng.uniform(0.12, 0.16), height,
+        height = [1.25, 1.65, 1.65, 2.3, 1.1][i]
+        chip = {1: 0.90, 3: 0.96}.get(i)
+        c = make_crystal(f"crystal_mid_{i}", rng, height * rng.uniform(0.105, 0.13), height,
                          crystal, chip=chip)
-        place(c, rng, angle, rng.uniform(0.55, 0.8), math.radians(rng.uniform(23, 42)), 0.28)
+        place(c, rng, angle, rng.uniform(0.48, 0.7), math.radians(rng.uniform(23, 42)), 0.32)
 
     for i in range(9):
         angle = rng.uniform(0, math.tau)
