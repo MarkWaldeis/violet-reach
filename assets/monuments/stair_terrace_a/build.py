@@ -110,6 +110,7 @@ def limestone(name):
 def tread_mesh(bounds, chip, damaged_edge, sink):
     x0, x1, y0, y1, bottom, top = bounds
     depth = y1-y0
+    min_surface_z = bottom+.035
     site = .18+.63*abs(math.sin(17*y0+5*x0))
     samples = sorted(set((0, .025, .08, .20, .34, .46, .57, .69, .82, .94, .98, 1,
                           site-.075, site, site+.085)))
@@ -120,14 +121,15 @@ def tread_mesh(bounds, chip, damaged_edge, sink):
         scuff = lane*(.79+.21*math.cos(11*y0+.89*x))
         edge_loss = chip * max(0, 1-abs(v-site)/.085)
         eased = .011+.021*lane
-        section = (
-            (0, bottom), (1, bottom), (1, top-.003), (.79, top-.012*scuff),
+        surface = (
+            (1, top-.003), (.79, top-.012*scuff),
             (.61, top-.017*scuff), (.44, top-.037*scuff), (.26, top-.059*scuff),
             (.12, top-.051*scuff-.27*edge_loss),
             (.055, top-.046*scuff-eased-.55*edge_loss),
             (.016, top-.037-eased-.71*edge_loss),
             (0, top-.070-.23*edge_loss),
         )
+        section = ((0, bottom), (1, bottom)) + tuple((t, max(z, min_surface_z)) for t, z in surface)
         for t, z in section:
             edge_weight = max(0, 1-4*(v if damaged_edge == -1 else 1-v)) if damaged_edge else 0
             crack = edge_weight*(.027*math.sin(6.2*t)+.020*t)
