@@ -14,22 +14,22 @@
     1800
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-a193abe14f544701aef56a91e66901c2",
   "review": {
     "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
     "scores": {
-      "silhouette": 7,
-      "form_detail": 6,
-      "material": 6,
+      "silhouette": 8,
+      "form_detail": 7,
+      "material": 7,
       "scale": 8,
-      "style": 6,
+      "style": 7,
       "defects": 7
     },
-    "notes": "Round 2. Fixed: the grass/sand edge is now a smooth natural transition; the water is rendered and the close-up shows the waterline; grass is in varied clumps. Not fixed: (1) there is no darker wet sand strip along the waterline (closeup.jpg) - sand is the same dry beige right up to the water; add a 0.5-1.5 m darker, slightly glossy wet band. (2) Rocks are low-poly faceted boxes with flat planes and all the same light grey; wet and dry stones look identical. Round and vary them, and make stones in/at the water darker and glossier. (3) The small pebbles are scattered evenly like confetti across the whole beach; cluster them along the waterline and drift lines. (4) The water is a saturated flat blue; shift towards the blue-green of water_opaque with a shallower, lighter band at the shore. (5) The embankment is still a smooth green ramp; add exposed roots/soil breaks and stones in the bank.",
-    "round": 2,
-    "source_sha256": "6c43f7a39159c8005488a835564fb3f14f65c25ab202f8d2a90ec6aee77d8614",
-    "sheet_sha256": "9d273ba09583b152b600beb1d3a7cce45c8ed8a9578f15bc85a9331c6c27af10"
+    "notes": "Round 3 (final). Fixed: there is now a dark wet-sand band at the waterline; the water is blue-green; wet stones are darker and glossy versus pale dry ones; the bank has a soil cut and root/driftwood pieces. Not fixed: (1) all stones are smooth, rounded blobs (soap/marshmallow look), and the dry stones are almost pure white with no texture; use angular-to-rounded river stones with grey variation and lichen. (2) Pebbles are laid in straight dotted lines that read like footprint trails, not natural clusters along the drift line. (3) The water is a flat opaque teal with no shallow-water transition or shoreline foam where it meets the sand. (4) The root pieces stand like sticks pushed into the bank rather than growing out of the soil cut.",
+    "round": 3,
+    "source_sha256": "b16ad93f672bdfd9c0e136dfd8dc9af3aea93d4db6e8037dd0f9c4e569a9a178",
+    "sheet_sha256": "fd8c4f7837dfe8a186687d9fe82a5b2a1c0573af48a8c44f0ddea6eabdfc8982"
   },
-  "review_rounds": 2
+  "review_rounds": 3
 }

@@ -14,22 +14,22 @@
     1100
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-a193abe14f544701aef56a91e66901c2",
   "review": {
     "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
     "scores": {
-      "silhouette": 8,
+      "silhouette": 7,
       "form_detail": 7,
-      "material": 6,
+      "material": 7,
       "scale": 8,
       "style": 7,
       "defects": 7
     },
-    "notes": "Round 2. Fixed: spire is a proper prism blade with side crystals; the camouflage pattern is gone; base fault banks are now layered shale plates with a fracture ring and rubble. Not fixed: (1) closeup.jpg shows the material as flat blue-violet with long vertical streaks over the whole blade (reads as a stretched texture) and a bluish top facet; no lighter facets or inner bands - darken to the violet_crystal base, add lighter facet values and internal bands. (2) Main blade termination is still a clean point with no stepped growth or broken edge; the raised collar rings at even spacing look like bamboo joints - make growth steps inset and uneven, chip the edges. (3) The top surfaces of the base slabs show the same wood-grain streaking (closeup_base tile); use a proper rock/limestone pattern at metre scale. (4) Emissive cracks are barely visible; make a few read in the hero view.",
-    "round": 2,
-    "source_sha256": "9177a5243583cf9d787eb332e8fa987d32a498f3f6e40c8039efe25c1efaaf41",
-    "sheet_sha256": "4d7942223ecacc9ac2e57a0dd20b7213b5147dce1f558591858245684fd71cdf"
+    "notes": "Round 3 (final). Fixed: base slabs no longer show wood-grain streaks; blade is darker violet; the top facet is no longer bluish; cracks are visible. Not fixed: (1) the main blade now bends like a banana/horn and ends in a slanted soft-edged cut, which weakens the prismatic silhouette instead of adding stepped growth. (2) Growth steps are still evenly spaced collar rings along the blade (bamboo). (3) closeup.jpg: flat low-poly facets with blurry horizontal glare bands, no lighter facet values per face, no internal bands; cracks are painted squiggle lines, not modelled. (4) Base slabs are now flat, untextured pale plates stacked like paper, with no rock structure at metre scale.",
+    "round": 3,
+    "source_sha256": "451220cf519e28640c2430714b3cc51acd0c1461ac02946221cc0a7f64cafc77",
+    "sheet_sha256": "99b4ccbdc86987539b1ceb67be053cf8bc538aa05863ad3bdfb608faedcf8fae"
   },
-  "review_rounds": 2
+  "review_rounds": 3
 }

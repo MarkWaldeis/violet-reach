@@ -14,22 +14,22 @@
     1200
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-a193abe14f544701aef56a91e66901c2",
   "review": {
     "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
     "scores": {
       "silhouette": 8,
       "form_detail": 7,
-      "material": 6,
+      "material": 7,
       "scale": 8,
       "style": 7,
       "defects": 7
     },
-    "notes": "Round 2. Fixed: crystals are now directional hexagonal prisms with pyramidal tips (no more ellipsoids); limestone shelf is now layered plates with chipped edges and varied rubble; no black hole-like facets. Not fixed: (1) material is a flat, saturated light purple with vertical streaks; the brief asks for dark violet opaque gemstone with lighter facets and inner bands - darken the base, give each facet its own value, put the bands inside the crystal instead of on the surface. (2) The growth bands are raised outer collars at even spacing, so every prism reads like bamboo; replace them with uneven, inset growth steps and vary spacing per crystal. (3) Tips are all clean, perfect points; break or chip 2-3 terminations and add small secondary crystals at the base. (4) Emissive cracks are hair-thin and only visible on two crystals in the close-up; make 2-3 cracks per large crystal readable in the hero shot while keeping emission restrained.",
-    "round": 2,
-    "source_sha256": "6d6dcbbda3b664bca994c3bb2b6b86ae8b33808362d4e40e4f52f8bff924d7a1",
-    "sheet_sha256": "373bd4428f3fa920a234c55c0a40bdf075a40bf9b34fb801fe06b9798917ec2e"
+    "notes": "Round 3 (final). Fixed: material is now a darker violet with lighter top facets and faint horizontal bands; vertical streaks are gone; cracks are now visible in the hero view. Not fixed: (1) the main prisms are still built from 3-4 stacked segments with flaring outward rings at regular spacing, so the bamboo-joint read remains (round-2 point 2). (2) All terminations are still clean, unchipped pyramidal points (round-2 point 3). (3) The cracks are flat painted zigzag lines on the faces (cartoon-lightning look), not modelled fractures; the inner bands sit on the surface rather than inside the stone. (4) Prisms are still coarse 6-8-sided low-poly with fully flat facets in closeup.jpg, which is not hero-level detail.",
+    "round": 3,
+    "source_sha256": "4b5926e6731f71e48f7e003af02dc170e395443b08065841a55f94b6168f27aa",
+    "sheet_sha256": "60e8b6c6d0dd0b0d26d52101d4cc26dfd7e56f29c268e87400a10de7359155c0"
   },
-  "review_rounds": 2
+  "review_rounds": 3
 }

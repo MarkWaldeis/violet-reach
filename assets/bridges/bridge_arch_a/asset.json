@@ -14,22 +14,22 @@
     3100
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-a193abe14f544701aef56a91e66901c2",
   "review": {
     "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
     "scores": {
       "silhouette": 8,
-      "form_detail": 7,
+      "form_detail": 8,
       "material": 7,
       "scale": 8,
       "style": 8,
-      "defects": 8
+      "defects": 7
     },
-    "notes": "Round 2, closest to passing. Fixed: the deck is now a walkable stair run with a level crown; the end abutments are stepped; the full-surface grey mottling is gone. Not fixed: (1) the parapet is still one identical baluster/slot module repeated along the whole span (round-1 point); add heavier piers every few metres, a different crown panel, and break or chip a few balusters. (2) Material is now uniformly clean ivory with no weathering anywhere; add localized monument_weathered at the abutment bases/water line, in joints and under the parapet coping (local only, not full-surface). (3) The flat landing slabs at both ends sit on the ground like thin plates; give them thickness and tie them into the abutments/wing walls.",
-    "round": 2,
-    "source_sha256": "8dd4567f6f692203cc66d31688fa3769d6b156befd1046e45cb764fafd4c5b62",
-    "sheet_sha256": "763b4b21c70522bc7a972149422c75a228992aa1a361dff5d2fee6e6c58c79f4"
+    "notes": "Round 3 (final), closest to passing. Fixed: the parapet now varies, with heavier posts, newel posts at the ends and a carved crown panel; the stairs meet stepped abutments; a weathered band now sits at the abutment base. Not fixed: (1) apart from that thin base band the stone is still uniformly clean ivory; joints, the underside of the coping and the arch intrados show no localized weathering, and no balusters are chipped or broken (round-2 points 1-2). (2) The front landing is still loose thin slabs lying on the ground with gaps, not tied into the abutment and wing walls (round-2 point 3). (3) hero.jpg frames the bridge tiny in the middle of the image, so the hero view cannot show the detail; frame it to fill the shot.",
+    "round": 3,
+    "source_sha256": "e345efdbc99a06c9cc0fb4caa1d0f1394edad94975d696731e21bff2631e195a",
+    "sheet_sha256": "c3e85505e7206a02b793abac9ba46d239036bcaee66e3912aee2c31e84953c72"
   },
-  "review_rounds": 2
+  "review_rounds": 3
 }

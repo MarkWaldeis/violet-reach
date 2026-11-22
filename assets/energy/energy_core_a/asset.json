@@ -14,7 +14,7 @@
     2600
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-a193abe14f544701aef56a91e66901c2",
   "review": {
     "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
@@ -26,10 +26,10 @@
       "style": 7,
       "defects": 7
     },
-    "notes": "Round 2. Fixed: core is now a faceted violet crystal instead of a white-glowing egg; ribs are tapered horn shapes of different heights with joints and a weathered band only at the base; plinth with ring steps is a clear improvement. Not fixed: (1) the core is a coarse flat-shaded lozenge with blocky light rectangles on two faces that look painted on; model proper facets/inner bands and give it a restrained inner glow from the core outwards. (2) The four filaments are flat ribbon strips (paper/plastic look) floating loosely beside the core, and one passes in front of it in the close-up; make them thin, tapered energy strands with bright narrow cores that clearly orbit or emerge from the core. (3) The thin strands from the core to the floor end in a flat purple disc in the step hole; give them a proper emitter (socket, crystal seat) at the floor. (4) Ribs still have very even block joints and no chips; add 1-2 broken/chipped rib blocks and vary block lengths.",
-    "round": 2,
-    "source_sha256": "c182ffded5b03535b6c9ffb6ce8944e9961354c3bc4a25b8ad3129491ac5ca87",
-    "sheet_sha256": "d00182848ad4a09f808f404055263de396114b1d46459e16395cbadb70f33587"
+    "notes": "Round 3 (final). Fixed: painted light rectangles on the core are gone; one rib joint is now chipped; floor strands end in a small crystal cluster instead of a flat disc. Not fixed: (1) the core is still a coarse flat-shaded lozenge; the new horizontal wavy glare bands look like a stretched texture, not inner bands or a glow from within. (2) Filaments are still flat ribbon strips floating loosely beside the core, and one still crosses in front of it in hero.jpg (round-2 point 2). (3) The floor emitter is a tiny blob in the step hole, unreadable from the hero view; there is no socket or seat. (4) Rib blocks are still evenly jointed apart from the one chip.",
+    "round": 3,
+    "source_sha256": "48a49c46e1a0921a5083754fca414db84aa5b380b492f710f6db2b699f3e4341",
+    "sheet_sha256": "986820abfe89f525af9d8944685ec04d28901afed5f34665e80d355f2b74bbd5"
   },
-  "review_rounds": 2
+  "review_rounds": 3
 }
