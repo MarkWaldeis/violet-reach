@@ -9,6 +9,7 @@ import { sliceAssets } from "./slice-content.ts";
 import { selectWater, type Hydrology } from "./hydrology.ts";
 import { surfaceData } from "./surface-data.ts";
 import { waterSurface } from "./water.ts";
+import { warmScene } from "./scene-warmup.ts";
 
 const stage = document.querySelector<HTMLElement>("#stage")!;
 const status = document.querySelector<HTMLElement>("#status")!;
@@ -146,6 +147,9 @@ async function main() {
   });
   document.addEventListener("pointerlockerror", () => { lockLabel.textContent = "Ziehen oder Pfeiltasten"; });
 
+  status.textContent = "Materialien werden vorbereitet …";
+  terrain.update(position.x, position.z, performance.now());
+  await warmScene(renderer, scene, camera);
   let last = performance.now();
   let hudAt = last;
   let frames = 0;
