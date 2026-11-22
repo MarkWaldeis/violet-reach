@@ -2,7 +2,7 @@
   "id": "rock_boulder_a",
   "category": "rocks",
   "title": "Geschichteter Kalkfindling A",
-  "description": "Zusammenhängender Kalkfindling mit unregelmäßig erodiertem, eingesunkenem Fuß und verstürzten Blöcken. Stark wechselnde, seitlich auskeilende Schichtmächtigkeiten mit Überhängen und versetzten Sackklüften. Ruhige helle Bruchflächen; richtungs-, maßstabs- und keimvariierte Verwitterung nur in Lagerfugen und unter Schichtlippen. Warme Kreide- und Ockertöne einer lokalen canyon_layered-Variante.",
+  "description": "Vollständig neu aufgebauter zusammenhängender Kalkfindling aus einer dichten Ikosphäre mit sieben schrägen Bruchflächen. Mehrskalige geometrische Voronoibrüche, geneigte auskeilende Schichtbänder, körnige frische Bruchflächen und leicht verwitterte Lippen ersetzen gestapelte Quader und Fasen. Ein modellierter Kalksand- und Feinkieskragen bettet den geschlossenen Fuß und vier gefallene Bruchblöcke ein. Grasige Schichtterrassen und einzelne modellierte Büschel beleben die Oberseiten. Lokale warme canyon_layered-Varianten mit hellen Brüchen und dunkleren geschützten Fugen.",
   "target_size_m": [
     7.5,
     5.0,
@@ -14,22 +14,8 @@
     2500
   ],
   "texture_size": 2048,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-376742566d344b90aa5a22ec7e9cc164",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 6,
-      "form_detail": 6,
-      "material": 6,
-      "scale": 8,
-      "style": 6,
-      "defects": 6
-    },
-    "notes": "Round 2 against the round-1 points. Pedestal foot: changed, not fixed. The cut plinth is gone, but the mass now stands on five loose white wedge chips like feet with daylight under it (hero.jpg, turn_200). Fix: bury the lowest bed 0.3-0.5 m into the ground with a sand/fines apron and a few half-buried fallen blocks, no gaps under the mass. Layer cake: partly fixed. Bed thickness now varies, but every bed is a crisp box with straight 45-degree chamfers on all edges, so it reads as cut masonry blocks stacked up, not chalk beds (turn_200, closeup_base). Fix: break the bed edges into irregular fracture faces with undercut recesses and rounded weathered lips; vary the bed outline per side instead of a uniform offset. Scratch pattern: gone, but now the faces are flat clean clay with no fracture texture, and one face in closeup_base has a blue mottled patch. Fix: light rough fracture faces, darker joints, local staining at the foot; remove the blue patch. New defects: a rectangular inset panel with a single slot on the front (hero.jpg) looks like a door hatch; a smooth scooped bowl on the top; a row of small white cubes on the summit (closeup_upper). Remove all three, replace the top with a weathered stepped bed surface with grass terraces as STYLE.md describes. One round left.",
-    "round": 2,
-    "source_sha256": "138c1f151bcfc065beaf114043437bb23805a681fd993f912fadd3d4093815d1",
-    "sheet_sha256": "75b76debed7c8484e577407f185931f3e1862ee9d8943c27538a37475236ca5f"
-  },
+  "review": null,
   "review_rounds": 2
 }
