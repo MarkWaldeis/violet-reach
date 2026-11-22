@@ -75,7 +75,9 @@ if asset=="rock_boulder_b":
     assert any(n.type=="AMBIENT_OCCLUSION" for n in main.data.materials[0].node_tree.nodes)
     lichen=main.data.materials[0].node_tree.nodes["MetricLichen"]
     coordinates=lichen.inputs["Vector"].links[0]
-    assert coordinates.from_node.type=="NEW_GEOMETRY" and coordinates.from_socket.name=="Position"
+    assert coordinates.from_node.type=="TEX_COORD" and coordinates.from_socket.name=="Object"
+    assert coordinates.from_node.object is None
+    print("B_LICHEN_COORDINATES: object-space metres; unit scales; no external coordinate reference")
     print("B_FACE_RELIEF_M:",round(min(relief),4),round(max(relief),4))
     assert main["fissure_count"]==2
     block=next(obj for obj in stones if obj.get("replacement_kind"))
