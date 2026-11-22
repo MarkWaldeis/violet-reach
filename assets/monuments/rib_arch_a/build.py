@@ -10,10 +10,12 @@ import vrmat
 
 
 def limestone(name):
-    mat = vrmat.get(name)
-    if mat.get("quarried_finish"):
+    local_name = f"rib_arch_a.{name}"
+    mat = bpy.data.materials.get(local_name)
+    if mat is not None:
         return mat
-    mat["quarried_finish"] = True
+    mat = vrmat.get(name).copy()
+    mat.name = local_name
     tree = mat.node_tree
     nodes, links = tree.nodes, tree.links
     surface = nodes["Principled BSDF"]
