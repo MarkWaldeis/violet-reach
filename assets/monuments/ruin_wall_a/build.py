@@ -24,7 +24,7 @@ def mesh(name, vertices, faces, materials=(), smooth=False, indices=()):
     return obj
 
 
-def limestone(name, tone, *, mortar=False, fracture=False):
+def limestone(name, tone, *, mortar=False, fracture=False, infill=False):
     material = vrmat.get("monument_white").copy()
     material.name = name
     nodes, links = material.node_tree.nodes, material.node_tree.links
@@ -71,8 +71,8 @@ def limestone(name, tone, *, mortar=False, fracture=False):
         return node.outputs["Fac"]
 
     if mortar:
-        umber = tuple(0.39 * a + 0.61 * b for a, b in zip(shadow, soil))
-        lime = tuple(0.39 * a + 0.46 * b for a, b in zip(weathered, soil))
+        umber = tuple(0.19 * a + 0.64 * b for a, b in zip(shadow, soil))
+        lime = tuple(0.24 * a + 0.64 * b for a, b in zip(weathered, soil))
         color = ramp(noise(6.8, 3), 0.21, 0.79, umber, lime)
     else:
         cool = tuple(c * t * k for c, t, k in zip(cream, tone, (0.88, 0.94, 1.065)))
@@ -83,30 +83,35 @@ def limestone(name, tone, *, mortar=False, fracture=False):
         ao = nodes.new("ShaderNodeAmbientOcclusion")
         ao.samples = 4
         ao.inputs["Distance"].default_value = 0.19
-        seam = tuple(0.73 * a + 0.27 * b for a, b in zip(shadow, weathered))
+        seam = tuple(0.44 * a + 0.56 * b for a, b in zip(shadow, (0.096, 0.058, 0.030)))
         color = mix(ao.outputs["AO"], seam, color)
         ochre = tuple(
-            0.41 * a + 0.59 * b for a, b in zip(weathered, (0.096, 0.058, 0.030))
+            0.19 * a + 0.81 * b for a, b in zip(weathered, (0.096, 0.058, 0.030))
         )
-        contact = ramp(noise(8.0), 0.25, 0.75, (0.50,) * 3, (0.96,) * 3)
+        contact = ramp(noise(2.4), 0.23, 0.76, (0.48,) * 3, (0.98,) * 3)
         color = mix(attr("patina"), color, mix(contact, color, ochre))
 
         stretch = nodes.new("ShaderNodeVectorMath")
         stretch.operation = "MULTIPLY"
-        stretch.inputs[1].default_value = (5.2, 5.2, 0.38)
+        stretch.inputs[1].default_value = (4.3, 4.3, 0.64)
         links.new(coords, stretch.inputs[0])
         runoff = ramp(
-            noise(1, 3, stretch.outputs["Vector"]), 0.44, 0.74, (0,) * 3, (0.82,) * 3
+            noise(1, 3, stretch.outputs["Vector"]), 0.39, 0.68, (0,) * 3, (0.92,) * 3
         )
-        color = mix(attr("coping_runoff"), color, mix(runoff, color, ochre))
+        rain = nodes.new("ShaderNodeMath")
+        rain.operation = "MAXIMUM"
+        rain.inputs[0].default_value = 0.16
+        links.new(attr("coping_runoff"), rain.inputs[1])
+        color = mix(rain.outputs[0], color, mix(runoff, color, ochre))
         geom = nodes.new("ShaderNodeNewGeometry")
         axis = nodes.new("ShaderNodeSeparateXYZ")
         links.new(geom.outputs["Normal"], axis.inputs[0])
         up = ramp(axis.outputs["Z"], 0.43, 0.95)
-        colonies = ramp(noise(3.7, 3), 0.52, 0.73)
-        lichen = tuple(0.79 * a + 0.21 * b for a, b in zip(moss, weathered))
+        colonies = ramp(noise(2.9, 3), 0.47, 0.68)
+        lichen = tuple(0.67 * a + 0.33 * b for a, b in zip(moss, weathered))
         growth = mix(ramp(noise(25, 2), 0.28, 0.73), lichen, moss)
         color = mix(up, color, mix(colonies, color, growth))
+        color = mix(attr("joint_growth"), color, mix(colonies, color, moss))
 
     links.new(color, surface.inputs["Base Color"])
     links.new(
@@ -115,9 +120,13 @@ def limestone(name, tone, *, mortar=False, fracture=False):
     )
     surface.inputs["Specular IOR Level"].default_value = 0.27
     bump = nodes.new("ShaderNodeBump")
-    bump.inputs["Distance"].default_value = 0.021 if fracture or mortar else 0.010
-    bump.inputs["Strength"].default_value = 0.38 if fracture or mortar else 0.29
-    links.new(noise(13 if fracture or mortar else 10), bump.inputs["Height"])
+    bump.inputs["Distance"].default_value = (
+        0.027 if fracture or mortar or infill else 0.017
+    )
+    bump.inputs["Strength"].default_value = (
+        0.48 if fracture or mortar or infill else 0.32
+    )
+    links.new(noise(9 if fracture or mortar or infill else 13), bump.inputs["Height"])
     links.new(bump.outputs["Normal"], surface.inputs["Normal"])
     return material
 
@@ -290,13 +299,14 @@ def ashlar(
     yaw=0.0,
     tilt=(0.0, 0.0),
     ground=None,
+    rubble=False,
 ):
     x0, x1, y0, y1, bottom, top = bounds
     cx, cy, cz = (x0 + x1) / 2, (y0 + y1) / 2, (bottom + top) / 2
     w, d, h = (x1 - x0) / 2, (y1 - y0) / 2, (top - bottom) / 2
     wear = min(wear, w / 9, d / 9, h / 5)
     bevel_width = 0.51 * wear
-    chamfer = min(wear * 1.9, h * 0.44)
+    chamfer = min(wear * (3.1 if rubble else 1.9), h * 0.44)
     outline = (
         (-w + chamfer, -d),
         (w - chamfer, -d),
@@ -326,9 +336,10 @@ def ashlar(
     faces += [(i, (i + 1) % n, (i + 1) % n + n, i + n) for i in range(n)]
     faces.append(tuple(range(n, 2 * n)))
     obj = mesh(name, vertices, faces, (material,))
-    if break_side:
-        obj.data.materials.append(split)
-        sign = break_side
+    if break_side or chip > 0.055:
+        if split != material:
+            obj.data.materials.append(split)
+        sign = break_side or rng.choice((-1, 1))
         edge = rng.uniform(0.40, 0.77)
         slope_y, slope_z = rng.uniform(-0.44, 0.44), rng.uniform(-0.62, 0.48)
         if abs(slope_z) < 0.25:
@@ -345,6 +356,22 @@ def ashlar(
                 (sign * 0.78, -front * 0.38, -0.61),
             ),
         ]
+        if not break_side:
+            front = -1 if notch in (0, 1, 2, 7) else 1
+            cut = [
+                (
+                    (
+                        sign * (w - chip * 0.58),
+                        front * (d - chip * 0.28),
+                        h - chip * 0.48,
+                    ),
+                    (sign * 0.74, front * 0.88, 1),
+                ),
+                (
+                    (sign * (w - chip * 0.31), front * d, h - chip * 0.73),
+                    (sign * 0.88, front * 0.93, 0.24),
+                ),
+            ]
         bm = bmesh.new()
         bm.from_mesh(obj.data)
         for point, normal in cut:
@@ -363,7 +390,7 @@ def ashlar(
             ]
             if edge_ring:
                 for face in bmesh.ops.holes_fill(bm, edges=edge_ring, sides=0)["faces"]:
-                    face.material_index = 1
+                    face.material_index = int(split != material)
         bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
         bm.to_mesh(obj.data)
         bm.free()
@@ -376,7 +403,7 @@ def ashlar(
         vert.co = point + Vector((cx, cy, cz))
     obj.data.update()
     bevel = obj.modifiers.new("Worn arrises", "BEVEL")
-    bevel.width, bevel.segments = bevel_width, 2
+    bevel.width, bevel.segments = bevel_width * (1.45 if rubble else 1), 3
     bevel.limit_method, bevel.angle_limit = "ANGLE", math.radians(20)
     bevel.harden_normals = True
     weld = obj.modifiers.new("Remove coincident bevel vertices", "WELD")
@@ -391,14 +418,23 @@ def ashlar(
                 min(
                     0.94,
                     (
-                        1.33
-                        + 0.24 * math.sin(1.9 * v.co.x)
-                        + 0.12 * math.sin(3.4 * v.co.x + 2.1 * v.co.y)
+                        2.02
+                        + 0.32 * math.sin(1.9 * v.co.x)
+                        + 0.19 * math.sin(3.4 * v.co.x + 2.1 * v.co.y)
                         - v.co.z
                     )
-                    / 1.18,
+                    / 1.51,
                 ),
             )
+            for v in obj.data.vertices
+        ],
+    )
+    joint = obj.data.attributes.new("joint_growth", "FLOAT", "POINT")
+    joint.data.foreach_set(
+        "value",
+        [
+            max(0, min(0.87, (1.25 - v.co.z) / 0.65))
+            * max(0, 1 - abs(v.co.z - (cz - h)) / 0.24)
             for v in obj.data.vertices
         ],
     )
@@ -480,36 +516,38 @@ def lime_matrix(lo, hi, base, top, y, side, mortar):
     bm.free()
 
 
-def expose_core(lo, hi, base, top, y, side, beds, fracture, mortar, rng):
+def expose_core(lo, hi, base, top, y, side, beds, mortar, rng):
     width = hi - lo
     course = top - base
     lime_matrix(lo, hi, base, top, y, side, mortar)
     for band in range(3):
         z = base + (band + rng.uniform(0.30, 0.58)) * course / 3
-        count = max(2, round(width / rng.uniform(0.13, 0.29)))
+        count = max(2, round(width / rng.uniform(0.18, 0.34)))
         cuts = stone_cuts(lo, hi, count, rng)
         for a, b in zip(cuts, cuts[1:]):
-            r = (b - a) * rng.uniform(0.34, 0.69)
-            t = course * rng.uniform(0.047, 0.171)
+            r = (b - a) * rng.uniform(0.29, 0.72)
+            t = course * rng.uniform(0.053, 0.161)
             x = (a + b) / 2 + rng.uniform(-0.044, 0.044)
             stone_z = z + rng.uniform(-0.093, 0.091)
-            cy = y + side * rng.uniform(-0.076, -0.014)
-            depth = r * rng.uniform(0.73, 1.22)
+            depth = r * rng.uniform(0.68, 1.21)
+            cy = y - side * (depth * 0.54 + rng.uniform(0.01, 0.056))
+            bed = rng.choice(beds)
             ashlar(
                 "Angular limestone chinking in lime mortar",
                 (x - r, x + r, cy - depth, cy + depth, stone_z - t, stone_z + t),
                 rng,
-                rng.choice(beds),
-                wear=0.012,
+                bed,
+                wear=rng.uniform(0.017, 0.044),
                 chip=t * 0.18,
-                break_side=rng.choice((-1, 1)),
-                split=fracture,
+                break_side=rng.choice((-1, 0, 0, 1)),
+                split=bed,
                 yaw=rng.uniform(-0.75, 0.75),
                 tilt=(rng.uniform(-0.49, 0.49), rng.uniform(-0.31, 0.31)),
+                rubble=True,
             )
 
 
-def make_remnant(runs, breach, beds, mortar, fracture, rng):
+def make_remnant(runs, breach, beds, rubble, mortar, fracture, rng):
     front_rng = random.Random(rng.randrange(1 << 30))
     for row, (lo, hi, count) in enumerate(runs):
         bottom, top = LEVELS[row : row + 2]
@@ -553,14 +591,14 @@ def make_remnant(runs, breach, beds, mortar, fracture, rng):
                         top,
                         side * (core_y - 0.035),
                         side,
-                        beds[1:4],
-                        fracture,
+                        rubble,
                         mortar,
                         front_rng,
                     )
                     a, b = (a, inner - 0.026) if breach == 1 else (inner + 0.026, b)
 
-                lit = side == 1 and (row >= len(runs) - 2 or end)
+                lit = row >= len(runs) - 2 or end
+                chipped = lit or rng.random() < 0.34
                 chipped_side = breach if end and row >= 1 else 0
                 if row >= len(runs) - 2 and not chipped_side and rng.random() < 0.50:
                     chipped_side = -breach
@@ -580,8 +618,12 @@ def make_remnant(runs, breach, beds, mortar, fracture, rng):
                     (a + 0.022, b - 0.022, y0, y1, bottom + 0.028, bed_top),
                     rng,
                     rng.choice(beds),
-                    wear=rng.uniform(0.018, 0.035),
-                    chip=rng.uniform(0.052, 0.18) if lit else 0,
+                    wear=(
+                        rng.uniform(0.026, 0.053)
+                        if chipped
+                        else rng.uniform(0.016, 0.029)
+                    ),
+                    chip=rng.uniform(0.074, 0.20) if chipped else 0,
                     break_side=chipped_side,
                     split=fracture,
                     coping=top if lit else None,
@@ -606,8 +648,7 @@ def make_remnant(runs, breach, beds, mortar, fracture, rng):
                     top,
                     side * (core_y - 0.17),
                     side,
-                    beds[1:4],
-                    fracture,
+                    rubble,
                     mortar,
                     front_rng,
                 )
@@ -628,12 +669,13 @@ def make_remnant(runs, breach, beds, mortar, fracture, rng):
                         top - 0.36 + size,
                     ),
                     front_rng,
-                    front_rng.choice(beds[1:]),
+                    front_rng.choice(rubble),
                     wear=0.017,
                     break_side=breach,
-                    split=fracture,
+                    split=rubble[0],
                     yaw=front_rng.uniform(-1, 1),
                     tilt=(front_rng.uniform(-0.3, 0.3), front_rng.uniform(-0.3, 0.3)),
+                    rubble=True,
                 )
 
 
@@ -657,12 +699,12 @@ def build():
     rng = random.Random(247186)
     recipes = (
         (1.04, 1.01, 0.95),
-        (0.83, 0.89, 0.94),
-        (0.79, 0.76, 0.69),
+        (0.80, 0.86, 0.94),
+        (0.66, 0.61, 0.56),
         (0.95, 0.91, 0.86),
         (0.88, 0.92, 1.00),
         (1.01, 0.98, 0.91),
-        (0.84, 0.78, 0.72),
+        (0.81, 0.65, 0.52),
     )
     beds = [
         limestone(f"Floodmark · ashlar bed {i}", value)
@@ -672,8 +714,14 @@ def build():
     fracture = limestone(
         "Floodmark · split ochre limestone", (0.71, 0.67, 0.58), fracture=True
     )
-    make_remnant(LEFT, 1, beds, mortar, fracture, rng)
-    make_remnant(RIGHT, -1, beds, mortar, fracture, rng)
+    rubble = [
+        limestone(f"Floodmark · old core stone {i}", value, infill=True)
+        for i, value in enumerate(
+            ((0.46, 0.43, 0.36), (0.38, 0.39, 0.38), (0.56, 0.51, 0.43))
+        )
+    ]
+    make_remnant(LEFT, 1, beds, rubble, mortar, fracture, rng)
+    make_remnant(RIGHT, -1, beds, rubble, mortar, fracture, rng)
     for x, y, w, d, h in (
         (-2.85, 0.95, 1.32, 0.82, 0.61),
         (-1.93, 1.58, 1.62, 0.84, 0.65),

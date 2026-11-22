@@ -138,6 +138,15 @@ def main():
         baseline = vr.source_hash(d)
         with patch.object(vr, "sha256", side_effect=changed_library):
             results.append(expect("comments and strings do not opt into vrmat", [] if vr.source_hash(d) == baseline else ["changed"], None))
+        source = Path(root, "props", "parent", "build.py")
+        source.parent.mkdir()
+        source.write_text("def build(): pass\n")
+        Path(d, "build.py").write_text("from assets.props.parent import build as parent\n")
+        with patch.object(vr, "ASSETS", root):
+            baseline = vr.source_hash(d)
+            source.write_text("def build(): return 1\n")
+            results.append(expect("imported builder changes dependent review hash",
+                                  ["changed"] if vr.source_hash(d) != baseline else [], "changed"))
         for statement, depends in (("from vrcolumn import drum", True), ("# import vrcolumn", False)):
             Path(d, "build.py").write_text(statement + "\n")
             baseline = vr.source_hash(d)

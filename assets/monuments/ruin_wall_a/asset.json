@@ -14,23 +14,9 @@
     2400
   ],
   "texture_size": 4096,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-10557958564a4a9894cdbd6bc867cb9f",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 8,
-      "form_detail": 7,
-      "material": 7,
-      "scale": 8,
-      "style": 7,
-      "defects": 7
-    },
-    "notes": "Rebuild round 1 of 2. Fixed: real ashlar coursing with dark mortar joints, two broken remnants with stepped, collapsed tops, a breach with fallen blocks and a turf strip at the foot (hero, t9). Still failing: (1) material 7: every block is the same clean, even pale grey with crisp chamfers; no weathering gradient (rain streaks, darker damp lower courses, lichen on top surfaces, mortar loss) as on the approved bridge and stair. (2) form_detail/defects 7: the exposed rubble core is a pile of small, pale, sharp faceted shards that read as crushed ice or crystals (closeup, t8), not lime-bound rubble; and all blocks are flat-faced boxes with the same chamfer, no spalled corners or rounded wear. Fix: reuse the approved weathering stack from the bridge/stair on the wall (streaks under the broken tops, damp band and moss on the lowest two courses, lichen on upper faces); make the core darker grey-brown mortar with embedded rounded and broken stones of mixed size; chip and round a third of the block corners and vary block tone slightly.",
-    "round": 4,
-    "source_sha256": "4f9b417a4621f48ad25685597f5c54a312262597786d3078fcf41c4b830578bb",
-    "sheet_sha256": "0fd3296bf0a4d7e5df111317cde92130f34800c8f3dd8d26f02f0a20590208e9"
-  },
+  "review": null,
   "references": [
     "art/reference/ref_01_white_monuments_sky.jpg",
     "art/reference/ref_03_canyon_cliffs.jpg",

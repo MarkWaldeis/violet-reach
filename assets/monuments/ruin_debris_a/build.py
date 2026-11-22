@@ -2,24 +2,20 @@
 
 import math
 import random
+from pathlib import Path
+import sys
 
 import bmesh
 import bpy
 from mathutils import Euler, Matrix, Vector
 from mathutils.geometry import delaunay_2d_cdt
 
-from vrcolumn import (
-    SHAFT_LEVELS,
-    fracture_planes,
-    limestone,
-    limestone_library,
-    shaft_radius,
-    survey_base,
-    survey_capital,
-    survey_drum,
-)
+from vrcolumn import SHAFT_LEVELS, fracture_planes, shaft_radius
 import vrlib
 import vrmat
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+from assets.monuments.column_white_a import build as column
 
 
 def mesh(name, vertices, faces, materials=(), smooth=False, indices=()):
@@ -34,10 +30,6 @@ def mesh(name, vertices, faces, materials=(), smooth=False, indices=()):
     for poly, index in zip(data.polygons, indices):
         poly.material_index = index
     return obj
-
-
-def stone_library(prefix):
-    return limestone_library(prefix, base=1.10, runoff=(0.95, 2.85), flute_lichen=0.27)
 
 
 def accent(prefix, key, color_key, scale, blend):
@@ -64,7 +56,7 @@ def turf(cx, cy, rx, ry, height, rng, style, blades=130):
     def point(t, a):
         r = 1 + 0.13 * math.sin(3 * a + phase) + 0.07 * math.sin(5 * a - phase)
         x, y = cx + rx * t * r * math.cos(a), cy + ry * t * r * math.sin(a)
-        relief = (1 - t * t) ** 1.6 * (
+        relief = (1 - t * t) ** 1.35 * (
             0.75
             + 0.16 * math.cos(5 * t + 2 * a + phase)
             + 0.10 * math.sin(10 * t - 3 * a)
@@ -164,53 +156,11 @@ def ground_materials(prefix):
     )
 
 
-def turned(name, layers, radius, materials, n=480):
-    vs, fs = [], []
-    for j, level in enumerate(layers):
-        for k in range(n):
-            a = math.tau * k / n
-            r = radius(j, a)
-            vs.append((r * math.cos(a), r * math.sin(a), level))
-    for j in range(len(layers) - 1):
-        for k in range(n):
-            p, q = j * n + k, j * n + (k + 1) % n
-            fs.append((p, q, q + n, p + n))
-    side_count = len(fs)
-    fs.extend((tuple(reversed(range(n))), tuple(range(side_count, side_count + n))))
-    return mesh(name, vs, fs, materials, range(side_count))
-
-
-def moulding(name, profile, material, shaping=None, n=360):
-    return turned(
-        name,
-        [z for z, _ in profile],
-        lambda i, a: shaping(a, *profile[i]) if shaping else profile[i][1],
-        (material,),
-        n,
-    )
-
-
-def blend_curve(points, steps=12):
-    """Piecewise cubic Beziers sampled with a common endpoint at each joint."""
-    values = [points[0][0]]
-    for p0, p1, p2, p3 in points:
-        for j in range(1, steps + 1):
-            t = j / steps
-            s = 1 - t
-            values.append(
-                tuple(
-                    a * s**3 + 3 * b * t * s * s + 3 * c * t * t * s + d * t**3
-                    for a, b, c, d in zip(p0, p1, p2, p3)
-                )
-            )
-    return values
-
-
-def relief(bm, rng):
+def relief(bm, rng, material_index=1):
     """Sculpt the ledges and granular surface of a split limestone bed."""
     bm.normal_update()
     for face in list(bm.faces):
-        if face.material_index != 1 or face.calc_area() < 0.067:
+        if face.material_index != material_index or face.calc_area() < 0.067:
             continue
         normal = face.normal.copy()
         verts = list(face.verts)
@@ -219,9 +169,33 @@ def relief(bm, rng):
         v = normal.cross(u)
         points = [Vector((u.dot(p.co - origin), v.dot(p.co - origin))) for p in verts]
         boundary = len(points)
+        edges = list(zip(points, points[1:] + points[:1]))
         lo, hi = ([fn(p[k] for p in points) for k in range(2)] for fn in (min, max))
         dx, dy = hi[0] - lo[0], hi[1] - lo[1]
         step = max(0.054, min(0.14, max(dx, dy) / 15))
+
+        def edge_distance(p):
+            return min(
+                (
+                    p
+                    - a
+                    - (b - a)
+                    * max(0, min(1, (p - a).dot(b - a) / (b - a).length_squared))
+                ).length
+                for a, b in edges
+                if (b - a).length_squared > 1e-14
+            )
+
+        def inside(p):
+            return (
+                sum(
+                    (a.y > p.y) != (b.y > p.y)
+                    and p.x < a.x + (b.x - a.x) * (p.y - a.y) / (b.y - a.y)
+                    for a, b in edges
+                )
+                % 2
+            )
+
         for i in range(int(dx / step)):
             for j in range(int(dy / step)):
                 p = Vector(
@@ -230,17 +204,14 @@ def relief(bm, rng):
                         lo[1] + (j + rng.uniform(0.17, 0.83)) * step,
                     )
                 )
-                if all(
-                    (points[(k + 1) % boundary] - q).cross(p - q) > 0.011 * step
-                    for k, q in enumerate(points[:boundary])
-                ):
+                if inside(p) and edge_distance(p) > 0.043 * step:
                     points.append(p)
         if len(points) == boundary:
             continue
         coords, _, pieces, ids, _, _ = delaunay_2d_cdt(
             points, [], [tuple(range(boundary))], 1, 1e-6
         )
-        amount = min(0.021, 0.072 * min(dx, dy))
+        amount = min(0.084, 0.12 * min(dx, dy))
         phi = rng.uniform(0, math.tau)
         bmesh.ops.delete(bm, geom=[face], context="FACES_ONLY")
         corners = []
@@ -248,11 +219,7 @@ def relief(bm, rng):
             if source and source[0] < boundary:
                 corners.append(verts[source[0]])
                 continue
-            edge = min(
-                (points[(k + 1) % boundary] - p).cross(Vector((x, y)) - p)
-                / (points[(k + 1) % boundary] - p).length
-                for k, p in enumerate(points[:boundary])
-            )
+            edge = edge_distance(Vector((x, y)))
             fade = min(1, max(0, edge / (2 * step)))
             q = 1.61 * x + 2.38 * y
             gouge = (
@@ -266,7 +233,7 @@ def relief(bm, rng):
             )
         for ids in pieces:
             new = bm.faces.new([corners[i] for i in ids])
-            new.material_index = 1
+            new.material_index = material_index
 
 
 def fit_arrises():
@@ -423,159 +390,189 @@ def stone_block(
     return obj
 
 
-def seat(parts, x, y, twist, yaw, rise, foot):
-    matrix = (
-        Matrix.Rotation(yaw, 3, "Z")
-        @ Matrix.Rotation(rise, 3, "Y")
-        @ Matrix.Rotation(twist, 3, "Z")
+def seat(parts, x, y, roll, bearing, fall, foot):
+    rotation = (
+        Matrix.Rotation(bearing, 4, "Z")
+        @ Matrix.Rotation(fall, 4, "Y")
+        @ Matrix.Rotation(roll, 4, "Z")
     )
-    points = [[matrix @ v.co for v in part.data.vertices] for part in parts]
-    offset = Vector((x, y, foot - min(p.z for ring in points for p in ring)))
-    for part, ring in zip(parts, points):
-        for vert, point in zip(part.data.vertices, ring):
-            vert.co = point + offset
-        part.data.update()
+    points = [rotation @ v.co for obj in parts for v in obj.data.vertices]
+    lo, hi = ([fn(p[i] for p in points) for i in range(3)] for fn in (min, max))
+    transform = (
+        Matrix.Translation(
+            (x - (lo[0] + hi[0]) / 2, y - (lo[1] + hi[1]) / 2, foot - lo[2])
+        )
+        @ rotation
+    )
+    for obj in parts:
+        obj.matrix_world = transform
 
 
-def broken_drum(name, index, phase, slope, loss, rng, tone, fracture, *, stump=False):
-    obj = survey_drum(mesh, name, index, tone, rng)
+def split(obj, cuts, fracture, rng):
+    fracture_planes(obj, cuts, fracture)
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    relief(bm, rng, obj.data.materials.find(fracture.name))
+    bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
+    bm.to_mesh(obj.data)
+    bm.free()
+    obj.data.update()
+
+
+def break_drum(obj, index, phase, slope, loss, rng, fracture, *, stump=False):
     bed, tip = SHAFT_LEVELS[index : index + 2]
-    end = bed + 0.98 if stump else tip - loss
+    end = bed + 0.88 if stump else tip - loss
     r = shaft_radius(end)
     c, s = math.cos(phase), math.sin(phase)
-    planes = [
+    cuts = [
         ((0, 0, end), (slope * c, slope * s, 1)),
         (
-            (0.85 * r * c, 0.85 * r * s, end - slope * r * 0.87 - 0.075),
-            (0.78 * c, 0.78 * s, 1),
+            (0.83 * r * c, 0.83 * r * s, end - slope * r * 0.83 - 0.083),
+            (0.71 * c, 0.71 * s, 1),
         ),
     ]
     if not stump:
-        planes.append(
-            ((-0.86 * r * s, 0.86 * r * c, bed + 0.09), (-0.62 * s, 0.62 * c, -1))
+        cuts.append(
+            ((-0.81 * r * s, 0.81 * r * c, bed + 0.13), (-0.63 * s, 0.63 * c, -1))
         )
-    fracture_planes(obj, planes, fracture)
-    if not stump:
-        obj.data.transform(Matrix.Translation((0, 0, -(bed + tip) / 2)))
-    return obj
+    split(obj, cuts, fracture, rng)
 
 
-def capital(tones, fracture):
-    neck, cushion, abacus = survey_capital(moulding, blend_curve, tones)
-    fracture_planes(
-        abacus,
-        [
-            ((1.65, -1.68, 17.51), (0.69, -0.64, 0.14)),
-            ((1.71, -1.44, 17.80), (0.77, -0.35, 0.40)),
-            ((-1.92, 1.91, 17.73), (-0.72, 0.67, 0.31)),
-        ],
-        fracture,
-    )
-    fracture_planes(cushion, [((1.51, -1.65, 17.19), (0.69, -0.64, 0.14))], fracture)
-    for part in (neck, cushion, abacus):
-        part.data.transform(Matrix.Translation((0, 0, -16.72)))
-    return neck, cushion, abacus
+def source_parts():
+    column.build()
+    drums, footing, capital = {}, [], []
+    for obj in list(vrlib.source_objects()):
+        if obj.name.startswith("Survey shaft · drum "):
+            drums[int(obj.name.rsplit(" ", 1)[-1]) - 1] = obj
+        elif obj.name.startswith(
+            ("Attic footing", "Footing course ", "Packed foundation")
+        ):
+            footing.append(obj)
+        elif obj.name.startswith("Capital ·"):
+            capital.append(obj)
+        else:
+            bpy.data.objects.remove(obj, do_unlink=True)
+    assert len(drums) == len(SHAFT_LEVELS) - 1 and len(capital) == 3
+    return drums, footing, capital
 
 
 def build():
     rng = random.Random(873321)
-    tones = stone_library("Fallen Survey Line")
-    fracture = limestone(
-        "Limestone break plane", 0.86, 0.045, base=1.12, runoff=(0.95, 2.85)
+    drums, footing, capital = source_parts()
+    fracture = column.accent(
+        "Freshly split limestone · granular ochre",
+        "monument_weathered",
+        "stone_weathered",
+        0.51,
+        0.88,
     )
-    soil = ground_materials("Fallen Survey Line")
-    base = survey_base(moulding, blend_curve, tones[3])
-    stump = broken_drum(
-        "Source stump · sheared above its profiled foot",
-        0,
-        -0.61,
-        0.30,
-        0.0,
-        rng,
-        tones[5],
-        fracture,
-        stump=True,
-    )
-    seat((base, stump), -7.18, 0.37, 0.10, 0, 0, -0.044)
-    for name, index, phase, slope, loss, x, y, twist, yaw, rise in (
-        ("Fall 01 · lower shaft", 1, 1.85, 0.28, 0.14, -3.53, 0.36, 0.55, -0.24, 1.57),
-        (
-            "Fall 02 · middle shaft",
-            3,
-            -0.21,
-            0.24,
-            0.20,
-            -0.77,
-            -1.04,
-            0.12,
-            0.69,
-            1.38,
-        ),
-        ("Fall 03 · upper shaft", 6, 0.81, 0.31, 0.22, 1.96, 0.51, -0.28, 0.12, 1.83),
+    tones = [obj.data.materials[0] for obj in drums.values()]
+    break_drum(drums[0], 0, -0.72, 0.39, 0, rng, fracture, stump=True)
+    seat([*footing, drums[0]], -8.20, 0.48, 0.10, 0, 0, -0.048)
+    for index, phase, slope, loss, x, y, roll, bearing, fall in (
+        (1, 1.84, 0.27, 0.33, -4.57, 0.48, 0.29, -0.20, 1.41),
+        (3, -0.33, 0.46, 0.52, -1.38, -1.04, 0.54, 0.59, 0.16),
+        (6, 0.82, 0.43, 0.42, 2.67, 0.52, -0.28, -0.72, 1.18),
     ):
-        obj = broken_drum(name, index, phase, slope, loss, rng, tones[index], fracture)
-        seat((obj,), x, y, twist, yaw, rise, -0.049)
-    seat(capital(tones, fracture), 5.28, -0.46, -0.37, 0.37, 2.56, -0.047)
-    for x, y, w, d, h, az in (
-        (-7.31, -1.76, 1.14, 0.71, 0.49, -0.29),
-        (-5.46, 1.73, 1.47, 1.08, 0.81, -0.51),
-        (-3.80, 2.12, 1.37, 0.91, 0.67, 0.62),
-        (-2.87, -1.96, 1.49, 0.89, 0.62, 0.34),
-        (-0.42, 1.52, 1.04, 0.85, 0.56, -0.28),
-        (0.05, -2.38, 1.34, 0.83, 0.58, -0.56),
-        (1.97, 2.08, 1.25, 0.86, 0.48, 0.21),
-        (2.81, -1.74, 1.47, 1.01, 0.67, 0.32),
-        (3.93, 2.39, 1.06, 0.67, 0.48, 0.44),
-        (5.55, 2.07, 1.39, 0.94, 0.69, -0.22),
-        (6.70, -0.70, 1.40, 0.76, 0.60, 0.66),
-        (-6.40, 0.64, 1.35, 1.14, 0.49, 0.22),
-        (-0.75, 2.35, 0.81, 0.60, 0.41, -0.28),
-        (6.28, -2.13, 1.03, 0.75, 0.39, -0.16),
-    ):
-        stone_block(
-            "Scattered dressed beds & broken headers",
-            (w, d, h),
-            (x, y, 0),
-            (rng.choice(tones), fracture),
+        obj = drums[index]
+        obj.name = f"Fallen survey drum {index+1:02}"
+        break_drum(obj, index, phase, slope, loss, rng, fracture)
+        seat((obj,), x, y, roll, bearing, fall, -0.049)
+
+    for obj in capital:
+        split(
+            obj,
+            [
+                ((1.16, -0.88, 16.83), (0.71, -0.67, -0.18)),
+                ((1.46, -1.19, 17.74), (0.82, -0.37, 0.36)),
+            ],
+            fracture,
             rng,
-            azimuth=az,
-            tilt=(rng.uniform(-0.31, 0.25), rng.uniform(-0.21, 0.40)),
-            broken=True,
-            spalled=True,
-            foot=-0.038,
         )
-    for x, y, rx, ry, h, blades in (
-        (-6.9, -0.44, 1.57, 1.59, 0.49, 338),
-        (-6.24, 1.94, 1.89, 1.05, 0.29, 246),
-        (-4.16, 0.82, 1.94, 1.21, 0.65, 209),
-        (-3.84, -0.63, 1.58, 1.32, 0.57, 236),
-        (-1.62, -1.18, 1.81, 1.24, 0.55, 231),
-        (-0.93, 0.52, 1.49, 1.23, 0.43, 250),
-        (1.52, -0.32, 1.69, 1.36, 0.59, 215),
-        (1.99, 1.43, 1.70, 1.29, 0.38, 200),
-        (4.32, -1.32, 2.37, 1.18, 0.48, 244),
-        (4.94, 1.37, 1.72, 1.23, 0.35, 225),
-        (6.35, -0.53, 1.23, 1.43, 0.24, 121),
+    seat(capital, 6.54, -0.51, 0.03, -0.94, 1.57, -0.048)
+
+    for index, a, x, y, length, thickness in (
+        (2, -0.78, -5.42, 1.98, 0.86, 0.24),
+        (2, 0.53, -3.42, -1.32, 0.71, 0.22),
+        (4, -1.36, -1.95, 1.28, 0.91, 0.30),
+        (4, 0.21, 1.17, -1.55, 0.71, 0.21),
+        (5, 2.31, 4.97, 1.49, 0.78, 0.25),
+        (5, 0.12, 6.80, -2.45, 0.64, 0.19),
     ):
-        turf(x, y, rx, ry, h, rng, soil, blades=blades)
-    for cx, cy, n in (
-        (-7.2, -1.0, 24),
-        (-4.04, 1.81, 24),
-        (-2.44, -1.51, 25),
-        (0.94, 1.84, 19),
-        (2.65, -1.16, 17),
-        (4.64, 2.21, 23),
-        (6.1, -1.22, 25),
+        parent = drums[index]
+        piece = vrlib.link_to_source(parent.copy())
+        piece.data = parent.data.copy()
+        piece.name = "Fluted casing spall"
+        bed, top = SHAFT_LEVELS[index : index + 2]
+        height = (bed + top) / 2
+        radius = shaft_radius(height)
+        c, s = math.cos(a), math.sin(a)
+        edges = []
+        for k in (-1, 1):
+            angle = a + k * (0.19 + rng.uniform(-0.045, 0.057))
+            edges.append(
+                (
+                    (radius * math.cos(angle), radius * math.sin(angle), height),
+                    (
+                        -k * math.sin(angle),
+                        k * math.cos(angle),
+                        rng.uniform(-0.14, 0.14),
+                    ),
+                )
+            )
+        split(
+            piece,
+            [
+                (
+                    (c * (radius - thickness), s * (radius - thickness), height),
+                    (-c, -s, -0.07),
+                ),
+                (
+                    (radius * c, radius * s, height + length / 2),
+                    (0.31 * c, 0.31 * s, 1),
+                ),
+                (
+                    (radius * c, radius * s, height - length / 2),
+                    (-0.27 * c, -0.27 * s, -1),
+                ),
+                *edges,
+            ],
+            fracture,
+            rng,
+        )
+        seat(
+            (piece,),
+            x,
+            y,
+            rng.uniform(-0.68, 0.60),
+            rng.uniform(-1.9, 1.1),
+            rng.uniform(0.99, 1.82),
+            -0.035,
+        )
+    for index in (2, 4, 5):
+        bpy.data.objects.remove(drums[index], do_unlink=True)
+
+    soil = ground_materials("Fallen Survey Line")
+    turf(-0.65, -0.04, 10.20, 3.55, 0.42, rng, soil, blades=890)
+    for cx, cy, count in (
+        (-7.9, -0.88, 16),
+        (-5.0, 1.52, 18),
+        (-3.04, -0.82, 22),
+        (-1.5, -1.81, 15),
+        (1.75, 0.82, 20),
+        (4.67, 0.49, 21),
+        (6.1, -1.27, 20),
+        (8.37, -1.96, 15),
     ):
-        for _ in range(n):
-            size = rng.uniform(0.092, 0.61) ** 1.45
-            x, y = cx + rng.gauss(0, 0.58), cy + rng.gauss(0, 0.33)
+        for _ in range(count):
+            size = rng.uniform(0.092, 0.55) ** 1.45
+            x, y = cx + rng.gauss(0, 0.48), cy + rng.gauss(0, 0.36)
             stone_block(
                 "Graded limestone scree",
                 (
-                    size * rng.uniform(1, 1.7),
-                    size * rng.uniform(0.63, 1.1),
-                    size * rng.uniform(0.45, 0.89),
+                    size * rng.uniform(1, 1.5),
+                    size * rng.uniform(0.57, 1.1),
+                    size * rng.uniform(0.39, 0.86),
                 ),
                 (x, y, 0),
                 (rng.choice(tones), fracture),
@@ -583,9 +580,10 @@ def build():
                 azimuth=rng.uniform(-math.pi, math.pi),
                 tilt=(rng.uniform(-0.38, 0.38), rng.uniform(-0.38, 0.38)),
                 broken=True,
-                foot=-0.024,
+                foot=0.115,
             )
-    transform = Matrix.Rotation(math.radians(-47), 4, "Z")
+
+    turn = Matrix.Rotation(math.radians(-65), 4, "Z")
     for obj in vrlib.source_objects():
-        obj.data.transform(transform)
+        obj.matrix_world = turn @ obj.matrix_world
     fit_arrises()
