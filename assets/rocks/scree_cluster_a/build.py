@@ -164,7 +164,7 @@ def fractured_rock(name, size, seed, material, cuts=7, split=False,
         else:
             raise RuntimeError("Could not choose nonorthogonal fracture planes")
         support=max(normal.dot(v.co) for v in bm.verts)
-        distance=support*rng.uniform(.58,.78)
+        distance=support*rng.uniform(.40,.64)
         if split and index==cuts-1:
             cap=bm.copy()
             cut_plane(cap,normal*distance,-normal)
@@ -173,6 +173,8 @@ def fractured_rock(name, size, seed, material, cuts=7, split=False,
             cap.free()
         cut_plane(bm,normal*distance,normal)
         planes.append((normal,distance))
+    floor=min(v.co.z for v in bm.verts)+size[2]*.18
+    cut_plane(bm,(0,0,floor),Vector((0,0,-1)))
     bm.to_mesh(body.data)
     bm.free()
     low=Vector(tuple(min(v.co[i] for v in body.data.vertices) for i in range(3)))
@@ -181,7 +183,11 @@ def fractured_rock(name, size, seed, material, cuts=7, split=False,
     for obj in ([body,fragment] if split else [body]):
         for vertex in obj.data.vertices:
             vertex.co=Vector(tuple(vertex.co[i]*fit[i] for i in range(3)))
-    spacing=max(.003,min(.022,max(size)/150))
+    fitted_planes=[]
+    for normal,distance in planes:
+        transformed=Vector(tuple(normal[i]/fit[i] for i in range(3)))
+        fitted_planes.append((transformed.normalized(),distance/transformed.length))
+    spacing=max(.003,min(.018,max(size)/95))
     amplitude=min(.11,min(size)*.10)*weathering
     offset=Vector((seed*.013,seed*.007,seed*.019))
     for obj in ([body,fragment] if split else [body]):
@@ -190,7 +196,7 @@ def fractured_rock(name, size, seed, material, cuts=7, split=False,
         bm=bmesh.new()
         bm.from_mesh(obj.data)
         bm.normal_update()
-        bmesh.ops.smooth_vert(bm,verts=list(bm.verts),factor=.16,
+        bmesh.ops.smooth_vert(bm,verts=list(bm.verts),factor=.08,
                               use_axis_x=True,use_axis_y=True,use_axis_z=True)
         for _ in range(3):
             bm.normal_update()
@@ -204,14 +210,17 @@ def fractured_rock(name, size, seed, material, cuts=7, split=False,
             distances,sites=noise.voronoi(q)
             weights=[math.exp(-(d-distances[0])/.035) for d in distances[:3]]
             cell=sum(w*(noise.cell(sites[i])*2-1) for i,w in enumerate(weights))/sum(weights)
-            macro=amplitude*cell
+            plane_distance=min(abs(n.dot(p)-d) for n,d in fitted_planes)
+            planar=smooth(plane_distance/max(.025,spacing*3))
+            macro=amplitude*.32*cell*planar
             dip=p.z+.16*p.x-.075*p.y
-            mid=.018*min(1,min(size)/.5)*noise.noise(Vector((p.x*10,p.y*10,dip*5))+offset)
-            bed=(dip+.045*noise.noise(p*.8+offset))/strata
+            mid=.002*min(1,min(size)/.5)*noise.noise(Vector((p.x*4,p.y*4,dip*25))+offset)
+            bed=(dip+.13*math.sin(dip*2.7)+.018*noise.noise(p*.8+offset))/strata
             fraction=bed-math.floor(bed)
             pinch=smooth((noise.noise(Vector((p.x*.7,p.y*.7,math.floor(bed))))+.35)*1.4)
             lip=(smooth(fraction/.07)-smooth((fraction-.20)/.12))
-            band=min(.19,min(size)*.025)*lip*pinch*(1-abs(n.z))
+            band=min(.045,min(size)*.025)*lip*pinch*(1-abs(n.z))
+            band*=1-smooth((p.z/size[2]-.24)/.22)
             v.co+=n*(macro+mid+band)
         bm.to_mesh(obj.data)
         bm.free()
@@ -225,7 +234,7 @@ def fractured_rock(name, size, seed, material, cuts=7, split=False,
         tangent=Vector((.25,1,0)).normalized()
         for v in bm.verts:
             p,n=v.co.copy(),v.normal.copy()
-            depth=.005*min(1,min(size)/.5)*noise.noise(p*65+offset)
+            depth=.0008*min(1,min(size)/.5)*noise.noise(Vector((p.x*9,p.y*9,p.z*90))+offset)
             if tafoni and obj==body:
                 h=(p.z-lo)/(hi-lo)
                 mask=smooth((h-.18)/.10)*(1-smooth((h-.43)/.12))*smooth((n.dot(shadow)-.45)/.35)
@@ -247,7 +256,7 @@ def fractured_rock(name, size, seed, material, cuts=7, split=False,
             v.co+=n*depth
         bm.normal_update()
         if obj==body:
-            floor=min(v.co.z for v in bm.verts)+min(size[2]*.1,.25)
+            floor=min(v.co.z for v in bm.verts)+min(size[2]*.01,.02)
             cut_plane(bm,(0,0,floor),Vector((.025,-.035,-1)).normalized())
         pending=set(bm.verts)
         components=[]
@@ -270,6 +279,9 @@ def fractured_rock(name, size, seed, material, cuts=7, split=False,
         base=min(v.co.z for v in bm.verts)
         for v in bm.verts:
             v.co.z-=base+.035
+            flare=1+.14*(1-smooth(max(0,v.co.z)/(size[2]*.28)))
+            v.co.x*=flare
+            v.co.y*=flare
         bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces))
         bm.to_mesh(obj.data)
         bm.free()
@@ -278,8 +290,10 @@ def fractured_rock(name, size, seed, material, cuts=7, split=False,
         obj.data.set_sharp_from_angle(angle=math.radians(28))
         obj.data.update()
         obj["recipe_seed"]=seed
+        obj["grain_mode"]="directional"
         obj["ico_subdivisions"]=7 if max(size)>2 else 6
         obj["fracture_planes"]=[tuple(n) for n,d in planes]
+        obj["fitted_fracture_normals"]=[tuple(n) for n,d in fitted_planes]
         obj["macro_amplitude_m"]=amplitude
         obj["strata_spacing_m"]=strata
         obj["tafoni_voronoi"]=tafoni and obj==body
@@ -377,11 +391,15 @@ def chalk_material(seed, old=False):
     nt.links.new(value.outputs[0],grime.inputs[2])
     nt.links.new(grime.outputs[0],bsdf.inputs["Base Color"])
     fine=nt.nodes.new("ShaderNodeTexNoise")
-    fine.inputs["Scale"].default_value=85
-    nt.links.new(coord.outputs["Object"],fine.inputs["Vector"])
+    fine.inputs["Scale"].default_value=rng.uniform(18,55)
+    direction=nt.nodes.new("ShaderNodeMapping")
+    direction.inputs["Rotation"].default_value=(0,0,rng.uniform(-math.pi,math.pi))
+    direction.inputs["Scale"].default_value=(.15,1,3)
+    nt.links.new(coord.outputs["Object"],direction.inputs["Vector"])
+    nt.links.new(direction.outputs[0],fine.inputs["Vector"])
     bump=nt.nodes.new("ShaderNodeBump")
-    bump.inputs["Distance"].default_value=.003
-    bump.inputs["Strength"].default_value=.3
+    bump.inputs["Distance"].default_value=.0012 if seed%3==0 else .0004
+    bump.inputs["Strength"].default_value=.15
     nt.links.new(fine.outputs["Fac"],bump.inputs["Height"])
     nt.links.new(bump.outputs[0],bsdf.inputs["Normal"])
     bsdf.inputs["Roughness"].default_value=.96
@@ -409,48 +427,118 @@ def seat_on_bed(obj, bed, burial):
 
 
 
+def gravel_material():
+    palette=vrmat.load_palette()
+    mat=vrmat.get("canyon_layered").copy()
+    mat.name="scree_cluster_a_Warmer_Kalkfeinkies"
+    nt=mat.node_tree
+    bsdf=nt.nodes.get("Principled BSDF")
+    coord=nt.nodes.new("ShaderNodeTexCoord")
+    tex=nt.nodes.new("ShaderNodeTexNoise")
+    tex.inputs["Scale"].default_value=12
+    tex.inputs["Detail"].default_value=2
+    nt.links.new(coord.outputs["Object"],tex.inputs["Vector"])
+    ramp=nt.nodes.new("ShaderNodeValToRGB")
+    for element,(key,gain) in zip(ramp.color_ramp.elements,(("canyon_strata",.40),("path_sand",.60))):
+        element.color=tuple(v*gain for v in palette[key]["linear_rgb"])+(1,)
+    nt.links.new(tex.outputs["Fac"],ramp.inputs[0])
+    nt.links.new(ramp.outputs[0],bsdf.inputs["Base Color"])
+    bump=nt.nodes.new("ShaderNodeBump")
+    bump.inputs["Distance"].default_value=.003
+    bump.inputs["Strength"].default_value=.2
+    nt.links.new(tex.outputs["Fac"],bump.inputs["Height"])
+    nt.links.new(bump.outputs[0],bsdf.inputs["Normal"])
+    bsdf.inputs["Roughness"].default_value=.94
+    return mat
+
+
+def scatter_gravel(bed, occupied, materials):
+    if not materials or not bed.data.polygons:
+        raise ValueError("Gravel requires a bed surface and materials")
+    rng=random.Random(SEED+9000)
+    tree=BVHTree.FromObject(bed,bpy.context.evaluated_depsgraph_get())
+    vertices,faces,indices=[],[],[]
+    count=0
+    for attempt in range(2600):
+        angle=rng.uniform(0,math.tau)
+        radius=math.sqrt(rng.random())*.98
+        if rng.random()>1-radius**5:
+            continue
+        x,y=2.95*radius*math.cos(angle),2.42*radius*math.sin(angle)
+        if any((Vector((x,y))-centre).length<r*.63 for centre,r in occupied):
+            continue
+        hit=tree.ray_cast(Vector((x,y,6)),Vector((0,0,-1)))[0]
+        if hit is None:
+            continue
+        size=rng.uniform(.045,.16)*(1-.25*radius)
+        bm=bmesh.new()
+        for i in range(12):
+            z=rng.uniform(-1,1)
+            a=rng.uniform(0,math.tau)
+            r=math.sqrt(1-z*z)*rng.uniform(.7,1)
+            bm.verts.new((size*r*math.cos(a),size*r*math.sin(a)*.65,size*z*.42))
+        bmesh.ops.convex_hull(bm,input=list(bm.verts),use_existing_faces=False)
+        bmesh.ops.delete(bm,geom=[v for v in bm.verts if not v.link_faces],context="VERTS")
+        bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces))
+        bm.verts.ensure_lookup_table()
+        bm.verts.index_update()
+        offset=len(vertices)
+        low=min(v.co.z for v in bm.verts)
+        vertices.extend(v.co+Vector((x,y,hit.z-low-.012)) for v in bm.verts)
+        faces.extend(tuple(offset+v.index for v in f.verts) for f in bm.faces)
+        indices.extend([count%len(materials)]*len(bm.faces))
+        bm.free()
+        count+=1
+        if count==1100:
+            break
+    if not count:
+        raise RuntimeError("No gravel support surface")
+    obj=link_mesh("Modellierter_Zwischenkies",vertices,faces,materials[0])
+    for material in materials[1:]:
+        obj.data.materials.append(material)
+    for face,index in zip(obj.data.polygons,indices):
+        face.material_index=index
+    obj["pebble_count"]=count
+    return obj
+
+
 def build():
     rng=random.Random(SEED)
     noise.seed_set(SEED)
-    soil=vrmat.get("dirt_path").copy()
-    soil.name="scree_cluster_a_Kalkiger_Feinkies"
-    bed=fines_bed("Talus_Feinkieskeil",(3.0,2.45),soil,height=1.0,slope=True)
-    materials=[chalk_material(SEED+i,old=i%7==0) for i in range(16)]
+    bed=fines_bed("Talus_Feinkieskeil",(3.0,2.45),gravel_material(),height=1.0,slope=True)
+    materials=[chalk_material(SEED+i,old=False) for i in range(16)]
     occupied=[]
     for i in range(64):
         if i<8:
-            row,column=divmod(i,4)
-            y=-1.65+row*.75+rng.uniform(-.12,.12)
-            x=(column-1.5)*1.23+rng.uniform(-.12,.12)
-            size=rng.uniform(1.0,1.4)
+            angle=math.tau*i/8+rng.uniform(-.14,.14)
+            radius=rng.uniform(.76,.89)
+            size=rng.uniform(1.0,1.35)
             group="Gross"
         else:
             rank=(i-8)/55
-            y=-.65+rank*1.4+rng.uniform(-.18,.18)
-            width=2.45*(1-rank)+.6*rank
-            x=rng.uniform(-width,width)
-            size=(.72-.52*rank)*rng.uniform(.75,1.15)
-            group="Fein" if rank>.6 else "Mittel"
-        rock=fractured_rock(f"{group}_{i:02d}",(size,size*rng.uniform(.48,.8),size*rng.uniform(.25,.5)),SEED+100+i,materials[i%16],cuts=8,weathering=.6 if i%11==0 else .20,strata=max(.08,size*.2))
+            radius=.16+.69*math.sqrt(1-rank)
+            angle=i*2.3999632297+rng.uniform(-.16,.16)
+            size=(.20+.68*(radius-.16)/.69)*rng.uniform(.82,1.10)
+            group="Fein" if rank>.68 else "Mittel"
+        rock=fractured_rock(f"{group}_{i:02d}",(size,size*rng.uniform(.48,.8),size*rng.uniform(.25,.5)),SEED+100+i,materials[i%16],cuts=8,weathering=.04+.10*(i%7)/6,strata=max(.08,size*.2))
         rock["size_class"]=group
-        rock["talus_rank"]=i
-        radius=size*.36
+        rock["talus_rank"]=radius
         for attempt in range(30):
-            if all((Vector((x,y))-centre).length>(radius+other)*.85 for centre,other in occupied):
+            x=2.85*radius*math.cos(angle)
+            y=.15+2.3*radius*math.sin(angle)
+            if all((Vector((x,y))-centre).length>(size*.30+other)*.72 for centre,other in occupied):
                 break
-            x+=rng.uniform(-.2,.2)
-            y+=rng.uniform(-.12,.12)
-            x=max(-2.55,min(2.55,x))
-            y=max(-1.9,min(1.55,y))
+            angle+=.33
         rock.location=(x,y,0)
         distance=max(.1,math.hypot(x,y-.15))
         normal=Vector((math.tan(math.radians(32))*x/distance,
                        math.tan(math.radians(32))*(y-.15)/distance,1)).normalized()
         align=Vector((0,0,1)).rotation_difference(normal)
         rock.rotation_euler=(align@Quaternion((0,0,1),rng.uniform(-math.pi,math.pi))
-                             @Quaternion((1,0,0),rng.uniform(-.15,.15))).to_euler()
-        seat_on_bed(rock,bed,min(.09,size*.12))
-        occupied.append((Vector((x,y)),radius))
+                             @Quaternion((1,0,0),rng.uniform(-.10,.10))).to_euler()
+        seat_on_bed(rock,bed,min(.10,size*.14))
+        occupied.append((Vector((x,y)),size*.36))
+    scatter_gravel(bed,occupied,materials[:5])
     bpy.context.view_layer.update()
     tree=BVHTree.FromObject(bed,bpy.context.evaluated_depsgraph_get())
     points=[]
@@ -460,7 +548,7 @@ def build():
             points.append(hit)
     grass_tufts(points,vrmat.get("grass_ground"),SEED)
     bpy.context.scene["talus_angle_degrees"]=32
-    bpy.context.scene["placement_mode"]="size-graded fragments seated in modelled fines"
+    bpy.context.scene["placement_mode"]="all-round radial size grading over modelled gravel and fines"
     rotation=Matrix.Rotation(math.radians(110),4,"Z")
     bpy.context.scene["fall_line_world"]=tuple(rotation.to_3x3()@Vector((0,-1,0)))
     for obj in vrlib.source_objects():

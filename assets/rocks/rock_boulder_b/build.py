@@ -4,7 +4,7 @@ import random
 
 import bmesh
 import bpy
-from mathutils import Vector, noise
+from mathutils import Quaternion, Vector, noise
 from mathutils.bvhtree import BVHTree
 
 import vrlib
@@ -41,7 +41,11 @@ def materials():
         tex = nt.nodes.new("ShaderNodeTexNoise")
         tex.inputs["Scale"].default_value = 55 if key == "sandstone" else 95
         tex.inputs["Detail"].default_value = 3
-        nt.links.new(coord.outputs["Object"], tex.inputs["Vector"])
+        grain=nt.nodes.new("ShaderNodeVectorMath")
+        grain.operation="MULTIPLY"
+        grain.inputs[1].default_value=(.18,.18,1.8) if key=="sandstone" else (1,1,1)
+        nt.links.new(coord.outputs["Object"],grain.inputs[0])
+        nt.links.new(grain.outputs[0],tex.inputs["Vector"])
         ramp = nt.nodes.new("ShaderNodeValToRGB")
         # Local copies: warm sandstone bands; olive fibres fade into matching stone at shell edges.
         colors = (("accent_ochre", .30), ("sandstone", .45)) if key == "sandstone" else (("moss", .65), ("moss", 1.05))
@@ -84,7 +88,7 @@ def materials():
             nt.links.new(tips.outputs[0],bsdf.inputs["Base Color"])
         bump = nt.nodes.new("ShaderNodeBump")
         bump.inputs["Distance"].default_value = .003 if key == "sandstone" else .004
-        bump.inputs["Strength"].default_value = .35
+        bump.inputs["Strength"].default_value = .12 if key=="sandstone" else .35
         nt.links.new(tex.outputs["Fac"], bump.inputs["Height"])
         nt.links.new(bump.outputs[0], bsdf.inputs["Normal"])
         bsdf.inputs["Roughness"].default_value = .94
@@ -107,7 +111,7 @@ def cut_plane(bm, point, normal):
 
 
 
-def moss_shell(body, material, name="Angewachsene_Moosschale", coverage=.35, thickness=.03):
+def moss_shell(body, material, name="Angewachsene_Moosschale", coverage=.35, thickness=.014):
     mesh = body.data
     normals = [v.normal.copy() for v in mesh.vertices]
     adjacent = [set() for v in mesh.vertices]
@@ -119,11 +123,11 @@ def moss_shell(body, material, name="Angewachsene_Moosschale", coverage=.35, thi
         normals = [(normals[i]+sum((normals[j] for j in neighbors), Vector())).normalized()
                    for i, neighbors in enumerate(adjacent)]
     candidates = [f for f in mesh.polygons if f.center.z > .9 and f.center.y>-.35
-                  and min(normals[i].z for i in f.vertices) > .7]
+                  and sum(normals[i].z for i in f.vertices)/len(f.vertices) > .55]
     if not candidates:
         raise RuntimeError("No upward north-side faces for moss")
     def field(p):
-        return noise.noise(p*2.0 + Vector((3, 8, 1))) + .18*noise.noise(p*5)
+        return noise.noise(p*1.4 + Vector((3, 8, 1))) + .12*noise.noise(p*3)
     ranked = sorted(candidates, key=lambda f: field(f.center), reverse=True)
     target = sum(f.area for f in candidates)*coverage
     chosen, area = [], 0
@@ -132,6 +136,29 @@ def moss_shell(body, material, name="Angewachsene_Moosschale", coverage=.35, thi
         area += face.area
         if area >= target:
             break
+    edge_faces={}
+    for index,face in enumerate(chosen):
+        ids=list(face.vertices)
+        for a,b in zip(ids,ids[1:]+ids[:1]):
+            edge_faces.setdefault(tuple(sorted((a,b))),[]).append(index)
+    adjacent_faces=[set() for face in chosen]
+    for linked in edge_faces.values():
+        for index in linked:
+            adjacent_faces[index].update(linked)
+    pending=set(range(len(chosen)))
+    kept=[]
+    while pending:
+        component={pending.pop()}
+        frontier=set(component)
+        while frontier:
+            frontier={j for i in frontier for j in adjacent_faces[i]}&pending
+            pending-=frontier
+            component|=frontier
+        if sum(chosen[i].area for i in component)>.012:
+            kept.extend(chosen[i] for i in sorted(component))
+    chosen=kept
+    if not chosen:
+        raise RuntimeError("No broad moss patches")
     incident = {}
     for fi, face in enumerate(chosen):
         for i in face.vertices:
@@ -172,7 +199,7 @@ def moss_shell(body, material, name="Angewachsene_Moosschale", coverage=.35, thi
         v = mesh.vertices[i]
         p = v.co.copy()
         taper = min(1, distance.get(j, 9)/6)
-        clump = .008*noise.noise(p*30)+.0015*noise.noise(p*155)
+        clump = .0035*noise.noise(p*30)+.0008*noise.noise(p*155)
         verts.append(p+normals[i]*(.0004+taper*(thickness+clump)))
     verts.extend(mesh.vertices[i].co-normals[i]*.004 for i in used)
     n = len(used)
@@ -236,7 +263,7 @@ def fractured_rock(name, size, seed, material, cuts=7, split=False,
         else:
             raise RuntimeError("Could not choose nonorthogonal fracture planes")
         support=max(normal.dot(v.co) for v in bm.verts)
-        distance=support*rng.uniform(.58,.78)
+        distance=support*rng.uniform(.40,.64)
         if split and index==cuts-1:
             cap=bm.copy()
             cut_plane(cap,normal*distance,-normal)
@@ -245,6 +272,8 @@ def fractured_rock(name, size, seed, material, cuts=7, split=False,
             cap.free()
         cut_plane(bm,normal*distance,normal)
         planes.append((normal,distance))
+    floor=min(v.co.z for v in bm.verts)+size[2]*.18
+    cut_plane(bm,(0,0,floor),Vector((0,0,-1)))
     bm.to_mesh(body.data)
     bm.free()
     low=Vector(tuple(min(v.co[i] for v in body.data.vertices) for i in range(3)))
@@ -253,7 +282,11 @@ def fractured_rock(name, size, seed, material, cuts=7, split=False,
     for obj in ([body,fragment] if split else [body]):
         for vertex in obj.data.vertices:
             vertex.co=Vector(tuple(vertex.co[i]*fit[i] for i in range(3)))
-    spacing=max(.003,min(.022,max(size)/150))
+    fitted_planes=[]
+    for normal,distance in planes:
+        transformed=Vector(tuple(normal[i]/fit[i] for i in range(3)))
+        fitted_planes.append((transformed.normalized(),distance/transformed.length))
+    spacing=max(.003,min(.018,max(size)/95))
     amplitude=min(.11,min(size)*.10)*weathering
     offset=Vector((seed*.013,seed*.007,seed*.019))
     for obj in ([body,fragment] if split else [body]):
@@ -262,7 +295,7 @@ def fractured_rock(name, size, seed, material, cuts=7, split=False,
         bm=bmesh.new()
         bm.from_mesh(obj.data)
         bm.normal_update()
-        bmesh.ops.smooth_vert(bm,verts=list(bm.verts),factor=.16,
+        bmesh.ops.smooth_vert(bm,verts=list(bm.verts),factor=.08,
                               use_axis_x=True,use_axis_y=True,use_axis_z=True)
         for _ in range(3):
             bm.normal_update()
@@ -276,14 +309,17 @@ def fractured_rock(name, size, seed, material, cuts=7, split=False,
             distances,sites=noise.voronoi(q)
             weights=[math.exp(-(d-distances[0])/.035) for d in distances[:3]]
             cell=sum(w*(noise.cell(sites[i])*2-1) for i,w in enumerate(weights))/sum(weights)
-            macro=amplitude*cell
+            plane_distance=min(abs(n.dot(p)-d) for n,d in fitted_planes)
+            planar=smooth(plane_distance/max(.025,spacing*3))
+            macro=amplitude*.32*cell*planar
             dip=p.z+.16*p.x-.075*p.y
-            mid=.018*min(1,min(size)/.5)*noise.noise(Vector((p.x*10,p.y*10,dip*5))+offset)
-            bed=(dip+.045*noise.noise(p*.8+offset))/strata
+            mid=.002*min(1,min(size)/.5)*noise.noise(Vector((p.x*4,p.y*4,dip*25))+offset)
+            bed=(dip+.13*math.sin(dip*2.7)+.018*noise.noise(p*.8+offset))/strata
             fraction=bed-math.floor(bed)
             pinch=smooth((noise.noise(Vector((p.x*.7,p.y*.7,math.floor(bed))))+.35)*1.4)
             lip=(smooth(fraction/.07)-smooth((fraction-.20)/.12))
-            band=min(.19,min(size)*.025)*lip*pinch*(1-abs(n.z))
+            band=min(.045,min(size)*.025)*lip*pinch*(1-abs(n.z))
+            band*=1-smooth((p.z/size[2]-.24)/.22)
             v.co+=n*(macro+mid+band)
         bm.to_mesh(obj.data)
         bm.free()
@@ -297,7 +333,7 @@ def fractured_rock(name, size, seed, material, cuts=7, split=False,
         tangent=Vector((.25,1,0)).normalized()
         for v in bm.verts:
             p,n=v.co.copy(),v.normal.copy()
-            depth=.005*min(1,min(size)/.5)*noise.noise(p*65+offset)
+            depth=.0008*min(1,min(size)/.5)*noise.noise(Vector((p.x*9,p.y*9,p.z*90))+offset)
             if tafoni and obj==body:
                 h=(p.z-lo)/(hi-lo)
                 mask=smooth((h-.18)/.10)*(1-smooth((h-.43)/.12))*smooth((n.dot(shadow)-.45)/.35)
@@ -319,7 +355,7 @@ def fractured_rock(name, size, seed, material, cuts=7, split=False,
             v.co+=n*depth
         bm.normal_update()
         if obj==body:
-            floor=min(v.co.z for v in bm.verts)+min(size[2]*.1,.25)
+            floor=min(v.co.z for v in bm.verts)+min(size[2]*.01,.02)
             cut_plane(bm,(0,0,floor),Vector((.025,-.035,-1)).normalized())
         pending=set(bm.verts)
         components=[]
@@ -342,6 +378,9 @@ def fractured_rock(name, size, seed, material, cuts=7, split=False,
         base=min(v.co.z for v in bm.verts)
         for v in bm.verts:
             v.co.z-=base+.035
+            flare=1+.14*(1-smooth(max(0,v.co.z)/(size[2]*.28)))
+            v.co.x*=flare
+            v.co.y*=flare
         bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces))
         bm.to_mesh(obj.data)
         bm.free()
@@ -350,14 +389,17 @@ def fractured_rock(name, size, seed, material, cuts=7, split=False,
         obj.data.set_sharp_from_angle(angle=math.radians(28))
         obj.data.update()
         obj["recipe_seed"]=seed
+        obj["grain_mode"]="directional"
         obj["ico_subdivisions"]=7 if max(size)>2 else 6
         obj["fracture_planes"]=[tuple(n) for n,d in planes]
+        obj["fitted_fracture_normals"]=[tuple(n) for n,d in fitted_planes]
         obj["macro_amplitude_m"]=amplitude
         obj["strata_spacing_m"]=strata
         obj["tafoni_voronoi"]=tafoni and obj==body
         obj["fissure_count"]=2 if fissures and obj==body else 0
         if split:
             obj["split_normal"]=tuple(planes[-1][0])
+            obj["split_normal_fitted"]=tuple(fitted_planes[-1][0])
     bpy.context.view_layer.update()
     return (body,fragment) if split else body
 
@@ -404,6 +446,50 @@ def grass_tufts(points, material, seed):
     return link_mesh("Randgras",verts,faces,material)
 
 
+def cut_cleft(body, outward, phase):
+    if not body.data.polygons or len(outward)!=3 or math.hypot(outward[0],outward[1])<.000001 or abs(outward[2])>.000001:
+        raise ValueError("Cleft needs a rock surface and a horizontal direction")
+    tree=BVHTree.FromObject(body,bpy.context.evaluated_depsgraph_get())
+    outward=Vector(outward).normalized()
+    tangent=Vector((-outward.y,outward.x,0))
+    lo,hi=vrlib.world_bounds([body])
+    verts=[]
+    sections=44
+    for i in range(sections):
+        t=i/(sections-1)
+        z=lo.z+(hi.z-lo.z)*(.12+.77*t)
+        wander=.12*math.sin(z*3+phase)+.02*math.sin(z*9+phase)
+        origin=outward*5+tangent*wander+Vector((0,0,z))
+        hit=tree.ray_cast(origin,-outward)[0]
+        if hit is None:
+            raise RuntimeError("Cleft missed the main rock")
+        taper=math.sin(math.pi*t)**.65
+        width=.002+.065*taper*(.85+.15*math.sin(z*7))
+        depth=.003+.30*taper
+        verts.extend((hit+outward*.18-tangent*width,
+                      hit+outward*.18+tangent*width,hit-outward*depth))
+    faces=[(2,1,0)]
+    for i in range(sections-1):
+        a,b=i*3,(i+1)*3
+        faces.extend((a+j,a+(j+1)%3,b+(j+1)%3,b+j) for j in range(3))
+    faces.append(tuple(range((sections-1)*3,sections*3)))
+    cutter=link_mesh("Auskeilende_Kluft",verts,faces,body.data.materials[0])
+    bpy.context.view_layer.objects.active=body
+    modifier=body.modifiers.new("Tiefe_saubere_Sackkluft","BOOLEAN")
+    modifier.operation="DIFFERENCE"
+    modifier.solver="EXACT"
+    modifier.object=cutter
+    bpy.ops.object.modifier_apply(modifier=modifier.name)
+    bpy.data.objects.remove(cutter,do_unlink=True)
+    bm=bmesh.new()
+    bm.from_mesh(body.data)
+    bmesh.ops.dissolve_degenerate(bm,dist=.000001,edges=list(bm.edges))
+    bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces))
+    bm.to_mesh(body.data)
+    bm.free()
+    body.data.update()
+
+
 def build():
     rng=random.Random(SEED)
     noise.seed_set(SEED)
@@ -411,7 +497,11 @@ def build():
     soil=vrmat.get("dirt_path").copy()
     soil.name="rock_boulder_b_Sandiger_Feinkies"
     body,block=fractured_rock("Sandstein_Hauptmasse",(3.2,2.65,2.1),SEED,stone,
-                              split=True,tafoni=True,fissures=True)
+                              split=True,tafoni=True,fissures=False)
+    cut_cleft(body,(.85,.5,0),.2)
+    cut_cleft(body,(-.6,.8,0),2.3)
+    body["fissure_count"]=2
+    body["cleft_method"]="tapered Boolean V-grooves"
     moss_shell(body,moss)
     normal=Vector(block["split_normal"])
     outward=Vector((normal.x,normal.y,0)).normalized()
@@ -419,7 +509,8 @@ def build():
     for v in block.data.vertices:
         v.co-=pivot
     block.location=pivot+outward*.30
-    block.rotation_euler=(.35,-.28,.21)
+    fitted=Vector(block["split_normal_fitted"])
+    block.rotation_euler=(Quaternion((1,0,0),.18)@fitted.rotation_difference(Vector((0,0,1)))).to_euler()
     bpy.context.view_layer.update()
     block.location.z+=-.04-min((block.matrix_world@v.co).z for v in block.data.vertices)
     bpy.context.view_layer.objects.active=block

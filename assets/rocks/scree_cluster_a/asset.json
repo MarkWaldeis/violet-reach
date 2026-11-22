@@ -2,7 +2,7 @@
   "id": "scree_cluster_a",
   "category": "rocks",
   "title": "Kalkschuttfächer A",
-  "description": "Neu aufgebauter größengestufter Kalktalus mit 64 individuellen kantigen Platten und Keilen. Jede dichte Ikosphäre wird durch acht schräge Bruchflächen und geometrische Voronoi-, Schicht- und Kornreliefs geformt. Große Blöcke liegen am Schuttfuß, kleinere Splitter hangaufwärts auf einem geschlossenen 32-Grad-Feinkieskeil, der Zwischenräume füllt und die Unterseiten einbettet. Warme wechselnde canyon_layered-Kreide- und Ockertöne, helle junge Brüche und wenige dunklere flechtenbewachsene ältere Oberseiten; einzelne Grasbüschel am Rand.",
+  "description": "Rundum bedeckter größengestufter Kalktalus mit 64 individuellen kantigen Platten und Keilen sowie 1100 modellierten Kieseln zwischen den Blöcken. Große Bruchstücke liegen am Schuttfuß aller Seiten, kleinere hangaufwärts; der Rand dünnt natürlich aus. Breite frische Bruchflächen und je Keim variierendes gerichtetes Feinkorn ersetzen gleichmäßig gehämmerte Grübchen. Sechzehn warme Kreide- und Kalkvarianten mit lokalem Fugenschmutz, ohne dunkle Schiefersteine. Ein geschlossener 32-Grad-Kalkfeinkieskörper füllt die Zwischenräume; wenige Grasbüschel sitzen am Rand.",
   "target_size_m": [
     6,
     4.5,
@@ -14,22 +14,8 @@
     1000
   ],
   "texture_size": 2048,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-376742566d344b90aa5a22ec7e9cc164",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 7,
-      "form_detail": 7,
-      "material": 6,
-      "scale": 8,
-      "style": 7,
-      "defects": 6
-    },
-    "notes": "Round 2. Fixed: the stones are now angular with chipped faces, there is a talus cone with size grading (big blocks at the foot) and a ground bed (hero, closeup_upper). Still failing: one whole side of the cone is bare smooth sand with no stones, so from that side it reads as a sand heap half covered with rocks (turn tiles, closeup_base); every stone carries the same hammered dimple pattern (closeup_upper); a few stones are dark slate-grey and don't match the chalk; the bed is smooth sand with blotchy purple stains instead of gravel and fines. Fix: cover the cone with graded debris all round (fines and gravel between the blocks, density thinning towards the edges), vary the surface of each stone with large fracture planes instead of one dimple pattern, keep all stones in the chalk palette with local dirt, and replace the stained sand with a gravel/fines texture that blends into the ground.",
-    "round": 2,
-    "source_sha256": "ef526ecf588bb5eb852d35aa37bfbaa95483dd9deb43caf4224cb83d3178342d",
-    "sheet_sha256": "0dbdb7b1c42635662dffc5099d63caafa776bee078e6398d17871caf4c56574f"
-  },
+  "review": null,
   "review_rounds": 2
 }

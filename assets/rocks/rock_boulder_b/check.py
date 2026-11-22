@@ -1,5 +1,6 @@
 """Run inside Blender against the rebuilt sandstone source."""
 import importlib.util
+import math
 import sys
 from pathlib import Path
 
@@ -37,6 +38,33 @@ bed=bpy.data.objects["Sand_und_Feinkieskragen"]
 assert tuple(body["split_normal"])==tuple(block["split_normal"])
 assert body["tafoni_voronoi"] and body["fissure_count"]==2
 assert body["macro_amplitude_m"]>=.08
+assert body["grain_mode"]=="directional"
+assert body["cleft_method"]=="tapered Boolean V-grooves"
+normals=[Vector(n) for n in body["fitted_fracture_normals"]]
+areas=[sum(face.area for face in body.data.polygons if face.normal.dot(n)>.98) for n in normals]
+assert sum(area>.25 for area in areas)>=3,areas
+low=min(v.co.z for v in body.data.vertices)
+high=max(v.co.z for v in body.data.vertices)
+foot=[v.co for v in body.data.vertices if v.co.z<low+(high-low)*.25]
+foot_width=max(p.x for p in foot)-min(p.x for p in foot)
+width=max(v.co.x for v in body.data.vertices)-min(v.co.x for v in body.data.vertices)
+assert foot_width>width*.80,(foot_width,width)
+assert vrlib.world_bounds([block])[1].z<1.1
+cleft_tree=BVHTree.FromObject(body,bpy.context.evaluated_depsgraph_get())
+depths=[]
+for direction,phase in (((.85,.5,0),.2),((-.6,.8,0),2.3)):
+    outward=Vector(direction).normalized()
+    tangent=Vector((-outward.y,outward.x,0))
+    z=low+(high-low)*(.12+.77*.5)
+    wander=.12*math.sin(z*3+phase)+.02*math.sin(z*9+phase)
+    distances=[]
+    for delta in (0,-.12,.12):
+        result=cleft_tree.ray_cast(outward*5+tangent*(wander+delta)+Vector((0,0,z)),-outward)
+        assert result[0] is not None
+        distances.append(result[3])
+    depth=distances[0]-(distances[1]+distances[2])*.5
+    assert depth>.15,depth
+    depths.append(depth)
 moss=bpy.data.objects["Angewachsene_Moosschale"]
 assert moss.data.attributes["moss_edge"].domain=="POINT"
 tree=BVHTree.FromObject(body,bpy.context.evaluated_depsgraph_get())
@@ -53,6 +81,8 @@ for shard in shards:
 print("B_GEOMETRY: 17 closed outward meshes; unit scales; centred XY; min_z >= -0.06; CPU: CPU")
 print("B_RECIPE: dense cut icospheres; 7 nonorthogonal planes; geometric Voronoi/strata/grain; 2 fissures; Voronoi tafoni")
 print("B_MOSS_MAX_SURFACE_OFFSET_M:",round(thickness,4))
+print("B_PLANAR_AREAS_M2:",[round(a,3) for a in areas],"CLEFT_DEPTHS_M:",[round(d,3) for d in depths])
+print("B_FOOT_WIDTH_M:",round(foot_width,3),"FALLEN_BLOCK_MAX_Z_M:",round(vrlib.world_bounds([block])[1].z,3))
 print("B_RUBBLE_CONTACT: all 12 shards touch soil collar or fallen block within 3.5 cm")
 print("B_SIZE_M:",tuple(round(v,3) for v in hi-lo),"TRIANGLES:",vrlib.triangle_count(objects))
 spec=importlib.util.spec_from_file_location("boulder_builder",Path(__file__).with_name("build.py"))
@@ -60,6 +90,12 @@ builder=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(builder)
 empty_mesh=bpy.data.meshes.new("empty_test")
 empty=bpy.data.objects.new("empty_test",empty_mesh)
+try:
+    builder.cut_cleft(empty,(0,0,0),0)
+except ValueError:
+    pass
+else:
+    raise AssertionError("Empty cleft surface accepted")
 try:
     builder.moss_shell(empty,None)
 except RuntimeError as error:

@@ -2,7 +2,7 @@
   "id": "rock_boulder_b",
   "category": "rocks",
   "title": "Bemooster Sandsteinfindling B",
-  "description": "Neu aufgebauter dichter Ikosphären-Sandstein mit sieben schrägen Bruchflächen, geometrischen Voronoibrüchen, auskeilender geneigter Schichtung und feinem Sandkorn. Nur die oberen Schultern sind leicht erweicht. Zwei wandernde Sackklüfte und unregelmäßige polygonale Verwitterungswaben gliedern die schattige Unterseite. Dünnes olivfarbenes Moos wächst aus nördlichen Oberseiten. Ein an derselben Bruchfläche abgespaltener, geneigter Block und zwölf unterschiedliche Splitter ruhen halb eingebettet auf einem modellierten sandigen Feinkieskragen mit einzelnen Grasbüscheln.",
+  "description": "Kräftig gebrochener Sandstein mit breiten ebenen Bruchflächen, zwei tiefen sauber auskeilenden Vertikalklüften und wechselnden horizontalen Schichtmächtigkeiten. Gerichtetes feines Sandkorn ersetzt gleichmäßige Grübchen. Der breite geschlossene Fuß weitet sich in einen modellierten Sand- und Taluskragen. Ein entlang seiner Bruchfläche wirklich umgelegter flacher Block und zwölf unterschiedliche Splitter liegen eingebettet am Fuß. Wenige unregelmäßige Wabenmulden bleiben auf der geschützten Unterseite; dünnes olivfarbenes Moos wächst in zusammenhängenden weich auslaufenden Oberseitenpolstern ohne Splitterfransen.",
   "target_size_m": [
     3.2,
     2.6,
@@ -14,22 +14,8 @@
     1500
   ],
   "texture_size": 2048,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-376742566d344b90aa5a22ec7e9cc164",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 7,
-      "form_detail": 6,
-      "material": 6,
-      "scale": 8,
-      "style": 6,
-      "defects": 6
-    },
-    "notes": "Round 2. Fixed: the rubble ring is gone and the moss strips are thinner. Still failing: it is still a rounded lump, which STYLE.md rules out (hero, turn tiles); the faces are soft clay with an even scatter of small pits, and the top carries flat cut-looking terraces (closeup_upper); at the base the rock narrows into a smooth column like a mushroom stem, a crack there is stair-stepped (aliased), and the edges are fringed with tiny triangular flakes (closeup_base); a loose slab sits balanced on top of the right side. Fix: break the mass with large planar fracture faces and 1-2 deep vertical clefts, horizontal bedding of varied thickness, a wide buried foot with talus and soil instead of the stem, cut cracks with clean edges, no edge fringe, and remove the perched slab.",
-    "round": 2,
-    "source_sha256": "be8639160ef9562b581cae9dbbb61e390dd60b45d28666458365e0976c0c4117",
-    "sheet_sha256": "6e709dbfb2be8b9ed4dba53f46deef46fe29dcd4a1f4840dfab7e513d449c151"
-  },
+  "review": null,
   "review_rounds": 2
 }

@@ -14,7 +14,7 @@ import vrlib
 
 objects=vrlib.source_objects()
 rocks=[o for o in objects if "recipe_seed" in o]
-assert len(rocks)==64 and len(objects)==66
+assert len(rocks)==64 and len(objects)==67
 assert len({o["recipe_seed"] for o in rocks})==64
 lo,hi=vrlib.world_bounds(objects)
 assert lo.z>=-.06
@@ -37,7 +37,17 @@ large=[o for o in rocks if o["size_class"]=="Gross"]
 fine=[o for o in rocks if o["size_class"]=="Fein"]
 assert len(large)==8
 fall_line=Vector(bpy.context.scene["fall_line_world"])
-assert sum(o.location.dot(fall_line) for o in large)/len(large)>sum(o.location.dot(fall_line) for o in fine)/len(fine)+.8
+assert sum(o["talus_rank"] for o in large)/len(large)>sum(o["talus_rank"] for o in fine)/len(fine)+.30
+centre=bpy.data.objects["Talus_Feinkieskeil"].matrix_world@Vector((0,.15,0))
+sectors=[0]*8
+for rock in rocks:
+    p=rock.location-centre
+    sector=int((math.atan2(p.y,p.x)%(2*math.pi))/(math.pi/4))
+    sectors[sector]+=1
+    assert rock["grain_mode"]=="directional"
+assert min(sectors)>=4,sectors
+gravel=bpy.data.objects["Modellierter_Zwischenkies"]
+assert gravel["pebble_count"]>=700
 assert len({o.data.materials[0].name for o in rocks})>=12
 assert "Randgras" in bpy.data.objects
 bed=bpy.data.objects["Talus_Feinkieskeil"]
@@ -60,13 +70,20 @@ for rock in rocks:
             closest=min(closest,abs((bed.matrix_world@hit).z-p.z))
     assert closest<.05,(rock.name,closest)
     maximum=max(maximum,closest)
-print("SCREE_GEOMETRY: 66 closed outward meshes; 64 unique seeded cut-icosphere shards; unit scales; centred XY; min_z >= -0.06; CPU: CPU")
-print("SCREE_GRADING: 8 large toe blocks; progressively smaller fragments upslope; 16 material variants; older stained tops; edge grass")
+print("SCREE_GEOMETRY: 67 closed outward meshes; 64 unique seeded cut-icosphere shards; unit scales; centred XY; min_z >= -0.06; CPU: CPU")
+print("SCREE_GRADING: 8 large toe blocks; radial size grading all round; 16 chalk variants; directional grain; edge grass")
+print("SCREE_SECTOR_COUNTS:",sectors,"MODELLED_PEBBLES:",gravel["pebble_count"])
 print("SCREE_SLOPE_DEGREES:",round(angle,2),"MAX_EMBEDDED_SURFACE_GAP_M:",round(maximum,4))
 print("SCREE_SIZE_M:",tuple(round(v,3) for v in hi-lo),"TRIANGLES:",vrlib.triangle_count(objects))
 spec=importlib.util.spec_from_file_location("talus_builder",Path(__file__).with_name("build.py"))
 builder=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(builder)
+try:
+    builder.scatter_gravel(bed,[],[])
+except ValueError:
+    pass
+else:
+    raise AssertionError("Empty gravel materials accepted")
 for size,cuts in (((),7),((1,0,1),7),((1,1,1),9)):
     try:
         builder.fractured_rock("invalid",size,1,None,cuts=cuts)
