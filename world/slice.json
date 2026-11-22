@@ -3,8 +3,8 @@
   "bounds": {"minX": -100, "minZ": 1100, "maxX": 900, "maxZ": 2100},
   "centre": {"x": 400, "z": 1600},
   "paths": [
-    {"width": 2.4, "polyline": [[350,1360],[385,1375],[420,1390],[450,1400],[455,1420],[445,1440],[440,1460],[455,1480],[465,1500],[465,1513],[465,1522.8],[479.5,1523.3]]},
-    {"width": 2.4, "polyline": [[520.5,1524.7],[536,1525],[550,1518],[560,1500]]}
+    {"width": 2.4, "polyline": [[350,1360],[385,1375],[420,1390],[450,1400],[455,1420],[445,1440],[440,1460],[435,1485],[444,1500],[453,1512],[465.5,1518.5]]},
+    {"width": 2.4, "polyline": [[494.5,1489.5],[510,1490],[530,1475],[550,1460]]}
   ],
   "spawn": {
     "fly": {"x": 200, "z": 1200, "yaw": -2.5},
@@ -12,9 +12,9 @@
   },
   "justification": "Nordwestufer des Spiegelsees: mäandrierende Weißfall- und Dornbachmündung mit gerundeten Mündungsfächern, rund 40 % Seehülle (37 % sichtbares Wasser), Buchten und ein bis 299 m hoher Rücken als gestaffelte Silhouette.",
   "measurements": {
-    "lake_fraction": 0.3972,
-    "land_fraction": 0.6028,
-    "visible_lake_fraction": 0.3726,
+    "lake_fraction": 0.4005,
+    "land_fraction": 0.5995,
+    "visible_lake_fraction": 0.3738,
     "min_height": 157.9949188232422,
     "max_height": 299.1663818359375,
     "relief": 141.1714630126953,

@@ -54,6 +54,29 @@ def bank_rise(distance):
     return .035*d+.35*(d-12+12*np.exp(-d/12))+.0015*np.maximum(d-100,0)**2
 
 
+def inlet_coordinates(x, y):
+    dx,dz = x-480,-y-1504
+    return (dx+dz)/math.sqrt(2),(dx-dz)/math.sqrt(2)
+
+
+def inlet_distance(x, y):
+    along,across = inlet_coordinates(x,y)
+    station = np.clip(along,-24,70)
+    radius = 7+7*smoothstep((station+25)/55)
+    bend = 1.6*np.sin(station/22)
+    return np.hypot(across-bend,along-station)-radius
+
+
+def inlet_terrain(x, y, height, level=180):
+    along,across = inlet_coordinates(x,y)
+    d = inlet_distance(x,y)
+    bed = -.65*smoothstep(-d/2.5)
+    bank = .14*smoothstep(d/2.5)+bank_rise(np.maximum(d-20,0))
+    target = level+np.where(d<0,bed,bank)
+    weight = smoothstep((100-abs(along-10))/50)*smoothstep((75-abs(across))/45)
+    return height+(np.minimum(height,target)-height)*weight
+
+
 def lake_distance(x, y, lake, rivers):
     _,cx,cy,r,level = lake
     base = lake_signed_distance(x,y,cx,cy,r)
@@ -70,12 +93,20 @@ def lake_distance(x, y, lake, rivers):
             d = np.hypot(x-a[0]-t*delta[0],y-a[1]-t*delta[1])-(a[3]+t*(b[3]-a[3]))*.5
             mouths = np.minimum(mouths,d)
     blend = np.maximum(1-abs(base-mouths)/60,0)
-    return np.minimum(base,mouths)-15*blend*blend
+    combined = np.minimum(base,mouths)-15*blend*blend
+    if lake[0]=='Spiegelsee':
+        inlet = inlet_distance(x,y)
+        blend = np.maximum(1-abs(combined-inlet)/4,0)
+        combined = np.minimum(combined,inlet)-blend*blend
+    return combined
 
 
 def lake_outline(lake, rivers, inset=18):
     _,cx,cy,r,_ = lake
     theta = np.linspace(0,2*np.pi,384,endpoint=False)
+    if lake[0]=='Spiegelsee':
+        bearing = math.atan2(-1504-cy,480-cx)
+        theta = np.unique(np.r_[theta,bearing+np.linspace(-.15,.15,181)])
     lo,hi = np.zeros_like(theta),np.full_like(theta,r*1.8+400)
     for _ in range(24):
         radius = (lo+hi)*.5
@@ -254,6 +285,12 @@ def carve(h, axis, rivers, lakes):
                 cut = np.s_[row:end,lo[0]:hi[0]]
                 # Compose continuous envelopes, not nearest-segment Voronoi cells.
                 h[cut] = np.minimum(h[cut],bed)
+    if any(lake[0]=='Spiegelsee' for lake in lakes):
+        ix = np.flatnonzero((axis>=330)&(axis<=630))
+        iy = np.flatnonzero((axis>=-1654)&(axis<=-1354))
+        if len(ix) and len(iy):
+            cut = np.ix_(iy,ix)
+            h[cut] = inlet_terrain(axis[ix][None,:],axis[iy][:,None],h[cut])
     return h
 
 

@@ -4,7 +4,7 @@ from pathlib import Path
 import sys
 import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from build_world import bank_rise, carve, hydrology, lake_radius, lake_distance, lake_outline
+from build_world import bank_rise, carve, hydrology, inlet_terrain, lake_radius, lake_distance, lake_outline
 
 
 def main():
@@ -53,6 +53,16 @@ def main():
     print('PASS: overlapping river envelopes are order-independent, wet and below 30 degrees')
     print('PASS: flat wet margin, empty hydrology, deterministic paths and irregular lake coves')
     print('PASS: smooth river/lake mouth union has a continuous curved dry shoreline')
+    span,flow = np.meshgrid(np.arange(-8,9),np.arange(-3,4))
+    x,y = 480+(span+flow)/math.sqrt(2),-1504+(span-flow)/math.sqrt(2)
+    wet = inlet_terrain(x,y,np.full_like(x,184.))
+    assert np.max(wet)<179.9, 'The channel must be wet across the bridge opening'
+    span,flow = np.meshgrid(np.r_[np.linspace(-20.47,-13,16),np.linspace(13,20.47,16)],np.linspace(-3.63,3.63,15))
+    x,y = 480+(span+flow)/math.sqrt(2),-1504+(span-flow)/math.sqrt(2)
+    land = inlet_terrain(x,y,np.full_like(x,184.))
+    assert np.min(land)>180.1 and np.ptp(land)<.025, 'Entire landing footprints must sit on dry, level banks'
+    np.testing.assert_array_equal(land,inlet_terrain(x,y,np.full_like(x,184.)))
+    print('PASS: curved inlet is wet under the span; both complete landing footprints are dry and supported')
 
 
 if __name__ == '__main__':

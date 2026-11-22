@@ -127,6 +127,17 @@ def main():
         cz = sum(p[1] for p in outline)/len(outline)
         require(sample(cx, cz) < level, f'Lake basin above surface: {lake["name"]}')
     print('PASS: 4 downstream-monotone rivers; 3 flat lakes below dry shorelines (river mouths excluded)')
+    placements = json.loads((WORLD/'placements.json').read_text())['placements']
+    bridge = next(p for p in placements if p['asset']=='bridge_arch_a')
+    c,s = math.cos(bridge['yaw']),math.sin(bridge['yaw'])
+    def crossing_height(span, flow):
+        return sample(bridge['x']+c*span+s*flow,bridge['z']-s*span+c*flow)
+    wet = [crossing_height(span,flow) for span in range(-8,9,2) for flow in range(-3,4)]
+    banks = [crossing_height(side*span,flow) for side in [-1,1]
+             for span in [13,14,16,18,20.47] for flow in [-3.63,-2,0,2,3.63]]
+    require(max(wet)<179.9, 'Bridge inlet is not wet under the opening')
+    require(min(banks)>180.075 and max(banks)-min(banks)<.075, 'Bridge landing footprints are not supported by dry, level banks')
+    print('PASS: inlet is wet under the bridge; both full landing footprints are dry and supported')
     print(f'WORLD OK — height range {low:.2f}…{high:.2f} m; quantization {(high-low)/65535:.4f} m')
 
 
