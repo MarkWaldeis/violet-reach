@@ -344,6 +344,15 @@ def passage_lining(x, y, stones, mortar, rng):
         shell(f"Limestone lining bay {i+1:02}", front+.018, back-.018, 1.57, 1.99, rng.choice(stones), .006)
 
 
+def center_footprint(objects):
+    ground = [obj for obj in objects if obj.name.startswith("Irregular root soil and turf")]
+    lo, hi = vrlib.world_bounds(ground)
+    shift = Matrix.Translation((-(lo.x+hi.x)/2, -(lo.y+hi.y)/2, 0))
+    for obj in objects:
+        obj.data.transform(shift)
+    return shift
+
+
 def build():
     stone = [pale_stone(f"Rib limestone | bed {i:02}", i) for i in range(13)]
     mortar = bedding()
@@ -367,5 +376,7 @@ def build():
             passage_lining(*tunnel, stone, mortar, rng)
             passage_floor(*tunnel, stone, rng)
     rotation = Matrix.Rotation(math.radians(-36), 3, "Z")
-    for obj in vrlib.source_objects():
+    objects = vrlib.source_objects()
+    for obj in objects:
         obj.data.transform(rotation.to_4x4())
+    center_footprint(objects)
