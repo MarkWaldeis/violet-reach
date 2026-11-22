@@ -8,7 +8,7 @@ import vrlib
 import vrmat
 
 
-def prism(name, rings, material, rounding):
+def prism(name, rings, material, rounding, patina=None):
     n = len(rings[0])
     faces = [tuple(reversed(range(n)))]
     for j in range(len(rings)-1):
@@ -19,6 +19,9 @@ def prism(name, rings, material, rounding):
     mesh.from_pydata([v for ring in rings for v in ring], [], faces)
     mesh.update()
     mesh.materials.append(vrmat.get(material) if isinstance(material, str) else material)
+    if patina is not None:
+        mask = mesh.attributes.new("patina", "FLOAT", "POINT")
+        mask.data.foreach_set("value", [patina(x,y,z) for ring in rings for x,y,z in ring])
     obj = vrlib.link_to_source(bpy.data.objects.new(name, mesh))
     if rounding:
         bevel = obj.modifiers.new("Dressed and worn edges", "BEVEL")
@@ -53,7 +56,27 @@ def dressed_stone():
     mix.inputs[0].default_value = .83
     mix.inputs[2].default_value = (*vrmat.load_palette()["monument_white"]["linear_rgb"], 1)
     links.new(diffuse.links[0].from_socket, mix.inputs[1])
-    links.new(mix.outputs[0], diffuse)
+    coords = nodes.new("ShaderNodeTexCoord")
+    noise = nodes.new("ShaderNodeTexNoise")
+    noise.inputs["Scale"].default_value = 8.0
+    links.new(coords.outputs["Object"], noise.inputs["Vector"])
+    breakup = nodes.new("ShaderNodeMapRange")
+    breakup.inputs["From Min"].default_value = .25
+    breakup.inputs["From Max"].default_value = .75
+    breakup.inputs["To Min"].default_value = .45
+    breakup.inputs["To Max"].default_value = 1.0
+    links.new(noise.outputs["Fac"], breakup.inputs["Value"])
+    mask = nodes.new("ShaderNodeAttribute")
+    mask.attribute_name = "patina"
+    intensity = nodes.new("ShaderNodeMath")
+    intensity.operation = "MULTIPLY"
+    links.new(mask.outputs["Fac"], intensity.inputs[0])
+    links.new(breakup.outputs["Result"], intensity.inputs[1])
+    weather = nodes.new("ShaderNodeMixRGB")
+    weather.inputs[2].default_value = (.096,.058,.030,1)
+    links.new(intensity.outputs[0], weather.inputs[0])
+    links.new(mix.outputs[0], weather.inputs[1])
+    links.new(weather.outputs[0], diffuse)
     return mat
 
 
@@ -71,6 +94,10 @@ def damp_stone():
     return mat
 
 
+def footing_patina(x,y,z):
+    return min(1.0,max(0.0,(.86+.24*math.sin(2.6*x)+.12*math.sin(5.8*x+2*y)-z)/.70))
+
+
 def arch_point(a, r):
     return (12.50 + r*.85)*math.cos(a), .21+(4.18+r)*math.sin(a)
 
@@ -80,34 +107,55 @@ def extrados(x):
     return .21+rise*math.sqrt(max(0,1-(x/radius)**2)) if abs(x)<radius else 0
 
 
-def arch_block(name, a, b, r0, r1, y0, y1, material, bevel):
+def arch_block(name, a, b, r0, r1, y0, y1, material, bevel, patina=None):
     t = [b+(a-b)*i/4 for i in range(5)]
     profile = [arch_point(t0,r1) for t0 in t]+[arch_point(t0,r0) for t0 in reversed(t)]
-    prism(name, [[(x,y,z) for x,z in profile] for y in (y0,y1)], material, bevel)
+    prism(name, [[(x,y,z) for x,z in profile] for y in (y0,y1)], material, bevel, patina)
 
 
-def run(name, x0, x1, y0, y1, depth0, depth1, material, bevel, follows=deck_z):
+def run(name, x0, x1, y0, y1, depth0, depth1, material, bevel, follows=deck_z, patina=None):
     ts = [x0+(x1-x0)*j/3 for j in range(4)]
     section = [(x,y0) for x in ts]+[(x,y1) for x in reversed(ts)]
-    prism(name, [[(x,y,max(-.052,follows(x)+d)) for x,y in section] for d in (depth0,depth1)], material,bevel)
+    prism(name, [[(x,y,max(-.052,follows(x)+d)) for x,y in section] for d in (depth0,depth1)],
+          material,bevel,patina)
 
 
-def column(name,x,y,height,rx,ry,profile,material,scar=0):
+def column(name,x,y,height,rx,ry,profile,material,chip=None):
     outline = [(-.69,-1),(.74,-1),(1,-.62),(1,.64),(.68,1),(-.76,1),(-1,.59),(-1,-.56)]
+    if chip:
+        corner, low, high, depth = chip
+        u,v = outline[corner]
+        prev_u,prev_v = outline[corner-1]
+        next_u,next_v = outline[(corner+1)%len(outline)]
+        outline[corner:corner+1] = [(.53*u+.47*prev_u,.53*v+.47*prev_v), (u,v),
+                                     (.51*u+.49*next_u,.51*v+.49*next_v)]
+        profile = sorted((*profile, *((f,None) for f in (low,(low+high)*.5,high))))
     rings = []
+    chip_patina = {}
     for k,(f,s) in enumerate(profile):
+        if s is None:
+            a,sa = next((a,v) for a,v in reversed(profile[:k]) if v is not None)
+            b,sb = next((b,v) for b,v in profile[k+1:] if v is not None)
+            s = sa+(sb-sa)*(f-a)/(b-a)
         ring = []
         for j,(u,v) in enumerate(outline):
-            if scar and j in (1,2) and .29<f<.78:
-                u -= scar*(.62 if j==2 else .34)
-                v += scar*(.45 if j==1 else .25)
-                f_chip = .07*scar*math.cos(k*2+j)
-            else:
-                f_chip = 0
+            mask = 0
+            if chip and corner <= j <= corner+2 and low < f < high:
+                cut = depth*(1-abs(2*(f-low)/(high-low)-1))
+                if j == corner+1:
+                    u,v = u*(1-cut),v*(1-cut)
+                    mask = .67*cut
+                else:
+                    u,v = u*(1-.38*cut),v*(1-.38*cut)
+                    mask = .30*cut
             q = x+rx*s*u
-            ring.append((q,y+ry*s*v,deck_z(q)+height*(f+f_chip)))
+            point = (q,y+ry*s*v,deck_z(q)+height*f)
+            ring.append(point)
+            if mask:
+                chip_patina[point] = mask
         rings.append(ring)
-    prism(name,rings,material,.016 if rx<.24 else .034)
+    prism(name,rings,material,.007 if chip else .016 if rx<.24 else .034,
+          (lambda x,y,z: chip_patina.get((x,y,z),0)) if chip else None)
 
 
 def crown_panel(side,a,b,pale,damp):
@@ -130,7 +178,7 @@ def crown_panel(side,a,b,pale,damp):
                   pale,.016)
 
 
-def wingwalls(side, pale, damp):
+def wingwalls(side, pale):
     for bank in (-1,1):
         for j in range(10):
             z = -.048+j*.235
@@ -147,21 +195,18 @@ def wingwalls(side, pale, damp):
                 outline.reverse()
             prism(f"Splayed wing {side:+}/{bank:+}/{j+1}", [
                 [(side*x,bank*y,z0) for x,y in outline] for z0 in (z,z+.23)],
-                damp if j==0 else "monument_weathered" if j==1 else pale,.030)
-        for j,(a,b,w,z) in enumerate(((17.1,18.09,2.64,.46),(18.1,18.92,2.61,.39),
-                                      (18.93,19.58,2.53,.32),(19.59,20.02,2.42,.23))):
-            x0,x1 = sorted((side*a,side*b))
-            y0,y1 = sorted((bank*1.80,bank*w))
-            run(f"Interlocked landing return {side:+}/{bank:+}/{j}",x0,x1,y0,y1,-.05,z,
-                pale,.039,lambda x:0)
-    for j,(a,b,z) in enumerate(((18.0,18.49,.178),(18.49,19.31,.178),
-                               (19.31,19.86,.178),(19.86,20.47,.034))):
-        x0,x1 = sorted((side*a,side*b))
-        run(f"Bedded landing core {side:+}/{j}",x0,x1,-2.09,2.09,-.048,z-.025,
-            damp,.018,lambda x:0)
-        for k,(y0,y1) in enumerate(zip((-2.07,-1.11,-.04,1.07),(-1.11,-.04,1.07,2.07))):
-            run(f"Thick landing paving {side:+}/{j}/{k}",x0+.005,x1-.005,y0+.007,y1-.007,
-                z-.14,z,pale,.025,lambda x:0)
+                pale,.030,footing_patina)
+    rings = []
+    for x,w,edge,deck in ((17.72,2.67,.47,.021),(18.0,2.67,.47,.034),
+                          (18.65,2.79,.46,.034),(19.43,2.72,.38,.034),
+                          (20.16,2.61,.29,.026),(20.47,2.53,.21,.012)):
+        section = [(-w,-.057),(w,-.057),(w,edge),(2.13,edge),
+                   (1.87,deck),(-1.87,deck),(-2.13,edge),(-w,edge)]
+        if side < 0:
+            section.reverse()
+        rings.append([(side*x,y,z) for y,z in section])
+    prism(f"Bonded landing and wing-wall plinth {side:+}", rings,pale,.018,
+          lambda x,y,z: footing_patina(x,y,z)*min(.83,max(0,(abs(y)-1.45)*.85)))
 
 
 def stairs(pale, rng, treads):
@@ -188,21 +233,33 @@ def build():
     n = 39
     for i in range(n):
         a,b = ((i+v)*math.pi/n for v in (.015,.985))
-        arch_block(f"Barrel voussoir {i+1:02}",a,b,0,.62,-1.88,1.88,
-                   "monument_weathered" if i in (0,1,37,38) else pale,.022)
+        def vault_patina(x,y,z):
+            radial = max(0,1-(x/12.5)**2)
+            underside = max(0,1-abs(z-(.21+4.18*math.sqrt(radial)))*2.6)
+            seep = .23+.76*max(0,math.sin(i*.89+.57))**1.3
+            return max(footing_patina(x,y,z),underside*seep)
+
+        arch_block(f"Barrel voussoir {i+1:02}",a,b,0,.62,-1.88,1.88,pale,.022,vault_patina)
+        if i:
+            joint = i*math.pi/n
+            seam = .082*math.pi/n
+            arch_block(f"Recessed vault mortar joint {i:02}",joint-seam,joint+seam,.023,.13,
+                       -1.881,1.881,damp,0)
         for side in (-1,1):
             y0,y1 = sorted((side*1.87,side*(2.38 if i==n//2 else 2.24)))
             arch_block(f"Face voussoir {side:+d}/{i+1:02}",a,b,-.15 if i==n//2 else -.04,
-                       .85 if i==n//2 else .68,y0,y1,
-                       "monument_weathered" if i in (0,1,37,38) else pale,.041)
+                       .85 if i==n//2 else .68,y0,y1,pale,.041,footing_patina)
+            if i:
+                arch_block(f"Recessed arch face mortar joint {side:+}/{i:02}",joint-seam,joint+seam,
+                           .01,.56,*sorted((side*1.88,side*2.216)),damp,0)
 
     for side in (-1,1):
-        wingwalls(side,pale,damp)
+        wingwalls(side,pale)
         for i,(xa,xb,z,w) in enumerate(((11.98,15.09,-.04,2.87),(12.05,14.82,.23,2.67),
                                          (12.46,14.63,.48,2.56),(13.38,14.47,.73,2.49))):
             x0,x1 = sorted((side*xa,side*xb))
             run(f"Abutment footing {side:+}/{i+1}",x0,x1,-w,w,z,z+.255,
-                damp if i==0 else "monument_weathered" if i==1 else pale,.042,lambda x:0)
+                pale,.042,lambda x:0,footing_patina)
         for i in range(10):
             z = .02+.27*i
             xa = max(12.4,13.2055*math.sqrt(max(0,1-((z-.21)/5.01)**2)))
@@ -216,7 +273,7 @@ def build():
                 if top<=z+.01:
                     continue
                 run(f"Retaining masonry {side:+}/{i+1}.{j+1}",x0,x1,-2.03,2.03,
-                    z,top,pale,.026,lambda x:0)
+                    z,top,pale,.026,lambda x:0,footing_patina)
 
     stairs(pale,rng,treads)
     for i in range(53):
@@ -256,25 +313,28 @@ def build():
             if crest:
                 crown_panel(side,a,b,pale,damp)
             elif abs(mid)>13 or i in (4,6,14,16):
-                run(f"Solid parapet field {side:+}/{i+1:02}",a,b,yo+.046,yi-.046,.18,crown-.11,pale,.026)
+                run(f"Solid parapet field {side:+}/{i+1:02}",a,b,yo+.046,yi-.046,.18,crown-.11,pale,.026,
+                    patina=lambda x,y,z: (.32+.59*abs(2*(x-a)/(b-a)-1)**2) if z-deck_z(x)>.65 else .035)
             else:
                 count = 2 if b-a<1.65 else 3
                 pitch = (b-a)/count
                 for j in range(count):
-                    scar = .82 if (i*7+j+side)%11 in (0,3) else 0
+                    chip = None
+                    if (i*7+j+side)%7 in (0,3):
+                        corner = (0,1)[j%2] if side<0 else (4,5)[j%2]
+                        low,high = rng.uniform(.28,.32),rng.uniform(.64,.73)
+                        chip = (corner,low,high,rng.uniform(.94,1.18))
                     profile = ((.23,1),(.30,.93),(.39,.66),(.55,.78),(.65,.71),(.76,.95),(.83,.95))
                     if i%3==0:
                         profile = ((.23,1),(.33,1),(.40,.72),(.54,.61),(.66,.76),(.75,1),(.83,1))
-                    column(f"{'Spalled' if scar else 'Dressed'} baluster {side:+}/{i+1:02}.{j+1}",
-                           a+(j+.5)*pitch,side*2.037,1,.155+.026*(i%2),.145,profile,pale,scar)
+                    column(f"{'Spalled' if chip else 'Dressed'} baluster {side:+}/{i+1:02}.{j+1}",
+                           a+(j+.5)*pitch,side*2.037,1,.155+.026*(i%2),.145,profile,pale,chip)
             run(f"Recessed damp under coping {side:+}/{i+1:02}",a,b,yo-.012,yi+.012,
                 crown-.185,crown-.131,damp,.011)
-            run(f"Parapet coping {side:+}/{i+1:02}",a,b,yo-.037,yi+.037,crown-.137,crown,pale,.033)
-            if i%3==side%3:
-                for q,(u,v) in enumerate(((.03,.10),(.16,.25),(.78,.82))):
-                    x0,x1=a+(b-a)*u,a+(b-a)*v
-                    run(f"Drip stain on head joint {side:+}/{i+1:02}/{q}",x0,x1,
-                        *sorted((side*2.208,side*2.219)),crown-.25-.03*(q%2),crown-.15,damp,.007)
+            run(f"Parapet coping {side:+}/{i+1:02}",a,b,yo-.037,yi+.037,crown-.137,crown,pale,.033,
+                patina=lambda x,y,z: .69+.30*abs(2*(x-a)/(b-a)-1) if z-deck_z(x)<crown-.08 else .035)
     for ob in vrlib.source_objects():
         ob.location.z += .008
-    bpy.context.scene["vr_closeup_base"] = (-16.40,-.15,1.15,222,22,18.8)
+    bpy.context.scene["vr_hero"] = (1.4,0,2.25,292,20,65)
+    bpy.context.scene["vr_closeup_upper"] = (3.9,-1.95,4.85,255,-12,10.8)
+    bpy.context.scene["vr_closeup_base"] = (-15.65,-.16,1.08,235,15,21)
