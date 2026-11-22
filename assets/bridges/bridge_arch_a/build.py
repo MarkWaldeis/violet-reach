@@ -34,11 +34,12 @@ def deck_z(x):
     return .034+5.52*math.cos(math.pi*a/36)**1.02
 
 
-def paving_stations():
+def tread_intervals():
     stations = [18.0]
     for n in range(1,31):
         stations.append(36/math.pi*math.acos((n*.176/5.52)**(1/1.02)))
-    return stations
+    half = [(a,b,.034+i*.176) for i,(b,a) in enumerate(zip(stations,stations[1:]))]
+    return [(-b,-a,z) for a,b,z in half]+[(-stations[-1],stations[-1],.034+30*.176)]+half[::-1]
 
 
 def dressed_stone():
@@ -61,7 +62,7 @@ def arch_point(a, r):
 
 
 def extrados(x):
-    radius, rise = 12.50+.65*.85, 4.18+.65
+    radius, rise = 12.50+.62*.85, 4.18+.62
     return .21+rise*math.sqrt(max(0,1-(x/radius)**2)) if abs(x)<radius else 0
 
 
@@ -96,7 +97,7 @@ def wingwalls(side, pale):
             mid = (reach+start)/2
             bulge = 3.12-.060*j
             # Mirrored returns spread out beyond the walkable stair width.
-            outline = [(start,1.85),(mid,1.9),(reach,2.04),(reach-.09,bulge),
+            outline = [(start,1.87),(mid,1.9),(reach,2.04),(reach-.09,bulge),
                        (mid+.22,bulge+.12),(start-.16,bulge-.27)]
             if side*bank<0:
                 outline.reverse()
@@ -109,21 +110,15 @@ def wingwalls(side, pale):
             pale,.021,lambda x:0)
 
 
-def stairs(pale, rng):
-    stations = paving_stations()
-    for side in (-1,1):
-        for i,(a,b) in enumerate(zip(stations,stations[1:]+[0.0])):
-            if i==30 and side==1:
-                continue
-            x0,x1 = sorted((a*side,b*side)) if i<30 else (-a,a)
-            z = .034+i*.176
-            split = [-1.865,-.95,.02,.94,1.865]
-            for j in (1,2,3):
-                split[j] += rng.uniform(-.14,.14)
-            for j,(u,v) in enumerate(zip(split,split[1:])):
-                run(f"Stair tread {side:+}/{i+1}.{j+1}",
-                    x0+.004,x1-.004,u+.005,v-.005,-.238,.0,
-                    pale,.012,lambda x,z=z:z)
+def stairs(pale, rng, treads):
+    for i,(x0,x1,z) in enumerate(treads):
+        split = [-1.865,-.95,.02,.94,1.865]
+        for j in (1,2,3):
+            split[j] += rng.uniform(-.14,.14)
+        for j,(u,v) in enumerate(zip(split,split[1:])):
+            run(f"Stair tread {i+1}.{j+1}",
+                x0+.004,x1-.004,u+.005,v-.005,-.238,.0,
+                pale,.012,lambda x,z=z:z)
     for side in (-1,1):
         for x in (-16.57,-13.48,-8.8,-4.18,0,4.18,8.8,13.48,16.57):
             # Modelled cover blocks anchor the coping at strongly loaded pier lines.
@@ -134,13 +129,14 @@ def stairs(pale, rng):
 def build():
     rng = random.Random(135719)
     pale = dressed_stone()
+    treads = tread_intervals()
     n = 39
     for i in range(n):
         a,b = ((i+v)*math.pi/n for v in (.015,.985))
-        arch_block(f"Barrel voussoir {i+1:02}",a,b,0,.89,-1.88,1.88,
+        arch_block(f"Barrel voussoir {i+1:02}",a,b,0,.62,-1.88,1.88,
                    "monument_weathered" if i in (0,1,37,38) else pale,.022)
         for side in (-1,1):
-            y0,y1 = sorted((side*1.82,side*(2.38 if i==n//2 else 2.24)))
+            y0,y1 = sorted((side*1.87,side*(2.38 if i==n//2 else 2.24)))
             arch_block(f"Face voussoir {side:+d}/{i+1:02}",a,b,-.15 if i==n//2 else -.04,
                        .85 if i==n//2 else .68,y0,y1,
                        "monument_weathered" if i in (0,1,37,38) else pale,.041)
@@ -160,17 +156,14 @@ def build():
                 k = .47 if j==0 else 1
                 xb = 17.98
                 x0,x1 = sorted((side*(xa+(xb-xa)*q), side*(xa+(xb-xa)*k-.013)))
-                ts = [x0+(x1-x0)*j/8 for j in range(9)]
-                ts = [x for x in ts if deck_z(x)-.17>z+.01]
-                if len(ts)<2:
+                heights = [top for a,b,top in treads if a<x1 and x0<b]
+                top = min(z+.255,min(heights)-.045) if heights else z
+                if top<=z+.01:
                     continue
-                section = [(x,-2.03) for x in ts]+[(x,2.03) for x in reversed(ts)]
-                prism(f"Retaining masonry {side:+}/{i+1}.{j+1}",
-                      [[(x,y,z) for x,y in section],
-                       [(x,y,min(z+.255,deck_z(x)-.149)) for x,y in section]],
-                      pale,.026)
+                run(f"Retaining masonry {side:+}/{i+1}.{j+1}",x0,x1,-2.03,2.03,
+                    z,top,pale,.026,lambda x:0)
 
-    stairs(pale,rng)
+    stairs(pale,rng,treads)
     for i in range(53):
         x0,x1 = -17.99+i*35.98/53,-17.99+(i+1)*35.98/53
         for side in (-1,1):
@@ -180,15 +173,14 @@ def build():
                 "monument_weathered",.014)
             run(f"Drip cornice {side:+}/{i+1:02}",x0+.009,x1-.009,lo,hi,-.19 if i not in (0,52) else -.058,
                 -.04 if i not in (0,52) else .016,pale,.027)
-    for i in range(67):
-        a,b = ((i+v)*36/67-18 for v in (.015,.985))
-        if abs((a+b)/2)>17.65:
-            continue
+    for i,(x0,x1,z) in enumerate(treads):
+        a,b = x0+.012,x1-.012
+        top = z-.045
         xs = [a+(b-a)*k/4 for k in range(5)]
-        if all(deck_z(x)-.10>extrados(x)+.04 for x in xs):
+        if top>max(extrados(x) for x in xs)+.008:
             section = [(x,-2.025) for x in xs]+[(x,2.025) for x in reversed(xs)]
             prism(f"Spandrel ashlar {i+1:02}",[[(x,y,extrados(x)-.01) for x,y in section],
-                 [(x,y,deck_z(x)-.095) for x,y in section]],pale,.017)
+                 [(x,y,top) for x,y in section]],pale,.017)
 
     for side in (-1,1):
         breaks = (-18,-16.57,-14.6,-13.48,-11.25,-8.8,-7.1,-5.9,-4.18,-2.65,
