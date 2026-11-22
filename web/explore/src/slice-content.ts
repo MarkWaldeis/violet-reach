@@ -3,6 +3,7 @@ import { inBounds, readJSON, type Slice } from "./slice.ts";
 import type { TerrainStream } from "./terrain-stream.ts";
 import { InstanceAssets } from "./instance-assets.ts";
 import { placementWaterAt, type Hydrology } from "./hydrology.ts";
+import { scatterSurface } from "./scatter-surface.ts";
 
 export async function sliceAssets(slice: Slice, terrain: TerrainStream, params: URLSearchParams) {
   const [document, hydrology] = await Promise.all([
@@ -24,8 +25,14 @@ export async function sliceAssets(slice: Slice, terrain: TerrainStream, params: 
     const length = Math.hypot(dx, 1, dz);
     return { height, slope: Math.atan(Math.hypot(dx, dz)) * 180 / Math.PI, normal: [-dx / length, 1 / length, -dz / length] as [number, number, number] };
   };
-  const instances = expandPlacements(entries, groundAt, waterAt, (x, z) => inBounds(slice.bounds, x, z));
+  const instances = expandPlacements(entries, groundAt, waterAt, (x, z) => inBounds(slice.bounds, x, z), (entry, ground, x, z, aboveWater) => {
+    if (!entry.scatter.surface) return true;
+    const height = (dx: number, dz: number) => terrain.fullHeightAt(x + dx, z + dz) ?? ground.height;
+    const dx = (height(8, 0) - height(-8, 0)) / 16, dz = (height(0, 8) - height(0, -8)) / 16;
+    const length = Math.hypot(dx, 1, dz), hollow = (height(16, 0) + height(-16, 0) + height(0, 16) + height(0, -16)) / 4 - ground.height;
+    return scatterSurface(entry.scatter.surface, x, z, [-dx / length, 1 / length, -dz / length], aboveWater, slice.paths ?? [], entry.scatter.path_clearance, hollow);
+  });
   const maxDistance = params.has("assetDistance") ? Number(params.get("assetDistance")) : undefined;
   if (maxDistance !== undefined && (!Number.isFinite(maxDistance) || maxDistance <= 0)) throw new Error("assetDistance muss positiv sein");
-  return InstanceAssets.load(instances, { maxDistance });
+  return InstanceAssets.load(instances, { maxDistance }, slice.asset_options);
 }

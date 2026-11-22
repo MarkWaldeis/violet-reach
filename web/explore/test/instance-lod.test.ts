@@ -1,6 +1,20 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { chunkVisible, instanceLOD, lodDistances, spatialChunks } from "../src/instance-lod.ts";
+import { assetRenderOptions, chunkVisible, instanceLOD, lodDistances, spatialChunks } from "../src/instance-lod.ts";
+
+test("asset rendering overrides preserve defaults and validate finite distance, quality and shadow limits", () => {
+  assert.deepEqual(assetRenderOptions(2), { maxDistance: 80, lodScale: 1, shadowLODs: 2, maxLOD: Number.MAX_SAFE_INTEGER });
+  assert.deepEqual(assetRenderOptions(2, { maxDistance: 100 }, { maxDistance: 30, lodScale: 0.5, shadowLODs: 1, maxLOD: 1 }), { maxDistance: 100, lodScale: 0.5, shadowLODs: 1, maxLOD: 1 });
+  for (const options of [{ maxDistance: 0 }, { maxDistance: Infinity }, { lodScale: -1 }, { lodScale: NaN }, { shadowLODs: 1.5 }, { shadowLODs: -1 }, { maxLOD: -1 }, { maxLOD: 1.5 }, { maxLOD: Infinity }]) {
+    assert.throws(() => assetRenderOptions(2, {}, options), /Invalid asset/);
+  }
+  assert.throws(() => assetRenderOptions(0), /Invalid asset/);
+  assert.equal(assetRenderOptions(2, { maxLOD: 0 }, { maxLOD: 1 }).maxLOD, 0);
+  const a = assetRenderOptions(2, {}, { maxDistance: 60, lodScale: 0.5 });
+  const full = lodDistances(2, 3, 900, 57, 60), reduced = lodDistances(2 * a.lodScale, 3, 900, 57, a.maxDistance);
+  assert.equal(reduced[0], full[0] / 2);
+  assert.equal(reduced[2], 60);
+});
 
 test("object size, screen resolution, FOV and cutoff determine LOD distances", () => {
   const a = lodDistances(4, 3, 900, 60, 200);

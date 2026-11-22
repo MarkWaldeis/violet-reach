@@ -5,13 +5,15 @@ import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { worldFiles } from "../scripts/world-content.mjs";
 
+const vegetation = ["tree_broadleaf_a", "tree_broadleaf_b", "tree_broadleaf_c", "shrub_round_a", "grass_tuft_a", "fern_cluster_a", "reed_cluster_a"];
+
 test("world content includes real terrain and only registered placed assets", () => {
   const files = worldFiles();
   assert.equal([...files.keys()].filter((p) => p.endsWith(".r16")).length, 256);
-  for (const key of ["terrain/manifest.json", "slice.json", "hydrology.json", "placements.json", "assets/crystal_violet_cluster_a.glb", "assets/bridge_arch_a.glb", "assets/lake_shore_a.glb"]) assert.ok(files.has(key));
-  assert.equal([...files.keys()].filter((p) => p.endsWith(".glb")).length, 3);
+  for (const key of ["terrain/manifest.json", "slice.json", "hydrology.json", "placements.json", "assets/crystal_violet_cluster_a.glb", "assets/bridge_arch_a.glb", "assets/lake_shore_a.glb", ...vegetation.map((asset) => `assets/${asset}.glb`)]) assert.ok(files.has(key));
+  assert.equal([...files.keys()].filter((p) => p.endsWith(".glb")).length, 3 + vegetation.length);
 });
-for (const asset of ["bridge_arch_a", "lake_shore_a"]) test(`${asset} export contains all three named LODs`, () => {
+for (const asset of ["bridge_arch_a", "lake_shore_a", ...vegetation]) test(`${asset} export contains all three named LODs`, () => {
   const glb = readFileSync(worldFiles().get(`assets/${asset}.glb`)!);
   assert.equal(glb.toString("ascii", 0, 4), "glTF");
   const document = JSON.parse(glb.toString("utf8", 20, 20 + glb.readUInt32LE(12)));

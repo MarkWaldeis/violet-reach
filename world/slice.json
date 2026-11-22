@@ -20,5 +20,42 @@
     "relief": 141.1714630126953,
     "river_length_m": {"Weißfall": 896.05, "Dornbach": 818.89},
     "method": "Lake outline occupancy at 10 m cell centres (shore envelope); visible lake additionally requires nearest R16 height below water_y 180. Height extrema at all 2 m R16 samples; river centrelines clipped to bounds."
+  },
+  "asset_options": {
+    "tree_broadleaf_a": {
+      "maxDistance": 700,
+      "lodScale": 0.35,
+      "maxLOD": 1,
+      "shadowLODs": 1
+    },
+    "tree_broadleaf_b": {
+      "maxDistance": 600,
+      "lodScale": 0.4,
+      "maxLOD": 1,
+      "shadowLODs": 1
+    },
+    "tree_broadleaf_c": {
+      "maxDistance": 500,
+      "lodScale": 0.5,
+      "maxLOD": 1,
+      "shadowLODs": 1
+    },
+    "shrub_round_a": {
+      "maxDistance": 160,
+      "lodScale": 0.65
+    },
+    "grass_tuft_a": {
+      "maxDistance": 35,
+      "lodScale": 0.7,
+      "shadowLODs": 1
+    },
+    "fern_cluster_a": {
+      "maxDistance": 70,
+      "lodScale": 0.7
+    },
+    "reed_cluster_a": {
+      "maxDistance": 40,
+      "lodScale": 0.7
+    }
   }
 }

@@ -13,6 +13,8 @@ export interface ScatterPlacement {
     max_height_above_water: number;
     scale: [number, number];
     align_to_slope?: boolean;
+    surface?: "meadow" | "land" | "shore";
+    path_clearance?: number;
   };
 }
 export type Placement = SinglePlacement | ScatterPlacement;
@@ -35,6 +37,7 @@ export function expandPlacements(
   entries: Placement[], groundAt: (x: number, z: number) => GroundSample | undefined,
   waterAt: (x: number, z: number) => number,
   acceptPosition: (x: number, z: number) => boolean = () => true,
+  acceptScatter: (entry: ScatterPlacement, ground: GroundSample, x: number, z: number, aboveWater: number) => boolean = () => true,
 ): InstancePlacement[] {
   const result: InstancePlacement[] = [];
   for (const entry of entries) {
@@ -70,6 +73,7 @@ export function expandPlacements(
       if (!ground) throw new Error(`Missing scatter terrain: ${entry.asset}`);
       const above = ground.height - waterAt(x, z);
       if (ground.slope > s.max_slope || above < s.min_height_above_water || above > s.max_height_above_water) continue;
+      if (!acceptScatter(entry, ground, x, z, above)) continue;
       const cx = Math.floor(x / cellSize), cz = Math.floor(z / cellSize);
       let crowded = false;
       for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) {

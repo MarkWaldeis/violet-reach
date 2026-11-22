@@ -35,6 +35,90 @@
         1.145
       ],
       "bytes": 3825952
+    },
+    {
+      "id": "fern_cluster_a",
+      "category": "vegetation",
+      "title": "Farnhorst A",
+      "file": "fern_cluster_a.glb",
+      "size_m": [
+        1.335,
+        1.441,
+        0.556
+      ],
+      "bytes": 1489400
+    },
+    {
+      "id": "grass_tuft_a",
+      "category": "vegetation",
+      "title": "Grasbüschel A",
+      "file": "grass_tuft_a.glb",
+      "size_m": [
+        0.579,
+        0.54,
+        0.639
+      ],
+      "bytes": 270072
+    },
+    {
+      "id": "reed_cluster_a",
+      "category": "vegetation",
+      "title": "Schilfhorst A",
+      "file": "reed_cluster_a.glb",
+      "size_m": [
+        1.593,
+        1.558,
+        1.816
+      ],
+      "bytes": 1678580
+    },
+    {
+      "id": "shrub_round_a",
+      "category": "vegetation",
+      "title": "Dichter Rundstrauch A",
+      "file": "shrub_round_a.glb",
+      "size_m": [
+        2.617,
+        2.239,
+        2.214
+      ],
+      "bytes": 1520656
+    },
+    {
+      "id": "tree_broadleaf_a",
+      "category": "vegetation",
+      "title": "Breitkroniger Laubbaum A",
+      "file": "tree_broadleaf_a.glb",
+      "size_m": [
+        14.333,
+        13.306,
+        15.624
+      ],
+      "bytes": 5442380
+    },
+    {
+      "id": "tree_broadleaf_b",
+      "category": "vegetation",
+      "title": "Eschenartiger Laubbaum B",
+      "file": "tree_broadleaf_b.glb",
+      "size_m": [
+        7.909,
+        6.727,
+        11.031
+      ],
+      "bytes": 6819112
+    },
+    {
+      "id": "tree_broadleaf_c",
+      "category": "vegetation",
+      "title": "Breitkroniger kleiner Laubbaum C",
+      "file": "tree_broadleaf_c.glb",
+      "size_m": [
+        6.005,
+        5.244,
+        6.958
+      ],
+      "bytes": 6820488
     }
   ]
 }

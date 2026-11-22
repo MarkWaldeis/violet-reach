@@ -5,12 +5,11 @@ import {
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import type { InstancePlacement } from "./placements.ts";
-import { chunkVisible, instanceLOD, lodDistances, spatialChunks, type Chunk } from "./instance-lod.ts";
+import { assetRenderOptions, chunkVisible, instanceLOD, lodDistances, spatialChunks, type AssetRenderOptions, type Chunk } from "./instance-lod.ts";
 
 interface Instance extends InstancePlacement { matrix: Matrix4; lod: number }
 interface Part { mesh: InstancedMesh; local: Matrix4 }
-interface AssetBatch { parts: Part[][]; chunks: Chunk<Instance>[]; size: number; maxDistance: number }
-export interface InstanceOptions { maxDistance?: number; shadowLODs?: number }
+interface AssetBatch { parts: Part[][]; chunks: Chunk<Instance>[]; size: number; maxDistance: number; lodScale: number }
 
 export class InstanceAssets {
   readonly group = new Group();
@@ -21,7 +20,7 @@ export class InstanceAssets {
   #updated = -Infinity;
   stats = { assets: 0, total: 0, lods: [] as number[], visibleChunks: 0, chunks: 0 };
 
-  static async load(placements: InstancePlacement[], options: InstanceOptions = {}) {
+  static async load(placements: InstancePlacement[], options: AssetRenderOptions = {}, byAsset: Record<string, AssetRenderOptions> = {}) {
     const result = new InstanceAssets();
     const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
     const ids = [...new Set(placements.map((p) => p.asset))];
@@ -45,12 +44,13 @@ export class InstanceAssets {
       for (const node of levels.get(ordered[0])!) bounds.expandByObject(node);
       const size = bounds.getSize(new Vector3()).length();
       const rootRadius = bounds.getCenter(new Vector3()).length() + size / 2;
+      const settings = assetRenderOptions(size, options, byAsset[id]);
       const instances: Instance[] = placements.filter((p) => p.asset === id).map((p) => {
         const rotation = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), p.yaw);
         if (p.normal) rotation.premultiply(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), new Vector3(...p.normal).normalize()));
         return { ...p, matrix: new Matrix4().compose(new Vector3(p.x, p.y, p.z), rotation, new Vector3().setScalar(p.scale)), lod: -1 };
       });
-      const parts = ordered.map((level, index) => {
+      const parts = ordered.filter((level) => level <= settings.maxLOD).map((level, index) => {
         const parts: Part[] = [];
         for (const source of levels.get(level)!) {
           const materials = Array.isArray(source.material) ? source.material : [source.material];
@@ -65,7 +65,7 @@ export class InstanceAssets {
             mesh.instanceMatrix.setUsage(DynamicDrawUsage);
             // CPU chunk culling is based on the viewer camera, never the shadow camera.
             mesh.frustumCulled = false;
-            mesh.castShadow = mesh.receiveShadow = index < (options.shadowLODs ?? 2);
+            mesh.castShadow = mesh.receiveShadow = index < settings.shadowLODs;
             result.group.add(mesh);
             parts.push({ mesh, local: source.matrixWorld.clone() });
           }
@@ -73,7 +73,7 @@ export class InstanceAssets {
         return parts;
       });
       const chunks = spatialChunks(instances, (p) => rootRadius * p.scale);
-      result.#batches.push({ parts, chunks, size, maxDistance: options.maxDistance ?? size * 40 });
+      result.#batches.push({ parts, chunks, size, maxDistance: settings.maxDistance, lodScale: settings.lodScale });
     }
     result.stats.assets = result.#batches.length;
     result.stats.total = placements.length;
@@ -90,7 +90,7 @@ export class InstanceAssets {
     const counts: number[] = [];
     let visibleChunks = 0, chunks = 0;
     for (const batch of this.#batches) {
-      const distances = lodDistances(batch.size, batch.parts.length, viewportHeight, camera.fov, batch.maxDistance);
+      const distances = lodDistances(batch.size * batch.lodScale, batch.parts.length, viewportHeight, camera.fov, batch.maxDistance);
       const written = batch.parts.map(() => 0);
       for (const chunk of batch.chunks) {
         chunks++;

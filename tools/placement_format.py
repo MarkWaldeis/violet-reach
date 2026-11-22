@@ -28,6 +28,8 @@ def placement_problems(document):
                          and s["min_height_above_water"] <= s["max_height_above_water"]
                          and isinstance(scale, list) and len(scale) == 2 and all(number(v) for v in scale)
                          and 0 < scale[0] <= scale[1] and type(s.get("align_to_slope", False)) is bool)
+                valid = (valid and s.get("surface", "meadow") in ("meadow", "land", "shore")
+                         and number(s.get("path_clearance", 0.5)) and s.get("path_clearance", 0.5) >= 0)
             if valid:
                 rect, poly = s.get("rect"), s.get("polygon")
                 if (rect is None) == (poly is None):

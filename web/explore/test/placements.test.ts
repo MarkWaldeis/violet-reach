@@ -59,3 +59,15 @@ test("polygon clipping and rejection constraints are respected", () => {
   assert.throws(() => expandPlacements([entry], ground, water, () => false), /constraints exhausted/);
   for (const p of expandPlacements([entry], ground, water, (x) => x < 50)) assert.ok(p.x < 50);
 });
+
+test("surface rejection applies only to scatter and preserves deterministic counts, spacing and slope alignment", () => {
+  const accept = (_entry: ScatterPlacement, _ground: ReturnType<typeof ground>, x: number) => x > 60;
+  const a = expandPlacements([entry], ground, water, undefined, accept);
+  assert.equal(a.length, 100);
+  assert.ok(a.every((p) => p.x > 60));
+  assert.deepEqual(a, expandPlacements([entry], ground, water, undefined, accept));
+  assert.throws(() => expandPlacements([entry], ground, water, undefined, () => false), /constraints exhausted/);
+  assert.deepEqual(expandPlacements([], ground, water, undefined, accept), []);
+  const single = { asset: "crystal", x: 1, z: 2, yaw: 0, scale: 1 };
+  assert.equal(expandPlacements([single], ground, water, undefined, () => false).length, 1);
+});

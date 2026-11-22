@@ -4,6 +4,4858 @@
     {"asset": "crystal_violet_cluster_a", "x": 450, "z": 1320, "yaw": 2.1, "scale": 0.8},
     {"asset": "crystal_violet_cluster_a", "x": 500, "z": 1340, "yaw": 4.2, "scale": 1.15, "y_offset": -0.1},
     {"asset": "bridge_arch_a", "x": 480, "z": 1504, "yaw": 0.785398, "scale": 1, "y_offset": 0.75},
-    {"asset": "lake_shore_a", "x": 626.5187, "z": 1540.5455, "yaw": 0.705398, "scale": 1, "y_offset": 0.03238}
+    {"asset": "lake_shore_a", "x": 626.5187, "z": 1540.5455, "yaw": 0.705398, "scale": 1, "y_offset": 0.03238},
+    {
+      "asset": "tree_broadleaf_a",
+      "scatter": {
+        "seed": 4801,
+        "count": 1,
+        "polygon": [
+          [
+            453.8,
+            1162
+          ],
+          [
+            453.566,
+            1162.566
+          ],
+          [
+            453,
+            1162.8
+          ],
+          [
+            452.434,
+            1162.566
+          ],
+          [
+            452.2,
+            1162
+          ],
+          [
+            452.434,
+            1161.434
+          ],
+          [
+            453,
+            1161.2
+          ],
+          [
+            453.566,
+            1161.434
+          ]
+        ],
+        "min_spacing": 6,
+        "max_slope": 15,
+        "min_height_above_water": 8,
+        "max_height_above_water": 160,
+        "scale": [
+          0.87,
+          1.08
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 1.8
+      }
+    },
+    {
+      "asset": "tree_broadleaf_b",
+      "scatter": {
+        "seed": 4802,
+        "count": 1,
+        "polygon": [
+          [
+            463.8,
+            1166
+          ],
+          [
+            463.566,
+            1166.566
+          ],
+          [
+            463,
+            1166.8
+          ],
+          [
+            462.434,
+            1166.566
+          ],
+          [
+            462.2,
+            1166
+          ],
+          [
+            462.434,
+            1165.434
+          ],
+          [
+            463,
+            1165.2
+          ],
+          [
+            463.566,
+            1165.434
+          ]
+        ],
+        "min_spacing": 6,
+        "max_slope": 15,
+        "min_height_above_water": 8,
+        "max_height_above_water": 160,
+        "scale": [
+          0.87,
+          1.08
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 1.8
+      }
+    },
+    {
+      "asset": "tree_broadleaf_c",
+      "scatter": {
+        "seed": 4803,
+        "count": 1,
+        "polygon": [
+          [
+            461.8,
+            1154
+          ],
+          [
+            461.566,
+            1154.566
+          ],
+          [
+            461,
+            1154.8
+          ],
+          [
+            460.434,
+            1154.566
+          ],
+          [
+            460.2,
+            1154
+          ],
+          [
+            460.434,
+            1153.434
+          ],
+          [
+            461,
+            1153.2
+          ],
+          [
+            461.566,
+            1153.434
+          ]
+        ],
+        "min_spacing": 6,
+        "max_slope": 15,
+        "min_height_above_water": 8,
+        "max_height_above_water": 160,
+        "scale": [
+          0.87,
+          1.08
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 1.8
+      }
+    },
+    {
+      "asset": "tree_broadleaf_a",
+      "scatter": {
+        "seed": 4804,
+        "count": 1,
+        "polygon": [
+          [
+            571.8,
+            1242
+          ],
+          [
+            571.566,
+            1242.566
+          ],
+          [
+            571,
+            1242.8
+          ],
+          [
+            570.434,
+            1242.566
+          ],
+          [
+            570.2,
+            1242
+          ],
+          [
+            570.434,
+            1241.434
+          ],
+          [
+            571,
+            1241.2
+          ],
+          [
+            571.566,
+            1241.434
+          ]
+        ],
+        "min_spacing": 6,
+        "max_slope": 15,
+        "min_height_above_water": 8,
+        "max_height_above_water": 160,
+        "scale": [
+          0.87,
+          1.08
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 1.8
+      }
+    },
+    {
+      "asset": "tree_broadleaf_b",
+      "scatter": {
+        "seed": 4805,
+        "count": 1,
+        "polygon": [
+          [
+            583.8,
+            1246
+          ],
+          [
+            583.566,
+            1246.566
+          ],
+          [
+            583,
+            1246.8
+          ],
+          [
+            582.434,
+            1246.566
+          ],
+          [
+            582.2,
+            1246
+          ],
+          [
+            582.434,
+            1245.434
+          ],
+          [
+            583,
+            1245.2
+          ],
+          [
+            583.566,
+            1245.434
+          ]
+        ],
+        "min_spacing": 6,
+        "max_slope": 15,
+        "min_height_above_water": 8,
+        "max_height_above_water": 160,
+        "scale": [
+          0.87,
+          1.08
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 1.8
+      }
+    },
+    {
+      "asset": "tree_broadleaf_c",
+      "scatter": {
+        "seed": 4806,
+        "count": 1,
+        "polygon": [
+          [
+            581.8,
+            1234
+          ],
+          [
+            581.566,
+            1234.566
+          ],
+          [
+            581,
+            1234.8
+          ],
+          [
+            580.434,
+            1234.566
+          ],
+          [
+            580.2,
+            1234
+          ],
+          [
+            580.434,
+            1233.434
+          ],
+          [
+            581,
+            1233.2
+          ],
+          [
+            581.566,
+            1233.434
+          ]
+        ],
+        "min_spacing": 6,
+        "max_slope": 15,
+        "min_height_above_water": 8,
+        "max_height_above_water": 160,
+        "scale": [
+          0.87,
+          1.08
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 1.8
+      }
+    },
+    {
+      "asset": "tree_broadleaf_a",
+      "scatter": {
+        "seed": 4807,
+        "count": 1,
+        "polygon": [
+          [
+            593.8,
+            1162
+          ],
+          [
+            593.566,
+            1162.566
+          ],
+          [
+            593,
+            1162.8
+          ],
+          [
+            592.434,
+            1162.566
+          ],
+          [
+            592.2,
+            1162
+          ],
+          [
+            592.434,
+            1161.434
+          ],
+          [
+            593,
+            1161.2
+          ],
+          [
+            593.566,
+            1161.434
+          ]
+        ],
+        "min_spacing": 6,
+        "max_slope": 15,
+        "min_height_above_water": 8,
+        "max_height_above_water": 160,
+        "scale": [
+          0.87,
+          1.08
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 1.8
+      }
+    },
+    {
+      "asset": "tree_broadleaf_b",
+      "scatter": {
+        "seed": 4808,
+        "count": 1,
+        "polygon": [
+          [
+            603.8,
+            1166
+          ],
+          [
+            603.566,
+            1166.566
+          ],
+          [
+            603,
+            1166.8
+          ],
+          [
+            602.434,
+            1166.566
+          ],
+          [
+            602.2,
+            1166
+          ],
+          [
+            602.434,
+            1165.434
+          ],
+          [
+            603,
+            1165.2
+          ],
+          [
+            603.566,
+            1165.434
+          ]
+        ],
+        "min_spacing": 6,
+        "max_slope": 15,
+        "min_height_above_water": 8,
+        "max_height_above_water": 160,
+        "scale": [
+          0.87,
+          1.08
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 1.8
+      }
+    },
+    {
+      "asset": "tree_broadleaf_c",
+      "scatter": {
+        "seed": 4809,
+        "count": 1,
+        "polygon": [
+          [
+            601.8,
+            1154
+          ],
+          [
+            601.566,
+            1154.566
+          ],
+          [
+            601,
+            1154.8
+          ],
+          [
+            600.434,
+            1154.566
+          ],
+          [
+            600.2,
+            1154
+          ],
+          [
+            600.434,
+            1153.434
+          ],
+          [
+            601,
+            1153.2
+          ],
+          [
+            601.566,
+            1153.434
+          ]
+        ],
+        "min_spacing": 6,
+        "max_slope": 15,
+        "min_height_above_water": 8,
+        "max_height_above_water": 160,
+        "scale": [
+          0.87,
+          1.08
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 1.8
+      }
+    },
+    {
+      "asset": "tree_broadleaf_a",
+      "scatter": {
+        "seed": 4810,
+        "count": 1,
+        "polygon": [
+          [
+            691.8,
+            1282
+          ],
+          [
+            691.566,
+            1282.566
+          ],
+          [
+            691,
+            1282.8
+          ],
+          [
+            690.434,
+            1282.566
+          ],
+          [
+            690.2,
+            1282
+          ],
+          [
+            690.434,
+            1281.434
+          ],
+          [
+            691,
+            1281.2
+          ],
+          [
+            691.566,
+            1281.434
+          ]
+        ],
+        "min_spacing": 6,
+        "max_slope": 15,
+        "min_height_above_water": 8,
+        "max_height_above_water": 160,
+        "scale": [
+          0.87,
+          1.08
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 1.8
+      }
+    },
+    {
+      "asset": "tree_broadleaf_b",
+      "scatter": {
+        "seed": 4811,
+        "count": 1,
+        "polygon": [
+          [
+            703.8,
+            1282
+          ],
+          [
+            703.566,
+            1282.566
+          ],
+          [
+            703,
+            1282.8
+          ],
+          [
+            702.434,
+            1282.566
+          ],
+          [
+            702.2,
+            1282
+          ],
+          [
+            702.434,
+            1281.434
+          ],
+          [
+            703,
+            1281.2
+          ],
+          [
+            703.566,
+            1281.434
+          ]
+        ],
+        "min_spacing": 6,
+        "max_slope": 15,
+        "min_height_above_water": 8,
+        "max_height_above_water": 160,
+        "scale": [
+          0.87,
+          1.08
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 1.8
+      }
+    },
+    {
+      "asset": "tree_broadleaf_c",
+      "scatter": {
+        "seed": 4812,
+        "count": 1,
+        "polygon": [
+          [
+            701.8,
+            1274
+          ],
+          [
+            701.566,
+            1274.566
+          ],
+          [
+            701,
+            1274.8
+          ],
+          [
+            700.434,
+            1274.566
+          ],
+          [
+            700.2,
+            1274
+          ],
+          [
+            700.434,
+            1273.434
+          ],
+          [
+            701,
+            1273.2
+          ],
+          [
+            701.566,
+            1273.434
+          ]
+        ],
+        "min_spacing": 6,
+        "max_slope": 15,
+        "min_height_above_water": 8,
+        "max_height_above_water": 160,
+        "scale": [
+          0.87,
+          1.08
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 1.8
+      }
+    },
+    {
+      "asset": "tree_broadleaf_a",
+      "scatter": {
+        "seed": 4813,
+        "count": 1,
+        "polygon": [
+          [
+            773.8,
+            1260
+          ],
+          [
+            773.566,
+            1260.566
+          ],
+          [
+            773,
+            1260.8
+          ],
+          [
+            772.434,
+            1260.566
+          ],
+          [
+            772.2,
+            1260
+          ],
+          [
+            772.434,
+            1259.434
+          ],
+          [
+            773,
+            1259.2
+          ],
+          [
+            773.566,
+            1259.434
+          ]
+        ],
+        "min_spacing": 6,
+        "max_slope": 15,
+        "min_height_above_water": 8,
+        "max_height_above_water": 160,
+        "scale": [
+          0.87,
+          1.08
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 1.8
+      }
+    },
+    {
+      "asset": "tree_broadleaf_b",
+      "scatter": {
+        "seed": 4814,
+        "count": 1,
+        "polygon": [
+          [
+            781.8,
+            1260
+          ],
+          [
+            781.566,
+            1260.566
+          ],
+          [
+            781,
+            1260.8
+          ],
+          [
+            780.434,
+            1260.566
+          ],
+          [
+            780.2,
+            1260
+          ],
+          [
+            780.434,
+            1259.434
+          ],
+          [
+            781,
+            1259.2
+          ],
+          [
+            781.566,
+            1259.434
+          ]
+        ],
+        "min_spacing": 6,
+        "max_slope": 15,
+        "min_height_above_water": 8,
+        "max_height_above_water": 160,
+        "scale": [
+          0.87,
+          1.08
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 1.8
+      }
+    },
+    {
+      "asset": "tree_broadleaf_c",
+      "scatter": {
+        "seed": 4815,
+        "count": 1,
+        "polygon": [
+          [
+            787.8,
+            1256
+          ],
+          [
+            787.566,
+            1256.566
+          ],
+          [
+            787,
+            1256.8
+          ],
+          [
+            786.434,
+            1256.566
+          ],
+          [
+            786.2,
+            1256
+          ],
+          [
+            786.434,
+            1255.434
+          ],
+          [
+            787,
+            1255.2
+          ],
+          [
+            787.566,
+            1255.434
+          ]
+        ],
+        "min_spacing": 6,
+        "max_slope": 15,
+        "min_height_above_water": 8,
+        "max_height_above_water": 160,
+        "scale": [
+          0.87,
+          1.08
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 1.8
+      }
+    },
+    {
+      "asset": "tree_broadleaf_a",
+      "scatter": {
+        "seed": 4816,
+        "count": 1,
+        "polygon": [
+          [
+            833.8,
+            1182
+          ],
+          [
+            833.566,
+            1182.566
+          ],
+          [
+            833,
+            1182.8
+          ],
+          [
+            832.434,
+            1182.566
+          ],
+          [
+            832.2,
+            1182
+          ],
+          [
+            832.434,
+            1181.434
+          ],
+          [
+            833,
+            1181.2
+          ],
+          [
+            833.566,
+            1181.434
+          ]
+        ],
+        "min_spacing": 6,
+        "max_slope": 15,
+        "min_height_above_water": 8,
+        "max_height_above_water": 160,
+        "scale": [
+          0.87,
+          1.08
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 1.8
+      }
+    },
+    {
+      "asset": "tree_broadleaf_b",
+      "scatter": {
+        "seed": 4817,
+        "count": 1,
+        "polygon": [
+          [
+            843.8,
+            1186
+          ],
+          [
+            843.566,
+            1186.566
+          ],
+          [
+            843,
+            1186.8
+          ],
+          [
+            842.434,
+            1186.566
+          ],
+          [
+            842.2,
+            1186
+          ],
+          [
+            842.434,
+            1185.434
+          ],
+          [
+            843,
+            1185.2
+          ],
+          [
+            843.566,
+            1185.434
+          ]
+        ],
+        "min_spacing": 6,
+        "max_slope": 15,
+        "min_height_above_water": 8,
+        "max_height_above_water": 160,
+        "scale": [
+          0.87,
+          1.08
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 1.8
+      }
+    },
+    {
+      "asset": "tree_broadleaf_c",
+      "scatter": {
+        "seed": 4818,
+        "count": 1,
+        "polygon": [
+          [
+            841.8,
+            1174
+          ],
+          [
+            841.566,
+            1174.566
+          ],
+          [
+            841,
+            1174.8
+          ],
+          [
+            840.434,
+            1174.566
+          ],
+          [
+            840.2,
+            1174
+          ],
+          [
+            840.434,
+            1173.434
+          ],
+          [
+            841,
+            1173.2
+          ],
+          [
+            841.566,
+            1173.434
+          ]
+        ],
+        "min_spacing": 6,
+        "max_slope": 15,
+        "min_height_above_water": 8,
+        "max_height_above_water": 160,
+        "scale": [
+          0.87,
+          1.08
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 1.8
+      }
+    },
+    {
+      "asset": "tree_broadleaf_a",
+      "scatter": {
+        "seed": 4819,
+        "count": 1,
+        "polygon": [
+          [
+            713.8,
+            1164
+          ],
+          [
+            713.566,
+            1164.566
+          ],
+          [
+            713,
+            1164.8
+          ],
+          [
+            712.434,
+            1164.566
+          ],
+          [
+            712.2,
+            1164
+          ],
+          [
+            712.434,
+            1163.434
+          ],
+          [
+            713,
+            1163.2
+          ],
+          [
+            713.566,
+            1163.434
+          ]
+        ],
+        "min_spacing": 6,
+        "max_slope": 15,
+        "min_height_above_water": 8,
+        "max_height_above_water": 160,
+        "scale": [
+          0.87,
+          1.08
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 1.8
+      }
+    },
+    {
+      "asset": "tree_broadleaf_b",
+      "scatter": {
+        "seed": 4820,
+        "count": 1,
+        "polygon": [
+          [
+            723.8,
+            1166
+          ],
+          [
+            723.566,
+            1166.566
+          ],
+          [
+            723,
+            1166.8
+          ],
+          [
+            722.434,
+            1166.566
+          ],
+          [
+            722.2,
+            1166
+          ],
+          [
+            722.434,
+            1165.434
+          ],
+          [
+            723,
+            1165.2
+          ],
+          [
+            723.566,
+            1165.434
+          ]
+        ],
+        "min_spacing": 6,
+        "max_slope": 15,
+        "min_height_above_water": 8,
+        "max_height_above_water": 160,
+        "scale": [
+          0.87,
+          1.08
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 1.8
+      }
+    },
+    {
+      "asset": "tree_broadleaf_c",
+      "scatter": {
+        "seed": 4821,
+        "count": 1,
+        "polygon": [
+          [
+            721.8,
+            1150
+          ],
+          [
+            721.566,
+            1150.566
+          ],
+          [
+            721,
+            1150.8
+          ],
+          [
+            720.434,
+            1150.566
+          ],
+          [
+            720.2,
+            1150
+          ],
+          [
+            720.434,
+            1149.434
+          ],
+          [
+            721,
+            1149.2
+          ],
+          [
+            721.566,
+            1149.434
+          ]
+        ],
+        "min_spacing": 6,
+        "max_slope": 15,
+        "min_height_above_water": 8,
+        "max_height_above_water": 160,
+        "scale": [
+          0.87,
+          1.08
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 1.8
+      }
+    },
+    {
+      "asset": "tree_broadleaf_a",
+      "scatter": {
+        "seed": 4822,
+        "count": 1,
+        "polygon": [
+          [
+            499.8,
+            1238
+          ],
+          [
+            499.566,
+            1238.566
+          ],
+          [
+            499,
+            1238.8
+          ],
+          [
+            498.434,
+            1238.566
+          ],
+          [
+            498.2,
+            1238
+          ],
+          [
+            498.434,
+            1237.434
+          ],
+          [
+            499,
+            1237.2
+          ],
+          [
+            499.566,
+            1237.434
+          ]
+        ],
+        "min_spacing": 6,
+        "max_slope": 15,
+        "min_height_above_water": 8,
+        "max_height_above_water": 160,
+        "scale": [
+          0.87,
+          1.08
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 1.8
+      }
+    },
+    {
+      "asset": "tree_broadleaf_b",
+      "scatter": {
+        "seed": 4823,
+        "count": 1,
+        "polygon": [
+          [
+            501.8,
+            1246
+          ],
+          [
+            501.566,
+            1246.566
+          ],
+          [
+            501,
+            1246.8
+          ],
+          [
+            500.434,
+            1246.566
+          ],
+          [
+            500.2,
+            1246
+          ],
+          [
+            500.434,
+            1245.434
+          ],
+          [
+            501,
+            1245.2
+          ],
+          [
+            501.566,
+            1245.434
+          ]
+        ],
+        "min_spacing": 6,
+        "max_slope": 15,
+        "min_height_above_water": 8,
+        "max_height_above_water": 160,
+        "scale": [
+          0.87,
+          1.08
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 1.8
+      }
+    },
+    {
+      "asset": "tree_broadleaf_c",
+      "scatter": {
+        "seed": 4824,
+        "count": 1,
+        "polygon": [
+          [
+            499.8,
+            1232
+          ],
+          [
+            499.566,
+            1232.566
+          ],
+          [
+            499,
+            1232.8
+          ],
+          [
+            498.434,
+            1232.566
+          ],
+          [
+            498.2,
+            1232
+          ],
+          [
+            498.434,
+            1231.434
+          ],
+          [
+            499,
+            1231.2
+          ],
+          [
+            499.566,
+            1231.434
+          ]
+        ],
+        "min_spacing": 6,
+        "max_slope": 15,
+        "min_height_above_water": 8,
+        "max_height_above_water": 160,
+        "scale": [
+          0.87,
+          1.08
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 1.8
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4825,
+        "count": 8,
+        "polygon": [
+          [
+            454.045,
+            1155.472
+          ],
+          [
+            451.994,
+            1160.422
+          ],
+          [
+            447.045,
+            1162.472
+          ],
+          [
+            442.095,
+            1160.422
+          ],
+          [
+            440.045,
+            1155.472
+          ],
+          [
+            442.095,
+            1150.523
+          ],
+          [
+            447.045,
+            1148.472
+          ],
+          [
+            451.994,
+            1150.523
+          ]
+        ],
+        "min_spacing": 1.8,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4826,
+        "count": 8,
+        "polygon": [
+          [
+            478.045,
+            1165.472
+          ],
+          [
+            475.994,
+            1170.422
+          ],
+          [
+            471.045,
+            1172.472
+          ],
+          [
+            466.095,
+            1170.422
+          ],
+          [
+            464.045,
+            1165.472
+          ],
+          [
+            466.095,
+            1160.523
+          ],
+          [
+            471.045,
+            1158.472
+          ],
+          [
+            475.994,
+            1160.523
+          ]
+        ],
+        "min_spacing": 1.8,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "fern_cluster_a",
+      "scatter": {
+        "seed": 4827,
+        "count": 5,
+        "polygon": [
+          [
+            455.444,
+            1161.54
+          ],
+          [
+            454.624,
+            1163.52
+          ],
+          [
+            452.644,
+            1164.34
+          ],
+          [
+            450.664,
+            1163.52
+          ],
+          [
+            449.844,
+            1161.54
+          ],
+          [
+            450.664,
+            1159.56
+          ],
+          [
+            452.644,
+            1158.74
+          ],
+          [
+            454.624,
+            1159.56
+          ]
+        ],
+        "min_spacing": 0.75,
+        "max_slope": 25,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.7,
+          1.1
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "fern_cluster_a",
+      "scatter": {
+        "seed": 4828,
+        "count": 5,
+        "polygon": [
+          [
+            466.356,
+            1166.061
+          ],
+          [
+            465.536,
+            1168.041
+          ],
+          [
+            463.556,
+            1168.861
+          ],
+          [
+            461.576,
+            1168.041
+          ],
+          [
+            460.756,
+            1166.061
+          ],
+          [
+            461.576,
+            1164.081
+          ],
+          [
+            463.556,
+            1163.261
+          ],
+          [
+            465.536,
+            1164.081
+          ]
+        ],
+        "min_spacing": 0.75,
+        "max_slope": 25,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.7,
+          1.1
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "fern_cluster_a",
+      "scatter": {
+        "seed": 4829,
+        "count": 5,
+        "polygon": [
+          [
+            463.734,
+            1153.817
+          ],
+          [
+            462.914,
+            1155.797
+          ],
+          [
+            460.934,
+            1156.617
+          ],
+          [
+            458.954,
+            1155.797
+          ],
+          [
+            458.134,
+            1153.817
+          ],
+          [
+            458.954,
+            1151.837
+          ],
+          [
+            460.934,
+            1151.017
+          ],
+          [
+            462.914,
+            1151.837
+          ]
+        ],
+        "min_spacing": 0.75,
+        "max_slope": 25,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.7,
+          1.1
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4830,
+        "count": 8,
+        "polygon": [
+          [
+            573.498,
+            1235.895
+          ],
+          [
+            571.448,
+            1240.844
+          ],
+          [
+            566.498,
+            1242.895
+          ],
+          [
+            561.548,
+            1240.844
+          ],
+          [
+            559.498,
+            1235.895
+          ],
+          [
+            561.548,
+            1230.945
+          ],
+          [
+            566.498,
+            1228.895
+          ],
+          [
+            571.448,
+            1230.945
+          ]
+        ],
+        "min_spacing": 1.8,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4831,
+        "count": 8,
+        "polygon": [
+          [
+            597.498,
+            1245.895
+          ],
+          [
+            595.448,
+            1250.844
+          ],
+          [
+            590.498,
+            1252.895
+          ],
+          [
+            585.548,
+            1250.844
+          ],
+          [
+            583.498,
+            1245.895
+          ],
+          [
+            585.548,
+            1240.945
+          ],
+          [
+            590.498,
+            1238.895
+          ],
+          [
+            595.448,
+            1240.945
+          ]
+        ],
+        "min_spacing": 1.8,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "fern_cluster_a",
+      "scatter": {
+        "seed": 4832,
+        "count": 5,
+        "polygon": [
+          [
+            574.32,
+            1242.54
+          ],
+          [
+            573.5,
+            1244.52
+          ],
+          [
+            571.52,
+            1245.34
+          ],
+          [
+            569.54,
+            1244.52
+          ],
+          [
+            568.72,
+            1242.54
+          ],
+          [
+            569.54,
+            1240.56
+          ],
+          [
+            571.52,
+            1239.74
+          ],
+          [
+            573.5,
+            1240.56
+          ]
+        ],
+        "min_spacing": 0.75,
+        "max_slope": 25,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.7,
+          1.1
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "fern_cluster_a",
+      "scatter": {
+        "seed": 4833,
+        "count": 5,
+        "polygon": [
+          [
+            586.061,
+            1246.645
+          ],
+          [
+            585.24,
+            1248.625
+          ],
+          [
+            583.261,
+            1249.445
+          ],
+          [
+            581.281,
+            1248.625
+          ],
+          [
+            580.461,
+            1246.645
+          ],
+          [
+            581.281,
+            1244.665
+          ],
+          [
+            583.261,
+            1243.845
+          ],
+          [
+            585.24,
+            1244.665
+          ]
+        ],
+        "min_spacing": 0.75,
+        "max_slope": 25,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.7,
+          1.1
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "fern_cluster_a",
+      "scatter": {
+        "seed": 4834,
+        "count": 5,
+        "polygon": [
+          [
+            583.514,
+            1233.499
+          ],
+          [
+            582.694,
+            1235.479
+          ],
+          [
+            580.714,
+            1236.299
+          ],
+          [
+            578.734,
+            1235.479
+          ],
+          [
+            577.914,
+            1233.499
+          ],
+          [
+            578.734,
+            1231.519
+          ],
+          [
+            580.714,
+            1230.699
+          ],
+          [
+            582.694,
+            1231.519
+          ]
+        ],
+        "min_spacing": 0.75,
+        "max_slope": 25,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.7,
+          1.1
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4835,
+        "count": 8,
+        "polygon": [
+          [
+            593.833,
+            1155.603
+          ],
+          [
+            591.783,
+            1160.552
+          ],
+          [
+            586.833,
+            1162.603
+          ],
+          [
+            581.883,
+            1160.552
+          ],
+          [
+            579.833,
+            1155.603
+          ],
+          [
+            581.883,
+            1150.653
+          ],
+          [
+            586.833,
+            1148.603
+          ],
+          [
+            591.783,
+            1150.653
+          ]
+        ],
+        "min_spacing": 1.8,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4836,
+        "count": 8,
+        "polygon": [
+          [
+            617.833,
+            1165.603
+          ],
+          [
+            615.783,
+            1170.552
+          ],
+          [
+            610.833,
+            1172.603
+          ],
+          [
+            605.883,
+            1170.552
+          ],
+          [
+            603.833,
+            1165.603
+          ],
+          [
+            605.883,
+            1160.653
+          ],
+          [
+            610.833,
+            1158.603
+          ],
+          [
+            615.783,
+            1160.653
+          ]
+        ],
+        "min_spacing": 1.8,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "fern_cluster_a",
+      "scatter": {
+        "seed": 4837,
+        "count": 5,
+        "polygon": [
+          [
+            595.815,
+            1162.033
+          ],
+          [
+            594.995,
+            1164.013
+          ],
+          [
+            593.015,
+            1164.833
+          ],
+          [
+            591.036,
+            1164.013
+          ],
+          [
+            590.215,
+            1162.033
+          ],
+          [
+            591.036,
+            1160.053
+          ],
+          [
+            593.015,
+            1159.233
+          ],
+          [
+            594.995,
+            1160.053
+          ]
+        ],
+        "min_spacing": 0.75,
+        "max_slope": 25,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.7,
+          1.1
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "fern_cluster_a",
+      "scatter": {
+        "seed": 4838,
+        "count": 5,
+        "polygon": [
+          [
+            605.703,
+            1166.154
+          ],
+          [
+            604.883,
+            1168.134
+          ],
+          [
+            602.903,
+            1168.954
+          ],
+          [
+            600.923,
+            1168.134
+          ],
+          [
+            600.103,
+            1166.154
+          ],
+          [
+            600.923,
+            1164.174
+          ],
+          [
+            602.903,
+            1163.354
+          ],
+          [
+            604.883,
+            1164.174
+          ]
+        ],
+        "min_spacing": 0.75,
+        "max_slope": 25,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.7,
+          1.1
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "fern_cluster_a",
+      "scatter": {
+        "seed": 4839,
+        "count": 5,
+        "polygon": [
+          [
+            603.381,
+            1153.621
+          ],
+          [
+            602.561,
+            1155.601
+          ],
+          [
+            600.581,
+            1156.421
+          ],
+          [
+            598.601,
+            1155.601
+          ],
+          [
+            597.781,
+            1153.621
+          ],
+          [
+            598.601,
+            1151.641
+          ],
+          [
+            600.581,
+            1150.821
+          ],
+          [
+            602.561,
+            1151.641
+          ]
+        ],
+        "min_spacing": 0.75,
+        "max_slope": 25,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.7,
+          1.1
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4840,
+        "count": 8,
+        "polygon": [
+          [
+            693.507,
+            1274.359
+          ],
+          [
+            691.456,
+            1279.309
+          ],
+          [
+            686.507,
+            1281.359
+          ],
+          [
+            681.557,
+            1279.309
+          ],
+          [
+            679.507,
+            1274.359
+          ],
+          [
+            681.557,
+            1269.409
+          ],
+          [
+            686.507,
+            1267.359
+          ],
+          [
+            691.456,
+            1269.409
+          ]
+        ],
+        "min_spacing": 1.8,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4841,
+        "count": 8,
+        "polygon": [
+          [
+            715.507,
+            1282.359
+          ],
+          [
+            713.456,
+            1287.309
+          ],
+          [
+            708.507,
+            1289.359
+          ],
+          [
+            703.557,
+            1287.309
+          ],
+          [
+            701.507,
+            1282.359
+          ],
+          [
+            703.557,
+            1277.409
+          ],
+          [
+            708.507,
+            1275.359
+          ],
+          [
+            713.456,
+            1277.409
+          ]
+        ],
+        "min_spacing": 1.8,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "fern_cluster_a",
+      "scatter": {
+        "seed": 4842,
+        "count": 5,
+        "polygon": [
+          [
+            693.661,
+            1282.529
+          ],
+          [
+            692.841,
+            1284.509
+          ],
+          [
+            690.861,
+            1285.329
+          ],
+          [
+            688.881,
+            1284.509
+          ],
+          [
+            688.061,
+            1282.529
+          ],
+          [
+            688.881,
+            1280.549
+          ],
+          [
+            690.861,
+            1279.729
+          ],
+          [
+            692.841,
+            1280.549
+          ]
+        ],
+        "min_spacing": 0.75,
+        "max_slope": 25,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.7,
+          1.1
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "fern_cluster_a",
+      "scatter": {
+        "seed": 4843,
+        "count": 5,
+        "polygon": [
+          [
+            706.075,
+            1281.901
+          ],
+          [
+            705.255,
+            1283.881
+          ],
+          [
+            703.275,
+            1284.701
+          ],
+          [
+            701.295,
+            1283.881
+          ],
+          [
+            700.475,
+            1281.901
+          ],
+          [
+            701.295,
+            1279.921
+          ],
+          [
+            703.275,
+            1279.101
+          ],
+          [
+            705.255,
+            1279.921
+          ]
+        ],
+        "min_spacing": 0.75,
+        "max_slope": 25,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.7,
+          1.1
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "fern_cluster_a",
+      "scatter": {
+        "seed": 4844,
+        "count": 5,
+        "polygon": [
+          [
+            704.185,
+            1273.647
+          ],
+          [
+            703.365,
+            1275.626
+          ],
+          [
+            701.385,
+            1276.447
+          ],
+          [
+            699.405,
+            1275.626
+          ],
+          [
+            698.585,
+            1273.647
+          ],
+          [
+            699.405,
+            1271.667
+          ],
+          [
+            701.385,
+            1270.847
+          ],
+          [
+            703.365,
+            1271.667
+          ]
+        ],
+        "min_spacing": 0.75,
+        "max_slope": 25,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.7,
+          1.1
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4845,
+        "count": 8,
+        "polygon": [
+          [
+            775.488,
+            1253.469
+          ],
+          [
+            773.438,
+            1258.419
+          ],
+          [
+            768.488,
+            1260.469
+          ],
+          [
+            763.538,
+            1258.419
+          ],
+          [
+            761.488,
+            1253.469
+          ],
+          [
+            763.538,
+            1248.52
+          ],
+          [
+            768.488,
+            1246.469
+          ],
+          [
+            773.438,
+            1248.52
+          ]
+        ],
+        "min_spacing": 1.8,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4846,
+        "count": 8,
+        "polygon": [
+          [
+            799.488,
+            1259.469
+          ],
+          [
+            797.438,
+            1264.419
+          ],
+          [
+            792.488,
+            1266.469
+          ],
+          [
+            787.538,
+            1264.419
+          ],
+          [
+            785.488,
+            1259.469
+          ],
+          [
+            787.538,
+            1254.52
+          ],
+          [
+            792.488,
+            1252.469
+          ],
+          [
+            797.438,
+            1254.52
+          ]
+        ],
+        "min_spacing": 1.8,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "fern_cluster_a",
+      "scatter": {
+        "seed": 4847,
+        "count": 5,
+        "polygon": [
+          [
+            776.121,
+            1259.951
+          ],
+          [
+            775.301,
+            1261.931
+          ],
+          [
+            773.321,
+            1262.751
+          ],
+          [
+            771.341,
+            1261.931
+          ],
+          [
+            770.521,
+            1259.951
+          ],
+          [
+            771.341,
+            1257.971
+          ],
+          [
+            773.321,
+            1257.151
+          ],
+          [
+            775.301,
+            1257.971
+          ]
+        ],
+        "min_spacing": 0.75,
+        "max_slope": 25,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.7,
+          1.1
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "fern_cluster_a",
+      "scatter": {
+        "seed": 4848,
+        "count": 5,
+        "polygon": [
+          [
+            783.927,
+            1259.436
+          ],
+          [
+            783.107,
+            1261.416
+          ],
+          [
+            781.127,
+            1262.236
+          ],
+          [
+            779.148,
+            1261.416
+          ],
+          [
+            778.327,
+            1259.436
+          ],
+          [
+            779.148,
+            1257.456
+          ],
+          [
+            781.127,
+            1256.636
+          ],
+          [
+            783.107,
+            1257.456
+          ]
+        ],
+        "min_spacing": 0.75,
+        "max_slope": 25,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.7,
+          1.1
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "fern_cluster_a",
+      "scatter": {
+        "seed": 4849,
+        "count": 5,
+        "polygon": [
+          [
+            789.815,
+            1256.021
+          ],
+          [
+            788.995,
+            1258.001
+          ],
+          [
+            787.015,
+            1258.821
+          ],
+          [
+            785.035,
+            1258.001
+          ],
+          [
+            784.215,
+            1256.021
+          ],
+          [
+            785.035,
+            1254.041
+          ],
+          [
+            787.015,
+            1253.221
+          ],
+          [
+            788.995,
+            1254.041
+          ]
+        ],
+        "min_spacing": 0.75,
+        "max_slope": 25,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.7,
+          1.1
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4850,
+        "count": 8,
+        "polygon": [
+          [
+            834.251,
+            1175.553
+          ],
+          [
+            832.2,
+            1180.502
+          ],
+          [
+            827.251,
+            1182.553
+          ],
+          [
+            822.301,
+            1180.502
+          ],
+          [
+            820.251,
+            1175.553
+          ],
+          [
+            822.301,
+            1170.603
+          ],
+          [
+            827.251,
+            1168.553
+          ],
+          [
+            832.2,
+            1170.603
+          ]
+        ],
+        "min_spacing": 1.8,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4851,
+        "count": 8,
+        "polygon": [
+          [
+            858.251,
+            1185.553
+          ],
+          [
+            856.2,
+            1190.502
+          ],
+          [
+            851.251,
+            1192.553
+          ],
+          [
+            846.301,
+            1190.502
+          ],
+          [
+            844.251,
+            1185.553
+          ],
+          [
+            846.301,
+            1180.603
+          ],
+          [
+            851.251,
+            1178.553
+          ],
+          [
+            856.2,
+            1180.603
+          ]
+        ],
+        "min_spacing": 1.8,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "fern_cluster_a",
+      "scatter": {
+        "seed": 4852,
+        "count": 5,
+        "polygon": [
+          [
+            836.021,
+            1181.601
+          ],
+          [
+            835.201,
+            1183.581
+          ],
+          [
+            833.221,
+            1184.401
+          ],
+          [
+            831.241,
+            1183.581
+          ],
+          [
+            830.421,
+            1181.601
+          ],
+          [
+            831.241,
+            1179.621
+          ],
+          [
+            833.221,
+            1178.801
+          ],
+          [
+            835.201,
+            1179.621
+          ]
+        ],
+        "min_spacing": 0.75,
+        "max_slope": 25,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.7,
+          1.1
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "fern_cluster_a",
+      "scatter": {
+        "seed": 4853,
+        "count": 5,
+        "polygon": [
+          [
+            845.803,
+            1186.562
+          ],
+          [
+            844.983,
+            1188.542
+          ],
+          [
+            843.003,
+            1189.362
+          ],
+          [
+            841.023,
+            1188.542
+          ],
+          [
+            840.203,
+            1186.562
+          ],
+          [
+            841.023,
+            1184.582
+          ],
+          [
+            843.003,
+            1183.762
+          ],
+          [
+            844.983,
+            1184.582
+          ]
+        ],
+        "min_spacing": 0.75,
+        "max_slope": 25,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.7,
+          1.1
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "fern_cluster_a",
+      "scatter": {
+        "seed": 4854,
+        "count": 5,
+        "polygon": [
+          [
+            844.327,
+            1173.495
+          ],
+          [
+            843.507,
+            1175.475
+          ],
+          [
+            841.527,
+            1176.295
+          ],
+          [
+            839.547,
+            1175.475
+          ],
+          [
+            838.727,
+            1173.495
+          ],
+          [
+            839.547,
+            1171.515
+          ],
+          [
+            841.527,
+            1170.695
+          ],
+          [
+            843.507,
+            1171.515
+          ]
+        ],
+        "min_spacing": 0.75,
+        "max_slope": 25,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.7,
+          1.1
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4855,
+        "count": 8,
+        "polygon": [
+          [
+            714.019,
+            1155.045
+          ],
+          [
+            711.968,
+            1159.995
+          ],
+          [
+            707.019,
+            1162.045
+          ],
+          [
+            702.069,
+            1159.995
+          ],
+          [
+            700.019,
+            1155.045
+          ],
+          [
+            702.069,
+            1150.095
+          ],
+          [
+            707.019,
+            1148.045
+          ],
+          [
+            711.968,
+            1150.095
+          ]
+        ],
+        "min_spacing": 1.8,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4856,
+        "count": 8,
+        "polygon": [
+          [
+            736.019,
+            1165.045
+          ],
+          [
+            733.968,
+            1169.995
+          ],
+          [
+            729.019,
+            1172.045
+          ],
+          [
+            724.069,
+            1169.995
+          ],
+          [
+            722.019,
+            1165.045
+          ],
+          [
+            724.069,
+            1160.095
+          ],
+          [
+            729.019,
+            1158.045
+          ],
+          [
+            733.968,
+            1160.095
+          ]
+        ],
+        "min_spacing": 1.8,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "fern_cluster_a",
+      "scatter": {
+        "seed": 4857,
+        "count": 5,
+        "polygon": [
+          [
+            715.832,
+            1163.847
+          ],
+          [
+            715.012,
+            1165.826
+          ],
+          [
+            713.032,
+            1166.647
+          ],
+          [
+            711.052,
+            1165.826
+          ],
+          [
+            710.232,
+            1163.847
+          ],
+          [
+            711.052,
+            1161.867
+          ],
+          [
+            713.032,
+            1161.047
+          ],
+          [
+            715.012,
+            1161.867
+          ]
+        ],
+        "min_spacing": 0.75,
+        "max_slope": 25,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.7,
+          1.1
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "fern_cluster_a",
+      "scatter": {
+        "seed": 4858,
+        "count": 5,
+        "polygon": [
+          [
+            725.403,
+            1166.553
+          ],
+          [
+            724.583,
+            1168.532
+          ],
+          [
+            722.603,
+            1169.353
+          ],
+          [
+            720.623,
+            1168.532
+          ],
+          [
+            719.803,
+            1166.553
+          ],
+          [
+            720.623,
+            1164.573
+          ],
+          [
+            722.603,
+            1163.753
+          ],
+          [
+            724.583,
+            1164.573
+          ]
+        ],
+        "min_spacing": 0.75,
+        "max_slope": 25,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.7,
+          1.1
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "fern_cluster_a",
+      "scatter": {
+        "seed": 4859,
+        "count": 5,
+        "polygon": [
+          [
+            724.221,
+            1149.735
+          ],
+          [
+            723.401,
+            1151.715
+          ],
+          [
+            721.421,
+            1152.535
+          ],
+          [
+            719.442,
+            1151.715
+          ],
+          [
+            718.621,
+            1149.735
+          ],
+          [
+            719.442,
+            1147.755
+          ],
+          [
+            721.421,
+            1146.935
+          ],
+          [
+            723.401,
+            1147.755
+          ]
+        ],
+        "min_spacing": 0.75,
+        "max_slope": 25,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.7,
+          1.1
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4860,
+        "count": 8,
+        "polygon": [
+          [
+            502.602,
+            1231.817
+          ],
+          [
+            500.551,
+            1236.767
+          ],
+          [
+            495.602,
+            1238.817
+          ],
+          [
+            490.652,
+            1236.767
+          ],
+          [
+            488.602,
+            1231.817
+          ],
+          [
+            490.652,
+            1226.867
+          ],
+          [
+            495.602,
+            1224.817
+          ],
+          [
+            500.551,
+            1226.867
+          ]
+        ],
+        "min_spacing": 1.8,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4861,
+        "count": 8,
+        "polygon": [
+          [
+            518.602,
+            1243.817
+          ],
+          [
+            516.551,
+            1248.767
+          ],
+          [
+            511.602,
+            1250.817
+          ],
+          [
+            506.652,
+            1248.767
+          ],
+          [
+            504.602,
+            1243.817
+          ],
+          [
+            506.652,
+            1238.867
+          ],
+          [
+            511.602,
+            1236.817
+          ],
+          [
+            516.551,
+            1238.867
+          ]
+        ],
+        "min_spacing": 1.8,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "fern_cluster_a",
+      "scatter": {
+        "seed": 4862,
+        "count": 5,
+        "polygon": [
+          [
+            502.115,
+            1238.615
+          ],
+          [
+            501.295,
+            1240.595
+          ],
+          [
+            499.315,
+            1241.415
+          ],
+          [
+            497.335,
+            1240.595
+          ],
+          [
+            496.515,
+            1238.615
+          ],
+          [
+            497.335,
+            1236.635
+          ],
+          [
+            499.315,
+            1235.815
+          ],
+          [
+            501.295,
+            1236.635
+          ]
+        ],
+        "min_spacing": 0.75,
+        "max_slope": 25,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.7,
+          1.1
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "fern_cluster_a",
+      "scatter": {
+        "seed": 4863,
+        "count": 5,
+        "polygon": [
+          [
+            503.373,
+            1245.602
+          ],
+          [
+            502.553,
+            1247.582
+          ],
+          [
+            500.573,
+            1248.402
+          ],
+          [
+            498.594,
+            1247.582
+          ],
+          [
+            497.773,
+            1245.602
+          ],
+          [
+            498.594,
+            1243.622
+          ],
+          [
+            500.573,
+            1242.802
+          ],
+          [
+            502.553,
+            1243.622
+          ]
+        ],
+        "min_spacing": 0.75,
+        "max_slope": 25,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.7,
+          1.1
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "fern_cluster_a",
+      "scatter": {
+        "seed": 4864,
+        "count": 5,
+        "polygon": [
+          [
+            501.716,
+            1232.234
+          ],
+          [
+            500.896,
+            1234.214
+          ],
+          [
+            498.916,
+            1235.034
+          ],
+          [
+            496.936,
+            1234.214
+          ],
+          [
+            496.116,
+            1232.234
+          ],
+          [
+            496.936,
+            1230.254
+          ],
+          [
+            498.916,
+            1229.434
+          ],
+          [
+            500.896,
+            1230.254
+          ]
+        ],
+        "min_spacing": 0.75,
+        "max_slope": 25,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.7,
+          1.1
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4865,
+        "count": 8,
+        "polygon": [
+          [
+            286.5,
+            1600
+          ],
+          [
+            284.596,
+            1604.596
+          ],
+          [
+            280,
+            1606.5
+          ],
+          [
+            275.404,
+            1604.596
+          ],
+          [
+            273.5,
+            1600
+          ],
+          [
+            275.404,
+            1595.404
+          ],
+          [
+            280,
+            1593.5
+          ],
+          [
+            284.596,
+            1595.404
+          ]
+        ],
+        "min_spacing": 1.7,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4866,
+        "count": 8,
+        "polygon": [
+          [
+            566.5,
+            1490
+          ],
+          [
+            564.596,
+            1494.596
+          ],
+          [
+            560,
+            1496.5
+          ],
+          [
+            555.404,
+            1494.596
+          ],
+          [
+            553.5,
+            1490
+          ],
+          [
+            555.404,
+            1485.404
+          ],
+          [
+            560,
+            1483.5
+          ],
+          [
+            564.596,
+            1485.404
+          ]
+        ],
+        "min_spacing": 1.7,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4867,
+        "count": 8,
+        "polygon": [
+          [
+            346.5,
+            1380
+          ],
+          [
+            344.596,
+            1384.596
+          ],
+          [
+            340,
+            1386.5
+          ],
+          [
+            335.404,
+            1384.596
+          ],
+          [
+            333.5,
+            1380
+          ],
+          [
+            335.404,
+            1375.404
+          ],
+          [
+            340,
+            1373.5
+          ],
+          [
+            344.596,
+            1375.404
+          ]
+        ],
+        "min_spacing": 1.7,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4868,
+        "count": 8,
+        "polygon": [
+          [
+            686.5,
+            1420
+          ],
+          [
+            684.596,
+            1424.596
+          ],
+          [
+            680,
+            1426.5
+          ],
+          [
+            675.404,
+            1424.596
+          ],
+          [
+            673.5,
+            1420
+          ],
+          [
+            675.404,
+            1415.404
+          ],
+          [
+            680,
+            1413.5
+          ],
+          [
+            684.596,
+            1415.404
+          ]
+        ],
+        "min_spacing": 1.7,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4869,
+        "count": 8,
+        "polygon": [
+          [
+            486.5,
+            1380
+          ],
+          [
+            484.596,
+            1384.596
+          ],
+          [
+            480,
+            1386.5
+          ],
+          [
+            475.404,
+            1384.596
+          ],
+          [
+            473.5,
+            1380
+          ],
+          [
+            475.404,
+            1375.404
+          ],
+          [
+            480,
+            1373.5
+          ],
+          [
+            484.596,
+            1375.404
+          ]
+        ],
+        "min_spacing": 1.7,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4870,
+        "count": 8,
+        "polygon": [
+          [
+            416.5,
+            1490
+          ],
+          [
+            414.596,
+            1494.596
+          ],
+          [
+            410,
+            1496.5
+          ],
+          [
+            405.404,
+            1494.596
+          ],
+          [
+            403.5,
+            1490
+          ],
+          [
+            405.404,
+            1485.404
+          ],
+          [
+            410,
+            1483.5
+          ],
+          [
+            414.596,
+            1485.404
+          ]
+        ],
+        "min_spacing": 1.7,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4871,
+        "count": 8,
+        "polygon": [
+          [
+            876.5,
+            1360
+          ],
+          [
+            874.596,
+            1364.596
+          ],
+          [
+            870,
+            1366.5
+          ],
+          [
+            865.404,
+            1364.596
+          ],
+          [
+            863.5,
+            1360
+          ],
+          [
+            865.404,
+            1355.404
+          ],
+          [
+            870,
+            1353.5
+          ],
+          [
+            874.596,
+            1355.404
+          ]
+        ],
+        "min_spacing": 1.7,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4872,
+        "count": 8,
+        "polygon": [
+          [
+            776.5,
+            1370
+          ],
+          [
+            774.596,
+            1374.596
+          ],
+          [
+            770,
+            1376.5
+          ],
+          [
+            765.404,
+            1374.596
+          ],
+          [
+            763.5,
+            1370
+          ],
+          [
+            765.404,
+            1365.404
+          ],
+          [
+            770,
+            1363.5
+          ],
+          [
+            774.596,
+            1365.404
+          ]
+        ],
+        "min_spacing": 1.7,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4873,
+        "count": 8,
+        "polygon": [
+          [
+            586.5,
+            1390
+          ],
+          [
+            584.596,
+            1394.596
+          ],
+          [
+            580,
+            1396.5
+          ],
+          [
+            575.404,
+            1394.596
+          ],
+          [
+            573.5,
+            1390
+          ],
+          [
+            575.404,
+            1385.404
+          ],
+          [
+            580,
+            1383.5
+          ],
+          [
+            584.596,
+            1385.404
+          ]
+        ],
+        "min_spacing": 1.7,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4874,
+        "count": 8,
+        "polygon": [
+          [
+            416.5,
+            1320
+          ],
+          [
+            414.596,
+            1324.596
+          ],
+          [
+            410,
+            1326.5
+          ],
+          [
+            405.404,
+            1324.596
+          ],
+          [
+            403.5,
+            1320
+          ],
+          [
+            405.404,
+            1315.404
+          ],
+          [
+            410,
+            1313.5
+          ],
+          [
+            414.596,
+            1315.404
+          ]
+        ],
+        "min_spacing": 1.7,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4875,
+        "count": 8,
+        "polygon": [
+          [
+            646.5,
+            1340
+          ],
+          [
+            644.596,
+            1344.596
+          ],
+          [
+            640,
+            1346.5
+          ],
+          [
+            635.404,
+            1344.596
+          ],
+          [
+            633.5,
+            1340
+          ],
+          [
+            635.404,
+            1335.404
+          ],
+          [
+            640,
+            1333.5
+          ],
+          [
+            644.596,
+            1335.404
+          ]
+        ],
+        "min_spacing": 1.7,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4876,
+        "count": 8,
+        "polygon": [
+          [
+            416.5,
+            1410
+          ],
+          [
+            414.596,
+            1414.596
+          ],
+          [
+            410,
+            1416.5
+          ],
+          [
+            405.404,
+            1414.596
+          ],
+          [
+            403.5,
+            1410
+          ],
+          [
+            405.404,
+            1405.404
+          ],
+          [
+            410,
+            1403.5
+          ],
+          [
+            414.596,
+            1405.404
+          ]
+        ],
+        "min_spacing": 1.7,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4877,
+        "count": 8,
+        "polygon": [
+          [
+            636.5,
+            1480
+          ],
+          [
+            634.596,
+            1484.596
+          ],
+          [
+            630,
+            1486.5
+          ],
+          [
+            625.404,
+            1484.596
+          ],
+          [
+            623.5,
+            1480
+          ],
+          [
+            625.404,
+            1475.404
+          ],
+          [
+            630,
+            1473.5
+          ],
+          [
+            634.596,
+            1475.404
+          ]
+        ],
+        "min_spacing": 1.7,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4878,
+        "count": 8,
+        "polygon": [
+          [
+            716.5,
+            1350
+          ],
+          [
+            714.596,
+            1354.596
+          ],
+          [
+            710,
+            1356.5
+          ],
+          [
+            705.404,
+            1354.596
+          ],
+          [
+            703.5,
+            1350
+          ],
+          [
+            705.404,
+            1345.404
+          ],
+          [
+            710,
+            1343.5
+          ],
+          [
+            714.596,
+            1345.404
+          ]
+        ],
+        "min_spacing": 1.7,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4879,
+        "count": 8,
+        "polygon": [
+          [
+            826.5,
+            1320
+          ],
+          [
+            824.596,
+            1324.596
+          ],
+          [
+            820,
+            1326.5
+          ],
+          [
+            815.404,
+            1324.596
+          ],
+          [
+            813.5,
+            1320
+          ],
+          [
+            815.404,
+            1315.404
+          ],
+          [
+            820,
+            1313.5
+          ],
+          [
+            824.596,
+            1315.404
+          ]
+        ],
+        "min_spacing": 1.7,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4880,
+        "count": 8,
+        "polygon": [
+          [
+            526.5,
+            1430
+          ],
+          [
+            524.596,
+            1434.596
+          ],
+          [
+            520,
+            1436.5
+          ],
+          [
+            515.404,
+            1434.596
+          ],
+          [
+            513.5,
+            1430
+          ],
+          [
+            515.404,
+            1425.404
+          ],
+          [
+            520,
+            1423.5
+          ],
+          [
+            524.596,
+            1425.404
+          ]
+        ],
+        "min_spacing": 1.7,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4881,
+        "count": 8,
+        "polygon": [
+          [
+            356.5,
+            1320
+          ],
+          [
+            354.596,
+            1324.596
+          ],
+          [
+            350,
+            1326.5
+          ],
+          [
+            345.404,
+            1324.596
+          ],
+          [
+            343.5,
+            1320
+          ],
+          [
+            345.404,
+            1315.404
+          ],
+          [
+            350,
+            1313.5
+          ],
+          [
+            354.596,
+            1315.404
+          ]
+        ],
+        "min_spacing": 1.7,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4882,
+        "count": 8,
+        "polygon": [
+          [
+            596.5,
+            1440
+          ],
+          [
+            594.596,
+            1444.596
+          ],
+          [
+            590,
+            1446.5
+          ],
+          [
+            585.404,
+            1444.596
+          ],
+          [
+            583.5,
+            1440
+          ],
+          [
+            585.404,
+            1435.404
+          ],
+          [
+            590,
+            1433.5
+          ],
+          [
+            594.596,
+            1435.404
+          ]
+        ],
+        "min_spacing": 1.7,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4883,
+        "count": 8,
+        "polygon": [
+          [
+            366.5,
+            1440
+          ],
+          [
+            364.596,
+            1444.596
+          ],
+          [
+            360,
+            1446.5
+          ],
+          [
+            355.404,
+            1444.596
+          ],
+          [
+            353.5,
+            1440
+          ],
+          [
+            355.404,
+            1435.404
+          ],
+          [
+            360,
+            1433.5
+          ],
+          [
+            364.596,
+            1435.404
+          ]
+        ],
+        "min_spacing": 1.7,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "shrub_round_a",
+      "scatter": {
+        "seed": 4884,
+        "count": 8,
+        "polygon": [
+          [
+            286.5,
+            1550
+          ],
+          [
+            284.596,
+            1554.596
+          ],
+          [
+            280,
+            1556.5
+          ],
+          [
+            275.404,
+            1554.596
+          ],
+          [
+            273.5,
+            1550
+          ],
+          [
+            275.404,
+            1545.404
+          ],
+          [
+            280,
+            1543.5
+          ],
+          [
+            284.596,
+            1545.404
+          ]
+        ],
+        "min_spacing": 1.7,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.8,
+          1.18
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "reed_cluster_a",
+      "scatter": {
+        "seed": 4970,
+        "count": 6,
+        "polygon": [
+          [
+            569.996,
+            1524.83
+          ],
+          [
+            567.36,
+            1531.194
+          ],
+          [
+            560.996,
+            1533.83
+          ],
+          [
+            554.632,
+            1531.194
+          ],
+          [
+            551.996,
+            1524.83
+          ],
+          [
+            554.632,
+            1518.466
+          ],
+          [
+            560.996,
+            1515.83
+          ],
+          [
+            567.36,
+            1518.466
+          ]
+        ],
+        "min_spacing": 1.1,
+        "max_slope": 10,
+        "min_height_above_water": -0.18,
+        "max_height_above_water": 0.65,
+        "scale": [
+          0.8,
+          1.12
+        ],
+        "align_to_slope": true,
+        "surface": "shore",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "reed_cluster_a",
+      "scatter": {
+        "seed": 4971,
+        "count": 6,
+        "polygon": [
+          [
+            514.454,
+            1487.483
+          ],
+          [
+            511.818,
+            1493.847
+          ],
+          [
+            505.454,
+            1496.483
+          ],
+          [
+            499.09,
+            1493.847
+          ],
+          [
+            496.454,
+            1487.483
+          ],
+          [
+            499.09,
+            1481.119
+          ],
+          [
+            505.454,
+            1478.483
+          ],
+          [
+            511.818,
+            1481.119
+          ]
+        ],
+        "min_spacing": 1.1,
+        "max_slope": 10,
+        "min_height_above_water": -0.18,
+        "max_height_above_water": 0.65,
+        "scale": [
+          0.8,
+          1.12
+        ],
+        "align_to_slope": true,
+        "surface": "shore",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "reed_cluster_a",
+      "scatter": {
+        "seed": 4972,
+        "count": 6,
+        "polygon": [
+          [
+            450.632,
+            1473.561
+          ],
+          [
+            447.996,
+            1479.925
+          ],
+          [
+            441.632,
+            1482.561
+          ],
+          [
+            435.268,
+            1479.925
+          ],
+          [
+            432.632,
+            1473.561
+          ],
+          [
+            435.268,
+            1467.197
+          ],
+          [
+            441.632,
+            1464.561
+          ],
+          [
+            447.996,
+            1467.197
+          ]
+        ],
+        "min_spacing": 1.1,
+        "max_slope": 10,
+        "min_height_above_water": -0.18,
+        "max_height_above_water": 0.65,
+        "scale": [
+          0.8,
+          1.12
+        ],
+        "align_to_slope": true,
+        "surface": "shore",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "reed_cluster_a",
+      "scatter": {
+        "seed": 4974,
+        "count": 6,
+        "polygon": [
+          [
+            376.741,
+            1483.207
+          ],
+          [
+            374.105,
+            1489.571
+          ],
+          [
+            367.741,
+            1492.207
+          ],
+          [
+            361.377,
+            1489.571
+          ],
+          [
+            358.741,
+            1483.207
+          ],
+          [
+            361.377,
+            1476.844
+          ],
+          [
+            367.741,
+            1474.207
+          ],
+          [
+            374.105,
+            1476.844
+          ]
+        ],
+        "min_spacing": 1.1,
+        "max_slope": 10,
+        "min_height_above_water": -0.18,
+        "max_height_above_water": 0.65,
+        "scale": [
+          0.8,
+          1.12
+        ],
+        "align_to_slope": true,
+        "surface": "shore",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "reed_cluster_a",
+      "scatter": {
+        "seed": 4976,
+        "count": 6,
+        "polygon": [
+          [
+            308.929,
+            1513.095
+          ],
+          [
+            306.293,
+            1519.459
+          ],
+          [
+            299.929,
+            1522.095
+          ],
+          [
+            293.565,
+            1519.459
+          ],
+          [
+            290.929,
+            1513.095
+          ],
+          [
+            293.565,
+            1506.731
+          ],
+          [
+            299.929,
+            1504.095
+          ],
+          [
+            306.293,
+            1506.731
+          ]
+        ],
+        "min_spacing": 1.1,
+        "max_slope": 10,
+        "min_height_above_water": -0.18,
+        "max_height_above_water": 0.65,
+        "scale": [
+          0.8,
+          1.12
+        ],
+        "align_to_slope": true,
+        "surface": "shore",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "reed_cluster_a",
+      "scatter": {
+        "seed": 4991,
+        "count": 6,
+        "polygon": [
+          [
+            103.749,
+            1684.234
+          ],
+          [
+            101.113,
+            1690.598
+          ],
+          [
+            94.749,
+            1693.234
+          ],
+          [
+            88.385,
+            1690.598
+          ],
+          [
+            85.749,
+            1684.234
+          ],
+          [
+            88.385,
+            1677.87
+          ],
+          [
+            94.749,
+            1675.234
+          ],
+          [
+            101.113,
+            1677.87
+          ]
+        ],
+        "min_spacing": 1.1,
+        "max_slope": 10,
+        "min_height_above_water": -0.18,
+        "max_height_above_water": 0.65,
+        "scale": [
+          0.8,
+          1.12
+        ],
+        "align_to_slope": true,
+        "surface": "shore",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "reed_cluster_a",
+      "scatter": {
+        "seed": 4993,
+        "count": 6,
+        "polygon": [
+          [
+            107.268,
+            1767.633
+          ],
+          [
+            104.632,
+            1773.997
+          ],
+          [
+            98.268,
+            1776.633
+          ],
+          [
+            91.904,
+            1773.997
+          ],
+          [
+            89.268,
+            1767.633
+          ],
+          [
+            91.904,
+            1761.27
+          ],
+          [
+            98.268,
+            1758.633
+          ],
+          [
+            104.632,
+            1761.27
+          ]
+        ],
+        "min_spacing": 1.1,
+        "max_slope": 10,
+        "min_height_above_water": -0.18,
+        "max_height_above_water": 0.65,
+        "scale": [
+          0.8,
+          1.12
+        ],
+        "align_to_slope": true,
+        "surface": "shore",
+        "path_clearance": 0.7
+      }
+    },
+    {
+      "asset": "grass_tuft_a",
+      "scatter": {
+        "seed": 5022,
+        "count": 12000,
+        "polygon": [
+          [
+            350,
+            1115
+          ],
+          [
+            615,
+            1115
+          ],
+          [
+            615,
+            1280
+          ],
+          [
+            520,
+            1320
+          ],
+          [
+            350,
+            1290
+          ]
+        ],
+        "min_spacing": 0.8,
+        "max_slope": 27,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.82,
+          1.28
+        ],
+        "align_to_slope": true,
+        "surface": "meadow",
+        "path_clearance": 0.4
+      }
+    },
+    {
+      "asset": "grass_tuft_a",
+      "scatter": {
+        "seed": 5023,
+        "count": 16000,
+        "polygon": [
+          [
+            620,
+            1115
+          ],
+          [
+            885,
+            1115
+          ],
+          [
+            885,
+            1310
+          ],
+          [
+            760,
+            1340
+          ],
+          [
+            620,
+            1300
+          ]
+        ],
+        "min_spacing": 0.8,
+        "max_slope": 27,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.82,
+          1.28
+        ],
+        "align_to_slope": true,
+        "surface": "meadow",
+        "path_clearance": 0.4
+      }
+    },
+    {
+      "asset": "grass_tuft_a",
+      "scatter": {
+        "seed": 5024,
+        "count": 12000,
+        "polygon": [
+          [
+            650,
+            1315
+          ],
+          [
+            885,
+            1325
+          ],
+          [
+            885,
+            1480
+          ],
+          [
+            720,
+            1490
+          ],
+          [
+            635,
+            1415
+          ]
+        ],
+        "min_spacing": 0.8,
+        "max_slope": 27,
+        "min_height_above_water": 6,
+        "max_height_above_water": 160,
+        "scale": [
+          0.82,
+          1.28
+        ],
+        "align_to_slope": true,
+        "surface": "meadow",
+        "path_clearance": 0.4
+      }
+    }
   ]
 }

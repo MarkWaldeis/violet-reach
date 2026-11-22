@@ -1,6 +1,18 @@
 export interface Point3 { x: number; y: number; z: number }
 export interface Plane extends Point3 { constant: number }
 export interface Chunk<T> { centre: Point3; radius: number; items: T[] }
+export interface AssetRenderOptions { maxDistance?: number; lodScale?: number; shadowLODs?: number; maxLOD?: number }
+
+export function assetRenderOptions(size: number, global: AssetRenderOptions = {}, asset: AssetRenderOptions = {}) {
+  const maxDistance = global.maxDistance ?? asset.maxDistance ?? size * 40;
+  const lodScale = global.lodScale ?? asset.lodScale ?? 1;
+  const shadowLODs = global.shadowLODs ?? asset.shadowLODs ?? 2;
+  const maxLOD = global.maxLOD ?? asset.maxLOD ?? Number.MAX_SAFE_INTEGER;
+  if (![size, maxDistance, lodScale].every((n) => Number.isFinite(n) && n > 0) || !Number.isSafeInteger(shadowLODs) || shadowLODs < 0 || !Number.isSafeInteger(maxLOD) || maxLOD < 0) {
+    throw new Error("Invalid asset distance, LOD or shadow settings");
+  }
+  return { maxDistance, lodScale, shadowLODs, maxLOD };
+}
 
 export function lodDistances(size: number, levels: number, viewportHeight: number, fov: number, maxDistance = size * 40) {
   const focalLength = viewportHeight / (2 * Math.tan(fov * Math.PI / 360));

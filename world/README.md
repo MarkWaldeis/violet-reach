@@ -97,3 +97,11 @@ Ein Höhenvergleich mit dem tatsächlichen exportierten LOD0-Mesh hält das
 Gelände unter der inneren Strandfläche; der auslaufende Grasrand bleibt
 zum Anschluss an die natürliche Böschung eingebettet. Keine Geländeänderung,
 keine gestreckten Achsen und kein Insel-Asset.
+
+### Approved vegetation (Step L)
+
+PR #8 head `7f5f57f` approves all seven imported vegetation assets; each is exported through the gate. The slice contains 24 mixed broadleaf trees in eight loose groups, 288 shrubs around group edges and above the wet shore, 120 fern clusters beneath the tree groups, 42 reed clusters in shallow shoreline bands and 40,000 meadow grass tufts.
+
+Scatter entries can select a `surface` profile (`meadow`, `land`, or `shore`) and a nonnegative `path_clearance` in metres. Deterministic surface filtering combines terrain slope, broad soil/grass noise, local hollows, interpolated water height and distance from paths. Land plants avoid sand and wet banks; reeds alone may use shallow water. Grass and ferns follow the ground normal.
+
+Optional `slice.json.asset_options` records set per-asset `maxDistance` (metres), `lodScale` (screen-space transition multiplier), `maxLOD` (coarsest permitted LOD) and `shadowLODs` (number of near LODs casting shadows). Defaults preserve existing assets. Mixed trees retain LOD1 silhouettes because LOD2 loses canopy coverage, with only LOD0 casting shadows; shrubs, ferns, reeds and grass cut off at 160, 70, 40 and 35 metres respectively. Reeds retain many triangles even at low LOD, so their visible range is deliberately short. All placements share instanced batches and spatial culling.

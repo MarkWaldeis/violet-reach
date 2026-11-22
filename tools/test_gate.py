@@ -108,7 +108,8 @@ def shipping_checks(root):
         yield expect("scatter cannot bypass asset gate", check_output(), "has not passed")
         scatter["asset"] = "thing"
         for key, value in [("count", -1), ("seed", True), ("scale", [2, 1]), ("max_slope", 91),
-                           ("min_spacing", float("nan")), ("rect", {})]:
+                           ("min_spacing", float("nan")), ("rect", {}), ("surface", "lava"),
+                           ("path_clearance", -1), ("path_clearance", True)]:
             broken = json.loads(json.dumps(scatter))
             broken["scatter"][key] = value
             yield expect(f"invalid scatter {key} refused", vr.placement_problems({"placements": [broken]}), "invalid")
