@@ -49,6 +49,18 @@
       "bytes": 4050624
     },
     {
+      "id": "stair_terrace_a",
+      "category": "monuments",
+      "title": "The Spillway Stair",
+      "file": "stair_terrace_a.glb",
+      "size_m": [
+        23.161,
+        13.804,
+        6.509
+      ],
+      "bytes": 4181124
+    },
+    {
       "id": "lake_shore_a",
       "category": "shore",
       "title": "Shinglewake Shore",
