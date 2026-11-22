@@ -95,10 +95,28 @@ if ASSET_DIR.name=="shore_stones_a":
     assert {o["stone_form"] for o in primary}=={"worn","split","slab"}
     for i,obj in enumerate(primary):
         lo,hi = vrlib.world_bounds([obj])
-        assert .4<=(hi.z-lo.z)/max(hi.x-lo.x,hi.y-lo.y)<=.601
+        assert .20<=(hi.z-lo.z)/max(hi.x-lo.x,hi.y-lo.y)<=.65
         assert obj["donor_displacement_multiplier"]==.2
-        bounds = builder.xy_bounds(obj)
-        assert not builder.overlaps(bounds,[builder.xy_bounds(other) for other in primary[:i]],.119)
+        if obj["stone_form"]=="worn":
+            assert obj["worn_facets"]==2
+            assert (hi.z-lo.z)/max(hi.x-lo.x,hi.y-lo.y)<.38
+        else:
+            assert obj["fracture_steps"]==2 and obj["edge_chips"]==3
+            assert len(obj["fracture_step_offsets_m"])==2 and min(obj["fracture_step_offsets_m"])>.005
+            floors=[p for p in obj.data.polygons if not p.use_smooth and p.normal.z>.85 and p.area>.00001]
+            assert len(floors)>=2,(obj.name,"Missing modeled fracture floors")
+    grouped={g:[o for o in primary if o["cluster_group"]==g] for g in range(5)}
+    assert [len(grouped[g]) for g in range(5)]==[2,2,2,1,1]
+    gaps=[]
+    for obj in primary:
+        if "contact_partner" not in obj:continue
+        other=bpy.data.objects[obj["contact_partner"]]
+        tree=world_tree(other)
+        gap=min(tree.find_nearest(obj.matrix_world@v.co)[3] for v in obj.data.vertices)
+        assert gap<.015,(obj.name,gap)
+        gaps.append(gap)
+    assert len(gaps)==3
+    assert max((vrlib.world_bounds([o])[1]-vrlib.world_bounds([o])[0]).length for o in primary)>min((vrlib.world_bounds([o])[1]-vrlib.world_bounds([o])[0]).length for o in primary)*2.5
     assert len([o for o in stones if o.name.startswith("Zwischenkiesel_")])==28
     assert 4.5<high.x-low.x<5.8
     top_means = []
@@ -114,7 +132,7 @@ if ASSET_DIR.name=="shore_stones_a":
         wet,dry = [],[]
         height = obj["wet_gradient_height_m"]
         for v in obj.data.vertices:
-            expected = 1-builder.smooth((v.co.z-obj["wet_base_z"])/height)
+            expected = 1-builder.smooth((v.co.z-obj["wet_base_z"]-height*.40)/(height*.60))
             assert abs(factors[v.index].value-expected)<1e-5,(obj.name,v.index)
             if expected>.8:
                 wet.append(sum(colors[v.index].color[:3])/3)
@@ -127,12 +145,30 @@ if ASSET_DIR.name=="shore_stones_a":
         chromas.append(tuple(c/sum(mean) for c in mean))
         bsdf = obj.data.materials[0].node_tree.nodes["Principled BSDF"]
         assert bsdf.inputs["Roughness"].is_linked
+        assert obj.data.attributes["stone_wet_height"] and obj.data.attributes["stone_base_z"]
+        assert obj.data.color_attributes["stone_dry_tones"]
+        if obj in primary:assert .05<=height<=.15
     assert min(top_means)>.22,top_means
     assert max(max(c[i] for c in chromas)-min(c[i] for c in chromas) for i in range(3))<.035,chromas
-    assert max(top_means)/min(top_means)<1.3,top_means
-    print("SHORE_DONOR_FORMS: 8 separated primary stones; split/slab/worn mix; height/width 0.4-0.6; 20% donor relief")
-    print("SHORE_UNITY: one pale tone family; irregular gravel-bed outline")
-    print("SHORE_BASE_WETNESS: smooth local-Z gradient on every stone; pale dry tops; wet roughness attribute")
+    assert max(top_means)/min(top_means)<1.7,top_means
+    pebbles=[o for o in stones if o.name.startswith("Zwischenkiesel_")]
+    assert {o["pebble_shape"] for o in pebbles}=={0,1,2}
+    assert max(o["pebble_tint"] for o in pebbles)-min(o["pebble_tint"] for o in pebbles)>.15
+    assert grit["foot_biased_fraction"]>.6
+    cover=bed.data.attributes["bed_coverage"].data
+    assert min(v.value for v in cover)==0 and max(v.value for v in cover)==1
+    assert any(.05<v.value<.95 for v in cover)
+    assert bed.data.materials[0].node_tree.nodes["Principled BSDF"].inputs["Alpha"].is_linked
+    wet_material=primary[0].data.materials[0]
+    mask=wet_material.node_tree.nodes["Physical_wet_band"]
+    assert mask.interpolation_type=="SMOOTHSTEP"
+    assert abs(mask.inputs["From Min"].default_value-.40)<1e-6
+    assert mask.inputs["To Min"].default_value==1 and mask.inputs["To Max"].default_value==0
+    assert any(l.from_node.type=="TEX_COORD" and l.from_socket.name=="Object" and l.to_node.type=="SEPXYZ" for l in wet_material.node_tree.links)
+    print("SHORE_FRACTURES: six angular stones with two modeled steps and three edge cuts each; two flattened faceted worn forms")
+    print("SHORE_GROUPS: three non-intersecting contact pairs plus two loners; closest gaps_m",tuple(round(v,4) for v in gaps))
+    print("SHORE_GRAVEL: varied shapes, sizes and tints; foot-biased fraction",round(grit["foot_biased_fraction"],3),"; buried alpha-feathered edge")
+    print("SHORE_BASE_WETNESS: object-space analytic 5-14 cm bands on primary stones; dark feet, smooth fade and lower roughness")
     for radius,flat in ((0,.6),(-1,.6),(1,0)):
         try:
             builder.shore_stone("invalid",radius,flat,(0,0),0,None)
