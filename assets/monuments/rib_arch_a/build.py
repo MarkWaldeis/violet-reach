@@ -6,6 +6,7 @@ import random
 import bmesh
 import bpy
 from mathutils import Matrix, Vector
+from mathutils.bvhtree import BVHTree
 from mathutils.noise import noise_vector
 
 import vrlib
@@ -43,14 +44,14 @@ def loft(name, rings, mat, smooth=True):
     return obj
 
 
-def pale_stone(name, i):
+def pale_stone(name, i, buttress=False):
     mat = vrmat.get("monument_white").copy()
     mat.name = name
     nodes, links = mat.node_tree.nodes, mat.node_tree.links
     surface = nodes["Principled BSDF"]
     cream = vrmat.load_palette()["monument_white"]["linear_rgb"]
     warm = math.sin(i*2.12)
-    tint = (1+.045*warm,.985,.965-.076*warm)
+    tint = (.78,.71,.60) if buttress else (1+.045*warm,.985,.965-.076*warm)
     ivory = tuple(c*t for c,t in zip(cream,tint))
     diffuse = surface.inputs["Base Color"]
     honed = nodes.new("ShaderNodeMixRGB")
@@ -71,12 +72,25 @@ def pale_stone(name, i):
         node.inputs[2].default_value = (*color,1)
         return node.outputs[0]
 
-    tone = stained(honed.outputs[0], attributes["Stone bed"], (.79,.80,.75))
+    bed_tint = (.50,.43,.33) if buttress else (.79,.80,.75)
+    foot_tint = (.18,.24,.12) if buttress else (.32,.41,.24)
+    coords = nodes.new("ShaderNodeTexCoord")
+    bed_mask = attributes["Stone bed"]
+    if buttress:
+        bed_noise = nodes.new("ShaderNodeTexNoise")
+        bed_noise.inputs["Scale"].default_value = .83
+        bed_noise.inputs["Detail"].default_value = 3.2
+        links.new(coords.outputs["Object"], bed_noise.inputs["Vector"])
+        mix = nodes.new("ShaderNodeMixRGB")
+        mix.inputs[0].default_value = .16
+        links.new(bed_noise.outputs["Fac"], mix.inputs[1])
+        links.new(bed_mask, mix.inputs[2])
+        bed_mask = mix.outputs[0]
+    tone = stained(honed.outputs[0], bed_mask, bed_tint)
     tone = stained(tone, attributes["Rain runnel"], (.38,.32,.23))
-    tone = stained(tone, attributes["Foot patina"], (.32,.41,.24))
+    tone = stained(tone, attributes["Foot patina"], foot_tint)
     links.new(tone, diffuse)
     surface.inputs["Specular IOR Level"].default_value = .23
-    coords = nodes.new("ShaderNodeTexCoord")
     grain = nodes.new("ShaderNodeTexNoise")
     grain.inputs["Scale"].default_value = 74
     grain.inputs["Detail"].default_value = 1.4
@@ -85,6 +99,16 @@ def pale_stone(name, i):
     bump.inputs["Distance"].default_value = .014
     bump.inputs["Strength"].default_value = .28
     links.new(grain.outputs["Fac"], bump.inputs["Height"])
+    if buttress:
+        pits = nodes.new("ShaderNodeTexNoise")
+        pits.inputs["Scale"].default_value = 7.2
+        pits.inputs["Detail"].default_value = 2.7
+        links.new(coords.outputs["Object"], pits.inputs["Vector"])
+        worn = nodes.new("ShaderNodeBump")
+        worn.inputs["Distance"].default_value = .19
+        worn.inputs["Strength"].default_value = .55
+        links.new(pits.outputs["Fac"], worn.inputs["Height"])
+        links.new(worn.outputs["Normal"], bump.inputs["Normal"])
     links.new(bump.outputs["Normal"], surface.inputs["Normal"])
     return mat
 
@@ -175,55 +199,68 @@ def limb(name, spine, width, thickness, stone, rng, direction):
     bevel.width, bevel.segments, bevel.angle_limit = .084, 3, .73
 
 
-def knuckle(name, x, y, depth, width, stone, rng, lean):
-    n, levels = 124, 79
-    phase = rng.uniform(0,math.tau)
-    crown = rng.uniform(11.8,15.4)
-    breaks = [(phase+i*math.tau/6+rng.uniform(-.19,.19),rng.uniform(.66,.87),rng.uniform(.14,.42))
-              for i in range(6)]
-    chips = [(rng.uniform(.19,.87),rng.uniform(0,math.tau),rng.uniform(.13,.36),rng.uniform(.10,.26),
-              rng.uniform(.40,.96)) for _ in range(27)]
-    rings, beds, rain, patina = [], [], [], []
-    for i in range(levels+1):
-        t = i/levels
-        row = []
-        taper = 1-.18*t-.24*t**3-.26*smoothstep((t-.75)/.25)
-        for j in range(n):
-            a = math.tau*j/n
-            c, s = math.cos(a), math.sin(a)
-            radius = taper + (.059*math.sin(3*a+phase)+.042*math.sin(5*a-phase))*(1-.4*t)
-            radius += .024*math.sin(11*a+8*t+phase)*math.cos(6*t)
-            for phi, reach, slope in breaks:
-                face = math.cos(a-phi)
-                if face > .2:
-                    plane = (reach+slope*(.26-t))/face
-                    blend = max(0,.020-abs(plane-radius))/.020
-                    radius = min(radius,plane)-.005*blend*blend
-            z = (crown+1.9*lean*c)*t+1.37*math.sin(2*a+phase)*t*t+.26*math.cos(7*a-phase)*t
-            px = x+width*radius*c+lean*t*2.85
-            py = y+depth*radius*s+1.2*t*math.sin(phase)
-            p = Vector((px,py,z))
-            grain = noise_vector(p*.88).x*.13+noise_vector(p*3.1).y*.034
-            gouge = 0
-            for h,c0,b,l,dep in chips:
-                u = (t-h)/l
-                if abs(u) >= 1:
-                    continue
-                v = math.remainder(a-c0-.08*u,math.tau)/b
-                gouge = max(gouge,dep*max(0,1-abs(u)-v*v))
-            cut = grain-gouge
-            z = -.051 if i == 0 else max(-.051,z-.051)
-            row.append((px+c*cut,py+s*cut,z))
-            beds.append(.49+.31*math.sin(a*3.1+t*7+phase))
-            rain.append(.46*max(0,math.sin(a*13+phase+t))**3*smoothstep(t/.67))
-            wet_line = 4.0+.74*math.sin(a*4+phase)+.50*math.cos(a*8)
-            patina.append((1-smoothstep((z-wet_line+.62)/3.25))*(.67+.30*noise_vector(p*1.85).y))
-        rings.append(row)
-    obj = loft(name,rings,stone)
-    atmospheres(obj,(beds,rain,patina))
+def buttresses(name, x, y, stone, rng, side):
+    phase = (math.radians(-73) if side == 1 else math.radians(107)) + rng.uniform(-.16,.16)
+    lobes = []
+    count = rng.choice((3,3,4))
+    for index in range(count):
+        az = phase + math.tau*index/count + rng.uniform(-.18,.18)
+        outward = Vector((math.cos(az),math.sin(az),0))
+        lateral = Vector((-outward.y,outward.x,0))
+        origin = Vector((x,y,0))
+        reach, width = rng.uniform(10.8,13.9), rng.uniform(5.2,7.2)
+        height = rng.uniform(15.0,18.5) if index == 0 else rng.uniform(11.6,15.6)
+        breaks = [(rng.uniform(.05,.9), rng.uniform(.28,.68), rng.uniform(.10,.22),
+                   rng.uniform(.12,.25), rng.uniform(.28,.72)) for _ in range(22)]
+        rings = []
+        for i in range(61):
+            t = i/60
+            taper = 1-.32*t-.32*t*t
+            row = []
+            for j in range(104):
+                a = j*math.tau/104
+                c, s = math.cos(a), math.sin(a)
+                swell = 1+.060*math.sin(3*a+index)+.055*math.sin(5*a-4*t)
+                p = origin + outward*(6.3-1.9*t+reach*taper*swell*c)
+                p += lateral*(width*taper*swell*s+1.35*t*math.sin(index+1))
+                p.z = max(-.051,t*height + .71*t*math.cos(2*a+index)-.051)
+                noise = noise_vector(p*.49).x*.73+noise_vector(p*2.9).y*.16+noise_vector(p*10).x*.028
+                for centre, level, breadth, rise, depth in breaks:
+                    v = abs(math.remainder(a-centre,math.tau))/breadth
+                    u = abs(t-level)/rise
+                    if u+v < 1:
+                        noise -= depth*smoothstep((1-u-v)*3)
+                p += outward*(noise*c)+lateral*(noise*s)
+                row.append(p)
+            rings.append(row)
+        obj = loft(f"{name} | splayed buttress {index+1}",rings,stone)
+        for elevation, distance, lean, skew in (
+            (.55,1.16,.78,-.44), (.75,.89,.99,.18), (.42,.96,.15,.97),
+            (.64,.91,.58,-.94), (.31,1.26,-.18,.21),
+        ):
+            point = origin + outward*(distance*reach) + Vector((0,0,elevation*height))
+            normal = outward + lateral*(skew+rng.uniform(-.13,.13)) + Vector((0,0,lean))
+            cut_plane(obj, point, normal, fracture=True)
+
+        masks = ([],[],[])
+        for vertex in obj.data.vertices:
+            p = vertex.co
+            z = p.z
+            bed = .5+.24*math.sin(z*1.6+p.x*.19-p.y*.12)+.21*noise_vector(p*.53).x
+            runnel = .38*smoothstep((noise_vector(Vector((p.x*.89,p.y*.89,z*.16))).y+.34)/.84)
+            wet_height = 6.2 + 1.6*noise_vector(p*.32).x
+            wet = .91*(1-smoothstep((z-wet_height+1.30)/5.0))
+            masks[0].append(bed)
+            masks[1].append(runnel)
+            masks[2].append(wet)
+        atmospheres(obj,masks)
+        bevel = obj.modifiers.new("Worn fracture arrises", "BEVEL")
+        bevel.width, bevel.segments, bevel.angle_limit = .13, 3, .42
+        lobes.append(obj)
+    return lobes
 
 
-def cut_plane(obj, point, normal):
+def cut_plane(obj, point, normal, fracture=False):
     x, y, z = point
     nx, ny, nz = normal
     bm = bmesh.new()
@@ -236,6 +273,9 @@ def cut_plane(obj, point, normal):
            if isinstance(edge, bmesh.types.BMEdge) and edge.is_valid and edge.is_boundary]
     for face in bmesh.ops.holes_fill(bm, edges=rim)["faces"]:
         face.smooth = False
+        if fracture:
+            for edge in face.edges:
+                edge.smooth = False
     bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
     bm.to_mesh(obj.data)
     bm.free()
@@ -267,55 +307,80 @@ def scree(name, x, y, z, size, stone, rng):
             vertex.co.z += lift
 
 
-def apron(x, y, ax, ay, rng):
+def bank_material():
+    mat = vrmat.get("grass_ground").copy()
+    mat.name = "Root bank | turf breaking into damp loam"
+    nodes, links = mat.node_tree.nodes, mat.node_tree.links
+    surface = nodes["Principled BSDF"]
+    noise = nodes.new("ShaderNodeTexNoise")
+    noise.inputs["Scale"].default_value = .36
+    noise.inputs["Detail"].default_value = 4
+    links.new(nodes.new("ShaderNodeTexCoord").outputs["Object"], noise.inputs["Vector"])
+    ramp = nodes.new("ShaderNodeValToRGB")
+    ramp.color_ramp.elements[0].position = .32
+    ramp.color_ramp.elements[0].color = (.079,.064,.036,1)
+    ramp.color_ramp.elements[1].position = .65
+    ramp.color_ramp.elements[1].color = (.17,.205,.071,1)
+    ramp.color_ramp.elements.new(.45).color = (.10,.092,.047,1)
+    links.new(noise.outputs["Fac"], ramp.inputs["Fac"])
+    links.new(ramp.outputs["Color"], surface.inputs["Base Color"])
+    return mat
+
+
+def apron(x, y, ax, ay, turf, lobes, rng):
     phase = rng.uniform(0, math.tau)
-    n = 98
+    n = 164
 
     def surface(u, a):
-        edge = 1 + .088*math.sin(3*a+phase) + .043*math.cos(7*a-phase)
-        bank = 3.1 + .64*math.sin(4*a+phase) + .35*math.sin(9*a-phase)
-        raise_by = bank*(1-smoothstep((u-.29)/.71))
-        px = x+ax*edge*u*math.cos(a)
-        return (px, y+ay*edge*u*math.sin(a), raise_by-.033)
+        edge = 1+.14*math.sin(3*a+phase)+.10*math.cos(7*a-phase)+.046*math.sin(17*a+phase)
+        bank = 4.45+.82*math.sin(3*a+phase)+.69*math.sin(8*a-phase)
+        px, py = x+ax*edge*u*math.cos(a), y+ay*edge*u*math.sin(a)
+        taper = 1-smoothstep((u-.25)/.75)
+        rise = taper*(bank+.66*noise_vector(Vector((px*.71,py*.71,phase))).x)
+        return (px,py,rise-.051)
 
-    stations = (.22,.32,.41,.50,.58,.66,.74,.82,.89,.95,1)
+    stations = [i/32 for i in range(1,33)]
     rings = [[surface(u,j*math.tau/n) for j in range(n)] for u in stations]
     faces = [tuple(range(n))]
     faces.extend((i*n+j, (i+1)*n+j, (i+1)*n+(j+1)%n, i*n+(j+1)%n)
                  for i in range(len(rings)-1) for j in range(n))
-    soil, grass = vrmat.get("forest_soil"), vrmat.get("grass_ground")
-    ground = mesh("Irregular root soil and turf", [p for row in rings for p in row], faces, grass,
-                  solid=False, smooth=True)
-    ground.data.materials.append(soil)
-    for poly in ground.data.polygons:
-        row,j = divmod(poly.index-1,n)
-        a = j*math.tau/n
-        if poly.index == 0 or math.sin(5*a+phase+.84*row)+.72*math.cos(9*a-phase-.39*row) > 1:
-            poly.material_index = 1
-    blades, faces = [], []
-    rubble = (vrmat.get("mossy_rock"), vrmat.get("monument_weathered"), vrmat.get("forest_soil"))
-    for _ in range(21):
-        a0, u0 = rng.uniform(0,math.tau), rng.uniform(.52,.86)
-        for i in range(rng.randint(9, 18)):
-            a, u = a0 + rng.uniform(-.16,.16), min(.96, u0 + rng.uniform(-.10,.10))
+    mesh("Irregular root soil and turf", [p for row in rings for p in row], faces, turf,
+         solid=False, smooth=True)
+    trees = [BVHTree.FromPolygons([v.co for v in obj.data.vertices],
+                                [p.vertices for p in obj.data.polygons]) for obj in lobes]
+    rubble = vrmat.get("mossy_rock")
+    plants = [([],[]),([],[])]
+    for cluster in range(94):
+        a0 = rng.uniform(0,math.tau)
+        u0 = rng.uniform(.84,1.02) if cluster < 37 else rng.uniform(.28,.91)
+        for i in range(rng.randint(4, 9)):
+            a, u = a0 + rng.uniform(-.11,.11), min(1.07,u0+rng.uniform(-.055,.055))
             px, py, pz = surface(u, a)
-            if i % 4 == 0:
-                size = rng.uniform(.18,.64)
-                scree("Sunk weathered foot rubble", px, py, pz-.27*size, size,
-                      rng.choice(rubble), rng)
-            for _ in range(rng.randint(4, 10)):
-                xx, yy = px + rng.uniform(-.22,.22), py + rng.uniform(-.22,.22)
-                h, w, ta = rng.uniform(.23,.72), rng.uniform(.029,.087), rng.uniform(0, math.tau)
+            hits = [tree.ray_cast((-py,px,22),(0,0,-1))[0] for tree in trees] if u < .87 else []
+            top = max((hit.z for hit in hits if hit is not None), default=pz)
+            ledge = top > pz+.14
+            if top > pz+2.5 or (u > .96 and rng.random() < smoothstep((u-.96)/.12)*.9):
+                continue
+            if i == 0 and cluster % 2 == 0 and not ledge and u < .94:
+                size = rng.uniform(.29,.83)
+                scree("Sunk dirty limestone chips", px, py, pz-.29*size, size, rubble, rng)
+            kind = int(ledge or cluster % 3 == 0)
+            blades, faces = plants[kind]
+            for _ in range(rng.randint(5, 11)):
+                ta = rng.uniform(0,math.tau)
                 dx, dy = math.cos(ta), math.sin(ta)
+                h, w = (rng.uniform(.10,.34),rng.uniform(.035,.092)) if kind else (
+                    rng.uniform(.23,.75),rng.uniform(.035,.083))
+                xx, yy = px+rng.uniform(-.17,.17), py+rng.uniform(-.17,.17)
+                base = max(0 if u > .9 else -.051,top-.075)
                 start = len(blades)
-                base = max(-.054,pz-.052)
                 blades.extend(((xx-w*dy,yy+w*dx,base),(xx+w*dy,yy-w*dx,base),
-                               (xx+.23*h*dx,yy+.23*h*dy,pz+.61*h),
-                               (xx+.47*h*dx,yy+.47*h*dy,pz+h)))
+                               (xx+.21*h*dx,yy+.21*h*dy,base+.59*h),
+                               (xx+.52*h*dx,yy+.52*h*dy,base+h)))
                 faces.extend(((start,start+1,start+2),(start,start+2,start+3)))
-    mesh("Clumped grass among limestone scree", blades, faces, vrmat.get("foliage_leaf"), solid=False)
-
-
+    for (blades,faces), name, mat in zip(plants, ("Feathered bank grass","Moss on damp ledges"),
+                                        ("foliage_leaf","mossy_rock")):
+        mesh(name, blades, faces, vrmat.get(mat), solid=False)
 
 
 def center_footprint(objects):
@@ -328,7 +393,8 @@ def center_footprint(objects):
 
 
 def build():
-    footing = pale_stone("Limestone | wet fractured buttresses", 6)
+    footing = pale_stone("Limestone | wet fractured buttresses", 6, buttress=True)
+    turf = bank_material()
     for i,(row,height,span) in enumerate(((-31,64,32),(0,77,39),(31,69,35))):
         rng = random.Random(410903+209*i)
         crest_x = rng.uniform(-3.7,3.7)
@@ -344,19 +410,18 @@ def build():
             part = f"Rib {i+1:02}.{j+1}"
             stone = pale_stone(f"Limestone | {part}",3*i+j)
             limb(part,spine,rng.uniform(6.25,7.15),rng.uniform(4.1,4.85),stone,rng,side)
-            width, depth = rng.uniform(9.7,11.2),rng.uniform(8.4,9.8)
-            knuckle(f"{part} | fractured buttress",x,y,depth,width,footing,rng,side)
-            apron(x,y,width*1.28,depth*1.49,rng)
+            ground_rng = random.Random(15427+53*i+j)
+            lobes = buttresses(part,x,y,footing,ground_rng,side)
+            apron(x,y,ground_rng.uniform(18.8,21.0),ground_rng.uniform(17.3,19.7),turf,lobes,ground_rng)
             if i == 0 and j == 1:
                 foreground = Vector((-y,x,0))
-                foreground_depth = depth
     rotation = Matrix.Rotation(math.radians(-74),4,"Z")
     objects = vrlib.source_objects()
     for obj in objects:
         obj.data.transform(rotation)
     shift = center_footprint(objects)
     foot = shift @ rotation @ foreground
-    figure = shift @ rotation @ (foreground+Vector((foreground_depth*1.49+1,8,0)))
+    figure = foot+Vector((23,-16,0))
     bpy.context.scene["vr_review_figure"] = (figure.x,figure.y)
     bpy.context.scene["vr_review_hero"] = (-24,10,.85,-10)
-    bpy.context.scene["vr_review_base"] = (*foot.xy,5.8,-65,21,.30)
+    bpy.context.scene["vr_review_base"] = (*foot.xy,6.5,-54,23,.34)
