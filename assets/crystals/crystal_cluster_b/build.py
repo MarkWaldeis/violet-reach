@@ -51,7 +51,7 @@ def mineral_finish(variant):
     bsdf.inputs["Coat Weight"].default_value = .18
     bsdf.inputs["IOR"].default_value = 1.49
     bsdf.inputs["Emission Strength"].default_value = .065
-    coord = nodes.new("ShaderNodeTexCoord").outputs["Generated"]
+    coord = nodes.new("ShaderNodeTexCoord").outputs["Object"]
 
     def scale(vector, factors):
         op = nodes.new("ShaderNodeVectorMath")
@@ -70,14 +70,14 @@ def mineral_finish(variant):
 
     cells = nodes.new("ShaderNodeTexVoronoi")
     cells.inputs["Scale"].default_value = 1.8
-    links.new(scale(coord,(4.3,4.3,1.2)),cells.inputs["Vector"])
+    links.new(scale(coord,(6.0,6.0,.50)),cells.inputs["Vector"])
     veins = nodes.new("ShaderNodeTexNoise")
     veins.inputs["Scale"].default_value = 1
-    links.new(scale(coord,(28,28,1.7)),veins.inputs["Vector"])
+    links.new(scale(coord,(30,30,.72)),veins.inputs["Vector"])
     bands = nodes.new("ShaderNodeTexWave")
     bands.bands_direction = "Z"
     bands.wave_profile = "TRI"
-    bands.inputs["Scale"].default_value = 1.48
+    bands.inputs["Scale"].default_value = .68
     bands.inputs["Distortion"].default_value = .25
     links.new(coord,bands.inputs["Vector"])
     pal = vrmat.load_palette()
