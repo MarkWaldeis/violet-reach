@@ -14,22 +14,8 @@
     950
   ],
   "texture_size": 2048,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-501e5a510b5c43f2b6ce7952cf05094b",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 6,
-      "form_detail": 5,
-      "material": 5,
-      "scale": 8,
-      "style": 5,
-      "defects": 6
-    },
-    "notes": "Abgelehnt. (1) Form: die kannelierten Säulentrommeln wirken weich aufgeblasen bzw. geschmolzen (Gummi), Kanneluren sind runde Wülste statt geschnittener Rillen mit Stegen; die Bruchflächen sind blumenförmig gewölbt statt rau-scharfkantig (closeup.jpg). Fix: Trommeln als harte Zylinder mit eingetieften Kanneluren und gefasten Kanten modellieren, Bruchflächen per Boolean/Fracture mit scharfen Graten, Abplatzungen an den Kanten. (2) Die übrigen Brocken sind abgerundete Kiesel, keine Bausteinfragmente; Fix: kantige Quader-/Gesimsbruchstücke mit erkennbaren Restflächen und Profilen. (3) Material: großflächige graue Fleckung (Vollflächenmarmor); Fix: heller Kalkstein, Schmutz in Vertiefungen und Bodenkontakt, leichte Einbettung in den Boden statt Aufliegen. (4) Komposition: Teile liegen lose nebeneinander ohne Sturzlogik; Fix: Trommeln in Fallrichtung einer Säule anordnen, Teile teils übereinander/eingesunken. Maßstab passt.",
-    "round": 1,
-    "source_sha256": "eb80c7e5ddcbb331136a1c59e598adb825e206e934f14ab514f3acd5886c1eb9",
-    "sheet_sha256": "796936e55781a916445a56b470942005ef1aae5e4bd425ce0b31a9a8bd668e98"
-  },
+  "review": null,
   "review_rounds": 1
 }

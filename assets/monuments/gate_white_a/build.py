@@ -1,4 +1,4 @@
-"""Floodmark Gate: battered limestone piers below a pointed, moulded arch."""
+"""Floodmark Gate: raked limestone piers carrying an asymmetric round crown."""
 import math
 import random
 
@@ -8,32 +8,40 @@ import vrlib
 import vrmat
 
 
-def gate_stone(name):
-    key = f"Floodmark {name}"
-    saved = bpy.data.materials.get(key)
-    if saved is not None:
-        return saved
-    base = vrmat.get(name)
-    mat = base.copy()
-    mat.name = key
+def limestone(name):
+    mat = vrmat.get(name)
+    if mat.get("quarried_finish"):
+        return mat
+    mat["quarried_finish"] = True
     tree = mat.node_tree
-    for node in tree.nodes:
-        if node.type == "TEX_NOISE":
-            scale = node.inputs["Scale"]
-            for old, new in ((1.8, 6.8), (2.3, 7.8), (8, 19), (12, 25)):
-                if abs(old - scale.default_value) < 1e-4:
-                    scale.default_value = new
-                    break
-    surface = tree.nodes["Principled BSDF"].inputs["Base Color"]
-    original = surface.links[0].from_socket
-    mix = tree.nodes.new("ShaderNodeMixRGB")
-    mix.label = "Low-contrast fine-grained limestone"
+    nodes, links = tree.nodes, tree.links
+    surface = nodes["Principled BSDF"]
     weathered = name == "monument_weathered"
-    mix.inputs["Fac"].default_value = .36 if weathered else .25
-    gain = .84 if weathered else .93
-    mix.inputs["Color1"].default_value = (*(gain * v for v in base.diffuse_color[:3]), 1)
-    tree.links.new(original, mix.inputs["Color2"])
-    tree.links.new(mix.outputs["Color"], surface)
+    palette = vrmat.load_palette()
+    white = palette["monument_white"]["linear_rgb"]
+    patina = palette["stone_weathered"]["linear_rgb"]
+    pores = next(n for n in nodes if n.type == "TEX_VORONOI")
+    pores.inputs["Scale"].default_value = 32
+    grain = nodes.new("ShaderNodeValToRGB")
+    grain.color_ramp.elements[0].position = .11
+    grain.color_ramp.elements[0].color = (*(v * .74 for v in white), 1)
+    grain.color_ramp.elements[1].position = .34
+    grain.color_ramp.elements[1].color = (*white, 1)
+    links.new(pores.outputs["Distance"], grain.inputs["Fac"])
+    ao = nodes.new("ShaderNodeAmbientOcclusion")
+    ao.inputs["Distance"].default_value = .31 if weathered else .14
+    tone = nodes.new("ShaderNodeMixRGB")
+    strength = .68 if weathered else .34
+    tone.inputs["Color1"].default_value = (*(a * (1-strength) + b * strength for a, b in zip(white, patina)), 1)
+    links.new(ao.outputs["AO"], tone.inputs["Fac"])
+    links.new(grain.outputs["Color"], tone.inputs["Color2"])
+    links.new(tone.outputs["Color"], surface.inputs["Base Color"])
+    bump = surface.inputs["Normal"].links[0].from_node
+    bump.inputs["Strength"].default_value = .67
+    bump.inputs["Distance"].default_value = .021
+    roughness = surface.inputs["Roughness"].links[0].from_node
+    roughness.inputs["To Min"].default_value = .77
+    roughness.inputs["To Max"].default_value = .94
     return mat
 
 
@@ -43,7 +51,7 @@ def make_stone(name, vertices, faces, stone, smooth=()):
     mesh.update()
     obj = bpy.data.objects.new(name, mesh)
     vrlib.link_to_source(obj)
-    obj.data.materials.append(gate_stone(stone))
+    obj.data.materials.append(limestone(stone))
     for i in smooth:
         mesh.polygons[i].use_smooth = True
     mesh.set_sharp_from_angle(angle=math.radians(23))
@@ -52,10 +60,10 @@ def make_stone(name, vertices, faces, stone, smooth=()):
 
 def ashlar(name, bottom, top, foot, head, depth, cut, wear, rng, stone, y=0):
     vertices = []
-    for i, (z, (left, right), scale) in enumerate(((bottom, foot, .985),
+    for i, (z, (left, right), scale) in enumerate(((bottom, foot, .995),
                                                    (bottom + wear * .7, foot, 1),
                                                    (top - wear, head, 1),
-                                                   (top, head, .978))):
+                                                   (top, head, .993))):
         half = depth / 2 * (1 - .02 * i)
         s = cut
         mid = (left + right) / 2
@@ -73,7 +81,7 @@ def ashlar(name, bottom, top, foot, head, depth, cut, wear, rng, stone, y=0):
     faces.extend(((24, 25, 26, 27), (24, 27, 28, 29), (24, 29, 30, 31)))
     obj = make_stone(name, vertices, faces, stone, range(1, 25))
     bevel = obj.modifiers.new("Stone arrises", "BEVEL")
-    bevel.width, bevel.segments = min(wear * .52, .12), 4
+    bevel.width, bevel.segments = min(wear * .29, .056), 2
     bevel.limit_method, bevel.angle_limit = "ANGLE", math.radians(22)
     obj.modifiers.new("Dressed face normals", "WEIGHTED_NORMAL")
 
@@ -81,8 +89,6 @@ def ashlar(name, bottom, top, foot, head, depth, cut, wear, rng, stone, y=0):
 SPRING = 18.05
 HALF_SPAN = 11.60
 APEX_RISE = 16.25
-CENTRE = (APEX_RISE ** 2 - HALF_SPAN ** 2) / (2 * HALF_SPAN)
-RADIUS = HALF_SPAN + CENTRE
 ARCH_FRONT = ((.04, -4.66), (.09, -5.05), (.33, -5.35), (.54, -5.35), (.65, -5.10),
               (.86, -5.10), (1.04, -5.53), (1.40, -5.55), (1.61, -5.26), (1.86, -4.90),
               (2.68, -4.90), (2.89, -5.33), (3.06, -5.55), (3.38, -5.56), (3.59, -5.23),
@@ -90,28 +96,54 @@ ARCH_FRONT = ((.04, -4.66), (.09, -5.05), (.33, -5.35), (.54, -5.35), (.65, -5.1
 ARCH_SECTION = ARCH_FRONT + tuple((r, -y) for r, y in reversed(ARCH_FRONT))
 
 
+def split_section(section):
+    points = []
+    for (u0, v0), (u1, v1) in zip(section, section[1:] + section[:1]):
+        count = max(1, math.ceil(math.hypot(u1-u0, v1-v0) / .32))
+        for j in range(count):
+            f = j / count
+            points.append((u0 + f*(u1-u0), v0 + f*(v1-v0)))
+    return points
+
+
 def arch_stone(name, positions, section, rng, stone, flip, dress=False, key=False):
+    if dress:
+        section = split_section(section)
     rings = []
     for index, (side, t) in enumerate(positions):
         progress = index / (len(positions) - 1)
         end = index in (0, len(positions) - 1)
         flange = 1
         if dress:
-            flange += .022 * math.sin(math.pi * progress) - (.026 if end else 0)
+            flange -= .009 if end else 0
         taper = 1 - .27 * math.sin(math.pi * t / 2)
         ring = []
-        for offset, y in section:
-            r = RADIUS + offset * taper * flange
+        for k, (offset, y) in enumerate(section):
+            radial = offset * taper * flange
+            relief = 0
+            if dress:
+                activity = math.sin(25.9*progress+1.3*y) * math.cos(5.6*y-.23*t)
+                track = math.sin(58*progress-3.8*y) * math.cos(4.7*offset+2.3*y)
+                relief = .021 * activity + .031 * track
+                if offset > 3.92:
+                    radial += relief * min(1, (offset-3.92)/.34)
+                if end and offset > 2.9 and .62 < math.sin(y*.79 + t*28) < .93:
+                    radial -= .098
             if key:
-                r += .33 * (offset / 4.71) * math.sin(math.pi * t / 2) ** 4
-            theta = math.acos(CENTRE / r) * t
-            x = side * (r * math.cos(theta) - CENTRE) if t < 1 else 0
-            z = SPRING + r * math.sin(theta)
+                radial += .49 * (offset / 4.71) * math.sin(math.pi * t / 2) ** 5
+            theta = math.pi / 2 * t
+            shift = 1.18 * math.sin(theta) ** 2
+            x = side * (HALF_SPAN + radial) * math.cos(theta) + shift
+            z = SPRING + (APEX_RISE + radial) * math.sin(theta)
+            z += side * .46 * math.sin(math.pi * t) ** 2
             if end and dress:
-                chip = rng.uniform(-.08, .08)
-                y *= .99
+                chip = rng.uniform(-.10, .10)
+                if (k + int(t * 109)) % 9 in (0, 1):
+                    y *= .963
                 y += rng.uniform(-.055, .055)
                 z += chip * (offset / 4.71)
+            if dress:
+                y += math.copysign(1, y) * relief * min(1,abs(y)*.32)
             if key:
                 y *= 1.033
             ring.append((x, y * (1 - .13 * t) * flange, z))
@@ -132,12 +164,12 @@ def build_arch(rng, white, old):
     arch_stone("Continuous recessed arch bed",
                [(-1, j / 64) for j in range(65)] + [(1, j / 64) for j in range(63, -1, -1)],
                bed, rng, old, True)
-    cuts = (0, .11, .239, .36, .482, .596, .711, .821)
-    for side, label in ((-1, "West"), (1, "East")):
+    for side, label, cuts in ((-1, "West", (0, .096, .237, .349, .533, .664, .813)),
+                              (1, "East", (0, .127, .204, .382, .499, .602, .738, .812))):
         for i, (lo, hi) in enumerate(zip(cuts, cuts[1:])):
             a, b = lo + .0024, hi - .0024
             arch_stone(f"{label} pointed-arch voussoir {i + 1:02}",
-                       [(side, a + (b - a) * j / 16) for j in range(17)],
+                       [(side, a + (b - a) * j / 38) for j in range(39)],
                        ARCH_SECTION, rng, white, side == -1, dress=True)
     crown = .823
     arch_stone("Saddle keystone",
@@ -161,7 +193,8 @@ def build():
         pier("foundation", 0, .46, 9.65, 24.5, 9.65, 24.5, 17.6, 1.2, .065, old)
         pier("battered plinth", .445, 2.18, 10.08, 23.78, 10.34, 22.8, 15.7, 1.12, .16, old)
         pier("plinth neck", 2.14, 2.72, 10.2, 22.95, 10.36, 22.64, 14.8, .86, .08, white)
-        levels = (2.70, 4.84, 7.34, 10.10, 12.91, 15.37, 17.69)
+        levels = (2.70, 4.14, 7.49, 9.16, 12.91, 14.66, 17.69) if sign < 0 else (
+            2.70, 5.82, 8.06, 9.44, 13.12, 15.73, 17.69)
         for i, (lo, hi) in enumerate(zip(levels, levels[1:])):
             t, u = lo / SPRING, hi / SPRING
             pier(f"load-bearing course {i:02}", lo, hi, 10.33 + t * 1.25, 23.14 - t * 5.30,
@@ -188,7 +221,9 @@ def build():
         pier("Keyed springer seat", 18.04, 18.32, 11.64, 16.25, 11.66, 16.21, 10.22, .36, .045, white)
 
     build_arch(rng, white, old)
-    for i, (a, b) in enumerate(zip((-9.88, -7.07, -4.23, -1.42, 1.40, 4.24, 7.05),
-                                  (-7.07, -4.23, -1.42, 1.40, 4.24, 7.05, 9.88))):
-        ashlar(f"Threshold slab {i}", 0, .15, (a + .023, b - .023), (a + .023, b - .023),
-               7.3, .17, .031, rng, old)
+    ashlar("Continuous keyed threshold foundation", -.034, .25, (-11, 11), (-10.8, 10.8),
+           10.08, .52, .038, rng, old)
+    cuts = (-10.78, -7.17, -5.23, -1.32, 1.08, 4.66, 7.53, 10.78)
+    for i, (a, b) in enumerate(zip(cuts, cuts[1:])):
+        ashlar(f"Threshold inset stone {i}", .22, .34, (a + .019, b - .019), (a + .026, b - .026),
+               9.92, .17, .031, rng, white)

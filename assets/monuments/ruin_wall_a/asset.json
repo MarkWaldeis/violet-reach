@@ -14,22 +14,8 @@
     1300
   ],
   "texture_size": 2048,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-501e5a510b5c43f2b6ce7952cf05094b",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 6,
-      "form_detail": 6,
-      "material": 5,
-      "scale": 8,
-      "style": 6,
-      "defects": 7
-    },
-    "notes": "Abgelehnt. (1) Silhouette: die Mauer zerfällt in gleichmäßigen Stufen von oben nach unten und liest sich als zweite Treppe neben der echten Treppe, nicht als Ruine. Fix: unregelmäßige Bruchkante mit Lücken, einzelnen stehen gebliebenen Lagen und einem hohen Reststück. (2) Form: alle Quader sind gleich große, ganze Kissenblöcke mit gerundeten Kanten im starren Läuferverband; keine Bruchflächen, Risse, fehlenden Steine oder verschobenen Lagen. Fix: gebrochene Steine mit scharfen Bruchflächen, verschobene/gekippte Blöcke, Lagenhöhen variieren, Mörtelfugen leicht eingetieft. (3) Material: großflächige graue Fleckung auf jedem Block (closeup.jpg), Ablehnungsfall Vollflächenmarmor; Fix: sauberer heller Kalkstein, Schmutz/monument_weathered nur in Fugen und am Fuß, Moos an Schattseite. (4) Kaum Schutt am Fuß; Fix: Bruchstücke passend zu den fehlenden Steinen streuen. Maßstab zur Figur passt.",
-    "round": 1,
-    "source_sha256": "4b8512599eae4da80983d423cbcb2a99128aa56cf56f1d75894215c69563ee03",
-    "sheet_sha256": "a3723e199525d9b034e0bcb20a0165826585ba610b82b0d41181326696acd610"
-  },
+  "review": null,
   "review_rounds": 1
 }

@@ -14,22 +14,8 @@
     2400
   ],
   "texture_size": 4096,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-501e5a510b5c43f2b6ce7952cf05094b",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 7,
-      "form_detail": 7,
-      "material": 6,
-      "scale": 8,
-      "style": 7,
-      "defects": 7
-    },
-    "notes": "Abgelehnt, aber nah dran. (1) Material: graue Fleckenwolken auf den Wandquadern (closeup.jpg) statt hellem Kalkstein mit lokalem Schmutz; Fix: Fleckung reduzieren, Verwitterung an Fugen, Kanten und Fußzone konzentrieren. (2) Form: alles ist neuwertig und kistenförmig; gleich große Quader im starren Raster, keine abgetretenen Stufenkanten, keine Abplatzungen, keine Sockelprofilierung. Fix: Stufenvorderkanten abgerundet/abgetreten (Mitte stärker), 3–5 gebrochene Ecken, Sockelband und Abdeckplatten mit Überstand, Quaderhöhen variieren. (3) Silhouette/Stil: Rückseite und Seiten sind glatte Kastenwände ohne Gliederung; Fix: Pfeilervorlagen oder Strebewände, Übergang ins Gelände (eingebettete Unterkante, Bewuchs an Fugen). (4) Unten rechts im closeup.jpg blitzt eine blaue Fläche unter dem Fuß durch; Bodenkontakt prüfen. Maßstab und Stufenhöhe zur Figur plausibel.",
-    "round": 1,
-    "source_sha256": "39c9656bda3a16c8db9c736cec41db8b8a3b92dc5de215d5422986fcb2fe05b0",
-    "sheet_sha256": "601fc0e5e285f44c17f8bd9b4febeff0f6eb893970e42f596acf44802e3c2e5b"
-  },
+  "review": null,
   "review_rounds": 1
 }
