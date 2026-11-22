@@ -23,39 +23,54 @@
   },
   "asset_options": {
     "tree_broadleaf_a": {
-      "maxDistance": 700,
-      "lodScale": 0.35,
-      "maxLOD": 1,
-      "shadowLODs": 1
+      "maxDistance": 1600,
+      "lodScale": 0.11,
+      "lodRatio": 27,
+      "maxLOD": 2,
+      "shadowLODs": 1,
+      "tintVariation": 0.09
     },
     "tree_broadleaf_b": {
-      "maxDistance": 600,
-      "lodScale": 0.4,
-      "maxLOD": 1,
-      "shadowLODs": 1
+      "maxDistance": 1600,
+      "lodScale": 0.12,
+      "lodRatio": 35,
+      "maxLOD": 2,
+      "shadowLODs": 1,
+      "tintVariation": 0.09
     },
     "tree_broadleaf_c": {
-      "maxDistance": 500,
-      "lodScale": 0.5,
-      "maxLOD": 1,
-      "shadowLODs": 1
+      "maxDistance": 1600,
+      "lodScale": 0.14,
+      "lodRatio": 35,
+      "maxLOD": 2,
+      "shadowLODs": 1,
+      "tintVariation": 0.09
     },
     "shrub_round_a": {
       "maxDistance": 160,
-      "lodScale": 0.65
+      "lodScale": 0.2,
+      "shadowLODs": 0,
+      "tintVariation": 0.12
     },
     "grass_tuft_a": {
-      "maxDistance": 35,
-      "lodScale": 0.7,
-      "shadowLODs": 1
+      "maxDistance": 24,
+      "lodScale": 0.3,
+      "lodRatio": 4,
+      "shadowLODs": 0,
+      "tintVariation": 0.14
     },
     "fern_cluster_a": {
       "maxDistance": 70,
-      "lodScale": 0.7
+      "lodScale": 0.22,
+      "lodRatio": 4,
+      "shadowLODs": 0,
+      "tintVariation": 0.1
     },
     "reed_cluster_a": {
-      "maxDistance": 40,
-      "lodScale": 0.7
+      "maxDistance": 12,
+      "lodScale": 0.25,
+      "shadowLODs": 0,
+      "tintVariation": 0.08
     }
   }
 }

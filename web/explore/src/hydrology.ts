@@ -60,8 +60,27 @@ export function waterSample(region: Pick<WaterRegion, "lakes" | "segments">, x: 
 }
 
 export function placementWaterAt(hydrology: Hydrology) {
-  const segments = hydrology.rivers.flatMap((river) => river.polyline.slice(1).map((b, i) => ({ a: river.polyline[i], b })));
-  return (x: number, z: number) => waterSample({ lakes: hydrology.lakes, segments }, x, z).height;
+  const lakes = hydrology.lakes.map((lake) => ({ lake, bounds: boundsOf(lake.outline) }));
+  const segments = hydrology.rivers.flatMap((river) => river.polyline.slice(1).map((b, i) => {
+    const a = river.polyline[i];
+    return { a, b, bounds: boundsOf([a, b]), radius: Math.max(a[3], b[3]) / 2 };
+  }));
+  const lowerBound = (b: Bounds, x: number, z: number) => Math.max(b.minX - x, x - b.maxX, b.minZ - z, z - b.maxZ);
+  return (x: number, z: number) => {
+    let distance = Infinity, height = 0;
+    for (const { lake, bounds } of lakes) {
+      if (lowerBound(bounds, x, z) + 3 >= distance) continue;
+      const d = polygonDistance(x, z, lake.outline) + 3;
+      if (d < distance) { distance = d; height = lake.water_y; }
+    }
+    for (const { a, b, bounds, radius } of segments) {
+      if (lowerBound(bounds, x, z) - radius >= distance) continue;
+      const sample = segmentSample(x, z, a, b);
+      const d = sample.distance - (a[3] + sample.t * (b[3] - a[3])) / 2;
+      if (d < distance) { distance = d; height = a[2] + sample.t * (b[2] - a[2]); }
+    }
+    return height;
+  };
 }
 
 export function pathMask(paths: Slice["paths"], x: number, z: number) {

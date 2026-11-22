@@ -24,6 +24,7 @@ test("tiles use the redirected manifest directory, throttle requests, and dispos
   const terrain = await TerrainStream.open(manifestUrl, material);
   terrain.update(200, 200, performance.now());
   assert.equal(requested.length, 4);
+  assert.ok(terrain.stats.pending > 0);
   assert.equal(requested[0], "https://cdn.terrain.test/world/v1/0_0.r16");
   await setImmediate();
   terrain.update(200, 200, performance.now());
@@ -64,6 +65,20 @@ test("slice tiles preload at full resolution, are prioritised and leave backdrop
   terrain.update(0, 0, 1);
   const backdrop = terrain.group.children.find((mesh) => mesh.position.x === 0 && mesh.position.z === 0) as Mesh;
   assert.equal(backdrop.geometry.attributes.position.count, 17 ** 2 + 257 * 4);
+  terrain.dispose(); material.dispose();
+});
+
+test("stream readiness includes unfinished LOD refinement and clears after all geometry is built", async (t) => {
+  const m = { version: 1 as const, tilesX: 2, tilesZ: 2, tileSize: 512, samples: 17, originX: 0, originZ: 0, minHeight: 0, maxHeight: 10 };
+  t.mock.method(globalThis, "fetch", async () => new Response(new ArrayBuffer(m.samples ** 2 * 2)));
+  const material = new MeshBasicMaterial(), terrain = new TerrainStream(m, new URL("https://terrain.test/manifest.json"), material);
+  assert.equal(terrain.stats.pending, 0);
+  terrain.update(10, 10, 0);
+  assert.ok(terrain.stats.pending > 0);
+  await setImmediate();
+  for (let i = 0; i < 8; i++) terrain.update(10, 10, i + 1);
+  assert.equal(terrain.stats.pending, 0);
+  assert.equal(terrain.stats.lods.reduce((a, b) => a + b, 0), terrain.stats.total);
   terrain.dispose(); material.dispose();
 });
 

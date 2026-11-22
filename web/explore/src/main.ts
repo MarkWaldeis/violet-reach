@@ -179,7 +179,7 @@ async function main() {
     toggle.textContent = nav.mode === "fly" ? "Landen" : "Abheben";
     flightControls.hidden = nav.mode !== "fly";
 
-    const { lods, total, failed: missing } = terrain.stats;
+    const { lods, total, failed: missing, pending } = terrain.stats;
     const loaded = lods.reduce((a, b) => a + b, 0);
     const fps = frames * 1000 / (now - hudAt);
     const info = renderer.info.render;
@@ -188,8 +188,8 @@ async function main() {
       const stats = assets.stats;
       telemetry.textContent += `\n${stats.assets} Assets · Instanz-LOD: ${stats.lods.join(" / ")}\n${stats.lods.reduce((a, b) => a + b, 0)}/${fmt(stats.total)} Instanzen · ${stats.visibleChunks}/${stats.chunks} Chunks`;
     }
-    streamStatus.textContent = missing ? `${missing} Kacheln nicht verfügbar` : loaded < total ? "Kacheln werden geladen" : "Gelände geladen";
-    streamStatus.dataset.state = missing ? "error" : loaded < total ? "loading" : "ready";
+    streamStatus.textContent = missing ? `${missing} Kacheln nicht verfügbar` : loaded < total || pending ? "Kacheln werden geladen" : "Gelände geladen";
+    streamStatus.dataset.state = missing ? "error" : loaded < total || pending ? "loading" : "ready";
     hudAt = now;
     frames = 0;
   });

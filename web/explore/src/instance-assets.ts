@@ -1,15 +1,15 @@
 import {
-  Box3, DynamicDrawUsage, Frustum, Group, InstancedMesh, Matrix4, Mesh,
-  PerspectiveCamera, Quaternion, Vector3, type BufferGeometry, type Material,
+  Box3, Color, DynamicDrawUsage, Frustum, Group, InstancedMesh, Matrix4, Mesh,
+  PerspectiveCamera, Quaternion, Sphere, Vector3, type BufferGeometry, type Material,
 } from "three/webgpu";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import type { InstancePlacement } from "./placements.ts";
-import { assetRenderOptions, chunkVisible, instanceLOD, lodDistances, spatialChunks, type AssetRenderOptions, type Chunk } from "./instance-lod.ts";
+import { assetRenderOptions, chunkVisible, instanceLOD, instanceTint, lodDistances, spatialChunks, type AssetRenderOptions, type Chunk } from "./instance-lod.ts";
 
-interface Instance extends InstancePlacement { matrix: Matrix4; lod: number }
+interface Instance extends InstancePlacement { matrix: Matrix4; tint: Color; sphere: { centre: Vector3; radius: number }; lod: number }
 interface Part { mesh: InstancedMesh; local: Matrix4 }
-interface AssetBatch { parts: Part[][]; chunks: Chunk<Instance>[]; size: number; maxDistance: number; lodScale: number }
+interface AssetBatch { parts: Part[][]; chunks: Chunk<Instance>[]; size: number; maxDistance: number; lodScale: number; lodRatio: number }
 
 export class InstanceAssets {
   readonly group = new Group();
@@ -44,11 +44,14 @@ export class InstanceAssets {
       for (const node of levels.get(ordered[0])!) bounds.expandByObject(node);
       const size = bounds.getSize(new Vector3()).length();
       const rootRadius = bounds.getCenter(new Vector3()).length() + size / 2;
+      const localSphere = bounds.getBoundingSphere(new Sphere());
       const settings = assetRenderOptions(size, options, byAsset[id]);
       const instances: Instance[] = placements.filter((p) => p.asset === id).map((p) => {
         const rotation = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), p.yaw);
         if (p.normal) rotation.premultiply(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), new Vector3(...p.normal).normalize()));
-        return { ...p, matrix: new Matrix4().compose(new Vector3(p.x, p.y, p.z), rotation, new Vector3().setScalar(p.scale)), lod: -1 };
+        const matrix = new Matrix4().compose(new Vector3(p.x, p.y, p.z), rotation, new Vector3().setScalar(p.scale));
+        const sphere = localSphere.clone().applyMatrix4(matrix);
+        return { ...p, matrix, sphere: { centre: sphere.center, radius: sphere.radius }, tint: new Color(...instanceTint(p.x, p.z, settings.tintVariation)), lod: -1 };
       });
       const parts = ordered.filter((level) => level <= settings.maxLOD).map((level, index) => {
         const parts: Part[] = [];
@@ -63,6 +66,8 @@ export class InstanceAssets {
             mesh.name = `${id}_LOD${level}`;
             mesh.count = 0;
             mesh.instanceMatrix.setUsage(DynamicDrawUsage);
+            mesh.setColorAt(0, new Color(1, 1, 1));
+            mesh.instanceColor!.setUsage(DynamicDrawUsage);
             // CPU chunk culling is based on the viewer camera, never the shadow camera.
             mesh.frustumCulled = false;
             mesh.castShadow = mesh.receiveShadow = index < settings.shadowLODs;
@@ -73,7 +78,7 @@ export class InstanceAssets {
         return parts;
       });
       const chunks = spatialChunks(instances, (p) => rootRadius * p.scale);
-      result.#batches.push({ parts, chunks, size, maxDistance: settings.maxDistance, lodScale: settings.lodScale });
+      result.#batches.push({ parts, chunks, size, maxDistance: settings.maxDistance, lodScale: settings.lodScale, lodRatio: settings.lodRatio });
     }
     result.stats.assets = result.#batches.length;
     result.stats.total = placements.length;
@@ -90,7 +95,7 @@ export class InstanceAssets {
     const counts: number[] = [];
     let visibleChunks = 0, chunks = 0;
     for (const batch of this.#batches) {
-      const distances = lodDistances(batch.size * batch.lodScale, batch.parts.length, viewportHeight, camera.fov, batch.maxDistance);
+      const distances = lodDistances(batch.size * batch.lodScale, batch.parts.length, viewportHeight, camera.fov, batch.maxDistance, batch.lodRatio);
       const written = batch.parts.map(() => 0);
       for (const chunk of batch.chunks) {
         chunks++;
@@ -101,10 +106,12 @@ export class InstanceAssets {
           const scaledDistances = distances.map((d) => d === batch.maxDistance ? d : Math.min(batch.maxDistance, d * instance.scale));
           const lod = instance.lod = instanceLOD(distance, scaledDistances, instance.lod);
           if (lod === batch.parts.length) continue;
+          if (!batch.parts[lod].some((part) => part.mesh.castShadow) && !chunkVisible(instance.sphere, camera.position, planes, Infinity)) continue;
           const index = written[lod]++;
           for (const part of batch.parts[lod]) {
             this.#matrix.multiplyMatrices(instance.matrix, part.local);
             part.mesh.setMatrixAt(index, this.#matrix);
+            part.mesh.setColorAt(index, instance.tint);
           }
         }
       }
@@ -114,6 +121,7 @@ export class InstanceAssets {
           part.mesh.count = written[lod];
           part.mesh.visible = written[lod] > 0;
           if (written[lod]) part.mesh.instanceMatrix.needsUpdate = true;
+          if (written[lod]) part.mesh.instanceColor!.needsUpdate = true;
         }
       });
     }

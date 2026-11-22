@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { pathMask, polygonDistance, segmentSample, selectWater, waterSample, type Hydrology } from "../src/hydrology.ts";
+import { pathMask, placementWaterAt, polygonDistance, segmentSample, selectWater, waterSample, type Hydrology } from "../src/hydrology.ts";
 import { surfaceData } from "../src/surface-data.ts";
 import { buildWaterGeometry } from "../src/water-geometry.ts";
 
@@ -29,6 +29,17 @@ test("water selection retains the whole Spiegelsee and inflows crossing the regi
   assert.equal(selectWater(hydrology, { minX: 1000, minZ: 1000, maxX: 1010, maxZ: 1010 }).lakes[0], lake);
   assert.deepEqual(selectWater({ lakes: [], rivers: [] }, bounds).segments, []);
   assert.equal(waterSample({ ...region, lakes: [], segments: [] }, 0, 0).distance, Infinity);
+});
+
+test("placement water broadphase preserves exact segment interpolation and concave lake distances", () => {
+  const hydrology: Hydrology = { lakes: [lake, { name: "Concave", water_y: 30, outline: [[20, 0], [28, 0], [28, 8], [24, 3], [20, 8]] }], rivers: [
+    { name: "Wide", polyline: [[-10, 12, 21, 1], [8, 12, 11, 20], [30, 12, 9, 3]] },
+    { name: "Point", polyline: [[15, 0, 20, 2], [15, 0, 20, 2]] },
+  ] };
+  const sample = placementWaterAt(hydrology);
+  const segments = hydrology.rivers.flatMap(r => r.polyline.slice(1).map((b, i) => ({ a: r.polyline[i], b })));
+  for (let x = -30; x < 50; x += 1.3) for (let z = -20; z < 40; z += 1.7) assert.equal(sample(x, z), waterSample({ lakes: hydrology.lakes, segments }, x, z).height);
+  assert.equal(placementWaterAt({ lakes: [], rivers: [] })(0, 0), 0);
 });
 
 test("paths have a full-width centre and soft edges, and omitted/empty paths paint nothing", () => {

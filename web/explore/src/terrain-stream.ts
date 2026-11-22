@@ -137,12 +137,13 @@ export class TerrainStream {
 
   get stats() {
     const lods = [0, 0, 0, 0];
-    let failed = 0;
+    let failed = 0, pending = 0;
     for (const tile of this.#active.values()) {
       if (tile.lod !== undefined) lods[tile.lod]++;
+      if (tile.pending || tile.lod !== tile.wantedLOD) pending++;
       if (tile.attempts > RETRIES && !tile.data && !tile.pending) failed++;
     }
-    return { lods, total: this.#active.size, failed };
+    return { lods, total: this.#active.size, failed, pending };
   }
 
   dispose() {
