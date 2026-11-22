@@ -1,10 +1,12 @@
-"""Double-terminated violet seed levitating over a fractured limestone cradle."""
+"""Proof-derived violet crystals on weathered, mossy fault limestone."""
+import json
 import math
 import random
+from pathlib import Path
 
 import bmesh
 import bpy
-from mathutils import Euler, Vector, noise
+from mathutils import Euler, Matrix, Vector, noise
 
 import vrlib
 import vrmat
@@ -12,388 +14,383 @@ import vrmat
 SEED = 840173
 
 
-def mineral_attributes(mesh, radius, height, phase):
-    fields = {name: mesh.attributes.new(name, "FLOAT", "POINT")
-              for name in ("growth_height", "plane_distance_0", "plane_distance_1", "vein_window")}
-    for vertex in mesh.vertices:
-        p = vertex.co
-        z = max(0, min(1, p.z / height))
-        angle = math.atan2(p.y, p.x)
-        fields["growth_height"].data[vertex.index].value = z + 0.018 * math.sin(2 * angle + phase)
-        fields["vein_window"].data[vertex.index].value = (
-            math.sin(math.pi * z) ** 0.5 * max(0, math.sin(z * 19 + phase)))
-        for i in range(2):
-            a = phase + i * 1.37
-            fields[f"plane_distance_{i}"].data[vertex.index].value = (
-                (p.x * math.cos(a) + p.y * math.sin(a)) / radius + 0.22 * z - 0.18
-                + 0.15 * math.sin(z * 24 + phase) + 0.06 * math.sin(z * 53 + a))
-
-
-def mineral_structure(mat):
-    nodes, links = mat.node_tree.nodes, mat.node_tree.links
-    bsdf = nodes["Principled BSDF"]
+def rock_material():
+    mat = bpy.data.materials.new("vr_rock_mossy")
+    mat.use_nodes = True
+    nt = mat.node_tree
+    N, L = nt.nodes, nt.links
+    bsdf = N["Principled BSDF"]
+    coords = N.new("ShaderNodeTexCoord")
+    geo = N.new("ShaderNodeNewGeometry")
     palette = vrmat.load_palette()
-    dark = tuple(v * 0.16 for v in palette["violet_shadow"]["linear_rgb"]) + (1,)
-    light = tuple(v * 0.46 for v in palette["violet_body"]["linear_rgb"]) + (1,)
 
-    def attribute(name):
-        node = nodes.new("ShaderNodeAttribute")
-        node.attribute_name = name
-        return node.outputs["Fac"]
+    big = N.new("ShaderNodeTexNoise")
+    big.inputs["Scale"].default_value = 1.6
+    big.inputs["Detail"].default_value = 9
+    big.inputs["Roughness"].default_value = 0.62
+    fine = N.new("ShaderNodeTexNoise")
+    fine.inputs["Scale"].default_value = 22
+    fine.inputs["Detail"].default_value = 8
+    cracks = N.new("ShaderNodeTexVoronoi")
+    cracks.feature = "DISTANCE_TO_EDGE"
+    cracks.inputs["Scale"].default_value = 1.9
+    cracks.inputs["Randomness"].default_value = 1.0
+    for n in (big, fine):
+        L.new(coords.outputs["Object"], n.inputs["Vector"])
+    # Warp the crack pattern so it reads as natural fractures, not a honeycomb.
+    warp = N.new("ShaderNodeTexNoise")
+    warp.inputs["Scale"].default_value = 2.3
+    warp.inputs["Detail"].default_value = 4
+    L.new(coords.outputs["Object"], warp.inputs["Vector"])
+    warped = N.new("ShaderNodeMixRGB")
+    warped.inputs["Fac"].default_value = 0.22
+    L.new(coords.outputs["Object"], warped.inputs["Color1"])
+    L.new(warp.outputs["Color"], warped.inputs["Color2"])
+    L.new(warped.outputs["Color"], cracks.inputs["Vector"])
 
-    def math_node(operation, source, other=0):
-        node = nodes.new("ShaderNodeMath")
-        node.operation = operation
-        links.new(source, node.inputs[0])
-        if isinstance(other, (float, int)):
-            node.inputs[1].default_value = other
-        else:
-            links.new(other, node.inputs[1])
-        return node.outputs[0]
+    stone = N.new("ShaderNodeValToRGB")
+    e = stone.color_ramp.elements
+    e[0].position, e[0].color = 0.28, (*palette["monument_shadow"]["linear_rgb"], 1)
+    e[1].position, e[1].color = 0.74, (*palette["stone_weathered"]["linear_rgb"], 1)
+    mid = e.new(0.52)
+    mid.color = (*palette["canyon_chalk"]["linear_rgb"], 1)
+    L.new(big.outputs["Fac"], stone.inputs["Fac"])
 
-    def threshold(source, start, end):
-        node = nodes.new("ShaderNodeMapRange")
-        node.clamp = True
-        node.inputs["From Min"].default_value = start
-        node.inputs["From Max"].default_value = end
-        links.new(source, node.inputs["Value"])
-        return node.outputs[0]
+    # Lighter wear on convex edges, darker in creases.
+    wear = N.new("ShaderNodeValToRGB")
+    wear.color_ramp.elements[0].position = 0.46
+    wear.color_ramp.elements[1].position = 0.58
+    L.new(geo.outputs["Pointiness"], wear.inputs["Fac"])
+    worn = N.new("ShaderNodeMixRGB")
+    worn.blend_type = "OVERLAY"
+    worn.inputs["Fac"].default_value = 0.75
+    L.new(stone.outputs["Color"], worn.inputs["Color1"])
+    L.new(wear.outputs["Color"], worn.inputs["Color2"])
 
-    def mix(factor, source, color):
-        node = nodes.new("ShaderNodeMixRGB")
-        links.new(factor, node.inputs[0])
-        links.new(source, node.inputs[1])
-        node.inputs[2].default_value = color
-        return node.outputs[0]
+    crack_mask = N.new("ShaderNodeValToRGB")
+    crack_mask.color_ramp.elements[0].position = 0.0
+    crack_mask.color_ramp.elements[1].position = 0.014
+    # Only keep cracks where the coarse noise is low, so they come and go.
+    crack_fade = N.new("ShaderNodeMath")
+    crack_fade.operation = "ADD"
+    crack_gate = N.new("ShaderNodeMapRange")
+    crack_gate.inputs["From Min"].default_value = 0.42
+    crack_gate.inputs["From Max"].default_value = 0.56
+    crack_gate.inputs["To Max"].default_value = 0.05
+    L.new(big.outputs["Fac"], crack_gate.inputs["Value"])
+    L.new(cracks.outputs["Distance"], crack_fade.inputs[0])
+    L.new(crack_gate.outputs["Result"], crack_fade.inputs[1])
+    L.new(crack_fade.outputs["Value"], crack_mask.inputs["Fac"])
+    cracked = N.new("ShaderNodeMixRGB")
+    cracked.blend_type = "MULTIPLY"
+    cracked.inputs["Fac"].default_value = 0.65
+    L.new(worn.outputs["Color"], cracked.inputs["Color1"])
+    L.new(crack_mask.outputs["Color"], cracked.inputs["Color2"])
 
-    phase = math_node("MULTIPLY", attribute("growth_height"), 6 * math.pi)
-    bands = threshold(math_node("SINE", phase), 0.65, 0.95)
-    source = bsdf.inputs["Base Color"].links[0].from_socket
-    body = mix(math_node("MULTIPLY", bands, 0.72), source, dark)
-    a = math_node("ABSOLUTE", attribute("plane_distance_0"))
-    b = math_node("ABSOLUTE", attribute("plane_distance_1"))
-    distance = math_node("MINIMUM", a, b)
-    border = threshold(distance, 0.11, 0.04)
-    veins = threshold(distance, 0.04, 0.008)
-    veins = math_node("MULTIPLY", veins, attribute("vein_window"))
-    body = mix(math_node("MULTIPLY", border, 0.8), body, dark)
-    links.new(mix(veins, body, light), bsdf.inputs["Base Color"])
-    strength = bsdf.inputs["Emission Strength"].links[0].from_socket
-    attenuation = math_node("ADD", math_node("MULTIPLY", bands, -0.72), 1)
-    strength = math_node("MULTIPLY", strength, attenuation)
-    strength = math_node("ADD", strength, math_node("MULTIPLY", veins, 0.025))
-    links.new(strength, bsdf.inputs["Emission Strength"])
-    emission = bsdf.inputs["Emission Color"].links[0].from_socket
-    links.new(mix(veins, emission, light), bsdf.inputs["Emission Color"])
-    for link in list(bsdf.inputs["Roughness"].links):
-        links.remove(link)
-    bsdf.inputs["Roughness"].default_value = 0.38
-    bsdf.inputs["Coat Weight"].default_value = 0.04
-    bsdf.inputs["Specular IOR Level"].default_value = 0.12
-    mat["structure_tweaks"] = "three dark growth bands; two signed crystal-plane attributes; dark vein borders, narrow violet veins; restrained coat/specular"
+    # Moss on upward faces, broken up by noise.
+    sep = N.new("ShaderNodeSeparateXYZ")
+    L.new(geo.outputs["Normal"], sep.inputs["Vector"])
+    moss_noise = N.new("ShaderNodeTexNoise")
+    moss_noise.inputs["Scale"].default_value = 3.0
+    moss_noise.inputs["Detail"].default_value = 6
+    L.new(coords.outputs["Object"], moss_noise.inputs["Vector"])
+    up = N.new("ShaderNodeMath")
+    up.operation = "MULTIPLY"
+    L.new(sep.outputs["Z"], up.inputs[0])
+    L.new(moss_noise.outputs["Fac"], up.inputs[1])
+    moss_mask = N.new("ShaderNodeValToRGB")
+    moss_mask.color_ramp.elements[0].position = 0.36
+    moss_mask.color_ramp.elements[1].position = 0.50
+    L.new(up.outputs["Value"], moss_mask.inputs["Fac"])
+    moss_col = N.new("ShaderNodeValToRGB")
+    moss_col.color_ramp.elements[0].color = (*palette["moss"]["linear_rgb"], 1)
+    moss_col.color_ramp.elements[1].color = (*palette["grass_green"]["linear_rgb"], 1)
+    L.new(fine.outputs["Fac"], moss_col.inputs["Fac"])
+    mossy = N.new("ShaderNodeMixRGB")
+    L.new(moss_mask.outputs["Color"], mossy.inputs["Fac"])
+    L.new(cracked.outputs["Color"], mossy.inputs["Color1"])
+    L.new(moss_col.outputs["Color"], mossy.inputs["Color2"])
 
+    L.new(mossy.outputs["Color"], bsdf.inputs["Base Color"])
 
-def weathered_limestone(name):
-    mat = vrmat.get("monument_weathered").copy()
-    mat.name = name
-    nodes, links = mat.node_tree.nodes, mat.node_tree.links
-    bsdf = nodes["Principled BSDF"]
-    palette = vrmat.load_palette()
-    coords = next(node for node in nodes if node.type == "TEX_COORD").outputs["Object"]
-    grain = nodes.new("ShaderNodeTexNoise")
-    grain.inputs["Scale"].default_value = 0.87
-    grain.inputs["Detail"].default_value = 3
-    links.new(coords, grain.inputs["Vector"])
-    cream = palette["monument_white"]["linear_rgb"]
-    seam = palette["stone_weathered"]["linear_rgb"]
-    shadow = palette["monument_shadow"]["linear_rgb"]
-    tones = nodes.new("ShaderNodeValToRGB")
-    tones.color_ramp.elements[0].position = 0.23
-    tones.color_ramp.elements[0].color = tuple(v * 0.56 for v in cream) + (1,)
-    tones.color_ramp.elements[1].position = 0.79
-    tones.color_ramp.elements[1].color = tuple(v * 0.90 for v in cream) + (1,)
-    links.new(grain.outputs["Fac"], tones.inputs[0])
-    patina = nodes.new("ShaderNodeAttribute")
-    patina.attribute_name = "stone_patina"
-    dirt = nodes.new("ShaderNodeMixRGB")
-    dirt.inputs[2].default_value = tuple(0.35 * a + 0.65 * b for a, b in zip(seam, palette["soil"]["linear_rgb"])) + (1,)
-    links.new(patina.outputs["Fac"], dirt.inputs[0])
-    links.new(tones.outputs[0], dirt.inputs[1])
-    ao = nodes.new("ShaderNodeAmbientOcclusion")
-    ao.samples = 4
-    ao.inputs["Distance"].default_value = 0.19
-    joints = nodes.new("ShaderNodeMixRGB")
-    joints.inputs[1].default_value = tuple(v * 0.55 for v in seam) + (1,)
-    links.new(ao.outputs["AO"], joints.inputs[0])
-    links.new(dirt.outputs[0], joints.inputs[2])
-    links.new(joints.outputs[0], bsdf.inputs["Base Color"])
-    bsdf.inputs["Specular IOR Level"].default_value = 0.22
-    mat["asset_tweaks"] = "approved stair_terrace_a: 0.87-scale cream variation, 0.19m joint AO, palette patina in recesses and feet; library pores retained"
+    rough = N.new("ShaderNodeMapRange")
+    rough.inputs["To Min"].default_value = 0.72
+    rough.inputs["To Max"].default_value = 0.96
+    L.new(fine.outputs["Fac"], rough.inputs["Value"])
+    L.new(rough.outputs["Result"], bsdf.inputs["Roughness"])
+
+    bump_fine = N.new("ShaderNodeBump")
+    bump_fine.inputs["Strength"].default_value = 0.35
+    bump_fine.inputs["Distance"].default_value = 0.03
+    L.new(fine.outputs["Fac"], bump_fine.inputs["Height"])
+    bump_crack = N.new("ShaderNodeBump")
+    bump_crack.inputs["Strength"].default_value = 0.9
+    bump_crack.inputs["Distance"].default_value = 0.04
+    L.new(crack_mask.outputs["Color"], bump_crack.inputs["Height"])
+    L.new(bump_fine.outputs["Normal"], bump_crack.inputs["Normal"])
+    L.new(bump_crack.outputs["Normal"], bsdf.inputs["Normal"])
     return mat
 
 
-def stone_patina(mesh, height):
-    attr = mesh.attributes.new("stone_patina", "FLOAT", "POINT")
-    low = min(vertex.co.z for vertex in mesh.vertices)
-    for vertex, value in zip(mesh.vertices, attr.data):
-        wear = noise.fractal(vertex.co * 2.3, 1, 2, 3)
-        value.value = max(0, min(0.85, 0.9 - (vertex.co.z - low) / height + wear * 0.28))
+def crystal_material():
+    mat = bpy.data.materials.new("vr_crystal_violet")
+    mat.use_nodes = True
+    nt = mat.node_tree
+    N, L = nt.nodes, nt.links
+    bsdf = N["Principled BSDF"]
+    coords = N.new("ShaderNodeTexCoord")
+    sep = N.new("ShaderNodeSeparateXYZ")
+    L.new(coords.outputs["Generated"], sep.inputs["Vector"])
 
+    body = N.new("ShaderNodeValToRGB")
+    e = body.color_ramp.elements
+    e[0].position, e[0].color = 0.0, (0.030, 0.004, 0.10, 1)
+    e[1].position, e[1].color = 1.0, (0.36, 0.10, 0.80, 1)
+    mid = e.new(0.55)
+    mid.color = (0.13, 0.022, 0.40, 1)
+    L.new(sep.outputs["Z"], body.inputs["Fac"])
 
-def moss_material():
-    mat = vrmat.get("mossy_rock").copy()
-    nodes, links = mat.node_tree.nodes, mat.node_tree.links
-    grain = nodes.new("ShaderNodeTexNoise")
-    grain.inputs["Scale"].default_value = 65
-    grain.inputs["Detail"].default_value = 4
-    colors = nodes.new("ShaderNodeValToRGB")
-    green = vrmat.load_palette()["moss"]["linear_rgb"]
-    colors.color_ramp.elements[0].color = tuple(v * 0.45 for v in green) + (1,)
-    colors.color_ramp.elements[1].color = tuple(v * 1.55 for v in green) + (1,)
-    links.new(grain.outputs["Fac"], colors.inputs[0])
-    links.new(colors.outputs[0], nodes["Principled BSDF"].inputs["Base Color"])
+    # Angular inner fractures: large Voronoi cells shift tone and glow.
+    cells = N.new("ShaderNodeTexVoronoi")
+    cells.inputs["Scale"].default_value = 5.5
+    L.new(coords.outputs["Object"], cells.inputs["Vector"])
+    cell_sep = N.new("ShaderNodeSeparateXYZ")
+    L.new(cells.outputs["Color"], cell_sep.inputs["Vector"])
+    fract = N.new("ShaderNodeMixRGB")
+    fract.blend_type = "OVERLAY"
+    fract.inputs["Fac"].default_value = 0.14
+    L.new(body.outputs["Color"], fract.inputs["Color1"])
+    L.new(cells.outputs["Color"], fract.inputs["Color2"])
+    tint = N.new("ShaderNodeMixRGB")
+    tint.blend_type = "MIX"
+    tint.inputs["Fac"].default_value = 0.45
+    L.new(fract.outputs["Color"], tint.inputs["Color1"])
+    L.new(body.outputs["Color"], tint.inputs["Color2"])
+    L.new(tint.outputs["Color"], bsdf.inputs["Base Color"])
+
+    veins = N.new("ShaderNodeTexNoise")
+    veins.inputs["Scale"].default_value = 2.4
+    veins.inputs["Detail"].default_value = 3
+    veins.inputs["Distortion"].default_value = 0.4
+    L.new(coords.outputs["Object"], veins.inputs["Vector"])
+    vein_mask = N.new("ShaderNodeValToRGB")
+    vein_mask.color_ramp.elements[0].position = 0.35
+    vein_mask.color_ramp.elements[1].position = 0.75
+    L.new(veins.outputs["Fac"], vein_mask.inputs["Fac"])
+
+    # Glow: strongest in the core near the base, fading toward the tip, plus bright veins.
+    core = N.new("ShaderNodeMapRange")
+    core.inputs["From Min"].default_value = 0.0
+    core.inputs["From Max"].default_value = 0.9
+    core.inputs["To Min"].default_value = 0.55
+    core.inputs["To Max"].default_value = 0.03
+    L.new(sep.outputs["Z"], core.inputs["Value"])
+    vein_gain = N.new("ShaderNodeMath")
+    vein_gain.operation = "MULTIPLY_ADD"
+    vein_gain.inputs[1].default_value = 0.14
+    L.new(vein_mask.outputs["Color"], vein_gain.inputs[0])
+    L.new(core.outputs["Result"], vein_gain.inputs[2])
+    cell_gain = N.new("ShaderNodeMath")
+    cell_gain.operation = "MULTIPLY_ADD"
+    cell_gain.inputs[1].default_value = 0.10
+    L.new(cell_sep.outputs["X"], cell_gain.inputs[0])
+    L.new(vein_gain.outputs["Value"], cell_gain.inputs[2])
+    bsdf.inputs["Emission Color"].default_value = (0.30, 0.05, 1.0, 1)
+    L.new(cell_gain.outputs["Value"], bsdf.inputs["Emission Strength"])
+
+    rough = N.new("ShaderNodeMapRange")
+    rough.inputs["To Min"].default_value = 0.06
+    rough.inputs["To Max"].default_value = 0.24
+    L.new(veins.outputs["Fac"], rough.inputs["Value"])
+    L.new(rough.outputs["Result"], bsdf.inputs["Roughness"])
+    bsdf.inputs["Coat Weight"].default_value = 0.6
+    bsdf.inputs["Coat Roughness"].default_value = 0.04
+    bsdf.inputs["IOR"].default_value = 1.6
+
+    # Growth striations running along the crystal axis.
+    stria = N.new("ShaderNodeTexWave")
+    stria.bands_direction = "Z"
+    stria.inputs["Scale"].default_value = 5
+    stria.inputs["Distortion"].default_value = 2.2
+    stria.inputs["Detail"].default_value = 3
+    L.new(coords.outputs["Object"], stria.inputs["Vector"])
+    bump = N.new("ShaderNodeBump")
+    bump.inputs["Strength"].default_value = 0.05
+    bump.inputs["Distance"].default_value = 0.01
+    L.new(stria.outputs["Fac"], bump.inputs["Height"])
+    L.new(bump.outputs["Normal"], bsdf.inputs["Normal"])
     return mat
 
 
-def moss_tufts(surface, rng, mat, count, extent):
-    for i in range(count):
-        angle = rng.uniform(0, math.tau)
-        distance = extent * rng.uniform(0.15, 0.96)
-        origin = Vector((math.cos(angle) * distance, math.sin(angle) * distance, extent * 4))
-        hit, point, normal, _ = surface.ray_cast(origin, Vector((0, 0, -1)))
-        if not hit or normal.z < 0.15:
-            continue
-        radius = extent * rng.uniform(0.035, 0.065)
-        bm = bmesh.new()
-        bmesh.ops.create_icosphere(bm, subdivisions=3, radius=radius)
-        for vertex in bm.verts:
-            grain = noise.fractal(vertex.co * (8 / radius) + Vector((i, 0, 0)), 1, 2, 3)
-            vertex.co *= 1 + grain * 0.24
-            vertex.co.z *= 0.5
-        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-        mesh = bpy.data.meshes.new(f"moss_tuft_{surface.name}_{i}")
-        bm.to_mesh(mesh)
-        bm.free()
-        for face in mesh.polygons:
-            face.use_smooth = True
-        obj = bpy.data.objects.new(mesh.name, mesh)
-        obj.data.materials.append(mat)
-        obj.matrix_world = surface.matrix_world.copy()
-        obj.location += surface.matrix_world.to_3x3() @ (point + normal * radius * 0.05)
-        vrlib.link_to_source(obj)
-
-
-def seed_material():
-    mat = vrmat.get("violet_crystal").copy()
-    mat.name = "Seed | violet heart"
-    nodes, links = mat.node_tree.nodes, mat.node_tree.links
-    bsdf = nodes["Principled BSDF"]
-    for node in nodes:
-        if node.type == "VECT_MATH" and node.operation == "SCALE":
-            node.inputs[3].default_value = 0.12
-        if node.type == "VALTORGB" and node.inputs["Fac"].is_linked:
-            if node.inputs["Fac"].links[0].from_node.type == "SEPXYZ":
-                color = vrmat.load_palette()["violet_shadow"]["linear_rgb"]
-                node.color_ramp.elements[0].color = (*(v * 0.65 for v in color), 1)
-    coords = next(node for node in nodes if node.type == "TEX_COORD")
-    targets = [link.to_socket for link in list(links) if link.from_socket == coords.outputs["Object"]]
-    space = nodes.new("ShaderNodeVectorMath")
-    space.operation = "SCALE"
-    space.inputs[3].default_value = 0.22
-    links.new(coords.outputs["Object"], space.inputs[0])
-    for socket in targets:
-        links.new(space.outputs[0], socket)
-    mat["asset_tweaks"] = "geometry depth 0–1; palette violet_body gains 0.12/0.24/0.7; tip mixes violet_glow 0.3; library body mix 0.12; hue 0.515; centre-only emission 0–1.8; normal tilt 0.12; texture scale 0.22"
-    source = bsdf.inputs["Base Color"].links[0].from_socket
-    depth = nodes.new("ShaderNodeAttribute")
-    depth.attribute_name = "mineral_depth"
-    palette = vrmat.load_palette()
-    violet = palette["violet_body"]["linear_rgb"]
-    lavender = palette["violet_glow"]["linear_rgb"]
-    def shade(gain):
-        return tuple(v * gain for v in violet) + (1,)
-    light = tuple(0.7 * a + 0.3 * b for a, b in zip(violet, lavender)) + (1,)
-    ramp = nodes.new("ShaderNodeValToRGB")
-    ramp.name = "Geometry inner depth"
-    ramp.color_ramp.elements[0].color = shade(0.12)
-    ramp.color_ramp.elements[1].color = light
-    for position, gain in [(0.28, 0.24), (0.58, 0.7)]:
-        ramp.color_ramp.elements.new(position).color = shade(gain)
-    links.new(depth.outputs["Fac"], ramp.inputs[0])
-    body = nodes.new("ShaderNodeMixRGB")
-    body.inputs[0].default_value = 0.88
-    links.new(source, body.inputs[1])
-    links.new(ramp.outputs[0], body.inputs[2])
-    tone = nodes.new("ShaderNodeHueSaturation")
-    tone.inputs["Hue"].default_value = 0.515
-    links.new(body.outputs[0], tone.inputs["Color"])
-    links.new(tone.outputs[0], bsdf.inputs["Base Color"])
-    heat = nodes.new("ShaderNodeAttribute")
-    heat.attribute_name = "core_glow"
-    glow = nodes.new("ShaderNodeValToRGB")
-    glow.color_ramp.elements[0].color = shade(0.24)
-    glow.color_ramp.elements[1].color = light
-    glow.color_ramp.elements.new(0.35).color = shade(0.7)
-    links.new(heat.outputs["Fac"], glow.inputs[0])
-    light_color = nodes.new("ShaderNodeHueSaturation")
-    light_color.inputs["Hue"].default_value = 0.515
-    links.new(glow.outputs[0], light_color.inputs["Color"])
-    links.new(light_color.outputs[0], bsdf.inputs["Emission Color"])
-    gain = nodes.new("ShaderNodeMath")
-    gain.operation = "MULTIPLY"
-    gain.inputs[1].default_value = 0.65
-    links.new(heat.outputs["Fac"], gain.inputs[0])
-    links.new(gain.outputs[0], bsdf.inputs["Emission Strength"])
-    mineral_structure(mat)
-    bsdf.inputs["Coat Weight"].default_value = 0
-    bsdf.inputs["Specular IOR Level"].default_value = 0
-    return mat
-
-
-def seed(rng, mat):
-    radius, height = 3.45, 14.75
-    sides = 8
-    twist = 0.22
-    profile = [rng.uniform(0.82, 1.18) for _ in range(sides)]
-    rings = [(0.0, 0.0), (0.14, 1.0), (0.32, 1.02),
-             (0.68, 0.98), (0.72, 0.96), (0.86, 0.52), (1.0, 0.0)]
-    tip_shift = Vector((0.20, -0.16, 0)) * radius
+def make_rock(name, rng, radius, squash, subdivisions, mat):
     bm = bmesh.new()
-    loops = []
-    for t, width in rings:
-        if width == 0:
-            loops.append([bm.verts.new(Vector((0, 0, height * t)) + tip_shift * (2 * t - 1))])
-        else:
-            loop = []
-            for s in range(sides):
-                angle = twist + math.tau * s / sides
-                r = radius * width * profile[s]
-                if t in (0.12, 0.88):
-                    r *= rng.uniform(0.8, 1.2)
-                z = height * (t + rng.uniform(-0.018, 0.018))
-                loop.append(bm.verts.new(Vector((math.cos(angle) * r, math.sin(angle) * r, z))
-                                         + tip_shift * ((t - 0.5) * 2) ** 3 * 0.6))
-            loops.append(loop)
-    for lower, upper in zip(loops, loops[1:]):
-        for s in range(sides):
-            n = (s + 1) % sides
-            if len(lower) == 1:
-                bm.faces.new((lower[0], upper[n], upper[s]))
-            elif len(upper) == 1:
-                bm.faces.new((lower[s], lower[n], upper[0]))
-            else:
-                bm.faces.new((lower[s], lower[n], upper[n], upper[s]))
-    for point, normal in [((0, 0, height * 0.955), (0.6, -0.3, 1)),
-                          ((0, 0, height * 0.025), (-0.4, 0.6, -1)),
-                          ((radius * 0.87, 0, height * 0.52), (1, 0.3, 0.12)),
-                          ((-radius * 0.88, 0, height * 0.68), (-1, 0.3, 0.17))]:
-        cut = bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:],
-                                    plane_co=point, plane_no=Vector(normal).normalized(), clear_outer=True)
-        edges = [e for e in cut["geom_cut"] if isinstance(e, bmesh.types.BMEdge) and e.is_boundary]
-        bmesh.ops.holes_fill(bm, edges=edges)
-    bmesh.ops.triangulate(bm, faces=bm.faces[:])
-    bmesh.ops.subdivide_edges(bm, edges=bm.edges[:], cuts=16, use_grid_fill=True)
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-    mesh = bpy.data.meshes.new("Seed planar facets")
+    bmesh.ops.create_icosphere(bm, subdivisions=subdivisions, radius=radius)
+    # Chisel the sphere with random planes to get hard, faceted rock breaks.
+    planes = []
+    for _ in range(26):
+        n = Vector((rng.uniform(-1, 1), rng.uniform(-1, 1), rng.uniform(-0.5, 1))).normalized()
+        planes.append((n, radius * rng.uniform(0.62, 0.96)))
+    offset = Vector((rng.uniform(0, 50), rng.uniform(0, 50), rng.uniform(0, 50)))
+    for v in bm.verts:
+        p = v.co.copy()
+        for n, d in planes:
+            over = p.dot(n) - d
+            if over > 0:
+                p -= n * over
+        direction = v.co.normalized()
+        coarse = noise.fractal(p * (1.1 / radius) + offset, 1.0, 2.0, 5)
+        ridged = noise.ridged_multi_fractal(p * (3.2 / radius) + offset, 1.0, 2.1, 5, 1.0, 2.0)
+        fine = noise.fractal(p * (16.0 / radius) + offset, 1.0, 2.0, 4)
+        p += direction * radius * (0.10 * coarse + 0.035 * (ridged - 1.0) + 0.008 * fine)
+        v.co = p
+    for v in bm.verts:
+        v.co.z *= squash
+    mesh = bpy.data.meshes.new(name)
     bm.to_mesh(mesh)
     bm.free()
-    heat = mesh.attributes.new("core_distance", "FLOAT", "POINT")
-    centre = Vector((0, 0, height * 0.5))
-    for v, value in zip(mesh.vertices, heat.data):
-        value.value = min(1, (v.co - centre).length / (height * 0.5))
-    depth = mesh.attributes.new("mineral_depth", "FLOAT", "POINT")
-    glow = mesh.attributes.new("core_glow", "FLOAT", "POINT")
-    for vertex, value, light in zip(mesh.vertices, depth.data, glow.data):
-        z = max(0, min(1, vertex.co.z / height))
-        distance = min(1, (vertex.co - centre).length / (height * 0.5))
-        growth = 0.04 * (1 - (z * 3) % 1)
-        value.value = max(0, min(1, (0.68 - distance) / 0.4 - growth))
-        central = max(0, 1 - abs(z - 0.5) / 0.22)
-        light.value = central * max(0, min(1, (0.66 - distance) / 0.26)) ** 2
-    mineral_attributes(mesh, radius, height, twist)
-    obj = bpy.data.objects.new("Levitating violet seed", mesh)
+    for poly in mesh.polygons:
+        poly.use_smooth = True
+    obj = bpy.data.objects.new(name, mesh)
     obj.data.materials.append(mat)
-    obj.location = (0, 0, 4.55)
-    bevel = obj.modifiers.new("Seed facet edges", "BEVEL")
-    bevel.width, bevel.segments = 0.028, 2
+    return vrlib.link_to_source(obj)
+
+
+def make_crystal(name, rng, radius, height, mat):
+    """Six-sided prism with an irregular double-tapered tip, built bottom-up."""
+    sides = 6
+    twist = rng.uniform(0, math.tau)
+    profile = [rng.uniform(0.82, 1.18) for _ in range(sides)]
+    rings = [
+        (0.0, 1.00),
+        (rng.uniform(0.30, 0.42), rng.uniform(1.04, 1.12)),
+        (rng.uniform(0.66, 0.76), rng.uniform(0.92, 1.0)),
+        (rng.uniform(0.86, 0.91), rng.uniform(0.50, 0.64)),
+    ]
+    tip_shift = Vector((rng.uniform(-0.3, 0.3), rng.uniform(-0.3, 0.3), 0)) * radius
+    bm = bmesh.new()
+    loops = []
+    for i, (t, scale) in enumerate(rings):
+        lean = tip_shift * (t ** 2) * 0.6
+        loop = []
+        for s in range(sides):
+            a = twist + math.tau * s / sides
+            r = radius * scale * profile[s]
+            if i == 3:
+                r *= rng.uniform(0.8, 1.2)
+            z = height * t + (rng.uniform(-0.02, 0.02) * height if i in (2, 3) else 0)
+            loop.append(bm.verts.new(Vector((math.cos(a) * r, math.sin(a) * r, z)) + lean))
+        loops.append(loop)
+    apex = bm.verts.new(Vector((0, 0, height)) + tip_shift)
+    for lower, upper in zip(loops, loops[1:]):
+        for s in range(sides):
+            bm.faces.new((lower[s], lower[(s + 1) % sides], upper[(s + 1) % sides], upper[s]))
+    for s in range(sides):
+        bm.faces.new((loops[-1][s], loops[-1][(s + 1) % sides], apex))
+    bm.faces.new(list(reversed(loops[0])))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    mesh = bpy.data.meshes.new(name)
+    bm.to_mesh(mesh)
+    bm.free()
+    obj = bpy.data.objects.new(name, mesh)
+    obj.data.materials.append(mat)
+    bevel = obj.modifiers.new("edge_bevel", "BEVEL")
+    bevel.width = max(0.004, radius * 0.045)
+    bevel.segments = 3
     bevel.limit_method = "ANGLE"
     bevel.angle_limit = math.radians(12)
     return vrlib.link_to_source(obj)
 
 
-def limestone_block(name, rng, size, location, rotation, mat):
-    bm = bmesh.new()
-    loops = []
-    profile = [rng.uniform(0.8, 1.15) for _ in range(7)]
-    for z, scale in [(-0.5, 0.95), (0.03, 1.05), (0.43, 0.74)]:
-        loop = []
-        for s in range(7):
-            angle = math.tau * s / 7
-            loop.append(bm.verts.new((math.cos(angle) * size[0] * 0.5 * scale * profile[s],
-                                      math.sin(angle) * size[1] * 0.5 * scale * profile[s],
-                                      (z + rng.uniform(-0.07, 0.07)) * size[2])))
-        loops.append(loop)
-    bm.faces.new(list(reversed(loops[0])))
-    bm.faces.new(loops[-1])
-    for lower, upper in zip(loops, loops[1:]):
-        for s in range(7):
-            n = (s + 1) % 7
-            bm.faces.new((lower[s], lower[n], upper[n], upper[s]))
-    planes = [(Vector((rng.uniform(-0.4, 0.4), rng.uniform(-0.4, 0.4), 1)),
-               Vector((0, 0, size[2] * rng.uniform(0.20, 0.38)))),
-              (Vector((1, rng.uniform(-0.6, 0.6), rng.uniform(-0.3, 0.3))),
-               Vector((size[0] * 0.36, 0, 0))),
-              (Vector((-0.45, 1, 0.15)), Vector((0, size[1] * 0.36, 0))),
-              (Vector((-1, -0.3, -0.08)), Vector((-size[0] * 0.42, 0, 0)))]
-    for _ in range(2):
-        corner = Vector(tuple(rng.choice((-1, 1)) * s * 0.5 for s in size))
-        normal = Vector(tuple(math.copysign(rng.uniform(0.6, 1.2), c) for c in corner)).normalized()
-        planes.append((normal, corner - normal * rng.uniform(0.15, 0.35)))
-    for normal, point in planes:
-        cut = bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:],
-                                    plane_co=point, plane_no=normal.normalized(), clear_outer=True)
-        edges = [e for e in cut["geom_cut"] if isinstance(e, bmesh.types.BMEdge) and e.is_boundary]
-        bmesh.ops.holes_fill(bm, edges=edges)
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-    bmesh.ops.triangulate(bm, faces=bm.faces[:])
-    bmesh.ops.subdivide_edges(bm, edges=bm.edges[:], cuts=10, use_grid_fill=True)
-    bm.normal_update()
-    for vertex in bm.verts:
-        wear = noise.fractal(vertex.co * 2 + Vector(location), 1, 2, 3)
-        vertex.co += vertex.normal * wear * min(size) * 0.035
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-    mesh = bpy.data.meshes.new(name)
-    bm.to_mesh(mesh)
-    bm.free()
-    stone_patina(mesh, size[2])
-    obj = bpy.data.objects.new(name, mesh)
-    for face in mesh.polygons:
-        face.use_smooth = True
-    obj.data.materials.append(mat)
-    obj.location, obj.rotation_euler = location, Euler(rotation)
-    bevel = obj.modifiers.new("Limestone edge wear", "BEVEL")
-    bevel.width, bevel.segments = 0.035, 2
-    return vrlib.link_to_source(obj)
+def place(obj, rng, angle, distance, tilt, base_z):
+    """Lean the crystal outward from the cluster centre by `tilt` radians."""
+    outward = Vector((math.cos(angle), math.sin(angle), 0))
+    axis = Vector((0, 0, 1)).cross(outward)
+    lean = Matrix.Rotation(tilt, 4, axis) if axis.length > 0 else Matrix.Identity(4)
+    spin = Matrix.Rotation(rng.uniform(0, math.tau), 4, "Z")
+    obj.matrix_world = Matrix.Translation(outward * distance + Vector((0, 0, base_z))) @ lean @ spin
 
 
-def mound(name, rng, radius, squash, location, mat):
-    if name.startswith("Shared"):
-        return ground_disc(name, radius, squash, location, mat)
+def cut_below_ground(depth=0.06):
+    """Remove everything deeper than `depth` under the ground plane; the underside is never seen."""
+    for obj in vrlib.source_objects():
+        inv = obj.matrix_world.inverted()
+        bm = bmesh.new()
+        bm.from_mesh(obj.data)
+        bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:],
+                               plane_co=inv @ Vector((0, 0, -depth)),
+                               plane_no=inv.to_3x3() @ Vector((0, 0, 1)), clear_inner=True)
+        bm.to_mesh(obj.data)
+        bm.free()
+        obj.data.update()
+
+
+def support_material(name, ao_distance, earth=False):
+    mat = rock_material()
+    mat.name = name
+    nodes, links = mat.node_tree.nodes, mat.node_tree.links
+    bsdf = nodes["Principled BSDF"]
+    mossy = bsdf.inputs["Base Color"].links[0].from_node
+    moss_colors = mossy.inputs["Color2"].links[0].from_node
+    palette = vrmat.load_palette()
+    for element, key in zip(moss_colors.color_ramp.elements, ("moss", "grass_green")):
+        element.color = (*palette[key]["linear_rgb"], 1)
+    stone = next(node for node in nodes if node.type == "VALTORGB"
+                 and abs(node.color_ramp.elements[0].position - 0.28) < 0.001)
+    low = palette["soil" if earth else "monument_shadow"]["linear_rgb"]
+    high = palette["grass_green" if earth else "stone_weathered"]["linear_rgb"]
+    for element, factor in zip(stone.color_ramp.elements, (0, 0.5, 1)):
+        element.color = tuple((1 - factor) * a + factor * b for a, b in zip(low, high)) + (1,)
+    ao = nodes.new("ShaderNodeAmbientOcclusion")
+    ao.samples = 8
+    ao.inputs["Distance"].default_value = ao_distance
+    grime = nodes.new("ShaderNodeMixRGB")
+    grime.inputs[1].default_value = tuple(v * 0.45 for v in palette["soil"]["linear_rgb"]) + (1,)
+    links.new(ao.outputs["AO"], grime.inputs[0])
+    links.new(mossy.outputs[0], grime.inputs[2])
+    links.new(grime.outputs[0], bsdf.inputs["Base Color"])
+    return mat
+
+
+def fracture(obj, point, normal):
     bm = bmesh.new()
-    bmesh.ops.create_icosphere(bm, subdivisions=5, radius=radius)
-    offset = Vector((rng.uniform(0, 20), rng.uniform(0, 20), rng.uniform(0, 20)))
-    for v in bm.verts:
-        v.co *= 1 + 0.11 * noise.fractal(v.co / radius * 3 + offset, 1, 2, 3)
-        v.co.z *= squash
-    mesh = bpy.data.meshes.new(name)
-    bm.to_mesh(mesh)
+    bm.from_mesh(obj.data)
+    cut = bmesh.ops.bisect_plane(
+        bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:],
+        plane_co=point, plane_no=Vector(normal).normalized(), clear_outer=True)
+    edges = [e for e in cut["geom_cut"] if isinstance(e, bmesh.types.BMEdge) and e.is_boundary]
+    filled = bmesh.ops.holes_fill(bm, edges=edges)
+    for face in filled["faces"]:
+        face.smooth = False
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.to_mesh(obj.data)
     bm.free()
-    for face in mesh.polygons:
-        face.use_smooth = True
-    obj = bpy.data.objects.new(name, mesh)
-    obj.data.materials.append(mat)
-    obj.location = location
-    return vrlib.link_to_source(obj)
+    obj.data.update()
+
+
+def chip_tip(obj, height, fraction):
+    fracture(obj, (0, 0, height * fraction), (0.85, -0.55, 1))
+    fracture(obj, (0, 0, height * (fraction + 0.025)), (-0.6, 0.9, 1))
+
+
+def finish():
+    bpy.context.view_layer.update()
+    cut_below_ground(0.055)
+    objects = vrlib.source_objects()
+    lo, hi = vrlib.world_bounds(objects)
+    target = json.loads(Path(__file__).with_name("asset.json").read_text())["target_size_m"]
+    factor = min(1, *(0.995 * t / s for t, s in zip(target, hi - lo)))
+    if factor < 1:
+        scale = Matrix.Scale(factor, 4)
+        for obj in objects:
+            obj.data.transform(scale)
+            obj.location *= factor
+            for modifier in obj.modifiers:
+                if modifier.type == "BEVEL":
+                    modifier.width *= factor
+            for name in ("socket_local", "glow_radii", "glow_centre"):
+                if name in obj:
+                    obj[name] = list(Vector(obj[name]) * factor)
+    bpy.context.view_layer.update()
 
 
 def ground_disc(name, radius, squash, location, mat):
@@ -429,58 +426,127 @@ def ground_disc(name, radius, squash, location, mat):
     return vrlib.link_to_source(obj)
 
 
-def trim_ground():
-    for obj in vrlib.source_objects():
-        inv = obj.matrix_world.inverted()
-        bm = bmesh.new()
-        bm.from_mesh(obj.data)
+def radial_glow(crystal, radius, height):
+    bm = bmesh.new()
+    bm.from_mesh(crystal.data)
+    bmesh.ops.triangulate(bm, faces=bm.faces[:])
+    bmesh.ops.subdivide_edges(bm, edges=bm.edges[:], cuts=14, use_grid_fill=True)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.to_mesh(crystal.data)
+    bm.free()
+    distance = crystal.data.attributes.new("core_distance", "FLOAT", "POINT")
+    glow = crystal.data.attributes.new("core_glow", "FLOAT", "POINT")
+    for vertex, d, g in zip(crystal.data.vertices, distance.data, glow.data):
+        p = vertex.co - Vector((0, 0, height * 0.5))
+        d.value = Vector((p.x / (radius * 1.15), p.y / (radius * 1.15),
+                          p.z / (radius * 1.6))).length
+        g.value = max(0, min(1, (1.1 - d.value) / 0.5)) ** 2
+    mat = crystal.data.materials[0]
+    nodes, links = mat.node_tree.nodes, mat.node_tree.links
+    attribute = nodes.new("ShaderNodeAttribute")
+    attribute.attribute_name = "core_glow"
+    gain = nodes.new("ShaderNodeMath")
+    gain.operation = "MULTIPLY_ADD"
+    gain.inputs[1].default_value = 2
+    gain.inputs[2].default_value = 0.025
+    links.new(attribute.outputs["Fac"], gain.inputs[0])
+    links.new(gain.outputs[0], nodes["Principled BSDF"].inputs["Emission Strength"])
+    crystal["glow_radii"] = (radius * 1.15, radius * 1.15, radius * 1.6)
+    crystal["glow_centre"] = (0, 0, height * 0.5)
+
+
+def menhir(name, rng, size, location, angle, mat):
+    section = [(0.5, -0.42), (0.5, -0.10), (0.5, 0), (0.5, 0.10),
+               (0.5, 0.40), (-0.15, 0.5), (-0.5, 0.24), (-0.46, -0.4), (0.05, -0.5)]
+    bm = bmesh.new()
+    loops = []
+    for z, scale in ((-0.5, 1.0), (0.02, 0.95), (0.5, 0.62)):
+        loop = []
+        for i, (x, y) in enumerate(section):
+            top = z == 0.5
+            height = z
+            if top:
+                height += (0.045 * math.sin(i * 1.7 + angle) if i not in (1, 2, 3) else 0)
+                if i == 2:
+                    height -= 0.16
+            loop.append(bm.verts.new(((x * scale + (0.08 if top else 0)) * size[0],
+                                      (y * scale - (0.04 if top else 0)) * size[1],
+                                      height * size[2])))
+        loops.append(loop)
+    socket = loops[-1][2].co.copy()
+    bm.faces.new(list(reversed(loops[0])))
+    centre = bm.verts.new((0, 0, size[2] * 0.39))
+    for i in range(len(section)):
+        j = (i + 1) % len(section)
+        for lower, upper in zip(loops, loops[1:]):
+            bm.faces.new((lower[i], lower[j], upper[j], upper[i]))
+        bm.faces.new((loops[-1][i], loops[-1][j], centre))
+    for normal, point in (((-0.4, -0.2, 1), (-size[0] * 0.2, -size[1] * 0.18, size[2] * 0.47)),
+                          ((-1, 0.2, 0.15), (-size[0] * 0.40, 0, 0)),
+                          ((0.2, 1, 0.05), (0, size[1] * 0.42, 0))):
         cut = bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:],
-                                    plane_co=inv @ Vector((0, 0, -0.055)),
-                                    plane_no=obj.matrix_world.to_3x3().transposed() @ Vector((0, 0, 1)),
-                                    clear_inner=True)
+                                    plane_co=point, plane_no=Vector(normal).normalized(),
+                                    clear_outer=True)
         edges = [e for e in cut["geom_cut"] if isinstance(e, bmesh.types.BMEdge) and e.is_boundary]
         bmesh.ops.holes_fill(bm, edges=edges)
-        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-        bm.to_mesh(obj.data)
-        bm.free()
-        obj.data.update()
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bmesh.ops.bevel(bm, geom=bm.edges[:], offset=min(size) * 0.008, segments=1, affect="EDGES")
+    bm.normal_update()
+    sharp = [e for e in bm.edges if len(e.link_faces) == 2 and e.calc_face_angle() > math.radians(32)]
+    bmesh.ops.split_edges(bm, edges=sharp)
+    bmesh.ops.triangulate(bm, faces=bm.faces[:])
+    bmesh.ops.subdivide_edges(bm, edges=bm.edges[:], cuts=8, use_grid_fill=True)
+    for vertex in bm.verts:
+        wear = noise.fractal(vertex.co * 2 + Vector(location), 1, 2, 3)
+        vertex.co += vertex.co.normalized() * wear * min(size) * 0.008
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    mesh = bpy.data.meshes.new(name)
+    bm.to_mesh(mesh)
+    bm.free()
+    for face in mesh.polygons:
+        face.use_smooth = True
+    obj = bpy.data.objects.new(name, mesh)
+    obj.data.materials.append(mat)
+    obj.location = location
+    obj.rotation_euler = Euler((0.08, -0.18, angle))
+    obj["socket_local"] = list(socket)
+    return vrlib.link_to_source(obj)
 
 
-def energy_filaments(crystal, stones):
+def energy_filaments(stones):
     material = vrmat.get("violet_energy").copy()
-    material.name = "Seed | flowing energy filaments"
-    palette = vrmat.load_palette()
+    material.name = "Stone-rooted tapered energy"
     bsdf = material.node_tree.nodes["Principled BSDF"]
+    palette = vrmat.load_palette()
     for name in ("Base Color", "Emission Color", "Emission Strength", "Roughness"):
         for link in list(bsdf.inputs[name].links):
             material.node_tree.links.remove(link)
-    body = palette["violet_body"]["linear_rgb"]
-    glow = palette["violet_glow"]["linear_rgb"]
-    bsdf.inputs["Base Color"].default_value = tuple(v * 0.35 for v in body) + (1,)
-    bsdf.inputs["Emission Color"].default_value = tuple(0.9 * a + 0.1 * b for a, b in zip(body, glow)) + (1,)
-    bsdf.inputs["Emission Strength"].default_value = 1.5
-    bsdf.inputs["Roughness"].default_value = 0.5
-    material["asset_tweaks"] = "palette violet body/glow mix; narrow tapered flowing filaments, emission 1.5"
-    for i, stone in enumerate(sorted(stones, key=lambda obj: obj.name)):
-        anchor = max((stone.matrix_world @ v.co for v in stone.data.vertices), key=lambda p: p.z)
+    bsdf.inputs["Base Color"].default_value = (*palette["violet_body"]["linear_rgb"], 1)
+    bsdf.inputs["Emission Color"].default_value = tuple(
+        0.92 * a + 0.08 * b for a, b in zip(palette["violet_body"]["linear_rgb"],
+                                          palette["violet_glow"]["linear_rgb"])) + (1,)
+    bsdf.inputs["Emission Strength"].default_value = 1.1
+    bsdf.inputs["Roughness"].default_value = 0.45
+    for i, stone in enumerate(stones):
+        anchor = stone.matrix_world @ Vector(stone["socket_local"])
         angle = math.atan2(anchor.y, anchor.x)
         radial = Vector((math.cos(angle), math.sin(angle), 0))
         tangent = Vector((-math.sin(angle), math.cos(angle), 0))
-        points = [anchor - Vector((0, 0, 0.12))]
-        for outward, around, height in [(0.65, 0.8, -0.8), (0.35, 1.1, 0.35),
-                                         (-0.9, 0.75, 0.9), (-1.55, 0.2, 1.15)]:
+        points = [anchor - Vector((0, 0, 0.08))]
+        for outward, around, height in ((0.35, 0.5, 0.18), (0.15, 0.95, 0.55),
+                                        (-0.65, 1.15, 0.85), (-1.25, 0.65, 1.3)):
             points.append(anchor + radial * outward + tangent * around + Vector((0, 0, height)))
         curve = bpy.data.curves.new(f"filament_{i}", "CURVE")
         curve.dimensions = "3D"
         curve.resolution_u = 20
-        curve.bevel_depth = 0.045
+        curve.bevel_depth = 0.09
         curve.bevel_resolution = 3
         spline = curve.splines.new("BEZIER")
         spline.bezier_points.add(len(points) - 1)
-        for j, (point, position) in enumerate(zip(spline.bezier_points, points)):
+        for point, position, radius in zip(spline.bezier_points, points, (1.8, 1.2, 0.75, 0.3, 0.02)):
             point.co = position
             point.handle_left_type = point.handle_right_type = "AUTO"
-            point.radius = (0.55, 1.0, 0.85, 0.5, 0.04)[j]
+            point.radius = radius
         obj = bpy.data.objects.new(curve.name, curve)
         bpy.context.scene.collection.objects.link(obj)
         bpy.context.view_layer.update()
@@ -491,41 +557,30 @@ def energy_filaments(crystal, stones):
         bpy.data.objects.remove(obj, do_unlink=True)
 
 
+
 def build():
     rng = random.Random(SEED)
-    limestone = weathered_limestone("Fault | limestone")
-    weather = weathered_limestone("Fault | sheltered stone")
-    moss = moss_material()
-    soil = vrmat.get("forest_soil").copy()
-    earth = mound("Shared earth bed", rng, 7.4, 0.075, (0, 0, 0.12), soil)
-    moss_tufts(earth, random.Random(SEED + 72), moss, 95, 7.1)
-
+    rock = support_material("Weathered notched limestone", 0.65)
+    earth = support_material("Mossy shared earth", 0.45, earth=True)
+    ground_disc("Shared earth bed", 7.4, 0.075, (0, 0, 0.12), earth)
     stones = []
     for i in range(5):
         angle = math.tau * i / 5 + 0.3
-        distance = 4.5 + rng.uniform(-0.2, 0.2)
-        height = rng.uniform(4.6, 5.5)
-        stones.append(((math.cos(angle) * distance, math.sin(angle) * distance, height * 0.43),
-                       (rng.uniform(3.3, 4.2), rng.uniform(2.7, 3.4), height),
-                       (0.12, -0.28, angle)))
-    for i, (location, size, rotation) in enumerate(stones):
-        limestone_block(f"Cradle stone {i}", rng, size, location, rotation,
-                        weather if i == 3 else limestone)
-        mound(f"Stone earth socket {i}", rng, 2.1, 0.16, (*location[:2], 0.30), soil)
-        mound(f"Moss at cradle foot {i}", rng, 1.2, 0.30,
-              (location[0] * 1.1, location[1] * 1.1, 0.28), moss)
-        for j in range(3):
-            angle = rng.uniform(0, math.tau)
-            radius = rng.uniform(0.25, 0.65)
-            mound(f"Limestone debris {i}_{j}", rng, radius, 0.65,
-                  (location[0] + math.cos(angle) * 2.0, location[1] + math.sin(angle) * 2.0, 0.35 + radius * 0.3),
-                  weather)
-    crystal = seed(rng, seed_material())
+        distance = 4.4 + rng.uniform(-0.15, 0.15)
+        height = rng.uniform(4.6, 5.1)
+        location = (math.cos(angle) * distance, math.sin(angle) * distance, height * 0.43)
+        stone = menhir(f"Cradle stone {i}", rng, (rng.uniform(3.3, 3.9), rng.uniform(2.7, 3.2), height),
+                       location, angle, rock)
+        stones.append(stone)
+        socket = make_rock(f"Buried stone socket {i}", rng, 1.6, 0.13, 5, earth)
+        socket.location = (*location[:2], 0.18)
+    crystal = make_crystal("Levitating violet seed", rng, 3.0, 13.1, crystal_material())
+    chip_tip(crystal, 13.1, 0.96)
+    radial_glow(crystal, 3.0, 13.1)
     bpy.context.view_layer.update()
-    stones = [obj for obj in vrlib.source_objects() if obj.name.startswith("Cradle stone")]
     _, tops = vrlib.world_bounds(stones)
     bottom, _ = vrlib.world_bounds([crystal])
     crystal.location.z += tops.z + 0.22 - bottom.z
     bpy.context.view_layer.update()
-    energy_filaments(crystal, stones)
-    trim_ground()
+    energy_filaments(stones)
+    finish()
