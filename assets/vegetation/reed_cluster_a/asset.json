@@ -1,0 +1,35 @@
+{
+  "id": "reed_cluster_a",
+  "category": "vegetation",
+  "title": "Schilfhorst A",
+  "description": "Ausladender Uferhorst mit 27 unterschiedlich hohen geneigten Schilfhalmen, Knoten, Blattscheiden und stark überhängenden Olivblättern. Zwölf dichte seitlich nickende strohbraune Phragmites-Rispen. Modellierte unregelmäßige nasse Erd- und Schlammbank mit eingesunkenen Rändern, kleinen Steinen, gebrochenen Altstängeln, niedrigen Blattbögen und gefalteten Ufergräsern. Flacher dunkler Boden mit gebrochenem eingesunkenem Rand, Laubstreu, Zweigen und kleinen eingesunkenen Steinen statt einer gewölbten Bodenbank.",
+  "target_size_m": [
+    1.7,
+    1.7,
+    2.1
+  ],
+  "lod_triangles": [
+    6000,
+    2000,
+    600
+  ],
+  "texture_size": 1024,
+  "status": "approved",
+  "builder": "devin-bbbec46812f34f45bdf2489c6f83c0fa",
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 8,
+      "scale": 8,
+      "style": 8,
+      "defects": 8
+    },
+    "notes": "Lead extra round: approved. Fixed: the glossy pillow mound is gone; the stems now rise directly out of a flat, matte mud patch with broken edges and dead stem stubs, hidden under the grass skirt at normal view distance (hero, t8). Polish (non-blocking): at close range (t9) the patch is one flat, uniform mid-brown with a sharp cut-paper edge; darker wet tones and a softer edge would help.",
+    "round": 4,
+    "source_sha256": "193159eb97e46fb65e535afb083b2d67e708bcacc709924eb50fbe981fb4ca99",
+    "sheet_sha256": "41a16c943569a30ca3548b13c2fc29383a06209383aaf5fc07ccbf90e7ee6c11"
+  },
+  "review_rounds": 4
+}

@@ -1,0 +1,35 @@
+{
+  "id": "tree_broadleaf_c",
+  "category": "vegetation",
+  "title": "Breitkroniger kleiner Laubbaum C",
+  "description": "Ausgewachsener kleiner Laubbaum um 7 m mit kräftigem gefurchtem Stamm, niedriger Dreiergabel und fünf breiten unregelmäßigen Olivlaubmassen. Aus der freigegebenen B-Bauweise neu aufgebaut, mit eigenem Seed und Astlayout. Ungleiche Wurzelanläufe in einer flachen dunklen Erd-, Gras- und Laubstreufläche. Flacher dunkler Boden mit gebrochenem eingesunkenem Rand, Laubstreu, Zweigen und kleinen eingesunkenen Steinen statt einer gewölbten Bodenbank.",
+  "target_size_m": [
+    5,
+    4.5,
+    7
+  ],
+  "lod_triangles": [
+    30000,
+    8000,
+    2000
+  ],
+  "texture_size": 2048,
+  "status": "approved",
+  "builder": "devin-bbbec46812f34f45bdf2489c6f83c0fa",
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 8,
+      "scale": 8,
+      "style": 8,
+      "defects": 8
+    },
+    "notes": "Lead extra round (rebuild on the b recipe): approved. No longer a sapling: a thick, tapering twisted trunk forks low into two limbs under a broad crown of two irregular masses with air between them (hero, t0). The root-fin struts are gone; the trunk flares into uneven buttresses that sink into a flat, irregular soil patch with grass (t9). Polish (non-blocking): the crown is fairly dense with few gaps, and the soil patch edge reads as a star shape in the base view.",
+    "round": 4,
+    "source_sha256": "cdb1d297ffbe89d9e4cceaab0c1bd36c6629280f7b121190e3537a2be36cc78a",
+    "sheet_sha256": "f81e2358be2d0af1701240d447a99632ddcea1dbe0e30b8e2e495503ef85f00e"
+  },
+  "review_rounds": 4
+}

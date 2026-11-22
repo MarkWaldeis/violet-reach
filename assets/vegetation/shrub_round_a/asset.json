@@ -1,0 +1,35 @@
+{
+  "id": "shrub_round_a",
+  "category": "vegetation",
+  "title": "Dichter Rundstrauch A",
+  "description": "Mehrstämmiger, unregelmäßig gewölbter Uferstrauch. Elf gebogene Grundtriebe verzweigen sich rekursiv zu feinen Endzweigen mit kleinen opaken Blattsprays; dunkles Innenlaub und warme helle Olivspitzen gliedern die dichte Krone.",
+  "target_size_m": [
+    2.8,
+    2.6,
+    2.2
+  ],
+  "lod_triangles": [
+    18000,
+    5000,
+    1200
+  ],
+  "texture_size": 1024,
+  "status": "approved",
+  "builder": "devin-bbbec46812f34f45bdf2489c6f83c0fa",
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 8,
+      "scale": 8,
+      "style": 8,
+      "defects": 8
+    },
+    "notes": "Round 2: approved. The round-1 material point is fixed: the leaves are olive with darker shaded interior and lighter tops, the stems are visible through gaps, and the outline is irregular (hero, closeup_upper, closeup_base). Polish, not blocking: the few leaf-litter chips on the ground look like flat hexagons; add a little soil and grass at the stem base.",
+    "round": 2,
+    "source_sha256": "1c52aacee94ba6c47398f39309614aab74263938be46f4e86f7ab4b244e719c1",
+    "sheet_sha256": "30af8159dc715054a212821f5facd8bcfd1cebdc539d1496d605e3ea3d2fb209"
+  },
+  "review_rounds": 2
+}
