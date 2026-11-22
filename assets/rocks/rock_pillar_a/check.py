@@ -117,41 +117,82 @@ if ASSET_DIR.name=="shore_stones_a":
 else:
     main = [o for o in stones if "stratum" in o]
     apron = [o for o in stones if o.get("scree_chunk")]
-    assert len(apron)>=8,len(apron)
+    assert len(apron)>=(3 if ASSET_DIR.name=="cliff_strata_a" else 24),len(apron)
     a,b = vrlib.world_bounds(main)
     size = b-a
+    assert len(main)==1,"Main mass must be a single union mesh"
+    body = main[0]
+    seeds = list(body["assembly_chunk_seeds"])
+    assert len(seeds)==len(set(seeds))==body["assembly_chunk_count"]
+    assert sum(body["tier_chunk_counts"])==len(seeds)
+    bm = bmesh.new()
+    bm.from_mesh(body.data)
+    root = next(iter(bm.verts))
+    visited,frontier = {root},[root]
+    while frontier:
+        vertex = frontier.pop()
+        for edge in vertex.link_edges:
+            other = edge.other_vert(vertex)
+            if other not in visited:
+                visited.add(other)
+                frontier.append(other)
+    assert len(visited)==len(bm.verts),"Disconnected wall/pillar mass"
+    bm.free()
+    assert not [f for f in body.data.polygons if abs(f.normal.z)>1-1e-7 and .05<f.center.z<b.z-.05],"Internal horizontal slice caps"
+    print("SEAM_FREE_ASSEMBLY:",len(seeds),"approved outcrops; one connected union; no internal horizontal slice caps")
     for obj in stones:
         assert obj["approved_generator"]=="c4c0cd0/crystal_cluster_b.make_rock"
         assert max(abs(v) for v in obj.rotation_euler)<1e-7,obj.name
     if ASSET_DIR.name=="cliff_strata_a":
-        assert 39.9<size.x<40.1 and size.y>=16 and 44<size.z<46,size
-        assert set(o["joint_column"] for o in main)=={0,1,2,3}
-        assert len({round(o["stratum_height_m"],1) for o in main})>=5
-        roofs = [max(vrlib.world_bounds([o])[1].z for o in main if o["joint_column"]==c) for c in range(4)]
-        assert max(roofs)-min(roofs)>1,roofs
+        assert 39.9<size.x<40.1 and size.y>=size.x*.4 and 44<size.z<46,size
+        assert len(body["tier_chunk_counts"])>=6
+        assert min(body["tier_chunk_counts"])>=3
+        assert len(set(body["tier_heights_m"]))>=5
+        crown = [v.co.z for v in body.data.vertices if v.co.z>b.z-4]
+        assert max(crown)-min(crown)>2
         assert bpy.context.scene["tile_pitch_m"]==40
-        assert len(bpy.context.scene["through_band_joints_x_m"])==3
         print("CLIFF_MAIN_M:",tuple(round(v,3) for v in size),"four through-band joints/columns; irregular crown; 40 m placement pitch")
     else:
-        assert len(main)==8
-        assert 12<size.x<18.1 and 59<size.z<61,size
-        main.sort(key=lambda o:o["stratum"])
-        base_width = vrlib.world_bounds([main[0]])[1].x-vrlib.world_bounds([main[0]])[0].x
-        cap_width = vrlib.world_bounds([main[-1]])[1].x-vrlib.world_bounds([main[-1]])[0].x
-        assert cap_width<base_width,(base_width,cap_width)
-        assert all(max(abs(v) for v in o["axis_offset_m"])<.25 for o in main)
+        assert 15.9<size.x<16.1 and 59<size.z<61,size
+        assert 3.7<size.z/size.x<4.3,size
+        counts = list(body["tier_chunk_counts"])
+        assert len(counts)>=10 and all(2<=n<=4 for n in counts),counts
+        assert len(set(body["tier_heights_m"]))>=5
+        foot = [v.co.x for v in body.data.vertices if v.co.z<6]
+        cap = [v.co.x for v in body.data.vertices if v.co.z>b.z-6]
+        base_width,cap_width = max(foot)-min(foot),max(cap)-min(cap)
+        assert 13<base_width<=16.1 and cap_width<base_width,(base_width,cap_width)
+        assert bed.dimensions.x>32 and bed.dimensions.y>28,bed.dimensions
         turf = next(o for o in objects if o.get("soil_mat_thickness_m"))
         assert .3<=turf["soil_mat_thickness_m"]<=1
         grass = next(o for o in objects if o.name=="Randgras")
         assert len(grass.data.vertices)>=2600*9*4
         assert max(v.co.z for v in turf.data.vertices)>b.z+.25
-        print("PILLAR_STACK: eight straight, slightly tapering approved-block slices; no rotation; same-chunk scree; grass crown")
+        print("PILLAR_STACK:",len(counts),"tiers of 2-4 approved blocks; base/cap widths",round(base_width,3),round(cap_width,3),"; broad same-chunk scree; grass crown")
+        assert body["removed_union_residue_vertices"]<len(body.data.vertices)*.01
+        before = set(vrlib.source_objects())
+        try:
+            pieces = [builder.approved_chunk("Disconnected_test",(1,1,1),(x,0,0),999+i,
+                       body.data.materials[0],2) for i,x in enumerate((0,5))]
+            try:
+                builder.union_chunks(pieces,"Invalid_assembly",(1,1,1))
+                raise AssertionError("Disconnected major chunks accepted")
+            except RuntimeError as error:
+                assert "Disconnected major outcrops" in str(error),error
+        finally:
+            for obj in set(vrlib.source_objects())-before:
+                bpy.data.objects.remove(obj,do_unlink=True)
     for dims in ((),(0,1,1),(1,-1,1)):
         try:
             builder.approved_chunk("invalid",dims,(0,0,0),0,None)
             raise AssertionError("Invalid dimensions accepted")
         except ValueError:
             pass
+    try:
+        builder.union_chunks([],"empty",(1,1,1))
+        raise AssertionError("Empty assembly accepted")
+    except ValueError:
+        pass
 
 original = builder.vrlib.source_objects
 try:

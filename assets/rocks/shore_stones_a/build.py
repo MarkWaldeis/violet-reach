@@ -227,7 +227,7 @@ def fines_bed(name, radius, material, height=.16, slope=False):
         r=row/rings
         for j in range(count):
             angle=math.tau*j/count
-            irregular=1+.035*math.sin(angle*7)+.025*math.sin(angle*11+1)
+            irregular=1+.13*math.sin(angle*3+.4)+.075*math.sin(angle*5+1)+.035*math.sin(angle*9)
             x,y=radius[0]*r*math.cos(angle)*irregular,radius[1]*r*math.sin(angle)*irregular
             z=height*(1-r**3)
             if slope:
@@ -261,17 +261,21 @@ def finish():
     vrlib.use_cycles_cpu(bpy.context.scene, 32)
 
 
-def shore_stone(name, radius, flat, centre, seed, material, level=6, form="split"):
+def shore_stone(name, radius, flat, centre, seed, material, level=6, form="worn"):
     if radius <= 0 or flat <= 0 or level < 1:
         raise ValueError("Positive radius, flattening and subdivision level required")
     palette = {key:value["linear_rgb"] for key,value in vrmat.load_palette().items()}
     sample = _TEMPLATES.setdefault(2,ico(2))
-    for attempt in range(120):
+    target = blend(palette["canyon_strata"],palette["canyon_chalk"],.5)
+    target = tuple(c/sum(target) for c in target)
+    for attempt in range(512):
         selected = seed+attempt*7919
         probe = Mesh()
         cobble(probe,palette,sample,0,3,radius,flat,random.Random(selected),form)
         rgb = tuple(sum(c[i] for c in probe.colors)/len(probe.colors) for i in range(3))
-        if sum(a*b for a,b in zip(rgb,(.2126,.7152,.0722))) >= .31:
+        luminance = sum(a*b for a,b in zip(rgb,(.2126,.7152,.0722)))
+        chroma = tuple(c/sum(rgb) for c in rgb)
+        if .33<=luminance<=.39 and max(abs(a-b) for a,b in zip(chroma,target))<.018:
             break
     else:
         raise RuntimeError("No pale limestone seed found")
@@ -366,8 +370,10 @@ def build():
             centre = (x,y) if attempt==0 else (x+rng.uniform(-.5,.5),y+rng.uniform(-.5,.5))
             if (centre[0]/2.3)**2+(centre[1]/1.85)**2>1:
                 continue
-            obj = shore_stone("Uferstein_%02d"%i,radius,rng.uniform(.55,.73),seated(*centre,radius),
-                              SEED+100+i,stone,6,"worn" if i%3==0 else "split")
+            if bed_tree.ray_cast(Vector((*centre,1)),Vector((0,0,-1)),2)[0] is None:
+                continue
+            obj = shore_stone("Uferstein_%02d"%i,radius,rng.uniform(.72,.92),seated(*centre,radius),
+                              SEED+100+i,stone,6,"worn")
             bounds = xy_bounds(obj)
             tree = stone_tree(obj)
             midpoint = sum((v.co for v in obj.data.vertices),Vector())/len(obj.data.vertices)
@@ -387,12 +393,14 @@ def build():
             x,y = rng.uniform(-2.25,2.25),rng.uniform(-1.8,1.8)
             if (x/2.3)**2+(y/1.85)**2 > .94:
                 continue
+            if bed_tree.ray_cast(Vector((x,y,1)),Vector((0,0,-1)),2)[0] is None:
+                continue
             bounds = (x-radius,x+radius,y-radius,y+radius)
             if not overlaps(bounds,occupied,.005):
                 break
         else:
             continue
-        obj = shore_stone("Zwischenkiesel_%03d"%i,radius,rng.uniform(.5,.7),seated(x,y,radius),
+        obj = shore_stone("Zwischenkiesel_%03d"%i,radius,rng.uniform(.72,.92),seated(x,y,radius),
                           SEED+1000+i,stone,4 if i < 28 else 2)
         occupied.append(xy_bounds(obj))
         if i >= 28:

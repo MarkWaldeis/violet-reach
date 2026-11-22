@@ -2,10 +2,10 @@
   "id": "rock_pillar_a",
   "category": "rocks",
   "title": "Freistehende geschichtete Felsnadel A",
-  "description": "Gerader, leicht verjüngter Kalkpfeiler aus acht gering versetzten Schichtsegmenten dreier freigegebener crystal_cluster_b-Felskörper aus c4c0cd0. Generator, Bruchfunktion und Kalkmaterial sind unveränderte lokale Kopien; keine Rotation, keine aufgesetzten umlaufenden Ränder. Ein flacher Saum aus denselben gebrochenen Kalkstücken und modelliertem Grus bettet den Fuß ein. Die Krone trägt eine rund 0,68 Meter starke durchwurzelte Erd- und Grasmatte mit 2600 dichten und teilweise überhängenden Büscheln.",
+  "description": "Massiver gerader Kalkpfeiler, sechzig Meter hoch und rund sechzehn Meter breit, aus zehn unterschiedlich hohen Ebenen mit jeweils zwei bis vier versetzten Bruchkörpern. Die unveränderten lokalen crystal_cluster_b-Fels-, Bruch- und Materialfunktionen aus c4c0cd0 erzeugen alle Felsen. Überlappende Körper werden mit dem Manifold-Verfahren boolesch vereint; keine horizontalen Schnittfugen, kein Würfelstapel auf schmalem Stiel. Sanfte Verjüngung, breiter eingebetteter Fuß und weit auslaufender Schuttfächer aus denselben Kalkstücken und modelliertem Grus. Durchwurzelte Grasmatte mit 0,68 Meter Stärke und 2600 dichten, teilweise überhängenden Büscheln.",
   "target_size_m": [
     16,
-    14,
+    14.5,
     60
   ],
   "lod_triangles": [

@@ -258,8 +258,9 @@ def ground_debris(radius, bases, material, count, seed):
         if lo.z < .1:
             occupied.append((lo.x, hi.x, lo.y, hi.y))
     gravel = []
+    large_count = 72
     for i in range(count):
-        size = rng.uniform(.7, 2.4) if i < 24 else rng.uniform(.10, .50)
+        size = rng.uniform(.8,3.3) if i < large_count else rng.uniform(.10,.50)
         for attempt in range(160):
             x, y = rng.uniform(-radius[0], radius[0]), rng.uniform(-radius[1], radius[1])
             r = size*.71
@@ -270,13 +271,13 @@ def ground_debris(radius, bases, material, count, seed):
             break
         else:
             continue
-        obj = approved_chunk("Kalkbruch" if i < 24 else "Kalkgrus",
+        obj = approved_chunk("Kalkbruch" if i < large_count else "Kalkgrus",
                              (size,size*rng.uniform(.65,.95),size*rng.uniform(.45,.75)),
-                             (x,y,size*.15),seed+i+1,material,5 if i < 24 else 2)
+                             (x,y,size*.15),seed+i+1,material,5 if i < large_count else 2)
         fracture(obj, (0,0,-.04), (0,0,-1))
         obj["scree_chunk"] = True
         occupied.append((x-size*.5,x+size*.5,y-size*.5,y+size*.5))
-        if i >= 24:
+        if i >= large_count:
             gravel.append(obj)
     if gravel:
         gravel_seeds = [obj["recipe_seed"] for obj in gravel]
@@ -405,10 +406,10 @@ def turf_shell(body, material, name="Angewachsene_Moosschale", coverage=.35, thi
 def plant_terraces(body, mode):
     bpy.context.view_layer.update()
     material=grass_material()
-    threshold=max(v.co.z for v in body.data.vertices)-.40 if mode=="pillar" else max(v.co.z for v in body.data.vertices)-.25
+    threshold=max(v.co.z for v in body.data.vertices)-(3.4 if mode=="pillar" else 4.5)
     turf=turf_shell(body,material,"Grasige_Terrassen",coverage=1.0,
                     thickness=.68 if mode=="pillar" else .12,min_height=threshold,
-                    normal_z=-.12 if mode=="pillar" else .48)
+                    normal_z=.30)
     soil=vrmat.get("dirt_path").copy()
     soil.name=ASSET+"_Durchwurzelte_Kappenerde"
     soil_bsdf=soil.node_tree.nodes["Principled BSDF"]
@@ -439,30 +440,97 @@ def plant_terraces(body, mode):
 
 
 
+def union_chunks(chunks, name, size):
+    if not chunks:
+        raise ValueError("Empty chunk assembly")
+    seeds = [obj["recipe_seed"] for obj in chunks]
+    body = chunks[0]
+    operands = bpy.data.collections.new(name+"_operands")
+    bpy.context.scene.collection.children.link(operands)
+    for obj in chunks[1:]:
+        operands.objects.link(obj)
+    bpy.context.view_layer.objects.active = body
+    modifier = body.modifiers.new("Intersecting approved outcrops", "BOOLEAN")
+    modifier.operation = "UNION"
+    modifier.solver = "MANIFOLD"
+    modifier.operand_type = "COLLECTION"
+    modifier.collection = operands
+    bpy.ops.object.modifier_apply(modifier=modifier.name)
+    for obj in chunks[1:]:
+        bpy.data.objects.remove(obj, do_unlink=True)
+    bpy.data.collections.remove(operands)
+    bm = bmesh.new()
+    bm.from_mesh(body.data)
+    pending,components = set(bm.verts),[]
+    while pending:
+        root = pending.pop()
+        component,frontier = {root},[root]
+        while frontier:
+            vertex = frontier.pop()
+            for edge in vertex.link_edges:
+                other = edge.other_vert(vertex)
+                if other in pending:
+                    pending.remove(other)
+                    component.add(other)
+                    frontier.append(other)
+        components.append(component)
+    components.sort(key=len,reverse=True)
+    residue = [v for component in components[1:] for v in component]
+    if len(residue)>len(components[0])*.01:
+        bm.free()
+        raise RuntimeError("Disconnected major outcrops in pillar assembly")
+    body["removed_union_residue_vertices"] = len(residue)
+    if residue:
+        bmesh.ops.delete(bm,geom=residue,context="VERTS")
+    bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces))
+    bm.to_mesh(body.data)
+    bm.free()
+    body.data.update()
+    lo, hi = vrlib.world_bounds([body])
+    fracture(body,(0,0,lo.z+4),(0,0,-1))
+    fracture(body,(0,0,hi.z-2),(0,0,1))
+    lo, hi = vrlib.world_bounds([body])
+    middle = (lo+hi)*.5
+    body.data.transform(Matrix.Diagonal(tuple(size[i]/(hi[i]-lo[i]) for i in range(3))).to_4x4()
+                        @ Matrix.Translation(-middle))
+    body.data.transform(Matrix.Translation((0,0,size[2]*.5-.04)))
+    fracture(body,(0,0,-.04),(0,0,-1))
+    body.name = name
+    body["stratum"] = 0
+    body["assembly_chunk_seeds"] = seeds
+    body["assembly_chunk_count"] = len(seeds)
+    body["assembly_method"] = "manifold union of overlapping approved outcrops; no internal horizontal slices"
+    return body
+
+
 def build():
     noise.seed_set(SEED)
-    stone = support_material("Approved fault limestone", .5)
-    fines_bed("Kalkgrus_Saum", (12,10.5), vrmat.get("dirt_path"), .018)
-    bases = []
-    bottom = -.04
-    heights = (7.4,5.5,8.2,6.4,7.8,5.9,8.6,10.24)
-    for i, height in enumerate(heights):
-        width = 16-i*.43
-        group = i//3
-        centre = (.10*math.sin(i*1.9),.08*math.sin(i*2.3),(11,31.15,50.6)[group])
-        block = approved_chunk("Säulenbank_%02d"%i,(width,14-i*.34,44),
-                                centre,SEED+group,stone,7)
-        fracture(block, (0,0,bottom), (0,0,-1))
-        fracture(block, (0,0,bottom+height-.018), (0,0,1))
-        block["stratum"] = i
-        block["slice_index"] = i
-        block["stratum_height_m"] = height
-        block["axis_offset_m"] = list(centre[:2])
-        block["landmark_mode"] = "pillar"
-        bases.append(block)
-        bottom += height
-    plant_terraces(bases[-1],"pillar")
+    stone = support_material("Approved fault limestone", .16)
+    fines_bed("Kalkgrus_Saum", (18,16), vrmat.get("dirt_path"), .018)
+    rng = random.Random(SEED)
+    chunks, counts = [], []
+    bottom = -.6
+    heights = (7,4.5,6.5,5,7.5,4,6.5,5.5,6,7.5)
+    layouts = (((-2.8,0),(2.8,0)),
+               ((-2.8,-1.7),(2.8,-1.7),(0,2.4)),
+               ((-2.7,-2.1),(2.7,-2.1),(-2.7,2.1),(2.7,2.1)))
+    for tier,height in enumerate(heights):
+        taper = 1-.015*tier
+        layout = layouts[2 if tier==len(heights)-1 else tier%3]
+        for j,(x,y) in enumerate(layout):
+            centre = ((x+rng.uniform(-.4,.4))*taper,
+                      (y+rng.uniform(-.4,.4))*taper,bottom+height*.5+rng.uniform(-.25,.25))
+            chunks.append(approved_chunk("Säulenbruch_%02d_%02d"%(tier,j),
+                          (rng.uniform(9.4,10.3)*taper,rng.uniform(9.8,11)*taper,height*1.65),
+                          centre,SEED+100+tier*10+j,stone,6))
+        counts.append(len(layout))
+        bottom += height*.78
+    body = union_chunks(chunks,"Massive_geklüftete_Kalksäule",(16,14.5,60))
+    body["tier_chunk_counts"] = counts
+    body["tier_heights_m"] = heights
+    body["landmark_mode"] = "pillar"
+    plant_terraces(body,"pillar")
     bpy.context.view_layer.update()
-    ground_debris((11.8,10.3),bases,stone,650,SEED+500)
-    bpy.context.scene["pillar_axis"] = "straight; no rotation; slightly tapering stacked approved chunks"
+    ground_debris((17.8,15.8),[body],stone,1600,SEED+5000)
+    bpy.context.scene["pillar_axis"] = "straight massive multi-block tiers; no rotation; gentle taper"
     finish()

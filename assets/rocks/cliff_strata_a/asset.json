@@ -2,10 +2,10 @@
   "id": "cliff_strata_a",
   "category": "rocks",
   "title": "Modulare geschichtete Canyonwand A",
-  "description": "Tiefe Kalkwand aus vier durchgehenden Kluftkörpern mit unterschiedlich hohen, geschlossenen Schichtsegmenten. Felsgeometrie, Bruchfunktion und Kalkmaterial sind unveränderte lokale Kopien des freigegebenen crystal_cluster_b aus c4c0cd0; auch Rücken und Seiten bestehen aus diesem gebrochenen Fels. Drei vertikale Trennfugen schneiden durch die versetzten Schichthöhen. Schräge gebrochene Kronen, Grasdecken, Kalkbruch und modellierter Grus ergänzen den Körper. Vierzig Meter Aufstellraster mit natürlichen Endprofilen, nicht exakt periodischen Anschlussflächen.",
+  "description": "Zusammenhängende tiefe Kalkwand aus unterschiedlich breiten und hohen, überlappend versetzten Aufschlüssen. Ausschließlich unverändert kopierte crystal_cluster_b-Fels-, Bruch- und Materialfunktionen aus c4c0cd0; die Körper werden mit dem Manifold-Verfahren boolesch vereint, ohne waagerechte Schichtschnitte oder künstliche Trennspalten. Rücken, Seiten und unregelmäßige Krone bestehen aus demselben gebrochenen Kalk. Gras auf den oberen Felsflächen, wenige gefallene Blöcke und modellierter Grus am Fuß. Vierzig Meter Aufstellraster mit natürlichen, nicht exakt periodischen Endprofilen.",
   "target_size_m": [
     40,
-    21,
+    22,
     45
   ],
   "lod_triangles": [

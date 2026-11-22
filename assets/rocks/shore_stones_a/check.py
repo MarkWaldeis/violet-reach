@@ -87,9 +87,12 @@ if ASSET_DIR.name=="shore_stones_a":
     assert len([o for o in stones if o.name.startswith("Zwischenkiesel_")])==28
     assert 4.5<high.x-low.x<5.8
     top_means = []
+    chromas = []
+    edge_radii = [math.hypot(v.co.x/2.45,v.co.y/2) for v in bed.data.vertices if abs(v.co.z+.045)<1e-5]
+    assert max(edge_radii)-min(edge_radii)>.3,"Circular gravel bed"
     for obj in stones:
         assert obj["approved_generator"]=="pr9/lake_shore_a.cobble"
-        assert obj["stone_form"] in ("split","worn")
+        assert obj["stone_form"]=="worn"
         assert obj.data.color_attributes["stone_tones"].domain=="POINT"
         factors = obj.data.attributes["stone_saturation"].data
         colors = obj.data.color_attributes["stone_tones"].data
@@ -104,9 +107,15 @@ if ASSET_DIR.name=="shore_stones_a":
                 dry.append(sum(colors[v.index].color[:3])/3)
         assert wet and dry and sum(dry)/len(dry)>sum(wet)/len(wet)*1.25,obj.name
         top_means.append(sum(dry)/len(dry))
+        dry_rgb = [colors[v.index].color[:3] for v in obj.data.vertices if factors[v.index].value<.05]
+        mean = tuple(sum(c[i] for c in dry_rgb)/len(dry_rgb) for i in range(3))
+        chromas.append(tuple(c/sum(mean) for c in mean))
         bsdf = obj.data.materials[0].node_tree.nodes["Principled BSDF"]
         assert bsdf.inputs["Roughness"].is_linked
     assert min(top_means)>.22,top_means
+    assert max(max(c[i] for c in chromas)-min(c[i] for c in chromas) for i in range(3))<.035,chromas
+    assert max(top_means)/min(top_means)<1.3,top_means
+    print("SHORE_UNITY: worn forms only; one pale tone family; irregular gravel-bed outline")
     print("SHORE_BASE_WETNESS: smooth local-Z gradient on every stone; pale dry tops; wet roughness attribute")
     for radius,flat in ((0,.6),(-1,.6),(1,0)):
         try:
