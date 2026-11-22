@@ -14,8 +14,22 @@
     840
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-b06222e48d554ae4a6a116ad07645e06",
-  "review": null,
-  "review_rounds": 2
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 7,
+      "material": 6,
+      "scale": 8,
+      "style": 7,
+      "defects": 7
+    },
+    "notes": "Round 3 (final) against the round-2 points. Flat purple: not fixed. The prisms are still one uniform saturated blue-violet from base to tip with no dark core and no lighter rim; the colour leans blue, not the violet of ref_07 (hero.jpg, closeup.jpg). Inner bands: changed, not fixed. They are now pale opaque stripes painted straight across the faces, so the prisms read as banded tubes, not growth zones inside the crystal. Fix: a dark violet core fading to a lighter translucent-looking rim via a facing/thickness gradient, with 2-3 thin internal growth zones parallel to the terminations, darker than the body. Tips: starburst shading gone, but the terminations are still clean, perfect points with no chips or broken prisms. Fix: chip 2-3 terminations and break one prism off with a fresh fracture face. Crack: still a thin painted zigzag line on the main prism, not a modelled fracture, and it does not glow. Fix: cut a real fracture plane with a narrow emissive seam.",
+    "round": 3,
+    "source_sha256": "62ee214b045f3666239c632e365897e9a25045739f5c8b7831fd718f82d2fac0",
+    "sheet_sha256": "a9cc136c86e23d3e193cb863669c99926a5c83cb64ba4a7d18e219e4260308c9"
+  },
+  "review_rounds": 3
 }
