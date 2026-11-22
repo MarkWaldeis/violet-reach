@@ -148,11 +148,13 @@ def mineral_attributes(mesh, radius, height, phase):
         z = max(0, min(1, p.z / height))
         angle = math.atan2(p.y, p.x)
         fields["growth_height"].data[vertex.index].value = z + 0.018 * math.sin(2 * angle + phase)
-        fields["vein_window"].data[vertex.index].value = math.sin(math.pi * z) ** 0.5
+        fields["vein_window"].data[vertex.index].value = (
+            math.sin(math.pi * z) ** 0.5 * max(0, math.sin(z * 19 + phase)))
         for i in range(2):
             a = phase + i * 1.37
             fields[f"plane_distance_{i}"].data[vertex.index].value = (
-                (p.x * math.cos(a) + p.y * math.sin(a)) / radius + 0.22 * z - 0.18)
+                (p.x * math.cos(a) + p.y * math.sin(a)) / radius + 0.22 * z - 0.18
+                + 0.15 * math.sin(z * 24 + phase) + 0.06 * math.sin(z * 53 + a))
 
 
 def mineral_structure(mat):
@@ -160,8 +162,7 @@ def mineral_structure(mat):
     bsdf = nodes["Principled BSDF"]
     palette = vrmat.load_palette()
     dark = tuple(v * 0.16 for v in palette["violet_shadow"]["linear_rgb"]) + (1,)
-    light = tuple(0.65 * a + 0.35 * b for a, b in
-                  zip(palette["violet_body"]["linear_rgb"], palette["violet_glow"]["linear_rgb"])) + (1,)
+    light = tuple(v * 0.46 for v in palette["violet_body"]["linear_rgb"]) + (1,)
 
     def attribute(name):
         node = nodes.new("ShaderNodeAttribute")
@@ -208,7 +209,7 @@ def mineral_structure(mat):
     strength = bsdf.inputs["Emission Strength"].links[0].from_socket
     attenuation = math_node("ADD", math_node("MULTIPLY", bands, -0.72), 1)
     strength = math_node("MULTIPLY", strength, attenuation)
-    strength = math_node("ADD", strength, math_node("MULTIPLY", veins, 0.7))
+    strength = math_node("ADD", strength, math_node("MULTIPLY", veins, 0.025))
     links.new(strength, bsdf.inputs["Emission Strength"])
     emission = bsdf.inputs["Emission Color"].links[0].from_socket
     links.new(mix(veins, emission, light), bsdf.inputs["Emission Color"])

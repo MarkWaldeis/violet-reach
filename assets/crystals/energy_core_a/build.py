@@ -20,11 +20,13 @@ def mineral_attributes(mesh, radius, height, phase):
         z = max(0, min(1, p.z / height))
         angle = math.atan2(p.y, p.x)
         fields["growth_height"].data[vertex.index].value = z + 0.018 * math.sin(2 * angle + phase)
-        fields["vein_window"].data[vertex.index].value = math.sin(math.pi * z) ** 0.5
+        fields["vein_window"].data[vertex.index].value = (
+            math.sin(math.pi * z) ** 0.5 * max(0, math.sin(z * 19 + phase)))
         for i in range(2):
             a = phase + i * 1.37
             fields[f"plane_distance_{i}"].data[vertex.index].value = (
-                (p.x * math.cos(a) + p.y * math.sin(a)) / radius + 0.22 * z - 0.18)
+                (p.x * math.cos(a) + p.y * math.sin(a)) / radius + 0.22 * z - 0.18
+                + 0.15 * math.sin(z * 24 + phase) + 0.06 * math.sin(z * 53 + a))
 
 
 def mineral_structure(mat):
@@ -32,8 +34,7 @@ def mineral_structure(mat):
     bsdf = nodes["Principled BSDF"]
     palette = vrmat.load_palette()
     dark = tuple(v * 0.16 for v in palette["violet_shadow"]["linear_rgb"]) + (1,)
-    light = tuple(0.65 * a + 0.35 * b for a, b in
-                  zip(palette["violet_body"]["linear_rgb"], palette["violet_glow"]["linear_rgb"])) + (1,)
+    light = tuple(v * 0.46 for v in palette["violet_body"]["linear_rgb"]) + (1,)
 
     def attribute(name):
         node = nodes.new("ShaderNodeAttribute")
@@ -80,7 +81,7 @@ def mineral_structure(mat):
     strength = bsdf.inputs["Emission Strength"].links[0].from_socket
     attenuation = math_node("ADD", math_node("MULTIPLY", bands, -0.72), 1)
     strength = math_node("MULTIPLY", strength, attenuation)
-    strength = math_node("ADD", strength, math_node("MULTIPLY", veins, 0.7))
+    strength = math_node("ADD", strength, math_node("MULTIPLY", veins, 0.025))
     links.new(strength, bsdf.inputs["Emission Strength"])
     emission = bsdf.inputs["Emission Color"].links[0].from_socket
     links.new(mix(veins, emission, light), bsdf.inputs["Emission Color"])
@@ -251,12 +252,11 @@ def seed_material():
 
 def seed(rng, mat):
     radius, height = 3.45, 14.75
-    sides = 11
+    sides = 8
     twist = 0.22
     profile = [rng.uniform(0.82, 1.18) for _ in range(sides)]
-    rings = [(0.0, 0.0), (0.05, 0.20), (0.12, 0.52), (0.28, 0.98),
-             (0.42, 1.10), (0.445, 0.96), (0.60, 1.02), (0.74, 0.84),
-             (0.86, 0.53), (0.92, 0.30), (1.0, 0.0)]
+    rings = [(0.0, 0.0), (0.14, 1.0), (0.32, 1.02),
+             (0.68, 0.98), (0.72, 0.96), (0.86, 0.52), (1.0, 0.0)]
     tip_shift = Vector((0.20, -0.16, 0)) * radius
     bm = bmesh.new()
     loops = []
@@ -464,15 +464,16 @@ def energy_filaments(crystal, stones):
     for i, stone in enumerate(sorted(stones, key=lambda obj: obj.name)):
         anchor = max((stone.matrix_world @ v.co for v in stone.data.vertices), key=lambda p: p.z)
         angle = math.atan2(anchor.y, anchor.x)
+        radial = Vector((math.cos(angle), math.sin(angle), 0))
+        tangent = Vector((-math.sin(angle), math.cos(angle), 0))
         points = [anchor - Vector((0, 0, 0.12))]
-        for turn, radius, height in [(0.12, 4.1, 0.08), (0.55, 3.8, 0.3),
-                                     (1.1, 3.25, 0.56), (1.65, 1.8, 0.82)]:
-            points.append(crystal.location + Vector((math.cos(angle + turn) * radius,
-                                                     math.sin(angle + turn) * radius, 14.75 * height)))
+        for outward, around, height in [(0.65, 0.8, -0.8), (0.35, 1.1, 0.35),
+                                         (-0.9, 0.75, 0.9), (-1.55, 0.2, 1.15)]:
+            points.append(anchor + radial * outward + tangent * around + Vector((0, 0, height)))
         curve = bpy.data.curves.new(f"filament_{i}", "CURVE")
         curve.dimensions = "3D"
         curve.resolution_u = 20
-        curve.bevel_depth = 0.075
+        curve.bevel_depth = 0.045
         curve.bevel_resolution = 3
         spline = curve.splines.new("BEZIER")
         spline.bezier_points.add(len(points) - 1)
