@@ -2,7 +2,7 @@
   "id": "tree_broadleaf_a",
   "category": "vegetation",
   "title": "Breitkroniger Laubbaum A",
-  "description": "Kräftiger Laubbaum mit vier ungleich hohen, geschichteten Astkronen und warmem Olivlaub. Tragäste gabeln sich versetzt ab 3,0, 3,8, 4,6 und 5,0 Metern mit verschmolzenen Astkragen. Vier unterschiedlich hohe und lange, steil eintauchende Brettwurzeln verdicken sich in den gefurchten Stamm; unregelmäßig verdrängte Erde, modellierte Gräser und Laubstreu bedecken den Wurzelfuß.",
+  "description": "Kräftiger Laubbaum mit vier ungleich hohen, geschichteten Astkronen und warmem Olivlaub. Tragäste gabeln sich versetzt ab 3,0, 3,8, 4,6 und 5,0 Metern mit verschmolzenen Astkragen. Vier unterschiedlich hohe und lange, steil eintauchende Brettwurzeln verdicken sich in den gefurchten Stamm; unregelmäßig verdrängte Erde, modellierte Gräser und Laubstreu bedecken den Wurzelfuß. Flacher dunkler Boden mit gebrochenem eingesunkenem Rand, Laubstreu, Zweigen und kleinen eingesunkenen Steinen statt einer gewölbten Bodenbank.",
   "target_size_m": [
     14,
     13.5,
@@ -14,22 +14,8 @@
     3000
   ],
   "texture_size": 2048,
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-bbbec46812f34f45bdf2489c6f83c0fa",
-  "review": {
-    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
-    "scores": {
-      "silhouette": 8,
-      "form_detail": 8,
-      "material": 8,
-      "scale": 8,
-      "style": 8,
-      "defects": 7
-    },
-    "notes": "Round 3 (final). Fixed: starfish foot replaced by a real trunk flare; the collar is gone and the limbs fork as a natural V; the crown is irregular with air gaps. Still failing (defects 7): the tree stands on a smooth, domed light-sand disc with a clean round hard edge and almost no grass, which reads as a placeholder base (t9/base view). Fix: replace the disc with an irregular, low soil patch that fades into the ground, with turf and leaf litter over the edge, and roots dipping into it; no visible rim.",
-    "round": 3,
-    "source_sha256": "79e085271df545b9639e299f6f0133143f36727a008664d00a37dd9df619b6e1",
-    "sheet_sha256": "feb8ad53f5e15ec9cd731cef67e027657ca53e890d2eb5e194fe32c67cddeeb0"
-  },
+  "review": null,
   "review_rounds": 3
 }
