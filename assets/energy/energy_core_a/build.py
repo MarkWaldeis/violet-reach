@@ -224,7 +224,7 @@ def limestone_finish():
     return mat
 
 
-def energy_finish(name, strength, sheath=False, current=False):
+def energy_finish(name, strength, current=False):
     mat = vrmat.get("violet_energy").copy()
     mat.name = name
     palette = vrmat.load_palette()
@@ -249,21 +249,6 @@ def energy_finish(name, strength, sheath=False, current=False):
     emission = bsdf.inputs["Emission Strength"]
     links.remove(emission.links[0])
     emission.default_value = strength
-    if sheath:
-        # Review-source transmission stays local to the skin; its lit texture still has a bakeable base.
-        roughness = bsdf.inputs["Roughness"]
-        links.remove(roughness.links[0])
-        roughness.default_value = .24
-        bsdf.inputs["IOR"].default_value = 1.16
-        bsdf.inputs["Transmission Weight"].default_value = .72
-        bsdf.inputs["Subsurface Weight"].default_value = .06
-        bsdf.inputs["Subsurface Scale"].default_value = .33
-        bsdf.inputs["Specular IOR Level"].default_value = .12
-        tint = nodes.new("ShaderNodeMixRGB")
-        tint.inputs[0].default_value = .36
-        tint.inputs[1].default_value = (.27, .107, .57, 1)
-        links.new(ramp.outputs[0], tint.inputs[2])
-        links.new(tint.outputs[0], bsdf.inputs["Base Color"])
     if current:
         links.remove(bsdf.inputs["Base Color"].links[0])
         bsdf.inputs["Base Color"].default_value = dark
@@ -275,43 +260,40 @@ def seed_axis(t):
                    .51*math.sin(6*t+.35), -5.25+10.5*t))
 
 
-def seed_point(t, theta, inner=False):
+def seed_point(t, theta):
     span = max(0, math.sin(t*math.pi))**.67
     centre = seed_axis(t)
     swelling = 1 + .15*math.sin(2*math.pi*t+.22) + .093*math.sin(4*math.pi*t-.64)
     helix = 3*theta - 11.8*t + .65*math.sin(6.6*t)
     lobes = .245*math.cos(helix) + .094*math.sin(2*theta+8*t) + .046*math.cos(2*helix+.32)
     radius = 2.60*swelling*span*(1+span*lobes)
-    if inner:
-        radius *= .68 + .125*math.cos(helix-.35)
-        centre.z *= .86
     x = centre.x + radius*math.cos(theta)
     y = centre.y + radius*.79*math.sin(theta)
     z = centre.z + .24*span*math.cos(theta+7*t)
     return CORE_ORIGIN + CORE_TILT @ Vector((x, y, z))
 
 
-def body(inner=False):
+def body():
     n, steps = 104, 116
-    points = [seed_point(0, 0, inner)]
-    intensity = [.11 if inner else .06]
+    points = [seed_point(0, 0)]
+    intensity = [.065]
     for k in range(1, steps):
         t = k/steps
         for j in range(n):
             theta = math.tau*j/n
-            p = seed_point(t, theta, inner)
+            p = seed_point(t, theta)
             helix = 3*theta-11.8*t+.65*math.sin(6.6*t)
-            spiral = .5 + .5*math.cos(helix+.36*math.sin(14*t-2*theta))
-            thread = (.5 + .5*math.cos(2*helix-.7+.49*math.sin(theta+9*t)))**7
-            envelope = math.sin(math.pi*t)**1.15
+            twist = helix + .44*math.sin(14*t-2*theta)
+            lane = .5 + .5*math.cos(twist)
+            fold = (.5 + .5*math.cos(twist+1.52))**4
+            thread = (.5 + .5*math.cos(2*twist-.8+.49*math.sin(theta+9*t)))**8
+            waist = .49 + .10*math.sin(2*theta+4.8*t)
+            envelope = math.sin(math.pi*t)**1.13 * math.exp(-((t-waist)/.39)**2)
             noise = noise_vector(p*.82).x
-            if inner:
-                value = .14 + envelope*(.30 + .43*spiral**1.8 + .18*thread + .09*noise)
-            else:
-                value = .065 + envelope*(.23 + .25*spiral**2.4 + .15*thread + .11*noise)
+            value = .065 + envelope*(.25 + .49*lane**1.9 + .21*fold + .12*thread + .09*noise)
             points.append(p)
             intensity.append(max(0,min(1,value)))
-    points.append(seed_point(1, 0, inner))
+    points.append(seed_point(1, 0))
     intensity.append(intensity[0])
     faces = [(0, 1+(j+1)%n, 1+j) for j in range(n)]
     for k in range(steps-2):
@@ -321,9 +303,8 @@ def body(inner=False):
     last = len(points)-1
     for j in range(n):
         faces.append((last-n+j,last-n+(j+1)%n,last))
-    layer = "emissive heart" if inner else "violet sheath"
-    obj = mesh_object("Levitating seed | "+layer, points, faces,
-                      [energy_finish("Violet | "+layer, 2.6 if inner else .51, sheath=not inner)], smooth=True)
+    obj = mesh_object("Levitating seed | plasma folds", points, faces,
+                      [energy_finish("Violet | plasma folds", 2.3)], smooth=True)
     field = obj.data.attributes.new("plasma", "FLOAT", "POINT")
     field.data.foreach_set("value", intensity)
 
@@ -517,7 +498,6 @@ def build():
         shaped_stone(f"Apron spall {i+1}", outline, -.018,
                      extent*rng.uniform(.32,.76), rng, "monument_weathered", True)
     body()
-    body(inner=True)
 
     def seat(spec):
         index, t, across, _ = spec
