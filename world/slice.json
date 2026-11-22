@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "bounds": {"minX": -100, "minZ": 1100, "maxX": 900, "maxZ": 2100},
+  "centre": {"x": 400, "z": 1600},
+  "paths": [
+    {"width": 2.4, "polyline": [[350,1360],[385,1375],[420,1390],[450,1400],[455,1420],[445,1440],[440,1460],[435,1485],[444,1500],[453,1512],[465.5,1518.5]]},
+    {"width": 2.4, "polyline": [[494.5,1489.5],[503,1502.2],[513.6,1512.8],[522,1510],[529.5,1502.6],[541,1499],[555,1497.5],[570,1495.8],[582,1493.5],[593.869,1490.652]]}
+  ],
+  "spawn": {
+    "fly": {"x": 200, "z": 1200, "yaw": -2.5},
+    "walk": {"x": 350, "z": 1360, "yaw": -1.3734}
+  },
+  "justification": "Nordwestufer des Spiegelsees: mäandrierende Weißfall- und Dornbachmündung mit gerundeten Mündungsfächern, rund 40 % Seehülle (37 % sichtbares Wasser), Buchten und ein bis 299 m hoher Rücken als gestaffelte Silhouette.",
+  "measurements": {
+    "lake_fraction": 0.4005,
+    "land_fraction": 0.5995,
+    "visible_lake_fraction": 0.3738,
+    "min_height": 157.9949188232422,
+    "max_height": 299.1663818359375,
+    "relief": 141.1714630126953,
+    "river_length_m": {"Weißfall": 896.05, "Dornbach": 818.89},
+    "method": "Lake outline occupancy at 10 m cell centres (shore envelope); visible lake additionally requires nearest R16 height below water_y 180. Height extrema at all 2 m R16 samples; river centrelines clipped to bounds."
+  },
+  "asset_options": {
+    "tree_broadleaf_a": {
+      "maxDistance": 1600,
+      "lodScale": 0.11,
+      "lodRatio": 12,
+      "aerialLODScale": 2.0,
+      "maxLOD": 2,
+      "shadowLODs": 1,
+      "tintVariation": 0.09
+    },
+    "tree_broadleaf_b": {
+      "maxDistance": 1600,
+      "lodScale": 0.12,
+      "lodRatio": 12,
+      "aerialLODScale": 2.0,
+      "maxLOD": 2,
+      "shadowLODs": 1,
+      "tintVariation": 0.09
+    },
+    "tree_broadleaf_c": {
+      "maxDistance": 1600,
+      "lodScale": 0.14,
+      "lodRatio": 12,
+      "aerialLODScale": 2.5,
+      "maxLOD": 2,
+      "shadowLODs": 1,
+      "tintVariation": 0.09
+    },
+    "shrub_round_a": {
+      "maxDistance": 260,
+      "lodScale": 0.2,
+      "shadowLODs": 0,
+      "tintVariation": 0.12
+    },
+    "grass_tuft_a": {
+      "maxDistance": 20,
+      "lodScale": 0.3,
+      "lodRatio": 4,
+      "shadowLODs": 0,
+      "tintVariation": 0.14
+    },
+    "fern_cluster_a": {
+      "maxDistance": 70,
+      "lodScale": 0.22,
+      "lodRatio": 4,
+      "shadowLODs": 0,
+      "tintVariation": 0.1
+    },
+    "reed_cluster_a": {
+      "maxDistance": 12,
+      "lodScale": 0.25,
+      "shadowLODs": 0,
+      "tintVariation": 0.08
+    },
+    "crystal_spire_a": {
+      "maxDistance": 1200,
+      "shadowLODs": 1
+    },
+    "stair_terrace_a": {
+      "lodScale": 0.7,
+      "shadowLODs": 2
+    }
+  }
+}

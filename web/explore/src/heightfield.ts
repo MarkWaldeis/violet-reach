@@ -54,8 +54,7 @@ export function distanceToTile(m: TerrainManifest, tile: TileCoords, x: number, 
   return Math.hypot(Math.max(0, -dx, dx - m.tileSize), Math.max(0, -dz, dz - m.tileSize));
 }
 
-export function selectTiles(m: TerrainManifest, x: number, z: number) {
-  const radius = Math.min(MAX_TILE_DISTANCE, 10 * m.tileSize);
+export function selectTiles(m: TerrainManifest, x: number, z: number, radius = Math.min(MAX_TILE_DISTANCE, 10 * m.tileSize)) {
   const from = worldTile(m, x - radius, z - radius);
   const to = worldTile(m, x + radius, z + radius);
   const result: { coords: TileCoords; distance: number }[] = [];

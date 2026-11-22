@@ -1,6 +1,42 @@
 {
   "assets": [
     {
+      "id": "bridge_arch_a",
+      "category": "bridges",
+      "title": "Pale Ford Arch",
+      "file": "bridge_arch_a.glb",
+      "size_m": [
+        40.94,
+        6.48,
+        7.251
+      ],
+      "bytes": 3806124
+    },
+    {
+      "id": "crystal_cluster_b",
+      "category": "crystals",
+      "title": "Fault-Grown Violet Cluster",
+      "file": "crystal_cluster_b.glb",
+      "size_m": [
+        3.617,
+        2.979,
+        2.98
+      ],
+      "bytes": 2597012
+    },
+    {
+      "id": "crystal_spire_a",
+      "category": "crystals",
+      "title": "Violet Fault Spire",
+      "file": "crystal_spire_a.glb",
+      "size_m": [
+        3.938,
+        3.587,
+        7.111
+      ],
+      "bytes": 2452032
+    },
+    {
       "id": "crystal_violet_cluster_a",
       "category": "crystals",
       "title": "Violetter Kristallhaufen A",
@@ -11,6 +47,138 @@
         3.514
       ],
       "bytes": 3316836
+    },
+    {
+      "id": "column_white_a",
+      "category": "monuments",
+      "title": "Survey Column",
+      "file": "column_white_a.glb",
+      "size_m": [
+        6.91,
+        6.712,
+        18.047
+      ],
+      "bytes": 3337468
+    },
+    {
+      "id": "gate_white_a",
+      "category": "monuments",
+      "title": "Floodmark Gate",
+      "file": "gate_white_a.glb",
+      "size_m": [
+        18.087,
+        46.23,
+        33.092
+      ],
+      "bytes": 4050624
+    },
+    {
+      "id": "stair_terrace_a",
+      "category": "monuments",
+      "title": "The Spillway Stair",
+      "file": "stair_terrace_a.glb",
+      "size_m": [
+        23.161,
+        13.804,
+        6.509
+      ],
+      "bytes": 4181124
+    },
+    {
+      "id": "lake_shore_a",
+      "category": "shore",
+      "title": "Shinglewake Shore",
+      "file": "lake_shore_a.glb",
+      "size_m": [
+        21.2,
+        7.678,
+        1.145
+      ],
+      "bytes": 3825952
+    },
+    {
+      "id": "fern_cluster_a",
+      "category": "vegetation",
+      "title": "Farnhorst A",
+      "file": "fern_cluster_a.glb",
+      "size_m": [
+        1.335,
+        1.441,
+        0.556
+      ],
+      "bytes": 1489400
+    },
+    {
+      "id": "grass_tuft_a",
+      "category": "vegetation",
+      "title": "Grasbüschel A",
+      "file": "grass_tuft_a.glb",
+      "size_m": [
+        0.579,
+        0.54,
+        0.639
+      ],
+      "bytes": 270072
+    },
+    {
+      "id": "reed_cluster_a",
+      "category": "vegetation",
+      "title": "Schilfhorst A",
+      "file": "reed_cluster_a.glb",
+      "size_m": [
+        1.593,
+        1.558,
+        1.816
+      ],
+      "bytes": 1046108
+    },
+    {
+      "id": "shrub_round_a",
+      "category": "vegetation",
+      "title": "Dichter Rundstrauch A",
+      "file": "shrub_round_a.glb",
+      "size_m": [
+        2.617,
+        2.239,
+        2.214
+      ],
+      "bytes": 1520656
+    },
+    {
+      "id": "tree_broadleaf_a",
+      "category": "vegetation",
+      "title": "Breitkroniger Laubbaum A",
+      "file": "tree_broadleaf_a.glb",
+      "size_m": [
+        14.333,
+        13.306,
+        15.624
+      ],
+      "bytes": 11171888
+    },
+    {
+      "id": "tree_broadleaf_b",
+      "category": "vegetation",
+      "title": "Eschenartiger Laubbaum B",
+      "file": "tree_broadleaf_b.glb",
+      "size_m": [
+        7.909,
+        6.727,
+        11.031
+      ],
+      "bytes": 10547576
+    },
+    {
+      "id": "tree_broadleaf_c",
+      "category": "vegetation",
+      "title": "Breitkroniger kleiner Laubbaum C",
+      "file": "tree_broadleaf_c.glb",
+      "size_m": [
+        6.005,
+        5.244,
+        6.958
+      ],
+      "bytes": 6480716
     }
   ]
 }

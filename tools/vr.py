@@ -22,6 +22,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+from placement_format import placement_problems
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ASSETS = os.path.join(ROOT, "assets")
@@ -78,7 +79,7 @@ def source_hash(asset_dir):
             imports.update(alias.name.split(".")[-1] for alias in node.names)
         if isinstance(node, ast.ImportFrom) and node.module:
             imports.add(node.module.split(".")[-1])
-    if "vrmat" in imports:
+    if "vrmat" in imports or "vrcolumn" in imports:
         inputs += [os.path.join(BLENDER_TOOLS, "vrmat.py"), os.path.join(ROOT, "art", "palette.json")]
     if "vrcolumn" in imports:
         inputs.append(os.path.join(BLENDER_TOOLS, "vrcolumn.py"))
@@ -392,9 +393,16 @@ def cmd_check(_):
         errors.append("public manifest is missing or unreadable")
     if os.path.isfile(PLACEMENTS):
         with open(PLACEMENTS) as f:
-            for item in json.load(f).get("placements", []):
-                if item["asset"] not in published:
-                    errors.append(f"world/placements.json: '{item['asset']}' has not passed the Blender gate")
+            try:
+                document = json.load(f)
+                errors.extend(f"world/placements.json: {p}" for p in placement_problems(document))
+                items = document.get("placements", []) if isinstance(document, dict) else []
+                for item in items if isinstance(items, list) else []:
+                    asset = item.get("asset") if isinstance(item, dict) else None
+                    if not isinstance(asset, str) or asset not in published:
+                        errors.append(f"world/placements.json: '{asset}' has not passed the Blender gate")
+            except ValueError:
+                errors.append("world/placements.json: invalid JSON")
     for e in sorted(errors):
         print("GATE FAIL:", e)
     if errors:

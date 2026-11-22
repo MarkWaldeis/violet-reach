@@ -14,7 +14,7 @@
     2800
   ],
   "texture_size": 2048,
-  "status": "approved",
+  "status": "exported",
   "builder": "devin-4076f9d9c7794015bd813c73729bed6b",
   "review": {
     "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
@@ -31,5 +31,23 @@
     "source_sha256": "32afd73456563dc46b0783d6c612c9a4a2ca728cd45740cbcb43b59f5fad8a1b",
     "sheet_sha256": "e81f688f323bfe6af1368924e8d0df34b5b7d2e5062a9a434972e59da9c21fea"
   },
-  "review_rounds": 2
+  "review_rounds": 2,
+  "size_m": [
+    21.2,
+    7.678,
+    1.145
+  ],
+  "export": {
+    "file": "export/lake_shore_a.glb",
+    "bytes": 3825952,
+    "sha256": "5fa742f9909396add1241397eb4ddc6202d4b34d5ee022a1f0a759212c2370e9",
+    "source_sha256": "32afd73456563dc46b0783d6c612c9a4a2ca728cd45740cbcb43b59f5fad8a1b",
+    "sheet_sha256": "e81f688f323bfe6af1368924e8d0df34b5b7d2e5062a9a434972e59da9c21fea",
+    "lod_triangles": [
+      26000,
+      9000,
+      2800
+    ],
+    "texture_size": 2048
+  }
 }

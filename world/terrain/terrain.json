@@ -10,7 +10,7 @@
   "samples": 4097,
   "tileSize": 512,
   "tileSamples": 257,
-  "h_min": 94.0,
+  "h_min": 97.5,
   "h_max": 1732.3597412109375,
   "encoding": "uint16 little-endian; rows +Z, columns +X; h = minHeight + v/65535 * (maxHeight-minHeight)",
   "water_levels": {

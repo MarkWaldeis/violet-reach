@@ -94,8 +94,40 @@ def shipping_checks(root):
 
         placements.write_text('{"placements":[{"asset":"rogue"}]}')
         yield expect("unregistered placement is refused", check_output(), "placements.json")
-        placements.write_text('{"placements":[{"asset":"thing"}]}')
+        placements.write_text('{"placements":[{"asset":"thing","x":0,"z":0,"yaw":0,"scale":1}]}')
         yield expect("gated placement passes", check_output(), None)
+        tilted = {"asset": "thing", "x": 0, "z": 0, "yaw": .4, "scale": 1, "pitch": .1, "roll": -.2}
+        yield expect("tilted single passes", vr.placement_problems({"placements": [tilted]}), None)
+        yield expect("fallen single passes", vr.placement_problems({"placements": [{**tilted, "roll": 1.5707963267948966}]}), None)
+        for key in ("pitch", "roll"):
+            for value in (True, None, "0.1", float("nan"), float("inf")):
+                yield expect("invalid single rotation refused", vr.placement_problems({"placements": [{**tilted, key: value}]}), "invalid")
+
+        scatter = {"asset": "thing", "scatter": {"seed": 42, "count": 2000,
+                   "rect": {"minX": 0, "minZ": 0, "maxX": 100, "maxZ": 100},
+                   "min_spacing": 1, "max_slope": 35, "min_height_above_water": 1,
+                   "max_height_above_water": 100, "scale": [0.8, 1.2], "align_to_slope": True}}
+        placements.write_text(json.dumps({"placements": [scatter]}))
+        yield expect("gated scatter passes", check_output(), None)
+        yield expect("single rotation on scatter refused", vr.placement_problems({"placements": [{**scatter, "pitch": .1}]}), "invalid")
+        scatter["asset"] = "rogue"
+        placements.write_text(json.dumps({"placements": [scatter]}))
+        yield expect("scatter cannot bypass asset gate", check_output(), "has not passed")
+        scatter["asset"] = "thing"
+        for key, value in [("count", -1), ("seed", True), ("scale", [2, 1]), ("max_slope", 91),
+                           ("min_spacing", float("nan")), ("rect", {}), ("surface", "lava"),
+                           ("path_clearance", -1), ("path_clearance", True)]:
+            broken = json.loads(json.dumps(scatter))
+            broken["scatter"][key] = value
+            yield expect(f"invalid scatter {key} refused", vr.placement_problems({"placements": [broken]}), "invalid")
+        polygon = json.loads(json.dumps(scatter))
+        del polygon["scatter"]["rect"]
+        polygon["scatter"]["polygon"] = [[0, 0], [100, 0], [0, 100]]
+        yield expect("polygon scatter passes", vr.placement_problems({"placements": [polygon]}), None)
+        yield expect("empty placements pass", vr.placement_problems({"placements": []}), None)
+        for document in ({}, {"placements": {}}, {"placements": [None]}, {"placements": [{"asset": "thing"}]}):
+            yield expect("malformed placements refused", vr.placement_problems(document), "expected" if "placements" not in document or isinstance(document["placements"], dict) else "invalid")
+        placements.write_text('{"placements":[]}')
 
         meta["texture_size"] *= 2
         vr.save(d, meta)
@@ -138,11 +170,18 @@ def main():
         baseline = vr.source_hash(d)
         with patch.object(vr, "sha256", side_effect=changed_library):
             results.append(expect("comments and strings do not opt into vrmat", [] if vr.source_hash(d) == baseline else ["changed"], None))
-        for statement, depends in (("from vrcolumn import drum", True), ("# import vrcolumn", False)):
-            Path(d, "build.py").write_text(statement + "\n")
+        for statement in ("import vrcolumn", "import vrcolumn as column", "from vrcolumn import mesh", "from vrcolumn import drum", "from tools.blender import vrcolumn"):
+            Path(d, "build.py").write_text(statement + "\ndef build(): pass\n")
             baseline = vr.source_hash(d)
             with patch.object(vr, "sha256", side_effect=lambda p: "changed" if str(p).endswith("vrcolumn.py") else real_sha256(p)):
-                results.append(expect(statement + " tracks survey geometry", [] if (vr.source_hash(d) != baseline) == depends else ["incorrect dependency"], None))
+                results.append(expect(statement + " includes geometry helper hash", ["changed"] if vr.source_hash(d) != baseline else [], "changed"))
+            for dependency in ("vrmat.py", "palette.json"):
+                with patch.object(vr, "sha256", side_effect=lambda p: "changed" if str(p).endswith(dependency) else real_sha256(p)):
+                    results.append(expect(statement + " includes transitive " + dependency, ["changed"] if vr.source_hash(d) != baseline else [], "changed"))
+        Path(d, "build.py").write_text('# import vrcolumn\nTEXT = "vrcolumn"\n')
+        baseline = vr.source_hash(d)
+        with patch.object(vr, "sha256", side_effect=lambda p: "changed" if str(p).endswith("vrcolumn.py") else real_sha256(p)):
+            results.append(expect("comments and strings do not opt into vrcolumn", [] if vr.source_hash(d) == baseline else ["changed"], None))
     colors = vrmat.load_palette()
     results.append(expect("all material colors match sRGB and linear palette", [] if colors else ["empty"], None))
     results.append(expect("ochre accent remains in palette without an inlay material",

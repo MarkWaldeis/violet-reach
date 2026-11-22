@@ -14,7 +14,7 @@
     150
   ],
   "texture_size": 512,
-  "status": "approved",
+  "status": "exported",
   "builder": "devin-bbbec46812f34f45bdf2489c6f83c0fa",
   "review": {
     "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
@@ -31,5 +31,23 @@
     "source_sha256": "956ffa61dbc64fbd2652f64065e26dd1aa08b21e06579d56b222201362d2f718",
     "sheet_sha256": "b605f8f48e33ed29965f3e5d4e7d973d52e417f839d62ec5c831cc72cb1b74a9"
   },
-  "review_rounds": 2
+  "review_rounds": 2,
+  "size_m": [
+    0.579,
+    0.54,
+    0.639
+  ],
+  "export": {
+    "file": "export/grass_tuft_a.glb",
+    "bytes": 270072,
+    "sha256": "76bb206ca4e1f92ee45a4d93c4ef45366ad3ad2381f18cf019284fdc316ae8c4",
+    "source_sha256": "956ffa61dbc64fbd2652f64065e26dd1aa08b21e06579d56b222201362d2f718",
+    "sheet_sha256": "b605f8f48e33ed29965f3e5d4e7d973d52e417f839d62ec5c831cc72cb1b74a9",
+    "lod_triangles": [
+      2000,
+      700,
+      150
+    ],
+    "texture_size": 512
+  }
 }

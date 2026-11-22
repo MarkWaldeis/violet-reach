@@ -14,7 +14,7 @@
     1200
   ],
   "texture_size": 1024,
-  "status": "approved",
+  "status": "exported",
   "builder": "devin-bbbec46812f34f45bdf2489c6f83c0fa",
   "review": {
     "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
@@ -31,5 +31,23 @@
     "source_sha256": "1c52aacee94ba6c47398f39309614aab74263938be46f4e86f7ab4b244e719c1",
     "sheet_sha256": "30af8159dc715054a212821f5facd8bcfd1cebdc539d1496d605e3ea3d2fb209"
   },
-  "review_rounds": 2
+  "review_rounds": 2,
+  "size_m": [
+    2.617,
+    2.239,
+    2.214
+  ],
+  "export": {
+    "file": "export/shrub_round_a.glb",
+    "bytes": 1520656,
+    "sha256": "5688199fd44e00a90af49db3af6fa0829ab1434f6b1d99a41bb40e39140811f1",
+    "source_sha256": "1c52aacee94ba6c47398f39309614aab74263938be46f4e86f7ab4b244e719c1",
+    "sheet_sha256": "30af8159dc715054a212821f5facd8bcfd1cebdc539d1496d605e3ea3d2fb209",
+    "lod_triangles": [
+      18000,
+      5000,
+      1200
+    ],
+    "texture_size": 1024
+  }
 }

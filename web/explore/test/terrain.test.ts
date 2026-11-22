@@ -5,7 +5,7 @@ import {
   chooseLOD, decodeTile, parseManifest, sampleTile, selectTiles, worldTile,
   type TerrainManifest,
 } from "../src/heightfield.ts";
-import { buildTerrainMesh, lodStride } from "../src/terrain-mesh.ts";
+import { buildTerrainMesh, lodStride, stitchedHeight } from "../src/terrain-mesh.ts";
 import { Navigation } from "../src/navigation.ts";
 
 const m: TerrainManifest = {
@@ -78,18 +78,29 @@ test("walking height interpolates both rendered triangles, including edge sample
   assert.equal(sampleTile(tile, 3, 2, 1, 1), 100);
 });
 
-test("render meshes decimate consistently and cover seams with valid skirt indices", () => {
+test("every render LOD stitches to the full-resolution edge without vertical skirts or holes", () => {
   const data = Float32Array.from({ length: m.samples ** 2 }, (_, i) => 50 + i % m.samples);
   const a = buildTerrainMesh(m, { x: 0, z: 0 }, data, 0);
   const b = buildTerrainMesh(m, { x: 0, z: 1 }, data, 3);
   const fine = a.getAttribute("position");
-  const coarse = b.getAttribute("position");
   assert.equal(lodStride(m, 0), 2);
-  assert.ok(a.index!.count > 50 * b.index!.count);
+  assert.ok(a.index!.count > 20 * b.index!.count);
   assert.ok(a.index!.array.every((idx) => idx < fine.count));
-  for (let i = 0; i <= 16; i++) {
-    assert.equal(fine.getY(128 * 129 + i * 8), coarse.getY(i));
-    assert.ok(coarse.getY(17 * 17 + i) < coarse.getY(i));
+  for (const geometry of [a, b]) {
+    const p = geometry.getAttribute("position"), indices = geometry.index!;
+    let area = 0;
+    for (let i = 0; i < p.count; i++) assert.equal(p.getY(i), 50 + p.getX(i) / 2);
+    for (let i = 0; i < indices.count; i += 3) {
+      const [a, b, c] = [indices.getX(i), indices.getX(i + 1), indices.getX(i + 2)];
+      const twiceArea = (p.getZ(b) - p.getZ(a)) * (p.getX(c) - p.getX(a)) - (p.getX(b) - p.getX(a)) * (p.getZ(c) - p.getZ(a));
+      assert.ok(twiceArea > 0, "all triangles face up and have horizontal area");
+      area += twiceArea / 2;
+    }
+    assert.equal(area, m.tileSize ** 2);
+    for (let x = 0; x < m.tileSize; x += 0.5) {
+      assert.ok(Math.abs(stitchedHeight(geometry, x, 0)! - 50 - x / 2) < 1e-6);
+      assert.ok(Math.abs(stitchedHeight(geometry, x, m.tileSize)! - 50 - x / 2) < 1e-6);
+    }
   }
   a.dispose();
   b.dispose();
@@ -117,4 +128,24 @@ test("flight has clearance, landing reaches eye height, and walk waits for terra
   nav.keys.add("KeyQ");
   nav.update(0.25);
   assert.equal(camera.position.y, 42.6);
+});
+
+test("walk spawn waits for ground then starts at eye height, reset and F preserve controls", () => {
+  const camera = new PerspectiveCamera();
+  let height: number | undefined;
+  const nav = new Navigation(camera, { ...m, spawn: { x: 350, z: 1360, yaw: -1.37 } }, () => height);
+  assert.equal(nav.liftToSpawnHeight(true), false);
+  height = 188;
+  assert.equal(nav.liftToSpawnHeight(true), true);
+  assert.equal(nav.mode, "walk");
+  assert.equal(camera.position.y, 189.8);
+  assert.equal(camera.position.x, 350);
+  assert.equal(camera.position.z, 1360);
+  assert.equal(camera.rotation.y, -1.37);
+  nav.toggle();
+  assert.equal(nav.mode, "fly");
+  nav.reset();
+  assert.equal(nav.mode, "fly");
+  assert.equal(nav.liftToSpawnHeight(true), true);
+  assert.equal(nav.mode, "walk");
 });

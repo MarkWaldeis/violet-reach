@@ -104,8 +104,22 @@ def main():
         outline, level = lake['outline'], lake['water_y']
         require(len(outline) >= 16 and math.isfinite(level), 'Invalid lake')
         def river_mouth(x,z):
-            return any(math.hypot(x-p[0],z-p[1]) < p[3]*1.5
-                       for river in water['rivers'] for p in river['polyline'])
+            x,z = round((x+4096)/2)*2-4096,round((z+4096)/2)*2-4096
+            for river in water['rivers']:
+                for a,b in zip(river['polyline'],river['polyline'][1:]):
+                    dx,dz = b[0]-a[0],b[1]-a[1]
+                    t = max(0,min(1,((x-a[0])*dx+(z-a[1])*dz)/(dx*dx+dz*dz or 1)))
+                    width = a[3]+t*(b[3]-a[3])
+                    distance = math.hypot(x-a[0]-t*dx,z-a[1]-t*dz)
+                    bank = max(0,distance-width*.5)
+                    river_level = a[2]+t*(b[2]-a[2])
+                    ceiling = river_level-.35+.035*bank+.35*(bank-12+12*math.exp(-bank/12))+.0015*max(bank-100,0)**2
+                    if distance < width*.5:
+                        t = distance/(width*.5)
+                        ceiling = river_level-2.5+2.15*t*t*(3-2*t)
+                    if ceiling <= level+.1:
+                        return True
+            return False
         shore = [(x,z) for x,z in outline if not river_mouth(x,z)]
         require(len(shore) >= len(outline)*.7, 'Insufficient dry shoreline')
         require(all(sample(x, z) > level for x, z in shore), f'Lake shoreline submerged: {lake["name"]}')
@@ -113,6 +127,32 @@ def main():
         cz = sum(p[1] for p in outline)/len(outline)
         require(sample(cx, cz) < level, f'Lake basin above surface: {lake["name"]}')
     print('PASS: 4 downstream-monotone rivers; 3 flat lakes below dry shorelines (river mouths excluded)')
+    placements = json.loads((WORLD/'placements.json').read_text())['placements']
+    bridge = next(p for p in placements if p['asset']=='bridge_arch_a')
+    c,s = math.cos(bridge['yaw']),math.sin(bridge['yaw'])
+    def crossing_height(span, flow):
+        return sample(bridge['x']+c*span+s*flow,bridge['z']-s*span+c*flow)
+    wet = [crossing_height(span,flow) for span in range(-8,9,2) for flow in range(-3,4)]
+    banks = [crossing_height(side*span,flow) for side in [-1,1]
+             for span in [13,14,16,18,20.47] for flow in [-3.63,-2,0,2,3.63]]
+    require(max(wet)<179.9, 'Bridge inlet is not wet under the opening')
+    require(min(banks)>180.075 and max(banks)-min(banks)<.075, 'Bridge landing footprints are not supported by dry, level banks')
+    print('PASS: inlet is wet under the bridge; both full landing footprints are dry and supported')
+    stair = next(p for p in placements if p['asset']=='stair_terrace_a')
+    fixture = json.loads(Path(__file__).with_name('stair_support.json').read_text())
+    asset = json.loads((WORLD.parent/'assets/monuments/stair_terrace_a/asset.json').read_text())
+    require(fixture['source_sha256']==asset['review']['source_sha256'], 'Stair contact fixture needs regeneration for the new approved source')
+    def surface(x,z):
+        ix,iz = math.floor(x/2)*2,math.floor(z/2)*2
+        u,v = (x-ix)/2,(z-iz)/2
+        a,b,c,d = sample(ix,iz),sample(ix+2,iz),sample(ix,iz+2),sample(ix+2,iz+2)
+        return a+(b-a)*u+(c-a)*v if u+v<=1 else d+(c-d)*(1-u)+(b-d)*(1-v)
+    c,s = math.cos(stair['yaw']),math.sin(stair['yaw'])
+    base = surface(stair['x'],stair['z'])+stair.get('y_offset',0)
+    burial = [surface(stair['x']+c*x+s*z,stair['z']-s*x+c*z)-base-y
+              for x,y,z in fixture['contact_points']]
+    require(len(burial)>400 and min(burial)>.015 and max(burial)<.5, 'Stair front apron floats or is deeply buried')
+    print(f'PASS: {len(burial)} exported stair contact samples supported; burial {min(burial):.3f}…{max(burial):.3f} m')
     print(f'WORLD OK — height range {low:.2f}…{high:.2f} m; quantization {(high-low)/65535:.4f} m')
 
 

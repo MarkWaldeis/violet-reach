@@ -14,7 +14,7 @@
     1900
   ],
   "texture_size": 2048,
-  "status": "approved",
+  "status": "exported",
   "builder": "devin-10557958564a4a9894cdbd6bc867cb9f",
   "review": {
     "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
@@ -37,5 +37,23 @@
     "art/reference/ref_04_white_ribbed_arches.jpg",
     "art/reference/ref_08_ribbed_crown.jpg"
   ],
-  "review_rounds": 4
+  "review_rounds": 4,
+  "size_m": [
+    6.91,
+    6.712,
+    18.047
+  ],
+  "export": {
+    "file": "export/column_white_a.glb",
+    "bytes": 3337468,
+    "sha256": "34f8dfb1521fa7ed92a6d4540f9227b14ec5f924e755073a533e12799081c9e2",
+    "source_sha256": "40f00c4405d46565fac69fa078e30a693d3c9f51d802d0da13701eacaf5ce6bb",
+    "sheet_sha256": "f8fc36499c71eb25f3f12a8abba23783ff960667eec85c3a72323590f4f400f0",
+    "lod_triangles": [
+      21000,
+      6700,
+      1900
+    ],
+    "texture_size": 2048
+  }
 }
