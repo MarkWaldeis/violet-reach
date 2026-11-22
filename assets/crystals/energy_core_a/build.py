@@ -32,37 +32,40 @@ def seed_material():
     links.new(coords.outputs["Object"], space.inputs[0])
     for socket in targets:
         links.new(space.outputs[0], socket)
-    mat["asset_tweaks"] = "geometry depth 0–1; sRGB 2A1450/3A1E6A/6D48AB/9C86D8; library body mix 0.12; body hue 0.53; glow hue 0.52; centre-only emission 0–1.8; normal tilt 0.12; texture scale 0.22"
+    mat["asset_tweaks"] = "geometry depth 0–1; palette violet_body gains 0.12/0.24/0.7; tip mixes violet_glow 0.3; library body mix 0.12; hue 0.515; centre-only emission 0–1.8; normal tilt 0.12; texture scale 0.22"
     source = bsdf.inputs["Base Color"].links[0].from_socket
     depth = nodes.new("ShaderNodeAttribute")
     depth.attribute_name = "mineral_depth"
-    def linear(hex_color):
-        rgb = [int(hex_color[i:i + 2], 16) / 255 for i in (0, 2, 4)]
-        return tuple(v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4 for v in rgb) + (1,)
+    palette = vrmat.load_palette()
+    violet = palette["violet_body"]["linear_rgb"]
+    lavender = palette["violet_glow"]["linear_rgb"]
+    def shade(gain):
+        return tuple(v * gain for v in violet) + (1,)
+    light = tuple(0.7 * a + 0.3 * b for a, b in zip(violet, lavender)) + (1,)
     ramp = nodes.new("ShaderNodeValToRGB")
     ramp.name = "Geometry inner depth"
-    ramp.color_ramp.elements[0].color = linear("2A1450")
-    ramp.color_ramp.elements[1].color = linear("9C86D8")
-    for position, color in [(0.28, "3A1E6A"), (0.58, "6D48AB")]:
-        ramp.color_ramp.elements.new(position).color = linear(color)
+    ramp.color_ramp.elements[0].color = shade(0.12)
+    ramp.color_ramp.elements[1].color = light
+    for position, gain in [(0.28, 0.24), (0.58, 0.7)]:
+        ramp.color_ramp.elements.new(position).color = shade(gain)
     links.new(depth.outputs["Fac"], ramp.inputs[0])
     body = nodes.new("ShaderNodeMixRGB")
     body.inputs[0].default_value = 0.88
     links.new(source, body.inputs[1])
     links.new(ramp.outputs[0], body.inputs[2])
     tone = nodes.new("ShaderNodeHueSaturation")
-    tone.inputs["Hue"].default_value = 0.53
+    tone.inputs["Hue"].default_value = 0.515
     links.new(body.outputs[0], tone.inputs["Color"])
     links.new(tone.outputs[0], bsdf.inputs["Base Color"])
     heat = nodes.new("ShaderNodeAttribute")
     heat.attribute_name = "core_glow"
     glow = nodes.new("ShaderNodeValToRGB")
-    glow.color_ramp.elements[0].color = linear("3A1E6A")
-    glow.color_ramp.elements[1].color = linear("9C86D8")
-    glow.color_ramp.elements.new(0.35).color = linear("6D48AB")
+    glow.color_ramp.elements[0].color = shade(0.24)
+    glow.color_ramp.elements[1].color = light
+    glow.color_ramp.elements.new(0.35).color = shade(0.7)
     links.new(heat.outputs["Fac"], glow.inputs[0])
     light_color = nodes.new("ShaderNodeHueSaturation")
-    light_color.inputs["Hue"].default_value = 0.52
+    light_color.inputs["Hue"].default_value = 0.515
     links.new(glow.outputs[0], light_color.inputs["Color"])
     links.new(light_color.outputs[0], bsdf.inputs["Emission Color"])
     gain = nodes.new("ShaderNodeMath")
