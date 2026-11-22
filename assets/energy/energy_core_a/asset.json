@@ -1,0 +1,20 @@
+{
+  "id": "energy_core_a",
+  "category": "energy",
+  "title": "Violet Seed Sanctuary",
+  "description": "A floating violet energy seed held between four eroded limestone sails by currents that wind around the body; references: ref_04_white_ribbed_arches and ref_07_violet_crater.",
+  "target_size_m": [
+    20,
+    22,
+    19.3
+  ],
+  "lod_triangles": [
+    18800,
+    6900,
+    2100
+  ],
+  "texture_size": 4096,
+  "status": "blender_review",
+  "builder": "devin-b06222e48d554ae4a6a116ad07645e06",
+  "review": null
+}
