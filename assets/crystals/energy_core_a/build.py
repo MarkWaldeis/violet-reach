@@ -32,41 +32,43 @@ def seed_material():
     links.new(coords.outputs["Object"], space.inputs[0])
     for socket in targets:
         links.new(space.outputs[0], socket)
-    # Preserve library body, inclusions and normals; add only bounded depth and centre glow.
-    mat["asset_tweaks"] = "saturation 0.88; centre-distance emission 0.03–0.65; body depth 0.5–1; inclusion shadow 0.65; normal tilt 0.12; texture scale 0.22"
-    heat = nodes.new("ShaderNodeAttribute")
-    heat.attribute_name = "core_distance"
-    inward = nodes.new("ShaderNodeMath")
-    inward.operation = "SUBTRACT"
-    inward.inputs[0].default_value = 1
-    links.new(heat.outputs["Fac"], inward.inputs[1])
+    mat["asset_tweaks"] = "geometry depth 0–1; sRGB 2A1450/3A1E6A/6D48AB/9C86D8; library body mix 0.12; body hue 0.53; glow hue 0.52; centre-only emission 0–1.8; normal tilt 0.12; texture scale 0.22"
     source = bsdf.inputs["Base Color"].links[0].from_socket
     depth = nodes.new("ShaderNodeAttribute")
     depth.attribute_name = "mineral_depth"
+    def linear(hex_color):
+        rgb = [int(hex_color[i:i + 2], 16) / 255 for i in (0, 2, 4)]
+        return tuple(v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4 for v in rgb) + (1,)
+    ramp = nodes.new("ShaderNodeValToRGB")
+    ramp.name = "Geometry inner depth"
+    ramp.color_ramp.elements[0].color = linear("2A1450")
+    ramp.color_ramp.elements[1].color = linear("9C86D8")
+    for position, color in [(0.28, "3A1E6A"), (0.58, "6D48AB")]:
+        ramp.color_ramp.elements.new(position).color = linear(color)
+    links.new(depth.outputs["Fac"], ramp.inputs[0])
     body = nodes.new("ShaderNodeMixRGB")
-    body.blend_type = "MULTIPLY"
-    body.inputs["Fac"].default_value = 1
+    body.inputs[0].default_value = 0.88
     links.new(source, body.inputs[1])
-    links.new(depth.outputs["Fac"], body.inputs[2])
+    links.new(ramp.outputs[0], body.inputs[2])
     tone = nodes.new("ShaderNodeHueSaturation")
-    tone.inputs["Saturation"].default_value = 0.88
+    tone.inputs["Hue"].default_value = 0.53
     links.new(body.outputs[0], tone.inputs["Color"])
     links.new(tone.outputs[0], bsdf.inputs["Base Color"])
-    palette = vrmat.load_palette()
-    color = lambda key: (*palette[key]["linear_rgb"], 1)
+    heat = nodes.new("ShaderNodeAttribute")
+    heat.attribute_name = "core_glow"
     glow = nodes.new("ShaderNodeValToRGB")
-    glow.color_ramp.elements[0].color = color("violet_shadow")
-    glow.color_ramp.elements[1].position = 0.55
-    glow.color_ramp.elements[1].color = tuple(0.8 * a + 0.2 * b for a, b in zip(color("violet_body"), color("violet_glow")))
-    mid = glow.color_ramp.elements.new(0.25)
-    mid.color = color("violet_body")
-    links.new(inward.outputs[0], glow.inputs["Fac"])
-    links.new(glow.outputs["Color"], bsdf.inputs["Emission Color"])
+    glow.color_ramp.elements[0].color = linear("3A1E6A")
+    glow.color_ramp.elements[1].color = linear("9C86D8")
+    glow.color_ramp.elements.new(0.35).color = linear("6D48AB")
+    links.new(heat.outputs["Fac"], glow.inputs[0])
+    light_color = nodes.new("ShaderNodeHueSaturation")
+    light_color.inputs["Hue"].default_value = 0.52
+    links.new(glow.outputs[0], light_color.inputs["Color"])
+    links.new(light_color.outputs[0], bsdf.inputs["Emission Color"])
     gain = nodes.new("ShaderNodeMath")
-    gain.operation = "MULTIPLY_ADD"
-    gain.inputs[1].default_value = 1.1
-    gain.inputs[2].default_value = 0.03
-    links.new(inward.outputs[0], gain.inputs[0])
+    gain.operation = "MULTIPLY"
+    gain.inputs[1].default_value = 1.8
+    links.new(heat.outputs["Fac"], gain.inputs[0])
     links.new(gain.outputs[0], bsdf.inputs["Emission Strength"])
     return mat
 
@@ -121,10 +123,14 @@ def seed(rng, mat):
     for v, value in zip(mesh.vertices, heat.data):
         value.value = min(1, (v.co - centre).length / (height * 0.5))
     depth = mesh.attributes.new("mineral_depth", "FLOAT", "POINT")
-    for vertex, value in zip(mesh.vertices, depth.data):
+    glow = mesh.attributes.new("core_glow", "FLOAT", "POINT")
+    for vertex, value, light in zip(mesh.vertices, depth.data, glow.data):
         z = max(0, min(1, vertex.co.z / height))
-        axis = min(1, Vector((vertex.co.x, vertex.co.y)).length / radius)
-        value.value = min(1, 0.50 + 0.32 * z + 0.14 * axis + 0.04 * int(z * 4) / 4)
+        distance = min(1, (vertex.co - centre).length / (height * 0.5))
+        growth = 0.04 * (1 - (z * 3) % 1)
+        value.value = max(0, min(1, (0.68 - distance) / 0.4 - growth))
+        central = max(0, 1 - abs(z - 0.5) / 0.22)
+        light.value = central * max(0, min(1, (0.66 - distance) / 0.26)) ** 2
     obj = bpy.data.objects.new("Levitating violet seed", mesh)
     obj.data.materials.append(mat)
     obj.location = (0, 0, 4.55)

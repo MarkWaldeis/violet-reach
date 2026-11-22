@@ -211,8 +211,10 @@ def make_crystal(name, rng, radius, height, mat, chip=None):
     for vertex, value in zip(mesh.vertices, depth.data):
         z = max(0, min(1, vertex.co.z / height))
         axis = min(1, Vector((vertex.co.x, vertex.co.y)).length / radius)
-        growth = 0.04 * int(z * 4) / 4
-        value.value = min(1, 0.50 + 0.32 * z + 0.14 * axis + growth)
+        axis = max(0, min(1, (axis - 0.65) / 0.35))
+        growth = 0.06 * (1 - (z * 3) % 1)
+        value.value = max(0, min(1, 0.06 + 0.94 * z ** 1.2
+                                - 0.38 * (1 - axis) * (1 - z) - growth))
     obj = bpy.data.objects.new(name, mesh)
     obj.data.materials.append(mat)
     bevel = obj.modifiers.new("edge_bevel", "BEVEL")
@@ -315,7 +317,7 @@ def build():
         links.new(source, lichen.inputs[1])
         links.new(lichen.outputs[0], bsdf.inputs["Base Color"])
     soil = vrmat.get("forest_soil").copy()
-    moss = vrmat.get("grass_ground").copy()
+    moss = vrmat.get("mossy_rock").copy()
     crystal = vrmat.get("violet_crystal").copy()
     crystal.name = "Spire | library violet depth"
     nodes, links = crystal.node_tree.nodes, crystal.node_tree.links
@@ -336,26 +338,39 @@ def build():
     links.new(coords.outputs["Object"], space.inputs[0])
     for socket in targets:
         links.new(space.outputs[0], socket)
-    vein = bsdf.inputs["Emission Strength"].links[0].from_socket
-    floor = nodes.new("ShaderNodeMath")
-    floor.operation = "ADD"
-    floor.inputs[1].default_value = 0.12
-    links.new(vein, floor.inputs[0])
-    links.new(floor.outputs[0], bsdf.inputs["Emission Strength"])
     source = bsdf.inputs["Base Color"].links[0].from_socket
     depth = nodes.new("ShaderNodeAttribute")
     depth.attribute_name = "mineral_depth"
+    ramp = nodes.new("ShaderNodeValToRGB")
+    ramp.name = "Geometry axial and axis depth"
+    def linear(hex_color):
+        rgb = [int(hex_color[i:i + 2], 16) / 255 for i in (0, 2, 4)]
+        return tuple(v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4 for v in rgb) + (1,)
+    ramp.color_ramp.elements[0].color = linear("2A1450")
+    ramp.color_ramp.elements[1].color = linear("9C86D8")
+    for position, color in [(0.28, "3A1E6A"), (0.58, "6D48AB")]:
+        ramp.color_ramp.elements.new(position).color = linear(color)
+    links.new(depth.outputs["Fac"], ramp.inputs[0])
     body = nodes.new("ShaderNodeMixRGB")
-    body.blend_type = "MULTIPLY"
-    body.inputs["Fac"].default_value = 1
+    body.inputs[0].default_value = 0.88
     links.new(source, body.inputs[1])
-    links.new(depth.outputs["Fac"], body.inputs[2])
+    links.new(ramp.outputs[0], body.inputs[2])
     tone = nodes.new("ShaderNodeHueSaturation")
-    tone.inputs["Saturation"].default_value = 0.88
+    tone.inputs["Hue"].default_value = 0.53
     links.new(body.outputs[0], tone.inputs["Color"])
     links.new(tone.outputs[0], bsdf.inputs["Base Color"])
-    # Library copy: 12% desaturation; bounded axial/axis depth and 4% growth steps.
-    crystal["asset_tweaks"] = "saturation 0.88; body value 0.5–1; growth steps 0.04; inclusion shadow 0.65; normal tilt 0.12; emission floor 0.12; texture scale 0.45"
+    light_color = nodes.new("ShaderNodeHueSaturation")
+    light_color.inputs["Hue"].default_value = 0.53
+    links.new(ramp.outputs[0], light_color.inputs["Color"])
+    links.new(light_color.outputs[0], bsdf.inputs["Emission Color"])
+    veins = bsdf.inputs["Emission Strength"].links[0].from_socket
+    gain = nodes.new("ShaderNodeMath")
+    gain.operation = "ADD"
+    gain.inputs[1].default_value = 0.3
+    links.new(veins, gain.inputs[0])
+    links.new(gain.outputs[0], bsdf.inputs["Emission Strength"])
+    # Emission uses the dark-to-light geometry ramp, never a uniform pale colour.
+    crystal["asset_tweaks"] = "geometry depth 0–1; sRGB 2A1450/3A1E6A/6D48AB/9C86D8; library body mix 0.12; hue 0.53; ramp-coloured emission 0.3 plus veins; normal tilt 0.12; texture scale 0.45"
 
     footing = [(-1.55, -0.8, 1.45, 1.15, 1.05), (0.05, -1.65, 1.35, 0.85, 0.6),
                (1.45, -0.95, 0.95, 1.45, 1.3), (1.7, 0.65, 1.15, 1.1, 0.72),
@@ -367,18 +382,38 @@ def build():
         nx, ny = footing[(i + 1) % len(footing)][:2]
         joint = make_rock(f"joint_earth_{i}", rng, 0.56, 0.23, 5, soil)
         joint.location = ((x + nx) * 0.47, (y + ny) * 0.47, 0.17)
-        tuft = make_rock(f"joint_moss_{i}", rng, 0.21, 0.55, 4, moss)
+        tuft = make_rock(f"joint_moss_{i}", rng, 0.21, 0.2, 4, moss)
         tuft.location = (joint.location.x, joint.location.y, 0.37)
     for i, (size, position) in enumerate([((1.0, 0.75, 0.55), (-1.55, 0.4, 1.05)),
                                          ((0.7, 0.85, 1.05), (0.6, 1.6, 1.03))]):
         block = limestone_block(f"leaning_break_{i}", rng, size, position, limestone)
         block.rotation_euler.x += 0.29 if i else -0.25
 
-    collar = make_rock("soil_collar", rng, 1.46, 0.32, 6, moss)
+    collar = make_rock("soil_collar", rng, 1.46, 0.27, 6, soil)
     collar.location = (0, 0, 0.33)
-    for i, (x, y, radius) in enumerate([(-0.6, -0.5, 0.65), (0.45, 0.4, 0.67), (-0.4, 0.6, 0.48)]):
-        turf = make_rock(f"moss_collar_{i}", rng, radius, 0.26, 5, moss)
-        turf.location = (x, y, 0.46)
+    turf_rng = random.Random(SEED + 83)
+    for i in range(48):
+        angle = turf_rng.uniform(0, math.tau)
+        distance = turf_rng.uniform(0.2, 1.35)
+        x, y = math.cos(angle) * distance, math.sin(angle) * distance
+        origin = Vector((x, y, 3)) - collar.location
+        hit, point, _, _ = collar.ray_cast(origin, Vector((0, 0, -1)))
+        if not hit:
+            continue
+        turf = make_rock(f"moss_collar_{i}", turf_rng, turf_rng.uniform(0.16, 0.27), 0.18, 4, moss)
+        turf.location = point + collar.location + Vector((0, 0, -0.012))
+        for vertex in turf.data.vertices:
+            top = vertex.co.z > 0
+            fringe = 0.8 + 0.2 * noise.fractal(vertex.co * 34, 1, 2, 3)
+            vertex.co.x *= fringe
+            vertex.co.y *= fringe
+            origin = vertex.co + turf.location - collar.location
+            origin.z = 3
+            hit, surface, _, _ = collar.ray_cast(origin, Vector((0, 0, -1)))
+            if hit:
+                grain = 0.004 + 0.003 * noise.fractal(vertex.co * 85, 1, 2, 3)
+                vertex.co.z = surface.z + collar.location.z - turf.location.z + (grain if top else -0.008)
+        turf.data.update()
     for i in range(6):
         angle = i * math.tau / 6 + 0.2
         pebble = make_rock(f"collar_pebble_{i}", rng, rng.uniform(0.09, 0.17), 0.75, 4, weather)
