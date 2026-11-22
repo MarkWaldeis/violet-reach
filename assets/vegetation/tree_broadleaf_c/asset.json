@@ -14,8 +14,22 @@
     2000
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-bbbec46812f34f45bdf2489c6f83c0fa",
-  "review": null,
-  "review_rounds": 2
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 6,
+      "material": 7,
+      "scale": 8,
+      "style": 6,
+      "defects": 6
+    },
+    "notes": "Round 3 (final). Still a thin sapling: a long bare pole with a small round lollipop crown (hero). The foot is now four straight, evenly spaced struts like rocket fins standing on a domed sand mound with round pits (t9). Fix: thicken and taper the trunk, fork it lower into 2-3 limbs, widen and break up the crown into irregular masses, and replace the fins with an uneven root flare of 4-6 roots of different size that sink into a flat, irregular soil patch.",
+    "round": 3,
+    "source_sha256": "7654a6b32284a7649e957158670483df6085791cd6bc9f20b486aa107ac4d632",
+    "sheet_sha256": "bdd7b2a125bfaff4dd042f67517afc72df6425c1783796c521b32cb93c55e4e3"
+  },
+  "review_rounds": 3
 }

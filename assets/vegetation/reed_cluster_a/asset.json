@@ -14,8 +14,22 @@
     600
   ],
   "texture_size": 1024,
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-bbbec46812f34f45bdf2489c6f83c0fa",
-  "review": null,
-  "review_rounds": 2
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 7,
+      "scale": 8,
+      "style": 8,
+      "defects": 7
+    },
+    "notes": "Round 3 (final). Seed heads, leaves and the grass skirt are good. The base is still a smooth, slightly glossy brown pillow mound that rises well above the ground with a hard edge (t9). Fix: replace the mound with a flat, wet, dark mud patch with roughness close to 1, broken edges, small stones and dead stems, and let stems emerge directly from it.",
+    "round": 3,
+    "source_sha256": "a7f71ff22679b06eb0c02a1772d3a19ae697c842a5dc2ef69ba847cf6de01d4d",
+    "sheet_sha256": "1e7bd1f373ac7111735d5717173a7e0b488cbac26658dca3e25c992f2f89ff3f"
+  },
+  "review_rounds": 3
 }

@@ -14,8 +14,22 @@
     2500
   ],
   "texture_size": 2048,
-  "status": "blender_review",
+  "status": "approved",
   "builder": "devin-bbbec46812f34f45bdf2489c6f83c0fa",
-  "review": null,
-  "review_rounds": 2
+  "review": {
+    "reviewer": "devin-3f0d33f2b24a409d87a3f128277c292b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 8,
+      "scale": 8,
+      "style": 8,
+      "defects": 8
+    },
+    "notes": "Round 3 (final): approved. Fixed: the trunk now flares into buttress roots that dip into an irregular soil mound with pebbles and grass tufts; no more blob spreading over the ground. Crown, bark and the twin-stem branching stay good. Polish (non-blocking): the soil mound is a little pale and its left edge is still fairly hard.",
+    "round": 3,
+    "source_sha256": "2c2dd93814d5db32054c805418302bcaca34e5ad6b6bec9fb2012280b668a6dd",
+    "sheet_sha256": "0450622536674996eafeaa1a82467faaf712bfcc224410445206ccbae0be5c64"
+  },
+  "review_rounds": 3
 }
