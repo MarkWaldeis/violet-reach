@@ -47,3 +47,14 @@ test("meadow density forms reproducible metre-scale clumps with open gaps", () =
   }
   assert.ok(transitions > 10 && same > transitions * 4);
 });
+
+test("grass remains on flats but yields to dry earth on steeper slopes", () => {
+  let flats = 0, steep = 0;
+  const angle = 27 * Math.PI / 180;
+  for (let x = 0; x < 1000; x += 4) {
+    if (scatterSurface("meadow", x, 0, up, 20, [])) flats++;
+    if (scatterSurface("meadow", x, 0, [Math.sin(angle), Math.cos(angle), 0], 20, [])) steep++;
+  }
+  assert.ok(flats > 15);
+  assert.equal(steep, 0);
+});

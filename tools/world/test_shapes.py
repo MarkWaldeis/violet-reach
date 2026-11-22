@@ -4,10 +4,17 @@ from pathlib import Path
 import sys
 import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from build_world import bank_rise, carve, hydrology, inlet_terrain, lake_radius, lake_distance, lake_outline
+from build_world import bank_rise, carve, dornbach_bends, hydrology, inlet_terrain, lake_radius, lake_distance, lake_outline
 
 
 def main():
+    stations = np.linspace(0, 1000, 200)
+    bends = dornbach_bends(np.full_like(stations, 100), stations)
+    assert np.ptp(bends)>90
+    np.testing.assert_array_equal(bends,dornbach_bends(np.full_like(stations, 100),stations))
+    np.testing.assert_array_equal(dornbach_bends(np.array([-700,-350,480,700]),np.arange(4)),np.zeros(4))
+    assert len(dornbach_bends(np.array([]),np.array([])))==0
+    print('PASS: deterministic lower Dornbach bends taper to zero outside their reach')
     axis = np.arange(-160, 162, 2, dtype=np.float32)
     high = np.full((len(axis), len(axis)), 80, dtype=np.float32)
     rivers = [('First', np.array([[-160, 0, 10, 20], [160, 0, 10, 20]])),

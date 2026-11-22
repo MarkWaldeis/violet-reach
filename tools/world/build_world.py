@@ -226,6 +226,11 @@ def smooth_path(controls):
     return np.array(result+[a[-1].tolist()])
 
 
+def dornbach_bends(x, distance):
+    envelope = smoothstep((x+350)/150)*smoothstep((480-x)/180)
+    return envelope*(42*np.sin(distance/53+.3)+19*np.sin(distance/97))
+
+
 def hydrology():
     rivers = [
         ('Weißfall', [(-3250,650,650,18),(-2800,420,630,22),(-2300,650,610,27),(-1840,470,595,31),(-1540,440,250,34),(-1150,100,235,38),(-550,160,222,42),(-720,-350,210,46),(-180,-630,202,49),(-350,-1050,195,53),(200,-1320,185,58),(550,-1660,180,65)]),
@@ -235,7 +240,7 @@ def hydrology():
     ]
     lakes = [('Spiegelsee',900,-1900,520,180),('Hirschweiher',-600,-2400,210,200),('Aschenauge',float(canyon_center(2900)),2900,175,380)]
     paths = [(n,smooth_path(p)) for n,p in rivers]
-    for _,p in paths:
+    for name,p in paths:
         distance = np.r_[0,np.cumsum(np.linalg.norm(np.diff(p[:,:2],axis=0),axis=1))]
         tangent = np.gradient(p[:,:2],axis=0)
         normal = np.column_stack((-tangent[:,1],tangent[:,0]))
@@ -244,6 +249,13 @@ def hydrology():
         taper = smoothstep(distance/100)*smoothstep((distance[-1]-distance)/100)
         meander = (55*np.sin(distance/90)+28*np.sin(distance/160+.7)
                    +12*noise(distance,np.zeros_like(distance),60,83))*taper/(1+curvature*3)
+        if name=='Dornbach':
+            meander += dornbach_bends(p[:,0],distance)
+            p[:,3] *= 1+.1*np.sin(distance/49+1.7)*smoothstep((p[:,0]+350)/150)*smoothstep((480-p[:,0])/180)
+        if name=='Weißfall':
+            envelope = smoothstep((-p[:,1]-1250)/100)*smoothstep((1650+p[:,1])/130)
+            meander += 25*np.sin(distance/38+.8)*envelope
+            p[:,3] *= 1+.09*np.sin(distance/38+.2)*envelope
         p[:,:2] += normal*meander[:,None]
         p[:,3] *= (1+.16*np.sin(distance/160)+.07*np.sin(distance/63)+np.minimum(curvature, .2))
         for _,cx,cy,r,level in lakes:

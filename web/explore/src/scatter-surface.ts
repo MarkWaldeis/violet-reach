@@ -44,9 +44,8 @@ export function scatterSurface(
   if (surface === "shore") return aboveWater >= -0.3 && aboveWater <= 0.03 && normal[1] > Math.cos(28 * Math.PI / 180);
   if (aboveWater < 6 || normal[1] < Math.cos(28 * Math.PI / 180)) return false;
   if (surface === "land") return true;
-  const patches = groundNoise(x * 0.046 + 71, z * 0.046 - 39) * 1.3 + 0.5;
   const small = groundNoise(x * 0.16 - 19, z * 0.16 + 58) * 1.2 + 0.5;
-  const bare = smooth(0.68, 0.94, patches + (small - 0.5) * 0.3) * 0.55 + smooth(0.07, 0.17, 1 - normal[1]) * 0.15;
+  const bare = smooth(0.045, 0.15, 1 - normal[1]) * 0.58 * (1 - smooth(0.15, 1.8, hollow) * 0.3) + smooth(0.55, 0.83, small) * 0.04;
   const clumps = groundNoise(x * 0.17 + 13.7, z * 0.17 - 6.3) + groundNoise(x * 0.43 - 31.2, z * 0.43 + 14.9) * 0.35;
   return bare < 0.12 && hollow < 0.6 && clumps > 0.13;
 }
