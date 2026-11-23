@@ -5,12 +5,11 @@ Diese Datei reicht, damit eine neue Session nahtlos weitermacht. Nach jedem Arbe
 ## Aktuell
 
 - Zweig: `grafik/next-level` (von `main` @ 0fff854)
-- Phase: **Phase 1 abgeschlossen** (`p1-r7`, 3 unabhängige Prüfer: `himmel` Median **7–8** auf allen 10 großen Himmels-Lesezeichen, `G2`/`G6` `licht = 8`, `0` Budget-Verstöße bei **537 MiB** GPU-Texturspeicher nach KTX2-Umbau `df87c8f`). Verbleibende `licht`-Abzüge (`G3, G5, G7, F3, H1`) hängen direkt an den noch unfertigen Legacy-Materialien für Boden/Sand/Wasser und werden in **Phase 2** behoben.
-- Arbeitspaket: P0 (`p0-baseline`), KTX2-Loader/Repack (`df87c8f`), 3 Blender-Gate Pilot-Assets (`3d780fb`), Makrokarte (`build_macromap.py` + `macro*.webp`) und **Phase 1** (`atmosphere.ts`, `sky-bodies.ts`, `post-processing.ts`, `scene-warmup.ts`) abgeschlossen.
+- Phase: **Phase 3 Pilot In-Game-Abnahme bestanden** (`p3-pilot-r3` / `p3-pilot-r4`: `boulder_chalk_a = 8/10`, `ruin_wall_a = 8/10`, `trunk_acacia_a = 9/10` — unabhängiger Prüfer `93a09673`). Zuvor abgeschlossen: **Phase 1** (`p1-r7`, 3 unabhängige Prüfer: `himmel` Median **7–8**, `0` Budget-Verstöße bei **537 MiB** GPU-Texturspeicher).
+- Arbeitspaket: P0 (`p0-baseline`), KTX2-Loader/Repack (`df87c8f`), 3 Blender-Gate Pilot-Assets (`3d780fb`), Makrokarte (`47a4b23`), **Phase 1** (`76d0227`), und **Phase 3 Pilot In-Game-Verifikation** (`detail-maps.ts` + `instance-assets.ts` + Class-B-AO/UV-Fix in `export_asset.py` + `placements.json` `G3/G6/G7`, `vr.py check`: `18 assets ok`, alle 82 Explorer-Tests grün) abgeschlossen.
 - Nächster Schritt:
-  1. Makrokarte + `check_image.py` committen und unfertigen Vegetations-Entwurf (`tools/vegetation/`, `web/explore/public/vegetation/`) entfernen.
-  2. **Phase 3 Pilot In-Game-Verifikation:** `detail-maps.ts` + Hook in `instance-assets.ts` umsetzen, die 3 Pilot-Assets (`boulder_chalk_a`, `ruin_wall_a`, `trunk_acacia_a`) im Ausschnitt platzieren und via `p3-pilot` prüfen (`≥ 8`).
-  3. **Phase 2:** PBR-Boden (`ground-material.ts` mit 9 Schichten, Makrokarte & Triplanar-Klippen ab 35°) und Tiefen-/Glanzwasser (`water.ts` inkl. `G1`-Brückenkanal) umsetzen und verifizieren.
+  1. **Phase 2:** PBR-Boden (`ground-material.ts` mit 9 Schichten im `DataArrayTexture`, Makrokarte & Triplanar-Klippen ab 35°) und Tiefen-/Fresnel-Wasser (`water.ts` inkl. `G1`-Brückenkanal) umsetzen, benchmarken und verifizieren (`≥ 8`).
+  2. Unfertigen Alt-Vegetations-Entwurf (`tools/vegetation/`, `web/explore/public/vegetation/`) vor/mit **Phase 4** bereinigen.
 
 ## Meshy
 

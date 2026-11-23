@@ -81,6 +81,86 @@ def decimate(obj, target, preserve_uvs=False):
     bpy.ops.object.modifier_apply(modifier=modifier.name)
 
 
+def _sanitize_meshy_uvs(obj):
+    """Collapse underground burial-skirt UVs and seam-bridging pinhole fill UVs so AO bake stays clean."""
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    uv_layer = bm.loops.layers.uv.active
+    if uv_layer is None or not bm.verts:
+        bm.free()
+        return
+    bm.normal_update()
+    z_min = min(v.co.z for v in bm.verts)
+    cap_faces = {f for f in bm.faces if all(v.co.z <= z_min + 0.02 for v in f.verts)}
+    skirt_walls = {
+        f for f in bm.faces
+        if f not in cap_faces and any(v.co.z <= z_min + 0.02 for v in f.verts) and abs(f.normal.z) < 0.35
+    }
+    body_faces = set(bm.faces) - cap_faces - skirt_walls
+
+    for f in cap_faces:
+        for lp in f.loops:
+            lp[uv_layer].uv = (0.001, 0.001)
+
+    for f in skirt_walls:
+        top_uv = {}
+        inner_uv = {}
+        top_edges = [e for e in f.edges if e.verts[0].co.z > z_min + 0.02 and e.verts[1].co.z > z_min + 0.02]
+        for e in top_edges:
+            adj = next((af for af in e.link_faces if af in body_faces), None)
+            if adj is not None:
+                adj_center = sum((bl[uv_layer].uv for bl in adj.loops), adj.loops[0][uv_layer].uv * 0.0) / len(adj.loops)
+                for bl in adj.loops:
+                    if bl.vert in e.verts:
+                        uv0 = bl[uv_layer].uv.copy()
+                        top_uv[bl.vert] = uv0
+                        inner_uv[bl.vert] = uv0.lerp(adj_center, 0.45)
+        for lp in f.loops:
+            if lp.vert.co.z > z_min + 0.02 and lp.vert not in top_uv:
+                fallback_lp = next((bl for bl in lp.vert.link_loops if bl.face in body_faces), None)
+                if fallback_lp is not None:
+                    adj = fallback_lp.face
+                    adj_center = sum((bl[uv_layer].uv for bl in adj.loops), fallback_lp[uv_layer].uv * 0.0) / len(adj.loops)
+                    uv0 = fallback_lp[uv_layer].uv.copy()
+                    top_uv[lp.vert] = uv0
+                    inner_uv[lp.vert] = uv0.lerp(adj_center, 0.45)
+                else:
+                    top_uv[lp.vert] = lp[uv_layer].uv.copy()
+                    inner_uv[lp.vert] = top_uv[lp.vert]
+        for lp in f.loops:
+            if lp.vert.co.z > z_min + 0.02:
+                if lp.vert in top_uv:
+                    lp[uv_layer].uv = top_uv[lp.vert]
+            else:
+                partner = next(
+                    (nl.vert for nl in (lp.link_loop_next, lp.link_loop_prev) if nl.vert.co.z > z_min + 0.02),
+                    None,
+                )
+                if partner is not None and partner in inner_uv:
+                    lp[uv_layer].uv = inner_uv[partner]
+                elif inner_uv:
+                    lp[uv_layer].uv = next(iter(inner_uv.values()))
+                else:
+                    lp[uv_layer].uv = (0.001, 0.001)
+
+    for f in body_faces:
+        n = len(f.loops)
+        if n < 3:
+            continue
+        uvs = [lp[uv_layer].uv for lp in f.loops]
+        uv_area = 0.5 * abs(sum(uvs[i].x * uvs[(i + 1) % n].y - uvs[(i + 1) % n].x * uvs[i].y for i in range(n)))
+        max_edge_uv = max((uvs[(i + 1) % n] - uvs[i]).length for i in range(n))
+        face_area = f.calc_area()
+        if (uv_area > 0.0015 and face_area < 0.01) or (max_edge_uv > 0.25 and face_area < 0.005):
+            anchor = uvs[0].copy()
+            for lp in f.loops:
+                lp[uv_layer].uv = anchor
+
+    bm.to_mesh(obj.data)
+    obj.data.update()
+    bm.free()
+
+
 def meshy_finish(obj, tex):
     """Class B export: keep the Meshy UVs and textures, no re-bake.
 
@@ -88,6 +168,7 @@ def meshy_finish(obj, tex):
     map exists — either the imported one or a cheap AO bake onto the Meshy UVs.
     Returns the emission strength for the export receipt.
     """
+    _sanitize_meshy_uvs(obj)
     for mat in obj.data.materials:
         if not mat or not mat.node_tree:
             continue
@@ -113,8 +194,16 @@ def meshy_finish(obj, tex):
             node.image = img
             mat.node_tree.nodes.active = node
             nodes.append((mat, node))
-        select_only([obj], obj)
-        bpy.ops.object.bake(type="AO", use_selected_to_active=False, margin=8)
+        hidden = [o for o in scene.objects if o is not obj and o.type == "MESH" and not o.hide_render]
+        for o in hidden:
+            o.hide_render = True
+        try:
+            scene.cycles.samples = 64
+            select_only([obj], obj)
+            bpy.ops.object.bake(type="AO", use_selected_to_active=False, margin=8)
+        finally:
+            for o in hidden:
+                o.hide_render = False
         for mat, node in nodes:
             mat.node_tree.nodes.remove(node)
             tex_node = mat.node_tree.nodes.new("ShaderNodeTexImage")

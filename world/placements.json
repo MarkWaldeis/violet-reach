@@ -1,6 +1,94 @@
 {
   "placements": [
     {
+      "asset": "boulder_chalk_a",
+      "x": 691.5,
+      "z": 1200.5,
+      "yaw": 0.45,
+      "scale": 1.05,
+      "y_offset": -0.82,
+      "pitch": 0.1,
+      "roll": -0.08
+    },
+    {
+      "asset": "boulder_chalk_a",
+      "x": 688.0,
+      "z": 1205.5,
+      "yaw": 1.85,
+      "scale": 1.25,
+      "y_offset": -0.92,
+      "pitch": -0.08,
+      "roll": 0.12
+    },
+    {
+      "asset": "boulder_chalk_a",
+      "x": 693.5,
+      "z": 1208.5,
+      "yaw": 3.1,
+      "scale": 0.95,
+      "y_offset": -0.8,
+      "pitch": 0.12,
+      "roll": 0.08
+    },
+    {
+      "asset": "boulder_chalk_a",
+      "x": 681.5,
+      "z": 1202.0,
+      "yaw": 4.4,
+      "scale": 1.35,
+      "y_offset": -1.15,
+      "pitch": -0.05,
+      "roll": 0.08
+    },
+    {
+      "asset": "boulder_chalk_a",
+      "x": 685.5,
+      "z": 1212.5,
+      "yaw": 2.35,
+      "scale": 1.05,
+      "y_offset": -0.92,
+      "pitch": 0.08,
+      "roll": -0.1
+    },
+    {
+      "asset": "ruin_wall_a",
+      "x": 541.5,
+      "z": 1435.0,
+      "yaw": 0.18,
+      "scale": 0.95,
+      "y_offset": -1.1,
+      "pitch": 0.02,
+      "roll": -0.02
+    },
+    {
+      "asset": "ruin_wall_a",
+      "x": 533.0,
+      "z": 1468.5,
+      "yaw": 3.65,
+      "scale": 0.98,
+      "y_offset": -1.15,
+      "pitch": -0.02,
+      "roll": 0.02
+    },
+    {
+      "asset": "trunk_acacia_a",
+      "x": 380.0,
+      "z": 1673.0,
+      "yaw": 1.1,
+      "scale": 0.92,
+      "y_offset": -0.22
+    },
+    {
+      "asset": "trunk_acacia_a",
+      "x": 365.0,
+      "z": 1659.5,
+      "yaw": 2.15,
+      "scale": 0.96,
+      "y_offset": -0.22,
+      "pitch": 0.0,
+      "roll": 0.0
+    },
+    {
       "asset": "bridge_arch_a",
       "x": 480,
       "z": 1504,

@@ -8,6 +8,7 @@ import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import type { InstancePlacement } from "./placements.ts";
 import { placementRotation } from "./placement-rotation.ts";
 import { aerialLODDistances, assetRenderOptions, chunkVisible, instanceLOD, instanceTint, lodDistances, spatialChunks, type AssetRenderOptions, type Chunk } from "./instance-lod.ts";
+import { applyAssetDetailMap, prepareDetailMapsForAssets } from "./detail-maps.ts";
 
 interface Instance extends InstancePlacement { matrix: Matrix4; tint: Color; sphere: { centre: Vector3; radius: number }; lod: number }
 interface Part { mesh: InstancedMesh; local: Matrix4 }
@@ -36,6 +37,7 @@ export class InstanceAssets {
       loader.setKTX2Loader(ktx2);
     }
     const ids = [...new Set(placements.map((p) => p.asset))];
+    await prepareDetailMapsForAssets(ids);
     try {
       for (const id of ids) {
         const gltf = await loader.loadAsync(new URL(`./assets/${id}.glb`, location.href).href);
@@ -74,7 +76,9 @@ export class InstanceAssets {
               const geometry = source.geometry.clone();
               geometry.clearGroups();
               geometry.setDrawRange(group.start, group.count);
-              const mesh = new InstancedMesh(geometry, materials[group.materialIndex ?? 0], instances.length);
+              const baseMat = materials[group.materialIndex ?? 0];
+              const mat = baseMat ? applyAssetDetailMap(baseMat, id) : baseMat;
+              const mesh = new InstancedMesh(geometry, mat, instances.length);
               mesh.name = `${id}_LOD${level}`;
               mesh.count = 0;
               mesh.instanceMatrix.setUsage(DynamicDrawUsage);

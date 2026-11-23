@@ -9,6 +9,7 @@ import type { Slice } from "../src/slice.ts";
 
 const vegetation = ["tree_broadleaf_a", "tree_broadleaf_b", "tree_broadleaf_c", "shrub_round_a", "grass_tuft_a", "fern_cluster_a", "reed_cluster_a"];
 const monuments = ["gate_white_a", "column_white_a", "stair_terrace_a"];
+const pilot = ["boulder_chalk_a", "ruin_wall_a", "trunk_acacia_a"];
 
 test("approved spire landmark is slightly buried and the energy core stays out", () => {
   const { placements } = JSON.parse(readFileSync(worldFiles().get("placements.json")!, "utf8"));
@@ -56,10 +57,10 @@ test("shore path frames the gate and reaches the terrace without the dead uphill
 test("world content includes real terrain and only registered placed assets", () => {
   const files = worldFiles();
   assert.equal([...files.keys()].filter((p) => p.endsWith(".r16")).length, 256);
-  for (const key of ["terrain/manifest.json", "slice.json", "hydrology.json", "placements.json", "assets/crystal_cluster_b.glb", "assets/crystal_spire_a.glb", "assets/bridge_arch_a.glb", "assets/lake_shore_a.glb", ...[...vegetation, ...monuments].map((asset) => `assets/${asset}.glb`)]) assert.ok(files.has(key));
-  assert.equal([...files.keys()].filter((p) => p.endsWith(".glb")).length, 4 + vegetation.length + monuments.length);
+  for (const key of ["terrain/manifest.json", "slice.json", "hydrology.json", "placements.json", "assets/crystal_cluster_b.glb", "assets/crystal_spire_a.glb", "assets/bridge_arch_a.glb", "assets/lake_shore_a.glb", ...[...vegetation, ...monuments, ...pilot].map((asset) => `assets/${asset}.glb`)]) assert.ok(files.has(key));
+  assert.equal([...files.keys()].filter((p) => p.endsWith(".glb")).length, 4 + vegetation.length + monuments.length + pilot.length);
 });
-for (const asset of ["bridge_arch_a", "lake_shore_a", "crystal_spire_a", ...vegetation, ...monuments]) test(`${asset} export contains all three named LODs`, () => {
+for (const asset of ["bridge_arch_a", "lake_shore_a", "crystal_spire_a", ...vegetation, ...monuments, ...pilot]) test(`${asset} export contains all three named LODs`, () => {
   const glb = readFileSync(worldFiles().get(`assets/${asset}.glb`)!);
   assert.equal(glb.toString("ascii", 0, 4), "glTF");
   const document = JSON.parse(glb.toString("utf8", 20, 20 + glb.readUInt32LE(12)));

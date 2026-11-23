@@ -42,8 +42,8 @@
   ],
   "export": {
     "file": "export/boulder_chalk_a.glb",
-    "bytes": 1007300,
-    "sha256": "aa84c04ebe662db00ea7cc02cb2ea0c9b2940a40aa1f83f8e7c721fa48526ff7",
+    "bytes": 1006664,
+    "sha256": "4dccd619bd99b470322cbfd7f27bd5f78798ffac54ab7115bd484116a08d69de",
     "source_sha256": "059fcbdd46efc0f7fa92b0e597e724ef349478b864d4815463260d527fefb98a",
     "sheet_sha256": "1cd7d46caed2990eb6664c793f24c78b33d1e64fc471565f51845250fc5b9454",
     "lod_triangles": [
