@@ -715,8 +715,11 @@ def main(argv: list[str] | None = None) -> None:
         1.0,
     ).astype(np.float32)
 
-    # Rock mask: steep slopes >= 28..36 deg transition to chalk/strata rock
-    rock_mask_4k = smoothstep(26.5, 36.5, slope_deg_4k + (noise_patches_4k - 0.5) * 3.5)
+    # Rock mask: valley cliffs (>= 41..50 deg) + clean continuous alpine limestone peaks (> 325 m) with zero mid-cliff green speckles
+    steep_cliff_4k = smoothstep(41.0, 50.0, slope_deg_4k + (noise_patches_4k - 0.5) * 3.0)
+    alpine_slope_4k = smoothstep(325.0, 400.0, h_4k) * smoothstep(14.0, 26.0, slope_deg_4k + (noise_patches_4k - 0.5) * 3.0)
+    alpine_cap_4k = smoothstep(420.0, 490.0, h_4k)
+    rock_mask_4k = np.maximum(steep_cliff_4k, np.maximum(alpine_slope_4k, alpine_cap_4k)).astype(np.float32)
     # Stratified bands along world elevation
     layer_h = h_4k + 38.0 * noise_strata_4k
     strata_band_4k = (0.5 + 0.5 * np.sin(layer_h / 6.5 + noise_patches_4k * 1.8)).astype(np.float32)

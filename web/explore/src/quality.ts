@@ -14,6 +14,7 @@ export interface QualityLevel {
 
 export const QUALITY_NAMES: readonly QualityName[] = ["low", "medium", "high", "ultra"];
 export const DEFAULT_QUALITY: QualityName = "high";
+export const REFLECTION_LAYER = 1;
 
 // "high" is the unchanged pre-quality-switch behaviour.
 export const QUALITY: Readonly<Record<QualityName, Readonly<QualityLevel>>> = {

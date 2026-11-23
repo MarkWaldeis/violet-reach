@@ -4,6 +4,7 @@ import {
   type HeightTile, type TerrainManifest, type TileCoords,
 } from "./heightfield.ts";
 import { buildTerrainMesh, lodStride, stitchedHeight } from "./terrain-mesh.ts";
+import { REFLECTION_LAYER } from "./quality.ts";
 import { type Bounds } from "./slice.ts";
 
 const FETCH_LIMIT = 4;
@@ -170,6 +171,7 @@ export class TerrainStream {
     } else {
       tile.mesh = new Mesh(geometry, this.#material);
       tile.mesh.receiveShadow = tile.mesh.castShadow = true;
+      tile.mesh.layers.enable(REFLECTION_LAYER);
       tile.mesh.position.set(m.originX + tile.coords.x * m.tileSize, 0, m.originZ + tile.coords.z * m.tileSize);
       this.group.add(tile.mesh);
     }

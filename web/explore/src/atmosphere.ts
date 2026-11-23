@@ -11,6 +11,7 @@ import { swatch } from "./palette.ts";
 import {
   buildCelestialBodiesNode, createCloudBillboards, createSkyEnvironmentTexture,
 } from "./sky-bodies.ts";
+import { REFLECTION_LAYER } from "./quality.ts";
 
 export const sunDirection = new Vector3(-0.56, 0.52, -0.62).normalize();
 
@@ -88,6 +89,7 @@ export function setupAtmosphere(scene: Scene, quality: ShadowSettings = DEFAULT_
   const sunColor = new Color("#FFF4E0");
   const sun = new DirectionalLight(sunColor, 4.2);
   sun.position.copy(sunDirection).multiplyScalar(1000);
+  sun.layers.enable(REFLECTION_LAYER);
   const shadows = quality.shadows && quality.shadowCascades > 0;
   sun.castShadow = shadows;
   sun.shadow.mapSize.set(quality.shadowMapSize, quality.shadowMapSize);
@@ -130,7 +132,9 @@ export function setupAtmosphere(scene: Scene, quality: ShadowSettings = DEFAULT_
 
   const skyFill = new Color(swatch("sky_blue")).lerp(new Color(swatch("cloud_cream")), 0.65);
   const groundFill = new Color(swatch("stone_weathered")).lerp(new Color(swatch("monument_shadow")), 0.35);
-  scene.add(sun, sun.target, new HemisphereLight(skyFill, groundFill, 0.48));
+  const hemi = new HemisphereLight(skyFill, groundFill, 0.48);
+  hemi.layers.enable(REFLECTION_LAYER);
+  scene.add(sun, sun.target, hemi);
   return {
     sun,
     update: (camera: { position: { x: number; y: number; z: number } }) => {

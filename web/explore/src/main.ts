@@ -3,14 +3,14 @@ import { PCFShadowMap, PerspectiveCamera, Scene, SRGBColorSpace, WebGPUCoordinat
 import { setupAtmosphere } from "./atmosphere.ts";
 import { waitForCloudAtlas } from "./sky-bodies.ts";
 import { createPostProcessing, resolveToneMapping } from "./post-processing.ts";
-import { terrainMaterial } from "./ground-material.ts";
+import { terrainMaterial, waitForGroundTextures } from "./ground-material.ts";
 import { Navigation } from "./navigation.ts";
 import { TerrainStream } from "./terrain-stream.ts";
 import { readJSON, type Slice } from "./slice.ts";
 import { sliceAssets } from "./slice-content.ts";
 import { selectWater, type Hydrology } from "./hydrology.ts";
 import { surfaceData } from "./surface-data.ts";
-import { waterSurface } from "./water.ts";
+import { waitForWaterTextures, waterSurface } from "./water.ts";
 import { warmScene } from "./scene-warmup.ts";
 import { parseQAParams } from "./qa-params.ts";
 import { FLY_CLEARANCE } from "./navigation.ts";
@@ -74,6 +74,8 @@ async function main() {
   const manifest = params.get("terrain") ?? (slice ? "./terrain/manifest.json" : "./demo-terrain/manifest.json");
   terrainLabel.textContent = slice ? "Spiegelsee · Phase-2-Ausschnitt" : params.has("terrain") ? "Höhenkartenvorschau" : "Testlandschaft";
   document.querySelector("#phase")!.textContent = slice ? "PHASE 2 · SPIEGELSEE-AUSSCHNITT" : params.has("terrain") ? "GELÄNDEVORSCHAU" : "DEMO · TESTLANDSCHAFT";
+  status.textContent = "Boden- und Wassertexturen werden geladen …";
+  await Promise.all([waitForGroundTextures(), waitForWaterTextures()]);
   const groundMaterial = terrainMaterial();
   const terrain = await TerrainStream.open(new URL(manifest, location.href), groundMaterial);
   scene.add(terrain.group);

@@ -4,12 +4,14 @@ Diese Datei reicht, damit eine neue Session nahtlos weitermacht. Nach jedem Arbe
 
 ## Aktuell
 
-- Zweig: `grafik/next-level` (von `main` @ 0fff854)
-- Phase: **Phase 3 Pilot In-Game-Abnahme bestanden** (`p3-pilot-r3` / `p3-pilot-r4`: `boulder_chalk_a = 8/10`, `ruin_wall_a = 8/10`, `trunk_acacia_a = 9/10` — unabhängiger Prüfer `93a09673`). Zuvor abgeschlossen: **Phase 1** (`p1-r7`, 3 unabhängige Prüfer: `himmel` Median **7–8**, `0` Budget-Verstöße bei **537 MiB** GPU-Texturspeicher).
-- Arbeitspaket: P0 (`p0-baseline`), KTX2-Loader/Repack (`df87c8f`), 3 Blender-Gate Pilot-Assets (`3d780fb`), Makrokarte (`47a4b23`), **Phase 1** (`76d0227`), und **Phase 3 Pilot In-Game-Verifikation** (`detail-maps.ts` + `instance-assets.ts` + Class-B-AO/UV-Fix in `export_asset.py` + `placements.json` `G3/G6/G7`, `vr.py check`: `18 assets ok`, alle 82 Explorer-Tests grün) abgeschlossen.
-- Nächster Schritt:
-  1. **Phase 2:** PBR-Boden (`ground-material.ts` mit 9 Schichten im `DataArrayTexture`, Makrokarte & Triplanar-Klippen ab 35°) und Tiefen-/Fresnel-Wasser (`water.ts` inkl. `G1`-Brückenkanal) umsetzen, benchmarken und verifizieren (`≥ 8`).
-  2. Unfertigen Alt-Vegetations-Entwurf (`tools/vegetation/`, `web/explore/public/vegetation/`) vor/mit **Phase 4** bereinigen.
+- Zweig: `grafik/next-level` (von `main` @ `0fff854`)
+- Phase: **Phase 2 WIP-Checkpoint (`p2-r12` pausiert)** — alle Code-, Textur- und Makrokarten-Änderungen aus `p2-r4`..`p2-r12` sind gebaut (`vite build` grün) und getestet (`84/84` Explorer-Tests grün); zuvor bestanden: Phase 1 (`p1-r7`, `76d0227`) & Phase 3 Pilot In-Game-Abnahme (`4f7a04d`, `boulder_chalk_a=8`, `ruin_wall_a=8`, `trunk_acacia_a=9`).
+- Abgeschlossene Vorpakete: P0 (`p0-baseline`), KTX2-Loader/Repack (`df87c8f`), 3 Blender-Gate Pilot-Assets (`3d780fb`), Makrokarte (`47a4b23`), **Phase 1** (`76d0227`) und **Phase 3 Pilot In-Game-Verifikation** (`4f7a04d`, `vr.py check`: `18 assets ok`).
+- Nächster Schritt beim Fortsetzen:
+  1. **`p2-r12` abschließen & verifizieren:** Bereits gerenderte Lesezeichen-Screenshots in `C:\Users\Mark Waldeis\devin-screenshots\violet-reach\p2-r12\` (`G1`..`H2`) sichten, `node tools/qa/bench.mjs --run p2-r12` ausführen (Budget-Prüfung nach `REFLECTION_LAYER = 1`, `resolutionScale = 0.25` und Shadow-Reuse im Planar-Reflector — falls `G4`/`G5` noch >4 Mio. Tris oder >400 Draws / <59.5 FPS, Reflector weiter optimieren), danach 3 unabhängige blinde Prüfer (`G1, G5, F1, F2, H1 ≥ 8`) fahren und Phase 2 finalisieren.
+  2. **Phase 3 (Vollproduktion):** Restliche 33 geplante Assets aus `C:\Users\Mark Waldeis\Desktop\Violet Reach Meshy\queue.json` (lokaler `image-generator` = 0 Meshy-Bildcredits + `tools/meshy/check_image.py`, Meshy `image-to-3d` Limit `1800` Cr., aktuell `141 / 2000` verbraucht, Blender `vrmeshy.py` + `export_asset.py` + `vr.py check`).
+  3. **Phase 4 (Vegetation):** Alt-Entwurf (`tools/vegetation/`, `web/explore/public/vegetation/`) bereinigen, GPU-Gras-Ringe (`≥ 90 m` über `macro_grass.webp`), Bodenflora & 5 Baumarten (Meshy-Stamm + Blender-Krone + LOD0–3).
+  4. **Phasen 5–6:** Hero-Monumente, Alt-Asset-Upgrades und finale Vollabnahme.
 
 ## Meshy
 
@@ -114,3 +116,18 @@ Median aus 3 unabhängigen Prüfern (`reviewer_a`, `reviewer_b`, `reviewer_c`; E
 | **Draw Calls (Mean / Max)** | 139,5 / 193 | 127,1 / 186 | ≤ 400 |
 | **Texturspeicher GPU** | **537 MiB** (99 Texturen) | **537 MiB** (99 Texturen) | ≤ 1536 MiB |
 | **Budget-Verletzungen** | **0** | **0** | 0 |
+
+---
+
+## Phase 2 — Zwischenstand (WIP Checkpoint `p2-r12`)
+
+- **Umgesetzte Änderungen (`p2-r4`..`p2-r12`):**
+  - `tools/world/build_macromap.py` + neu generierte `web/explore/public/ground/{macro.json,macro_color_ao.webp,macro_grass.webp,macro_weights_a.webp,macro_weights_b.webp}`: Tal-Fels-Schwelle auf `41,0–50,0°` angehoben und hochalpines Kalkstein-Plateau (`h > 325..400 m` ab `14..26°` + `h > 420..490 m`) ergänzt; falsche Kreideflecken/Grünsprenkel auf Tälern sowie die `H1`-Gratnaht beseitigt.
+  - `web/explore/src/ground-material.ts` (+ `web/explore/src/main.ts`, `web/explore/test/ground-material.test.ts`): 9 `1k`-PBR-Schichten in `1024×1024×9` `DataArrayTexture`s + 3 Welt-Makrokarten (`waitForGroundTextures()`), `36 m`-Makro-Bodenstruktur (`soil` + `mNrm` mit `midNormalFade` `45..160 m` bis `980 m`), gekörnte Sand-/Kies-Küsten mit dunklem Nasssaum (`roughness 0,18`), gekalkte Pfade, `64 m` geschichtete Kalkklippen (`chalk_rock`) und enges `screeBand` an Steilflanken (`G7`/`F4`).
+  - `web/explore/src/water.ts`: `MeshPhysicalNodeMaterial` (`metalness: 0`, `ior: 1.333`) mit `specularIntensityNode` (gegen Grazing-Milchschleier), echtem Planaren `reflector({ resolutionScale: 0.25, bounces: false })` auf dem Spiegelsee (`y = 180.03`) mit `hWave`-Fade bis `85 m` (ohne Nyquist-Stipple), Beer-Lambert-Tiefe/Farbkörper, HDR-Sonnenglanz und geflecktem Uferschaum (`isOpenLake`).
+  - `web/explore/src/quality.ts` (`REFLECTION_LAYER = 1`), `atmosphere.ts`, `sky-bodies.ts`, `terrain-stream.ts`, `instance-assets.ts`: Layer-Filterung (`REFLECTION_LAYER = 1`) und `DirectionalLight`-Shadow-Reuse im Planar-Reflector.
+- **Iterationsverlauf:**
+  - `p2-r9`: `0` Budget-Verstöße (`59,91 / 59,94 FPS`, `897 MiB`), Grauschleier behoben; 3 blinde Prüfer noch `FAIL` (dunkles Wasser, `windPatch`-Streifen, falsche Kreideflecken).
+  - `p2-r10`: `0` Budget-Verstöße (`59,94 / 59,94 FPS`, `897 MiB`), falsche Tal-Kreideflecken & `H1`-Naht beseitigt; 3 blinde Prüfer noch `FAIL` (`hWave`-Stipple, durchgehender Schaumring, glatte Grünhügel, fehlende Strände/Spiegelungen).
+  - `p2-r11`: Planarer Reflector (`0.35`), `36 m` Makro-Körnung, `64 m` Schichtfels, durchgehende Strände und gefleckter Schaum umgesetzt (optisch großer Sprung), jedoch `bench.mjs` `FAIL` (Exit `4`, `5` Verstöße: `ground` `58,51 FPS` Mean / `24,37` 1% Low / `66,9 ms` Max / `6,05 Mio.` Tris / `386` Draws) durch volle Szenen-/CSM-Neurenderung im Reflector.
+  - **`p2-r12` (aktueller Pause-Stand):** `REFLECTION_LAYER = 1`, `resolutionScale: 0.25` & Shadow-Reuse-Wrapper implementiert; `84/84` Explorer-Unit-Tests & `vite build` grün. `capture.mjs --run p2-r12 --seq` wurde beim Pausieren nach den 13 Lesezeichen-Screenshots (`G1`..`H2` in `C:\Users\Mark Waldeis\devin-screenshots\violet-reach\p2-r12\`) gestoppt; Sichtung, `bench.mjs --run p2-r12` und 3 blinde Prüfer stehen beim Fortsetzen an erster Stelle aus.

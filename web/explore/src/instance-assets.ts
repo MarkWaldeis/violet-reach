@@ -9,6 +9,10 @@ import type { InstancePlacement } from "./placements.ts";
 import { placementRotation } from "./placement-rotation.ts";
 import { aerialLODDistances, assetRenderOptions, chunkVisible, instanceLOD, instanceTint, lodDistances, spatialChunks, type AssetRenderOptions, type Chunk } from "./instance-lod.ts";
 import { applyAssetDetailMap, prepareDetailMapsForAssets } from "./detail-maps.ts";
+import { REFLECTION_LAYER } from "./quality.ts";
+
+const REFLECTED_HERO_ASSETS = new Set(["gate_white_a", "bridge_arch_a", "column_white_a", "stair_terrace_a", "trunk_acacia_a"]);
+const REFLECTED_CANOPY_ASSETS = new Set(["tree_broadleaf_a", "tree_broadleaf_b", "tree_broadleaf_c"]);
 
 interface Instance extends InstancePlacement { matrix: Matrix4; tint: Color; sphere: { centre: Vector3; radius: number }; lod: number }
 interface Part { mesh: InstancedMesh; local: Matrix4 }
@@ -87,6 +91,9 @@ export class InstanceAssets {
               // CPU chunk culling is based on the viewer camera, never the shadow camera.
               mesh.frustumCulled = false;
               mesh.castShadow = mesh.receiveShadow = index < settings.shadowLODs;
+              if (REFLECTED_HERO_ASSETS.has(id) || (REFLECTED_CANOPY_ASSETS.has(id) && level >= 1)) {
+                mesh.layers.enable(REFLECTION_LAYER);
+              }
               result.group.add(mesh);
               parts.push({ mesh, local: source.matrixWorld.clone() });
             }

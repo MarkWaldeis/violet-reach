@@ -8,6 +8,7 @@ import {
   sin, smoothstep, sqrt, texture, uniform, uv, vec2, vec3,
 } from "three/tsl";
 import { swatch } from "./palette.ts";
+import { REFLECTION_LAYER } from "./quality.ts";
 
 /** Prominent SE/SSE sky direction framed cleanly across F1, F2, H2, G1, G4, G6. */
 export const giantPlanetDirection = new Vector3(0.55, 0.205, 0.808).normalize();
@@ -243,6 +244,7 @@ export function createCloudBillboards(sunDir: Vector3): InstancedMesh {
   const mesh = new InstancedMesh(geom, new MeshBasicNodeMaterial(), count);
   mesh.name = "cloud_billboards";
   mesh.frustumCulled = false;
+  mesh.layers.enable(REFLECTION_LAYER);
 
   const dummy = new Object3D();
   const mat4 = new Matrix4();
