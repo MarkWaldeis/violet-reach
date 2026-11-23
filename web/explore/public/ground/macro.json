@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "bounds": {
+    "minX": -4096,
+    "maxX": 4096,
+    "minZ": -4096,
+    "maxZ": 4096,
+    "widthMetres": 8192,
+    "heightMetres": 8192
+  },
+  "coordinate_convention": {
+    "axes": "Runtime: X east (-4096..4096), Y up, Z south (-4096..4096); runtime.z = -blender.y",
+    "row_direction": "+Z (north to south: row 0 = minZ = -4096, row H-1 = maxZ = +4096)",
+    "col_direction": "+X (west to east: col 0 = minX = -4096, col W-1 = maxX = +4096)",
+    "uv_mapping": "u = (x - minX) / (maxX - minX), v = (z - minZ) / (maxZ - minZ) with texture.flipY = false",
+    "spiegelsee_region_centre_runtime": [
+      650,
+      1750
+    ],
+    "spiegelsee_lake_centre_runtime": [
+      900,
+      1900
+    ],
+    "playable_slice_bounds_runtime": {
+      "minX": -100,
+      "minZ": 1100,
+      "maxX": 900,
+      "maxZ": 2100
+    }
+  },
+  "textures": {
+    "macro_color_ao": {
+      "file": "macro_color_ao.webp",
+      "resolution": [
+        4096,
+        4096
+      ],
+      "metres_per_pixel": 2.0,
+      "color_space": "sRGB (RGB) + linear AO (A)",
+      "bytes": 6858912,
+      "channels": {
+        "R": "Macro ground & grass albedo tint R (sRGB, aligned with art/palette.json)",
+        "G": "Macro ground & grass albedo tint G (sRGB, aligned with art/palette.json)",
+        "B": "Macro ground & grass albedo tint B (sRGB, aligned with art/palette.json)",
+        "A": "Combined large-scale 8-azimuth horizon sky-view AO x tree canopy shadow (0..255, 255 = full open sky)"
+      }
+    },
+    "macro_weights_a": {
+      "file": "macro_weights_a.webp",
+      "resolution": [
+        2048,
+        2048
+      ],
+      "metres_per_pixel": 4.0,
+      "color_space": "linear",
+      "bytes": 1219390,
+      "channels": {
+        "R": "grass weight (0..1)",
+        "G": "grass_dry weight (0..1)",
+        "B": "soil weight (0..1)",
+        "A": "moss weight (0..1)"
+      }
+    },
+    "macro_weights_b": {
+      "file": "macro_weights_b.webp",
+      "resolution": [
+        2048,
+        2048
+      ],
+      "metres_per_pixel": 4.0,
+      "color_space": "linear",
+      "bytes": 2454662,
+      "channels": {
+        "R": "sand / gravel_path weight (0..1)",
+        "G": "sand_wet / wet shore weight (0..1)",
+        "B": "chalk_rock weight (0..1)",
+        "A": "strata_rock weight (0..1)"
+      }
+    },
+    "macro_grass": {
+      "file": "macro_grass.webp",
+      "resolution": [
+        2048,
+        2048
+      ],
+      "metres_per_pixel": 4.0,
+      "color_space": "linear",
+      "bytes": 3076170,
+      "channels": {
+        "R": "grass_density (0..1) — zero in water, on gravel paths, on steep rock >=32 deg, and on dry beach sand",
+        "G": "grass_height_scale (0..1)",
+        "B": "dry_mix (0..1) — blend between lush grass_green (#696F44) and sun-baked grass_dry (#635C30)",
+        "A": "canopy_shadow (0..1) — combined sky-view & tree canopy shadow multiplier (1 = open sky)"
+      }
+    }
+  },
+  "stats": {
+    "height_min_m": 97.52,
+    "height_max_m": 1731.36,
+    "slope_max_deg": 89.46,
+    "ao_min": 0.171,
+    "ao_mean": 0.757,
+    "grass_coverage_fraction": 0.4124,
+    "rock_coverage_fraction": 0.4676
+  }
+}
