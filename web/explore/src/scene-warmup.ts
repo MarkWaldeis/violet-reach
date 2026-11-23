@@ -1,6 +1,11 @@
 import type { Camera, InstancedMesh, Mesh, Object3D, Scene, WebGPURenderer } from "three/webgpu";
 
-export async function warmScene(renderer: Pick<WebGPURenderer, "compileAsync" | "render">, scene: Scene, camera: Camera) {
+export async function warmScene(
+  renderer: Pick<WebGPURenderer, "compileAsync" | "render">,
+  scene: Scene,
+  camera: Camera,
+  extraPass?: () => void,
+) {
   const saved: { node: Object3D; visible: boolean; culled: boolean; count?: number }[] = [];
   scene.traverse((node) => {
     const instanced = (node as InstancedMesh).isInstancedMesh;
@@ -12,6 +17,7 @@ export async function warmScene(renderer: Pick<WebGPURenderer, "compileAsync" | 
   try {
     await renderer.compileAsync(scene, camera);
     renderer.render(scene, camera);
+    extraPass?.();
   } finally {
     for (const { node, visible, culled, count } of saved) {
       node.visible = visible;

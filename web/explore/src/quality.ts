@@ -19,8 +19,8 @@ export const DEFAULT_QUALITY: QualityName = "high";
 export const QUALITY: Readonly<Record<QualityName, Readonly<QualityLevel>>> = {
   low: { name: "low", pixelRatio: 1, shadows: false, shadowMapSize: 1024, shadowCascades: 0, assetDistanceScale: 0.5 },
   medium: { name: "medium", pixelRatio: 1, shadows: true, shadowMapSize: 1024, shadowCascades: 2, assetDistanceScale: 0.75 },
-  high: { name: "high", pixelRatio: 1.5, shadows: true, shadowMapSize: 2048, shadowCascades: 3, assetDistanceScale: 1 },
-  ultra: { name: "ultra", pixelRatio: 2, shadows: true, shadowMapSize: 4096, shadowCascades: 3, assetDistanceScale: 1.25 },
+  high: { name: "high", pixelRatio: 1.5, shadows: true, shadowMapSize: 2048, shadowCascades: 4, assetDistanceScale: 1 },
+  ultra: { name: "ultra", pixelRatio: 2, shadows: true, shadowMapSize: 4096, shadowCascades: 4, assetDistanceScale: 1.25 },
 };
 
 export function qualityLevel(name: string | null | undefined = DEFAULT_QUALITY): Readonly<QualityLevel> {

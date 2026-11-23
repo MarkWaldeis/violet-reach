@@ -1,6 +1,8 @@
 import "./style.css";
-import { AgXToneMapping, PCFShadowMap, PerspectiveCamera, Scene, SRGBColorSpace, WebGPUCoordinateSystem, WebGPURenderer } from "three/webgpu";
+import { PCFShadowMap, PerspectiveCamera, Scene, SRGBColorSpace, WebGPUCoordinateSystem, WebGPURenderer } from "three/webgpu";
 import { setupAtmosphere } from "./atmosphere.ts";
+import { waitForCloudAtlas } from "./sky-bodies.ts";
+import { createPostProcessing, resolveToneMapping } from "./post-processing.ts";
 import { terrainMaterial } from "./ground-material.ts";
 import { Navigation } from "./navigation.ts";
 import { TerrainStream } from "./terrain-stream.ts";
@@ -47,9 +49,10 @@ async function main() {
   await renderer.init();
   const backend = renderer.coordinateSystem === WebGPUCoordinateSystem ? "WebGPU" : "WebGL2";
   const adapter = backend === "WebGPU" ? await adapterInfo(renderer.backend).catch(() => null) : null;
+  const tone = resolveToneMapping(params);
   renderer.setPixelRatio(Math.min(devicePixelRatio, quality.pixelRatio));
-  renderer.toneMapping = AgXToneMapping;
-  renderer.toneMappingExposure = 1.1;
+  renderer.toneMapping = tone.toneMapping;
+  renderer.toneMappingExposure = tone.exposure;
   renderer.outputColorSpace = SRGBColorSpace;
   renderer.shadowMap.enabled = quality.shadows;
   renderer.shadowMap.type = PCFShadowMap;
@@ -84,7 +87,7 @@ async function main() {
     groundMaterial.copy(terrainMaterial(surface));
     scene.add(waterSurface(region, surface));
   }
-  const assets = slice ? await sliceAssets(slice, terrain, params, quality.assetDistanceScale) : undefined;
+  const assets = slice ? await sliceAssets(slice, terrain, params, quality.assetDistanceScale, renderer) : undefined;
   if (assets) scene.add(assets.group);
   const nav = new Navigation(camera, terrain.manifest, (x, z) => terrain.heightAt(x, z));
   const { position } = camera;
@@ -174,7 +177,10 @@ async function main() {
 
   status.textContent = "Materialien werden vorbereitet …";
   terrain.update(position.x, position.z, performance.now());
-  await warmScene(renderer, scene, camera);
+  const post = createPostProcessing(renderer, scene, camera, quality, params);
+  await waitForCloudAtlas();
+  atmosphere.update(camera);
+  await warmScene(renderer, scene, camera, () => post.render());
   let last = performance.now();
   let hudAt = last;
   let frames = 0;
@@ -239,9 +245,10 @@ async function main() {
       }
     }
     if (ready) nav.update(dt);
+    atmosphere.update(camera);
     const fullHeight = terrain.fullHeightAt(position.x, position.z);
     assets?.update(camera, stage.clientHeight, now, fullHeight === undefined ? 0 : Math.max(0, position.y - fullHeight));
-    renderer.render(scene, camera);
+    post.render();
     frames++;
     frameId++;
     const p = camera.position, t = terrainStatus(), a = assets?.stats;

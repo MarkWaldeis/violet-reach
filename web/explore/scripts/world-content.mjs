@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
@@ -28,7 +28,8 @@ export function worldFiles(repo = root) {
     if (name === "manifest.json" || /^\d+_\d+\.r16$/.test(name)) files.set(`terrain/${name}`, resolve(terrain, name));
   }
   for (const name of ["hydrology", "slice", "placements"]) files.set(`${name}.json`, resolve(repo, `world/${name}.json`));
-  files.set("assets/manifest.json", resolve(repo, "web/public/assets/manifest.json"));
+  const assetManifest = resolve(repo, "web/public/assets/manifest.json");
+  if (existsSync(assetManifest)) files.set("assets/manifest.json", assetManifest);
   const ids = new Set(json(resolve(repo, "world/placements.json")).placements.map((p) => p.asset));
   for (const category of readdirSync(resolve(repo, "assets"), { withFileTypes: true })) {
     if (!category.isDirectory()) continue;

@@ -10,7 +10,7 @@ import {
   timestamp, validateBackend, waitReady,
 } from "./lib.mjs";
 
-const args = parseArgs(process.argv.slice(2), { run: "value", only: "value", quality: "value", seq: "flag", webgl: "flag", timeout: "value" });
+const args = parseArgs(process.argv.slice(2), { run: "value", only: "value", quality: "value", tonemapping: "value", exposure: "value", seq: "flag", webgl: "flag", timeout: "value" });
 const quality = args.quality ?? "high";
 const run = args.run ?? timestamp();
 const timeout = Number(args.timeout ?? 180) * 1000;
@@ -19,9 +19,9 @@ const only = args.only ? new Set(args.only.split(",").map((s) => s.trim()).filte
 const selected = doc.bookmarks.filter((b) => !only || only.has(b.id));
 if (only) for (const id of only) if (!doc.bookmarks.some((b) => b.id === id)) { console.error(`Unbekanntes Lesezeichen: ${id}`); process.exit(2); }
 const dir = runDir(run);
-const index = { run, created: new Date().toISOString(), quality, webgl: !!args.webgl, valid: null, backend: null, adapter: null, bookmarks: [], sequences: [], errors: [] };
+const index = { run, created: new Date().toISOString(), quality, tonemapping: args.tonemapping ?? null, exposure: args.exposure ?? null, webgl: !!args.webgl, valid: null, backend: null, adapter: null, bookmarks: [], sequences: [], errors: [] };
 const writeIndex = () => writeFileSync(join(dir, "index.json"), JSON.stringify(index, null, 2) + "\n");
-const query = (pose, fov) => ({ hud: 0, freeze: 1, cam: camParam(pose), agl: 1, fov, quality, webgl: args.webgl ? 1 : undefined });
+const query = (pose, fov) => ({ hud: 0, freeze: 1, cam: camParam(pose), agl: 1, fov, quality, tonemapping: args.tonemapping, exposure: args.exposure, webgl: args.webgl ? 1 : undefined });
 const pick = (s) => ({ quality: s.quality, frozen: s.frozen, triangles: s.triangles, drawCalls: s.drawCalls, textureBytes: s.textureBytes, terrain: s.terrain, assets: s.assets, camera: s.camera });
 
 console.log(`Lauf ${run} → ${dir}`);

@@ -21,7 +21,7 @@ test("without QA parameters the runtime keeps its previous behaviour", () => {
   assert.equal(p.hud, true);
   assert.equal(p.freeze, false);
   assert.equal(p.quality.name, "high");
-  assert.deepEqual(QUALITY.high, { name: "high", pixelRatio: 1.5, shadows: true, shadowMapSize: 2048, shadowCascades: 3, assetDistanceScale: 1 });
+  assert.deepEqual(QUALITY.high, { name: "high", pixelRatio: 1.5, shadows: true, shadowMapSize: 2048, shadowCascades: 4, assetDistanceScale: 1 });
   assert.deepEqual(assetRenderOptions(2, { distanceScale: QUALITY.high.assetDistanceScale }), assetRenderOptions(2));
 });
 
