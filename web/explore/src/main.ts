@@ -107,6 +107,7 @@ async function main() {
     const gq = grassQuality[quality.name] ?? grassQuality.high;
     grass = new GrassSystem(sampler, (x, z) => terrain.fullHeightAt(x, z) ?? terrain.heightAt(x, z), gq);
     scene.add(grass.group);
+    (window as unknown as { __grass: unknown }).__grass = { sys: grass, sampler, terrain };
   }
   const nav = new Navigation(camera, terrain.manifest, (x, z) => terrain.heightAt(x, z));
   const { position } = camera;
@@ -267,7 +268,15 @@ async function main() {
     const dt = Math.max(0, Math.min(0.05, (now - last) / 1000));
     last = now;
     terrain.update(position.x, position.z, now);
-    grass?.update(position.x, position.z);
+    try {
+      grass?.update(position.x, position.z);
+      const dbg = window as unknown as { __gdbg: { loopTicks: number; grassTruthy: boolean; err?: string } };
+      dbg.__gdbg = dbg.__gdbg ?? { loopTicks: 0, grassTruthy: false };
+      dbg.__gdbg.loopTicks++;
+      dbg.__gdbg.grassTruthy = !!grass;
+    } catch (e) {
+      (window as unknown as { __gdbg: { err?: string } }).__gdbg = { err: String(e).slice(0, 200) };
+    }
     if (!ready && !failed) {
       ready = applyPose();
       if (ready) {
