@@ -1,0 +1,23 @@
+{
+  "id": "scree_pile_a",
+  "category": "rocks",
+  "title": "Kalkstein-Geröllhaufen A",
+  "description": "Zusammenhängender Kalkstein-Geröllhaufen (~3,8 × 3,8 × 1,2 m) aus verzahnten Bruchbrocken mit zurückgesetztem soliden Geröll-Innenkern und 35 cm Eingrabe-Rand für Klippenfüße und Hangübergänge. Farbe canyon_chalk #BCB296, Rauheit ≥ 0,65, Metall 0,0.",
+  "target_size_m": [
+    3.6,
+    2.8,
+    1.2
+  ],
+  "lod_triangles": [
+    30000,
+    8000,
+    2000
+  ],
+  "texture_size": 1024,
+  "meshy_class": "B",
+  "material_class": "rock_chalk",
+  "texture_format": "ktx2",
+  "status": "blender_review",
+  "builder": "blender-batch2",
+  "review": null
+}

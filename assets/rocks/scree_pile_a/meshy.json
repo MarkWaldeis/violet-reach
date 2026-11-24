@@ -1,0 +1,23 @@
+{
+  "asset": "scree_pile_a",
+  "class": "B",
+  "image": {
+    "source": "external_cyan_cutout",
+    "prompt": "A compact solid scree pile and talus mound of fractured chalk limestone rocks, about 3.6 m wide and 1.2 m high, made of tightly interlocked angular broken limestone chunks and medium jagged stone blocks fused solidly together into one continuous rocky rubble heap with compacted dusty stone grit filling the gaps between blocks, no loose detached pebbles or separated fragments around the edges, pale chalky grey-beige stone (#BCB296) with darker strata facets (#9B8E7E) and dry dusty crevices (#665548), broad flat underside. single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
+    "credits": 0,
+    "file": "scree_pile_a/image/chosen.png",
+    "sha256": "3921eea0d03e0c594da513147527cf0fabd5d519f8cba54cc81de0114def159e"
+  },
+  "model": {
+    "task_id": "01a20d59-0ca8-75cd-acb1-3cea4f6b3692",
+    "resource": "image-to-3d",
+    "model_type": "smart-topology",
+    "target_polycount": 30000,
+    "texture_model": "meshy-7",
+    "enable_pbr": true,
+    "texture_resolution": "4k",
+    "credits": 15,
+    "file": "scree_pile_a/model/B-v1/model.glb",
+    "sha256": "611e441bb7fefb0b59ab483ad21929c09b881570684cdf579dcb0f1153a0104a"
+  }
+}

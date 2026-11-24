@@ -1,0 +1,38 @@
+{
+  "id": "rock_slab_a",
+  "category": "rocks",
+  "title": "Kalkstein-Felsplatte A",
+  "description": "Breite, flache geschichtete Kalkstein-Felsplatte (~4,0 × 3,9 × 0,8 m) aus 2–3 gestuften Sedimentbänken mit rissiger Oberseite und scharfen Schichtkanten. Farbe canyon_chalk #BCB296 mit dunklen Schichtfugen #9B8E7E, Rauheit ≥ 0,60, Metall 0,0, 35 cm Eingrabe-Rand.",
+  "target_size_m": [
+    4.0,
+    4.0,
+    0.8
+  ],
+  "lod_triangles": [
+    30000,
+    8000,
+    2000
+  ],
+  "texture_size": 1024,
+  "meshy_class": "B",
+  "material_class": "rock_chalk",
+  "texture_format": "ktx2",
+  "status": "modeling",
+  "builder": "blender-batch2",
+  "review": {
+    "reviewer": "devin-gate-rev-a",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 7,
+      "material": 8,
+      "scale": 10,
+      "style": 8,
+      "defects": 5
+    },
+    "notes": "Gute geschichtete Plattenform, passender Masstab und matte Kreideoberflaeche, aber mehrere schwarze Dreiecksloecher mitten in der Oberseite und an den Kanten, scharfe spitze Mesh-Zacken sowie tief schwebende/ueberlappende Schichtpakete; die Oberseite ist makroskopisch sehr flach und sechseckig.",
+    "round": 1,
+    "source_sha256": "12bb340d05d5835eac5c87e69b0dcb44a0b21cc7e0776ed470a6dffa1241bed1",
+    "sheet_sha256": "aaa41fd365041f6ec1be6b08f6c0e16c07aa307ac4cd2a54d85fb73b6c3157dc"
+  },
+  "review_rounds": 1
+}

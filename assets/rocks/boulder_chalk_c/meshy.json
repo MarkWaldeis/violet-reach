@@ -1,0 +1,23 @@
+{
+  "asset": "boulder_chalk_c",
+  "class": "B",
+  "image": {
+    "source": "external_cyan_cutout",
+    "prompt": "A low elongated weathered chalk limestone field boulder, about 2.2 m long and 1.0 m tall, compact angular wedge-like blocky shape with a cleaved gently sloped upper rock face, two crisp horizontal sedimentary layer seams, vertical fracture splits on the sides, pale chalky beige-white limestone (#BCB296) with darker grey-taupe bedding lines (#9B8E7E), subtle surface pitting and chipped edges, broad flat underside. single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
+    "credits": 0,
+    "file": "boulder_chalk_c/image/chosen.png",
+    "sha256": "401fc08087404faa09005736a846dfa559c2ff335c433af2f0756222c1df3a12"
+  },
+  "model": {
+    "task_id": "01a20d58-f991-77f5-8e79-12f1b2f1a27c",
+    "resource": "image-to-3d",
+    "model_type": "smart-topology",
+    "target_polycount": 30000,
+    "texture_model": "meshy-7",
+    "enable_pbr": true,
+    "texture_resolution": "4k",
+    "credits": 15,
+    "file": "boulder_chalk_c/model/B-v1/model.glb",
+    "sha256": "71c72049d9baf4492907f0699989024ecbe3a5d4a68debcfc07678b27d3049e8"
+  }
+}

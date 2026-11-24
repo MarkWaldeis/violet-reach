@@ -1,0 +1,23 @@
+{
+  "id": "shore_rocks_wet_a",
+  "category": "rocks",
+  "title": "Nasse Uferfelsen-Gruppe A",
+  "description": "Zusammenhängende Gruppe dunkler, feuchter Ufer- und Flachwassersteine (~3,0 × 2,6 × 1,05 m) mit abgeschliffener unterer Wasserlinie (Rauheit 0,38–0,52 unterhalb z = 0,55 m) und trockeneren, matteren Oberkanten (Rauheit ≥ 0,60), Metall 0,0, 35 cm Eingrabe-Rand.",
+  "target_size_m": [
+    3.2,
+    2.3,
+    1.05
+  ],
+  "lod_triangles": [
+    30000,
+    7500,
+    1800
+  ],
+  "texture_size": 1024,
+  "meshy_class": "B",
+  "material_class": "rock_chalk",
+  "texture_format": "ktx2",
+  "status": "blender_review",
+  "builder": "blender-batch2",
+  "review": null
+}

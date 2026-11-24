@@ -1,0 +1,38 @@
+{
+  "id": "trunk_acacia_b",
+  "category": "vegetation",
+  "title": "Schirmakazie Stamm B (mehrstämmig)",
+  "description": "Mehrstämmiger, laubloser Stamm und Hauptastgerüst der Schirmakazie (~6,8 m hoch, ~9,0 × 8,4 m Astausladung) mit 3 schräg aufsteigenden Stämmen ab gemeinsamem Wurzelfuß, flacher Schirmebene, dunkelbraun-grauer längs gefurchter Rinde (bark #41321D, Rauheit ≥ 0,70, Metall 0,0) und 40 cm Eingrabe-Rand.",
+  "target_size_m": [
+    9.0,
+    8.4,
+    6.8
+  ],
+  "lod_triangles": [
+    30000,
+    9000,
+    2500
+  ],
+  "texture_size": 2048,
+  "meshy_class": "B",
+  "material_class": "bark",
+  "texture_format": "ktx2",
+  "status": "modeling",
+  "builder": "blender-batch1",
+  "review": {
+    "reviewer": "devin-gate-rev-a",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 7,
+      "material": 8,
+      "scale": 10,
+      "style": 8,
+      "defects": 7
+    },
+    "notes": "Gute flache Akaziensilhouette und passender Masstab, aber viele Astenden sind sauber abgeschnittene Rohre statt verjuengter oder gebrochener Enden; zentrale Aste durchdringen sich teils ohne organische Astbasis, der gemeinsame Wurzelfuss ist schwach und hat eine dunkle unklare Kluft; Rinde wirkt gleichmaessig wellig, LOD0 leicht ueber 30k.",
+    "round": 1,
+    "source_sha256": "be8db2db952fc27993611389794569f3e5fe63ccdcf71c410364e02adee76ec0",
+    "sheet_sha256": "46d2b79e734503e8c298547fa3d77143b28f722505e40258c1b777cd2bd508ce"
+  },
+  "review_rounds": 1
+}

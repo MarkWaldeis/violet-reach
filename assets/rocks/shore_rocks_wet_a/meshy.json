@@ -1,0 +1,23 @@
+{
+  "asset": "shore_rocks_wet_a",
+  "class": "B",
+  "image": {
+    "source": "external_cyan_cutout",
+    "prompt": "A single fused cluster of three to four low coastal shoreline rocks joined solidly together into one continuous rock formation, about 3.2 m wide and 1.05 m high, stepped horizontal limestone strata worn smoother along the lower waterline flanks with slightly more angular fractured upper ledges, dark cool damp slate-grey stone (#5D6064) across the lower and middle wet rock surfaces transitioning naturally to slightly lighter weathered taupe-grey limestone (#9B8E7E) on the drier top ridges, matte-damp finish with no glossy reflections and no specular highlights and no cyan color reflections, no loose separated stones, broad flat underside. single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, no water, no puddles, uniform solid bright cyan (#00D8FF) studio background, photorealistic, fine surface detail, no text, no watermark, no people.",
+    "credits": 0,
+    "file": "shore_rocks_wet_a/image/chosen.png",
+    "sha256": "6e8f48a2008510d623610bf3640f85ed06beadeebd235fbc40d98b780db16d23"
+  },
+  "model": {
+    "task_id": "01a20d59-1699-712b-a0e6-9a1b85ea2a23",
+    "resource": "image-to-3d",
+    "model_type": "smart-topology",
+    "target_polycount": 30000,
+    "texture_model": "meshy-7",
+    "enable_pbr": true,
+    "texture_resolution": "4k",
+    "credits": 15,
+    "file": "shore_rocks_wet_a/model/B-v1/model.glb",
+    "sha256": "9eca8bee4d45e84e4a61f0231359ab718b4912c1b95985a21529b74048a3835d"
+  }
+}

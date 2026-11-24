@@ -1,0 +1,23 @@
+{
+  "asset": "rock_slab_a",
+  "class": "B",
+  "image": {
+    "source": "external_cyan_cutout",
+    "prompt": "A wide flat stratified chalk limestone rock slab outcrop, about 3.8 m wide and 0.8 m thick, composed of two to three broad stepped horizontal sedimentary limestone plates stacked naturally together, mostly flat weathered top deck with shallow fracture cracks and pitted texture, sharp blocky vertical broken rock edges around the perimeter showing layered strata seams, pale warm chalk-beige stone (#BCB296) with darker recessed strata bands (#9B8E7E), flat solid underside. single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
+    "credits": 0,
+    "file": "rock_slab_a/image/chosen.png",
+    "sha256": "473e7e91069d45945c5118a937cb03691668df9b5229ec6b136663c62ef6b90a"
+  },
+  "model": {
+    "task_id": "01a20d59-0365-755b-a2bd-30268b9ee762",
+    "resource": "image-to-3d",
+    "model_type": "smart-topology",
+    "target_polycount": 30000,
+    "texture_model": "meshy-7",
+    "enable_pbr": true,
+    "texture_resolution": "4k",
+    "credits": 15,
+    "file": "rock_slab_a/model/B-v1/model.glb",
+    "sha256": "d659b8191159e8f11d34f324d974c2d8aabd4aeb307047203638d906c473a6e6"
+  }
+}

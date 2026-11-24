@@ -1,0 +1,27 @@
+{
+  "asset": "trunk_baobab_a",
+  "class": "B",
+  "image": {
+    "task_id": null,
+    "resource": "own-image-gen",
+    "ai_model": "own-image-gen",
+    "prompt": "A bare bottle-shaped baobab tree trunk with no leaves at all, only the massive trunk and stout primary limbs, about 12 m tall and 3 m wide at the swollen belly, heavy flared buttress roots at the base, thick cylindrical bottle-shaped trunk with deep vertical folds and weathered elephant-hide furrowed dark grey-brown bark (#41321D and #574D46), tapering near the top into five short thick gnarled primary branches with blunt ends, no foliage, no leaves, no thin twigs, no fine branchlets. single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
+    "aspect_ratio": "1:1",
+    "remove_background": true,
+    "credits": 0,
+    "file": "trunk_baobab_a/image/chosen.png",
+    "sha256": "bf1799feb14256a3995fd94be607ccd372932945e479f7ff0a3510dfba86ffb3"
+  },
+  "model": {
+    "task_id": "01a20d56-71a6-7715-8b09-b057633183b8",
+    "resource": "image-to-3d",
+    "model_type": "smart-topology",
+    "target_polycount": 30000,
+    "texture_model": "meshy-7",
+    "enable_pbr": true,
+    "texture_resolution": "4k",
+    "credits": 15,
+    "file": "trunk_baobab_a/model/B-v1/model.glb",
+    "sha256": "919775d77ef60a152526af0eb8bcb45d833c789c66ba764121b92045451a447f"
+  }
+}

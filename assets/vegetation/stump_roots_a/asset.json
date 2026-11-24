@@ -1,0 +1,38 @@
+{
+  "id": "stump_roots_a",
+  "category": "vegetation",
+  "title": "Alter Baumstumpf mit Wurzelanlauf A",
+  "description": "Verwitterter Baumstumpf (~1,7 × 1,5 × 1,2 m) mit unregelmäßig ausgebrochener, zerklüfteter Oberseite (kein Sägeschnitt), 6 kräftig nach außen strebenden Brettwurzeln, stark gefurchter dunkler Rinde und hellerem Kernholz (bark #41321D / soil #665548, Rauheit ≥ 0,75, Metall 0,0) sowie 30 cm Eingrabe-Rand.",
+  "target_size_m": [
+    1.8,
+    1.7,
+    1.2
+  ],
+  "lod_triangles": [
+    30000,
+    6000,
+    1500
+  ],
+  "texture_size": 1024,
+  "meshy_class": "B",
+  "material_class": "bark",
+  "texture_format": "ktx2",
+  "status": "modeling",
+  "builder": "blender-batch1",
+  "review": {
+    "reviewer": "devin-gate-rev-a",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 7,
+      "material": 6,
+      "scale": 7,
+      "style": 8,
+      "defects": 6
+    },
+    "notes": "Sichtbare Hoehe passt etwa, aber der Fussabdruck ist mit ca. 1.64 x 1.41 m deutlich schmaler als 1.8 x 1.7 m; Rindentextur wirkt nah wie ornamentale gepraegte Muster, zu dunkel und repetitiv; Oberseite und Wurzelklufte enthalten papierduenne Schalen, schwarze tiefe Loecher und weiche schmelzartige Splitter statt faserigem Holzbruch.",
+    "round": 1,
+    "source_sha256": "18cde04f1e2d5487cb5236a7196ac5238f414955fa351d0f4038cf5f03f8dfe6",
+    "sheet_sha256": "904bba8706a49d64e38c418dcff399d3b440e5e4ab706273f69fadd03b85de50"
+  },
+  "review_rounds": 1
+}

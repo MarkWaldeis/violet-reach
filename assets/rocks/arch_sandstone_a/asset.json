@@ -1,0 +1,23 @@
+{
+  "id": "arch_sandstone_a",
+  "category": "rocks",
+  "title": "Sandstein-Canyonbogen A",
+  "description": "Durchfliegbarer monumentaler natürlicher Sandsteinbogen (~41 × 11,5 × 27 m) mit horizontalen Sedimentschichten, kantigen Bruchkanten und stufigen Widerlager-Pfeilern. Farbe sandstone #D3B490 mit dunkleren Schichtfugen #9B8E7E, Rauheit ≥ 0,65, Metall 0,0, 1,8 m Eingrabe-Rand an beiden Pfeilern.",
+  "target_size_m": [
+    42.0,
+    11.5,
+    27.0
+  ],
+  "lod_triangles": [
+    28000,
+    9000,
+    2500
+  ],
+  "texture_size": 2048,
+  "meshy_class": "A",
+  "material_class": "sandstone",
+  "texture_format": "ktx2",
+  "status": "blender_review",
+  "builder": "blender-batch2",
+  "review": null
+}

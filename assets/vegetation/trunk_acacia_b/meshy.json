@@ -1,0 +1,27 @@
+{
+  "asset": "trunk_acacia_b",
+  "class": "B",
+  "image": {
+    "task_id": null,
+    "resource": "own-image-gen",
+    "ai_model": "own-image-gen",
+    "prompt": "A bare multi-stemmed umbrella thorn acacia tree trunk with no leaves at all, only the trunks and thick main branches, about 7 m tall, three stout leaning trunks rising together from a single shared flared root base and forking outward and upward into thick sculptural primary branches that end in a wide flat horizontal umbrella-shaped canopy plane, no foliage, no leaves, no thin twigs, no fine branch tips, dark grey-brown deeply furrowed bark (#41321D). single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
+    "aspect_ratio": "1:1",
+    "remove_background": true,
+    "credits": 0,
+    "file": "trunk_acacia_b/image/chosen.png",
+    "sha256": "a859c160a20bc7d58a8a8feee4594057354529305b0a9a201f1e32c0e7cb4e95"
+  },
+  "model": {
+    "task_id": "01a20d54-f9b1-70d2-82c9-e3a40d4bf486",
+    "resource": "image-to-3d",
+    "model_type": "smart-topology",
+    "target_polycount": 30000,
+    "texture_model": "meshy-7",
+    "enable_pbr": true,
+    "texture_resolution": "4k",
+    "credits": 15,
+    "file": "trunk_acacia_b/model/B-v1/model.glb",
+    "sha256": "8a116200f35f20fd9af95f1836c60f5f461c13c083263fd4ad3e4ed36b6fc34d"
+  }
+}

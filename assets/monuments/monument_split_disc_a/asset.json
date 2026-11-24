@@ -1,0 +1,23 @@
+{
+  "id": "monument_split_disc_a",
+  "category": "monuments",
+  "title": "Gespaltenes Inselmonument A",
+  "description": "Monumentales 40-m-Inselmonument (~35 × 21 × 40 m) auf dreistufig abgetreppter runder Kalksteinplattform mit zwei leicht gegeneinander geneigten Scheiben-Monolithen und diagonaler Keilspalte. Farbe stone_weathered #DCCDB1 / monument_white #E8DABE, Rauheit ≥ 0,55, Metall 0,0, 1,5 m Eingrabe-Rand.",
+  "target_size_m": [
+    28.0,
+    20.0,
+    40.0
+  ],
+  "lod_triangles": [
+    32000,
+    10000,
+    3000
+  ],
+  "texture_size": 2048,
+  "meshy_class": "A",
+  "material_class": "stone_white",
+  "texture_format": "ktx2",
+  "status": "blender_review",
+  "builder": "blender-batch2",
+  "review": null
+}

@@ -1,0 +1,31 @@
+{
+  "asset": "monument_split_disc_a",
+  "class": "A",
+  "image": {
+    "task_id": "01a20d5e-c07d-71ed-8c66-686a5194968c",
+    "resource": "text-to-image",
+    "ai_model": "gpt-image-2-5-flare",
+    "prompt": "A monumental ancient island stone monument, about 40 m tall, 28 m wide and 20 m deep, featuring a broad three-tiered circular stepped limestone plinth base supporting two colossal curved monolith halves of a split upright stone disc leaning slightly toward each other with a dramatic open diagonal wedge cleft slicing between them, both massive stone halves solidly anchored and fused into the stepped circular base with zero floating parts, architectural pale weathered ivory and cool grey-beige limestone (#DCCDB1, #E8DABE, #AAA9A4) with large smooth cut-stone faces, fine masonry seams, sharp fractured cliff-like edges along the central split, subtle pores and weathering stains, solid thick sculpture with clear 3D depth from all angles, straight flat circular base. single isolated object, whole object visible, nothing cropped, at least 10 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 80 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no water, no grass, plain neutral light grey background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
+    "generate_multi_view": true,
+    "remove_background": true,
+    "credits": 9,
+    "file": "monument_split_disc_a/image/view_1.png",
+    "files": [
+      "monument_split_disc_a/image/view_1.png",
+      "monument_split_disc_a/image/view_0.png",
+      "monument_split_disc_a/image/view_2.png"
+    ],
+    "sha256": "6e79be466a8c0fdbe0b13719eef847607c1a9a0ba7cf19e4244af806a7419682"
+  },
+  "model": {
+    "task_id": "01a20d65-662a-705e-87a0-36ef476664a8",
+    "resource": "multi-image-to-3d",
+    "model_type": "standard",
+    "texture_model": "meshy-7",
+    "enable_pbr": true,
+    "texture_resolution": "4k",
+    "credits": 30,
+    "file": "monument_split_disc_a/model/A-v1/model.glb",
+    "sha256": "613cd6f7406ac07aefc8adccf8229d0901619f9533d9895f9e874a629ae7d932"
+  }
+}

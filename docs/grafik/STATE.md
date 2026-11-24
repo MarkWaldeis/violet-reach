@@ -4,24 +4,30 @@ Diese Datei reicht, damit eine neue Session nahtlos weitermacht. Nach jedem Arbe
 
 ## Aktuell
 
-- Zweig: `grafik/next-level` (von `main` @ `0fff854`)
-- Phase: **Phase 2 WIP-Checkpoint (`p2-r12` pausiert)** — alle Code-, Textur- und Makrokarten-Änderungen aus `p2-r4`..`p2-r12` sind gebaut (`vite build` grün) und getestet (`84/84` Explorer-Tests grün); zuvor bestanden: Phase 1 (`p1-r7`, `76d0227`) & Phase 3 Pilot In-Game-Abnahme (`4f7a04d`, `boulder_chalk_a=8`, `ruin_wall_a=8`, `trunk_acacia_a=9`).
-- Abgeschlossene Vorpakete: P0 (`p0-baseline`), KTX2-Loader/Repack (`df87c8f`), 3 Blender-Gate Pilot-Assets (`3d780fb`), Makrokarte (`47a4b23`), **Phase 1** (`76d0227`) und **Phase 3 Pilot In-Game-Verifikation** (`4f7a04d`, `vr.py check`: `18 assets ok`).
-- Nächster Schritt beim Fortsetzen:
-  1. **`p2-r12` abschließen & verifizieren:** Bereits gerenderte Lesezeichen-Screenshots in `C:\Users\Mark Waldeis\devin-screenshots\violet-reach\p2-r12\` (`G1`..`H2`) sichten, `node tools/qa/bench.mjs --run p2-r12` ausführen (Budget-Prüfung nach `REFLECTION_LAYER = 1`, `resolutionScale = 0.25` und Shadow-Reuse im Planar-Reflector — falls `G4`/`G5` noch >4 Mio. Tris oder >400 Draws / <59.5 FPS, Reflector weiter optimieren), danach 3 unabhängige blinde Prüfer (`G1, G5, F1, F2, H1 ≥ 8`) fahren und Phase 2 finalisieren.
-  2. **Phase 3 (Vollproduktion):** Restliche 33 geplante Assets aus `C:\Users\Mark Waldeis\Desktop\Violet Reach Meshy\queue.json` (lokaler `image-generator` = 0 Meshy-Bildcredits + `tools/meshy/check_image.py`, Meshy `image-to-3d` Limit `1800` Cr., aktuell `141 / 2000` verbraucht, Blender `vrmeshy.py` + `export_asset.py` + `vr.py check`).
-  3. **Phase 4 (Vegetation):** Alt-Entwurf (`tools/vegetation/`, `web/explore/public/vegetation/`) bereinigen, GPU-Gras-Ringe (`≥ 90 m` über `macro_grass.webp`), Bodenflora & 5 Baumarten (Meshy-Stamm + Blender-Krone + LOD0–3).
-  4. **Phasen 5–6:** Hero-Monumente, Alt-Asset-Upgrades und finale Vollabnahme.
+- Zweig: `grafik/next-level` — letzter Commit **`b0b5494`** "Phase 2 p2-r16 rendering work + Phase 4.1 GPU grass foundation"
+- Phase: **Phase 2 fast abgeschlossen** — Rendering von Antigravity reviewt, verifiziert und committed; Bench p2-r16 bestanden. **Phase 4.1 GPU-Gras Fundament implementiert** (noch nicht visuell verifiziert!).
+- Verifikation: **89/89 Explorer-Tests grün** (84 alt + 5 Gras), `tsc --noEmit` sauber, `vr.py check` grün (34 Assets).
+- Bench p2-r16 (sauberer Lauf, unbeladene Maschine): ground 59,79 FPS mean / 47,71 1%-low, flight 59,94 / 59,48, 0 Budget-Verletzungen, max 245 Draws, 896 MiB Textur. Der ursprüngliche r16-Fail (29er 1%-lows) war Load-Rauschen paralleler Blender-Jobs.
+- Meshy-Kostenbuch: **369 / 2000 Credits** verbraucht (Antigravity +228 für 10 Klasse-B-Modelle, 2 Bilder, 2 Klasse-A-Multiview), Kontostand 2791. Stopp bei 1800.
+- **Neue Regel von Mark (ersetzt die Spar-Regel in MESHY.md):** Bildgenerierung wieder über Meshy erlaubt (nicht mehr zwingend lokal/Grok); Bäume/Gras/Wasser/AAA-Assets kommen bevorzugt aus dem Fantasy-open-world-Projekt (siehe `docs/grafik/FANTASY_OPEN_WORLD_REUSE.md`), Meshy-Credits bleiben für andere wichtige Assets.
 
-## Meshy
+### Offene Arbeiten (in dieser Reihenfolge)
 
-- Bibliothek: `C:\Users\Mark Waldeis\Desktop\Violet Reach Meshy\` (`ledger.csv`, `queue.json`, README)
-- Verbraucht laut Kostenbuch: **141 / 2000 Credits** (Posten Pilot/Kalibrierung: 141 / 150; Stopp bei 1800). Kontostand am 22.11. nach Pilot: **3019 Credits** (Start: 3160).
-- Kalibrierung dokumentiert in `docs/grafik/MESHY.md`:
-  - `gpt-image-2-5-flare` (9 Cr.) schlug `nano-banana-2-lite` (3 Cr.) mit 3/3 vs. 1/3 bestandenen Vorlagen.
-  - **Neue Spar-Regel von Mark:** Für zukünftige Referenzbilder (`image/chosen.png`) darf die eigene Bildgenerierung (`image-generator` / Grok) + lokale Freistellung genutzt werden (0 Meshy-Credits fürs Bild), damit Meshy-Credits rein für `image-to-3d` / `multi-image-to-3d` gespart werden.
-  - Klasse B (`smart-topology`, 15 Cr., LOD0 direkt aus aufgeräumtem Meshy-Netz + UVs ohne Neu-Bake) ist aus 3 m Entfernung (`boulder_chalk_a/model_qa/compare.jpg`) zusammen mit Detailtextur (`rock_chalk`) von Klasse A (30 Cr.) kaum zu unterscheiden → Klasse B für alle Requisiten, Klasse A nur für Hero-Monumente und große Klippen.
-  - Regel von Mark: Meshy-Rohmodelle werden immer erst in Blender mit `vrmeshy.py` fürs Spiel aufbereitet (`load_raw`, `drop_loose`, `normalize`, `delight_basecolor`, `grade_basecolor`, `clamp_material`, `burial_skirt`, `fix_normals`, bei Bäumen Laubkrone in Blender, LODs, Gate-Review).
+1. **Gras visuell verifizieren & iterieren** (höchste Priorität): Das GPU-Gras-System (`web/explore/src/grass-*.ts`) ist implementiert und ungetestet im Browser — zum Sessionende war die Maschine durch parallele Blender-Jobs der Builder-Subagenten zu stark gesättigt für das Laden der App. Vorgehen: Dev-Server (`npm run dev` in `web/explore`), Playwright mit `channel: "chrome"`, URL `http://localhost:5173/?cam=460,2.2,1560,0.5,-0.12&agl=1&freeze=1`, warten bis `window.__vr.ready` (kann 1–3 min dauern!), Screenshot. Prüfen: sichtbare Halme in Bodennähe, Farbanschluss ans Gelände, keine Shader-Fehler in der Konsole, Wind nur bei `freeze=0`. Danach Dichte/Farbe/Höhe feinjustieren (`grass-material.ts`, `main.ts` quality-Tabelle). **Achtung HMR:** captures/benches NIEMALS parallel zu Code-Edits laufen lassen — vite-HMR lädt Seiten neu und kontaminiert Läufe (p2-r16-Capture dadurch unbrauchbar geworden).
+2. **Builder-Subagenten-Ergebnisse ernten:** Zwei Subagenten (SWE max) haben gearbeitet: (a) Assets `trunk_acacia_b`, `trunk_baobab_a`, `log_fallen_a`, `stump_roots_a` u.a. durch Blender-Pipeline bringen; (b) 6 Fantasy-open-world-Bäume importieren (`tree_oak_a`, `tree_beech_a`, `tree_ancient_a`, `tree_willow_a`, `bush_lush_a`, `fern_lush_a` — Ordner existieren schon, uncommitted!). Status prüfen, fertige Assets durch unabhängiges Gate-Review schicken, dann committen.
+3. **Abgelehnte Assets reparieren:** Gate-Review `devin-gate-rev-a` hat alle 6 geprüften Assets abgelehnt (Reviews in den jeweiligen `asset.json`): systemische Meshy-Defekte — papierdünne Schalen, schwarze Löcher, abgeschnittene Rohr-Astenden, repetitive Rinde. Entweder Blender-Reparatur in `vrmeshy.py` verstärken oder innerhalb des Retry-Budgets regenerieren.
+4. **Capture-Lauf p2-r16 NEU fahren** (alter Lauf durch HMR kontaminiert, G1–G7/F1 evtl. noch valide in `devin-screenshotsiolet-reach\p2-r16\`): `node tools/qa/capture.mjs --run p2-r16` + `bench.mjs`, aber erst NACH Gras-Stabilisierung, sonst doppelt Arbeit.
+5. **3 blinde Reviews** der finalen Lesezeichen (G1, G5, F1, F2, H1 >= 8) -> Phase-2-Sign-off.
+6. **Danach:** genehmigte Assets exportieren + platzieren, Fantasy-Bäume gegen alte broadleaf-Bäume tauschen, Gras alte `grass_tuft_a`-Instanzen ersetzen oder ergänzen (A/B-Vergleich), Phasen 5-6.
+
+### Gras-System Architektur (Phase 4.1, committed, unverifiziert)
+
+- `grass-macro.ts`: CPU-Sampler, bilinear, liest DIESELBEN `macro_grass.webp`/`macro_color_ao.webp` wie der Boden-Shader (perfekter Farb-/Dichteanschluss). Kanäle: Dichte/Höhe/Dry/Canopy + Tint/AO.
+- `grass-clump.ts`: prozedurale Büschel, 6 Halme à 3 Tris (spitz zulaufend, 5 Verts), uv.y=Höhenfraktion, color.r=Blatt-Hash, color.g=Flex.
+- `grass-material.ts`: TSL, Fantasy-Blueprint — 3-Komponenten-Wind (wave/gust/flutter, h²-gewichtet, worldTime-fähig/freeze-sicher), Width-Boost in der Mitte, Distance-Fade, Wurzel-zu-Spitze-Gradient, macro-gekoppelte Tönung pro Instanz, warmes Backlight. Instanz-Attribute: `aInfo`(xyz Welt+Hash), `aShade`(canopy,dry,heightScale,widthMul), `instanceColor`(tint).
+- `grass-system.ts`: Ring-Streaming 16-m-Zellen, 1 Zelle Build-Budget/Frame, reine Translations-Instanzmatrizen (Wind bleibt weltkohärent), kein Shadow-Casting, receiveShadow ja.
+- `main.ts`: Qualitätsstufen low/medium/high/ultra = 44m/2.6, 68m/4.0, 96m/5.5, 128m/6.5 (Sichtweite/Dichte pro m²). Deaktivierbar mit `?nograss`.
+- Offene Designfrage: LOD/fade-pop an Zellgrenzen prüfen; Perf-Budget: Grundstrecke hatte nur 47,71 FPS 1%-low — Grass muss sparsam bleiben, ggf. Dichte senken oder alte Tufts entfernen.
 
 ## Noten je Lesezeichen — Nulllinie (`p0-baseline`)
 

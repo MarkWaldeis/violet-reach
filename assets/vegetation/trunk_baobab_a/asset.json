@@ -1,0 +1,38 @@
+{
+  "id": "trunk_baobab_a",
+  "category": "vegetation",
+  "title": "Flaschenbaum Stamm A (Baobab)",
+  "description": "Massiver, bauchiger Flaschenbaum-Stamm ohne Laub (~12,0 m hoch, ~7,1 × 6,9 m Astausladung) mit ausgeprägten Wurzelwülsten, Längsfalten und 6 kräftigen Primärästen, elefantenhautartig gefurchter graubrauner Rinde (bark #41321D / #574D46, Rauheit ≥ 0,70, Metall 0,0) und 50 cm Eingrabe-Rand.",
+  "target_size_m": [
+    7.2,
+    7.0,
+    12.0
+  ],
+  "lod_triangles": [
+    30000,
+    9000,
+    2500
+  ],
+  "texture_size": 2048,
+  "meshy_class": "B",
+  "material_class": "bark",
+  "texture_format": "ktx2",
+  "status": "modeling",
+  "builder": "blender-batch1",
+  "review": {
+    "reviewer": "devin-gate-rev-a",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 6,
+      "material": 6,
+      "scale": 10,
+      "style": 7,
+      "defects": 6
+    },
+    "notes": "Masstab und Baobab-Gesamtform stimmen, aber die Rinde ist fast ohne Elefantenhaut-Furchen und wirkt wie glatter dunkler Ton oder Leder; Wurzelwulste sind weiche schmelzartige Zipfel ohne Bodenuebergang, Primaeraste enden in stumpfen teils offen wirkenden Rohren mit schwarzen Lochflaechen; Verwitterung und feine Holzstruktur fehlen.",
+    "round": 1,
+    "source_sha256": "967264f06364739fe5a29121eb229a9b1ab135be809b64f410253984e476bb64",
+    "sheet_sha256": "c7d3f356d3e048c6bc201e102ac58d7deba3746413752cf75fea0841869392bc"
+  },
+  "review_rounds": 1
+}

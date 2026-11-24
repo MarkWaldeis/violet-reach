@@ -1,0 +1,27 @@
+{
+  "asset": "stump_roots_a",
+  "class": "B",
+  "image": {
+    "task_id": null,
+    "resource": "own-image-gen",
+    "ai_model": "own-image-gen",
+    "prompt": "An old weathered tree stump with thick spreading surface roots, about 1.8 m wide at the root base and 1.2 m tall, a stout gnarled trunk base with an uneven jagged naturally broken top showing cracked weathered brown heartwood (#665548) and deep radial splits, surrounded by heavy furrowed dark grey-brown bark (#41321D) and five thick buttress roots flaring outward to a flat underside, no smooth saw cut, no leaves, no grass, no ground plane. single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
+    "aspect_ratio": "1:1",
+    "remove_background": true,
+    "credits": 0,
+    "file": "stump_roots_a/image/chosen.png",
+    "sha256": "349f58c94da9ff161a4da5de6dee2f1b1c29ae9c7b45228f0535299031985baa"
+  },
+  "model": {
+    "task_id": "01a20d56-b570-7009-b5b9-6cb9e58f0e87",
+    "resource": "image-to-3d",
+    "model_type": "smart-topology",
+    "target_polycount": 30000,
+    "texture_model": "meshy-7",
+    "enable_pbr": true,
+    "texture_resolution": "4k",
+    "credits": 15,
+    "file": "stump_roots_a/model/B-v1/model.glb",
+    "sha256": "1874fd6ca7e0a3005ac3ae2ed87980c7dd5f787401960f86c786b67a3785bd1c"
+  }
+}

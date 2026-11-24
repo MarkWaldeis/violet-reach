@@ -1,0 +1,31 @@
+{
+  "asset": "arch_sandstone_a",
+  "class": "A",
+  "image": {
+    "task_id": "01a20d5e-08a9-77d3-b4f1-b915f7945c1f",
+    "resource": "text-to-image",
+    "ai_model": "gpt-image-2-5-flare",
+    "prompt": "A monumental natural weathered sandstone rock arch bridge, about 45 m wide, 26 m tall and 12 m thick, spanning a wide open clean arch passage with two broad stepped rocky buttress legs standing firmly on the same flat ground level, thick sturdy layered sandstone arch span at least 5 m thick at the crown, blocky angular geological formation with pronounced stepped horizontal sedimentary rock layers and vertical fracture cracks, warm ochre-tan and golden beige sandstone (#D3B490) with darker taupe-brown horizontal bedding seams (#9B8E7E), solid and thick with visible depth from all angles, bare rock with no grass and no vegetation, straight flat bases on both legs. single isolated object, whole object visible, nothing cropped, at least 10 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 80 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, plain neutral light grey background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
+    "generate_multi_view": true,
+    "remove_background": true,
+    "credits": 9,
+    "file": "arch_sandstone_a/image/view_0.png",
+    "files": [
+      "arch_sandstone_a/image/view_0.png",
+      "arch_sandstone_a/image/view_1.png",
+      "arch_sandstone_a/image/view_2.png"
+    ],
+    "sha256": "e7da988145fbc57dc98f16e84b33900f1f3ee600143969191138496b6c03cd4a"
+  },
+  "model": {
+    "task_id": "01a20d66-ef69-72d7-8aa1-a6f9fb5293f2",
+    "resource": "multi-image-to-3d",
+    "model_type": "standard",
+    "texture_model": "meshy-7",
+    "enable_pbr": true,
+    "texture_resolution": "4k",
+    "credits": 30,
+    "file": "arch_sandstone_a/model/A-v1/model.glb",
+    "sha256": "647f102efa6c4bc9a88750f093693ab588ff4f2eb76c0c1a17e6d053aff17b93"
+  }
+}

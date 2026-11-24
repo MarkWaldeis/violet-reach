@@ -1,0 +1,38 @@
+{
+  "id": "log_fallen_a",
+  "category": "vegetation",
+  "title": "Umgestürzter Baumstamm A",
+  "description": "Großer, am Boden liegender verwitterter Totholz-Stamm (~5,0 × 2,1 × 1,7 m) mit aufgebrochenem Wurzelanlauf, splitterigem Bruchende, zwei kurzen Aststummeln, flacher Auflagefläche (ohne Eingrabe-Rand) und dunkler gefurchter Rinde samt Kernholz-Kontrast (bark #41321D / soil #665548, Rauheit ≥ 0,75, Metall 0,0).",
+  "target_size_m": [
+    5.0,
+    2.1,
+    1.7
+  ],
+  "lod_triangles": [
+    30000,
+    8000,
+    2000
+  ],
+  "texture_size": 1024,
+  "meshy_class": "B",
+  "material_class": "bark",
+  "texture_format": "ktx2",
+  "status": "modeling",
+  "builder": "blender-batch1",
+  "review": {
+    "reviewer": "devin-gate-rev-a",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 7,
+      "material": 7,
+      "scale": 10,
+      "style": 8,
+      "defects": 6
+    },
+    "notes": "Bruchende wirkt wie eine papierduenne hohle Schale mit schwarzem Loch und mechanisch gleichfoermigen Zacken; Rinde sehr dunkel/blaeulich und stellenweise repetitiv, Kernholz flach; Silhouette und Masstab sind gut, LOD0 liegt leicht ueber 30k.",
+    "round": 1,
+    "source_sha256": "d120467b32dff58c3438595cd0a4a45c59dbbddddfad35c7a5165cc4fdee129b",
+    "sheet_sha256": "5774dfae743d76a080923dad728bd1d681d6d4d901ad25f575e2e95ee1606578"
+  },
+  "review_rounds": 1
+}
