@@ -304,11 +304,17 @@ def cmd_export(a):
         packed = os.path.join(work, "packed.glb")
         if texture_format == "ktx2":
             # KTX-Software cannot read WebP, so encode straight from the PNG raw.
-            etc1s = os.path.join(work, "etc1s.glb")
-            subprocess.run(gltf + ["etc1s", raw, etc1s, "--slots",
-                                   "{baseColorTexture,metallicRoughnessTexture,occlusionTexture,emissiveTexture}"],
-                           cwd=web, check=True)
-            subprocess.run(gltf + ["uastc", etc1s, tmp, "--slots", "normalTexture"], cwd=web, check=True)
+            if meta.get("material_class") == "foliage":
+                uastc = os.path.join(work, "uastc.glb")
+                subprocess.run(gltf + ["uastc", raw, uastc, "--slots", "{baseColorTexture,normalTexture}"], cwd=web, check=True)
+                subprocess.run(gltf + ["etc1s", uastc, tmp, "--slots",
+                                       "{metallicRoughnessTexture,occlusionTexture,emissiveTexture}"], cwd=web, check=True)
+            else:
+                etc1s = os.path.join(work, "etc1s.glb")
+                subprocess.run(gltf + ["etc1s", raw, etc1s, "--slots",
+                                       "{baseColorTexture,metallicRoughnessTexture,occlusionTexture,emissiveTexture}"],
+                               cwd=web, check=True)
+                subprocess.run(gltf + ["uastc", etc1s, tmp, "--slots", "normalTexture"], cwd=web, check=True)
         else:
             subprocess.run(gltf + ["webp", raw, tmp, "--quality", "92"], cwd=web, check=True)
         subprocess.run(gltf + ["meshopt", tmp, packed], cwd=web, check=True)

@@ -8,9 +8,53 @@ from foliage_atlas import FoliageAtlas
 CANOPY_ATTRIBUTE = "vr_canopy"
 
 
+def socket_image(socket, depth=0):
+    if socket is None or depth > 8:
+        return None
+    for link in socket.links:
+        node = link.from_node
+        if node.type == "TEX_IMAGE" and node.image:
+            return node.image
+        for input_socket in node.inputs:
+            image = socket_image(input_socket, depth + 1)
+            if image:
+                return image
+    return None
+
+
+def foliage_material(material):
+    if not material:
+        return False
+    if material.get("vrmat_name") == "foliage_leaf":
+        return True
+    bsdf = material.node_tree.nodes.get("Principled BSDF") if material.node_tree else None
+    return bool(bsdf and bsdf.inputs["Alpha"].is_linked and socket_image(bsdf.inputs["Base Color"]))
+
+
+def foliage_indices(materials):
+    return {i for i, material in enumerate(materials) if foliage_material(material)}
+
+
+def canopy_textures(materials):
+    albedo = {}
+    occlusion = {}
+    for index in foliage_indices(materials):
+        material = materials[index]
+        bsdf = material.node_tree.nodes.get("Principled BSDF") if material.node_tree else None
+        image = socket_image(bsdf.inputs["Base Color"]) if bsdf else None
+        if image:
+            albedo[image.name] = image
+        for node in material.node_tree.nodes if material.node_tree else []:
+            if node.type == "GROUP" and node.node_tree and "glTF" in node.node_tree.name:
+                image = socket_image(node.inputs.get("Occlusion"))
+                if image:
+                    occlusion[image.name] = image
+    pick = lambda images: next(iter(images.values())) if len(images) == 1 else None
+    return pick(albedo), pick(occlusion)
+
+
 def mark_canopy(obj, materials):
-    leaves = {i for i, material in enumerate(materials)
-              if material and material.get("vrmat_name") == "foliage_leaf"}
+    leaves = foliage_indices(materials)
     if not leaves:
         return False
     attribute = obj.data.attributes.new(CANOPY_ATTRIBUTE, "INT", "FACE")
@@ -112,9 +156,13 @@ def simplify_canopy(obj, target, simplify_wood, source_image, texture_size, plan
     wood_triangles = sum(len(face.vertices) - 2 for face in mesh.polygons)
     if planes == 1 and len(leaves) * 2 <= target - wood_triangles:
         cards = 1
-    limit = (target - wood_triangles) // (2 * cards)
+    remaining = target - wood_triangles
+    limit = remaining // (2 * cards)
+    if limit < 1 and cards > 1 and remaining >= 2:
+        cards = 1
+        limit = remaining // 2
     if limit < 1:
-        raise ValueError("Wood leaves no room for canopy coverage")
+        limit = 1
     groups = partition(0)
     if len(groups) > limit:
         low, high = 0.0, max(float(np.ptp(centres, axis=0).max()) * 2, .001)

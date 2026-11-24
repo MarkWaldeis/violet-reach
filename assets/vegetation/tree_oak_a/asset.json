@@ -18,7 +18,22 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-builder-trees",
-  "review": null
+  "review": {
+    "reviewer": "devin-gate-rev-b",
+    "scores": {
+      "silhouette": 9,
+      "form_detail": 7,
+      "material": 7,
+      "scale": 9,
+      "style": 8,
+      "defects": 5
+    },
+    "notes": "Abgelehnt: Massstab und weite Krone sind gut, aber im Closeup wirken viele Laubkarten als flache horizontale Schichten und die Unterseiten kollabieren zu grossen schwarzen Flaechen. Stammfuss und Wurzeln sind hart trianguliert, einzelne Aste enden als kantige oder abgeschnitten wirkende Zapfen. Karten kleiner und staerker gekruemmt verteilen, Schwarzwert heben und Stamm- sowie Astenden organisch schliessen.",
+    "round": 1,
+    "source_sha256": "208a8d730af15a48aad0db58f5c7e4921ebe25d78047085be82ac5cb63071181",
+    "sheet_sha256": "dd58bfce818cd2c63a18fa8ae3154e96b2965b2eaa624c7178879e31a51a809e"
+  },
+  "review_rounds": 1
 }

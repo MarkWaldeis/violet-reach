@@ -18,7 +18,22 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-builder-trees",
-  "review": null
+  "review": {
+    "reviewer": "devin-gate-rev-b",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 7,
+      "material": 7,
+      "scale": 9,
+      "style": 8,
+      "defects": 5
+    },
+    "notes": "Abgelehnt: Dichte Grundform und Massstab passen, doch mehrere nackte Stengel ragen als hart abgeschnittene spitze Staebe aus dem Blattwerk. Innen kollabiert der Strauch fast komplett zu Schwarz und einige Karten lesen sich als flache Bahnen. Stengel organisch auslaufen lassen oder kuerzen, Innenlicht und Kartenausrichtung verbessern.",
+    "round": 1,
+    "source_sha256": "90d7d5c7a8f161c4feb01a8153a6b37dea595729038c434e144c4ac6f89fbea8",
+    "sheet_sha256": "d4b829fdaec2b89381e04091a5570323faa6d10408063ad054dd9b68e8525aa9"
+  },
+  "review_rounds": 1
 }

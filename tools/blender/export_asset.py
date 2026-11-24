@@ -13,7 +13,7 @@ import bmesh  # noqa: E402
 import bpy  # noqa: E402
 import numpy as np  # noqa: E402
 import vrlib  # noqa: E402
-from canopy_lod import mark_canopy, simplify_canopy  # noqa: E402
+from canopy_lod import canopy_textures, mark_canopy, simplify_canopy  # noqa: E402
 
 asset_dir, export_dir = map(os.path.abspath, vrlib.script_args())
 meta = vrlib.load_meta(asset_dir)
@@ -241,15 +241,25 @@ bmesh.ops.remove_doubles(mesh, verts=list(mesh.verts), dist=1e-6)
 mesh.to_mesh(lod0.data)
 lod0.data.update()
 mesh.free()
+if lod0.data.validate(verbose=False, clean_customdata=False):
+    lod0.data.update()
 meshy_b = meta.get("meshy_class") == "B"
 decimate(lod0, lod_tris[0], preserve_uvs=meshy_b)
 source_materials = list(lod0.data.materials)
 if meshy_b:
-    has_canopy = False
     emission_strength = meshy_finish(lod0, tex)
     images = {}
+    has_canopy = mark_canopy(lod0, source_materials)
+    if has_canopy:
+        canopy_albedo, canopy_occlusion = canopy_textures(source_materials)
+        if canopy_albedo:
+            lod0["canopy_albedo"] = canopy_albedo.name
+            if canopy_occlusion:
+                lod0["canopy_occlusion"] = canopy_occlusion.name
+        else:
+            has_canopy = False
 else:
-    has_canopy = asset_id in {"tree_broadleaf_a", "tree_broadleaf_b"} and mark_canopy(lod0, source_materials)
+    has_canopy = mark_canopy(lod0, source_materials)
     bpy.ops.object.mode_set(mode="EDIT")
     bpy.ops.mesh.select_all(action="SELECT")
     bpy.ops.uv.smart_project(angle_limit=math.radians(66), island_margin=0.003)
@@ -354,8 +364,6 @@ else:
 
 lods = [lod0]
 for i, target in enumerate(lod_tris[1:], start=1):
-    if has_canopy and i > 1:
-        target = int(target * .65)
     source = lods[-1] if has_canopy and i > 1 else lod0
     lod = source.copy()
     lod.data = source.data.copy()
@@ -364,12 +372,15 @@ for i, target in enumerate(lod_tris[1:], start=1):
     select_only([lod], lod)
     colour = occlusion = None
     if has_canopy:
-        colour = bpy.data.images.get(source.get("canopy_albedo", "")) or images["basecolor"]
-        occlusion = bpy.data.images.get(source.get("canopy_occlusion", "")) or images["occlusion"]
-    if not has_canopy or not simplify_canopy(lod, target, decimate, colour, tex, planes=1 if i == 1 else 3, occlusion=occlusion):
+        colour = bpy.data.images.get(source.get("canopy_albedo", "")) or images.get("basecolor")
+        occlusion = bpy.data.images.get(source.get("canopy_occlusion", "")) or images.get("occlusion")
+    if not has_canopy or colour is None or not simplify_canopy(lod, target, decimate, colour, tex, planes=1 if i == 1 else 3, occlusion=occlusion):
         decimate(lod, target, preserve_uvs=meshy_b)
     lods.append(lod)
 
+for lod in lods:
+    if lod.data.validate(verbose=False):
+        lod.data.update()
 select_only(lods, lod0)
 raw = os.path.join(export_dir, asset_id + ".raw.glb")
 bpy.ops.export_scene.gltf(filepath=raw, use_selection=True, export_apply=True, export_yup=True,

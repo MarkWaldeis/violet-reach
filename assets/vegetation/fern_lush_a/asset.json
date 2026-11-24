@@ -18,7 +18,22 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-builder-trees",
-  "review": null
+  "review": {
+    "reviewer": "devin-gate-rev-b",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 7,
+      "material": 8,
+      "scale": 9,
+      "style": 7,
+      "defects": 7
+    },
+    "notes": "Abgelehnt: Einzelne Wedeltextur und Massstab sind brauchbar, aber die Gesamtsilhouette ist ein flacher, regelmaessiger Stern mit vielen langen kahlen Drahtspitzen und dadurch wenig ueppig. Die schwarze harte Kernzone und der sichtbare braune Block wirken kuenstlich. Wedel staerker bogenfoermig staffeln, Blattbesatz bis naeher an die Spitzen fuehren und die Krone auflockern.",
+    "round": 1,
+    "source_sha256": "dc980d98ccb91d3dd6fe84383e31e7446f0ce74216355887d057e46b9160088e",
+    "sheet_sha256": "2f501b038818d20ccebe022ab5f9fe5d80a730c6beb0ef71b949124b5007c2fe"
+  },
+  "review_rounds": 1
 }

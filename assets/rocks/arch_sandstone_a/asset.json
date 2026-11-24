@@ -17,7 +17,22 @@
   "meshy_class": "A",
   "material_class": "sandstone",
   "texture_format": "ktx2",
-  "status": "blender_review",
+  "status": "approved",
   "builder": "blender-batch2",
-  "review": null
+  "review": {
+    "reviewer": "devin-gate-rev-b",
+    "scores": {
+      "silhouette": 9,
+      "form_detail": 9,
+      "material": 8,
+      "scale": 9,
+      "style": 9,
+      "defects": 8
+    },
+    "notes": "Freigabe: sehr starke grosse Bogensilhouette mit modellierten Schichtbaenken, senkrechten Bruechen und passendem riesigem Massstab. Das feine Sandsteinmaterial ist in Nahsicht recht gleichmaessig und koernig, wird aber durch die grosse Schicht- und Bruchhierarchie getragen; keine Loecher oder mechanischen Enden sichtbar.",
+    "round": 1,
+    "source_sha256": "a14da135a06702016984776a460ddddab3f1aa84a4d8e738514e988fc0a1f0b3",
+    "sheet_sha256": "7663880e1db46d2390accef28e89ab966f88ff3eb87600eaf54ef77d264223e8"
+  },
+  "review_rounds": 1
 }
