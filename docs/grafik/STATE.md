@@ -43,6 +43,10 @@ Diese Datei reicht, damit eine neue Session nahtlos weitermacht. Nach jedem Arbe
 3. **normalNode ist VIEW-Space:** eine Konstante vec3(0,1,0) bedeutet Bildschirm-oben, nicht Welt-oben (Beleuchtung hing von der Kamera!). Fix: Welt-up + yaw-rotierte Geometrie-Normalen (10-28% Höhenanteil) per `transformNormalToView` — gibt zusätzlich plastische Tiefenwirkung pro Halm.
 Empirischer Nachweis für 1: colorNode=reines Weiß → Halme rendern im blassen Tint (grass-tune2-diagwhite.png). Hue-Pipeline: hueK (lush→oliv-frisch (0.82,1.38,0.60), straw bei dry) × Wurzel-zu-Spitze-Gradient (0.34→1.0) × Spitzen-Wärmung (1.48,1.30,0.82) × Quer-Schattierung × Hash-Variation — Konstanten modulweit in grass-material.ts, Probe grassPaletteProbe spiegelt Ist-Farben.
 
+### Gras-Perf-Stand (bench p41-grass, LAST-KONTAMINIERT)
+
+Bench-Lauf während Blender/Browser-Agenten aktiv: ground 52.94/12.56 FPS, flight 56.18/11.57, längste Frames 133-250 ms (Last-Spikes, keine steady-state Gras-Kosten). **Aber echtes Signal: Dreiecke max 4.579.266 auf ground über 4M-Richtwert** (vor Gras ~2.37M an G3). Textur 936 MiB ok. Nach Agenten-Ende: sauberer Rerun nötig; falls Dreiecke weiterhin über Budget: Distanz-Instanzen/Dichte optimieren (fadeEnd=viewDistance bei high=96m, kaum tote Instanzen — eher Density/Clump-Geometrie/Distanzabstufung prüfen).
+
 ### Gras-System Architektur (Phase 4.1, committed, unverifiziert)
 
 - `grass-macro.ts`: CPU-Sampler, bilinear, liest DIESELBEN `macro_grass.webp`/`macro_color_ao.webp` wie der Boden-Shader (perfekter Farb-/Dichteanschluss). Kanäle: Dichte/Höhe/Dry/Canopy + Tint/AO.
