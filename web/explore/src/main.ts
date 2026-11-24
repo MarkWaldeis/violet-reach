@@ -3,7 +3,7 @@ import { PCFShadowMap, PerspectiveCamera, Scene, SRGBColorSpace, WebGPUCoordinat
 import { setupAtmosphere } from "./atmosphere.ts";
 import { waitForCloudAtlas } from "./sky-bodies.ts";
 import { createPostProcessing, resolveToneMapping } from "./post-processing.ts";
-import { terrainMaterial, waitForGroundTextures } from "./ground-material.ts";
+import { terrainMaterial, terrainReflectionMaterial, waitForGroundTextures } from "./ground-material.ts";
 import { Navigation } from "./navigation.ts";
 import { TerrainStream } from "./terrain-stream.ts";
 import { readJSON, type Slice } from "./slice.ts";
@@ -16,6 +16,8 @@ import { parseQAParams } from "./qa-params.ts";
 import { FLY_CLEARANCE } from "./navigation.ts";
 import { adapterInfo, FrameHistory, FrameStability, STABLE_FRAMES, trackTextures, type FrameRecord, type VRProbe } from "./qa-probe.ts";
 import { freezeWorldTime, worldTimeFrozen } from "./world-time.ts";
+import { GrassMacroSampler } from "./grass-macro.ts";
+import { GrassSystem } from "./grass-system.ts";
 
 const stage = document.querySelector<HTMLElement>("#stage")!;
 const status = document.querySelector<HTMLElement>("#status")!;
@@ -77,6 +79,7 @@ async function main() {
   status.textContent = "Boden- und Wassertexturen werden geladen …";
   await Promise.all([waitForGroundTextures(), waitForWaterTextures()]);
   const groundMaterial = terrainMaterial();
+  const reflTerrainMaterial = terrainReflectionMaterial();
   const terrain = await TerrainStream.open(new URL(manifest, location.href), groundMaterial);
   scene.add(terrain.group);
   if (slice) {
@@ -87,10 +90,24 @@ async function main() {
     status.textContent = "Gewässer und Ufermaterialien werden geladen …";
     const surface = await surfaceData(region, slice, terrain);
     groundMaterial.copy(terrainMaterial(surface));
-    scene.add(waterSurface(region, surface));
+    scene.add(waterSurface(region, surface, (active) => terrain.setReflectionMaterial(active ? reflTerrainMaterial : null)));
   }
   const assets = slice ? await sliceAssets(slice, terrain, params, quality.assetDistanceScale, renderer) : undefined;
   if (assets) scene.add(assets.group);
+  let grass: GrassSystem | undefined;
+  if (slice && !params.has("nograss")) {
+    status.textContent = "Gras-Makrokarten werden geladen …";
+    const sampler = await GrassMacroSampler.load(new URL("./ground/", location.href).href);
+    const grassQuality: Record<string, { viewDistance: number; density: number }> = {
+      low: { viewDistance: 44, density: 2.6 },
+      medium: { viewDistance: 68, density: 4.0 },
+      high: { viewDistance: 96, density: 5.5 },
+      ultra: { viewDistance: 128, density: 6.5 },
+    };
+    const gq = grassQuality[quality.name] ?? grassQuality.high;
+    grass = new GrassSystem(sampler, (x, z) => terrain.fullHeightAt(x, z) ?? terrain.heightAt(x, z), gq);
+    scene.add(grass.group);
+  }
   const nav = new Navigation(camera, terrain.manifest, (x, z) => terrain.heightAt(x, z));
   const { position } = camera;
   let ready = false;
@@ -181,8 +198,22 @@ async function main() {
   terrain.update(position.x, position.z, performance.now());
   const post = createPostProcessing(renderer, scene, camera, quality, params);
   await waitForCloudAtlas();
+  const warmPos = camera.position.clone();
+  const warmQuat = camera.quaternion.clone();
+  camera.position.set(500, 260, 1500);
+  camera.lookAt(900, 180, 1900);
+  camera.updateMatrixWorld(true);
   atmosphere.update(camera);
-  await warmScene(renderer, scene, camera, () => post.render());
+  const advanceFrame = () => (renderer as unknown as { _nodes?: { nodeFrame?: { update?: () => void } } })._nodes?.nodeFrame?.update?.();
+  await warmScene(renderer, scene, camera, () => {
+    post.render();
+    advanceFrame();
+    post.render();
+  });
+  camera.position.copy(warmPos);
+  camera.quaternion.copy(warmQuat);
+  camera.updateMatrixWorld(true);
+  atmosphere.update(camera);
   let last = performance.now();
   let hudAt = last;
   let frames = 0;
@@ -236,6 +267,7 @@ async function main() {
     const dt = Math.max(0, Math.min(0.05, (now - last) / 1000));
     last = now;
     terrain.update(position.x, position.z, now);
+    grass?.update(position.x, position.z);
     if (!ready && !failed) {
       ready = applyPose();
       if (ready) {

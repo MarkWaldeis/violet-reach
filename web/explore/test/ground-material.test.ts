@@ -13,7 +13,7 @@ const hooks = registerHooks({
     return { format: "module", shortCircuit: true, source: `export default ${JSON.stringify(raw)};` };
   },
 });
-const { terrainMaterial, waitForGroundTextures } = await import("../src/ground-material.ts");
+const { terrainMaterial, terrainReflectionMaterial, waitForGroundTextures } = await import("../src/ground-material.ts");
 const { waitForWaterTextures, waterMaterial } = await import("../src/water.ts");
 hooks.deregister();
 
@@ -24,6 +24,9 @@ test("ground and water preloading resolve cleanly in Node without browser DOM/fe
   assert.ok(terrainMat.normalNode);
   assert.ok(terrainMat.roughnessNode);
   terrainMat.dispose();
+  const reflMat = terrainReflectionMaterial();
+  assert.ok(reflMat.colorNode);
+  reflMat.dispose();
 });
 
 test("Phase 2 terrain(surface) and transparent Beer-Lambert water material construct cleanly", async () => {

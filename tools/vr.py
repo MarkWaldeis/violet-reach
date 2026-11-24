@@ -54,12 +54,12 @@ def find(asset_id):
 
 
 def load(asset_dir):
-    with open(os.path.join(asset_dir, "asset.json")) as f:
+    with open(os.path.join(asset_dir, "asset.json"), encoding="utf-8") as f:
         return json.load(f)
 
 
 def save(asset_dir, meta):
-    with open(os.path.join(asset_dir, "asset.json"), "w") as f:
+    with open(os.path.join(asset_dir, "asset.json"), "w", encoding="utf-8") as f:
         json.dump(meta, f, indent=2, ensure_ascii=False)
         f.write("\n")
 

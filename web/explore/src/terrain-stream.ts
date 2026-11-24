@@ -16,6 +16,7 @@ interface Tile {
   coords: TileCoords;
   wantedLOD: number;
   lod?: number;
+  reflected?: boolean;
   data?: HeightTile;
   mesh?: Mesh<BufferGeometry, Material>;
   pending?: AbortController;
@@ -147,6 +148,15 @@ export class TerrainStream {
     return { lods, total: this.#active.size, failed, pending };
   }
 
+  setReflectionMaterial(material: Material | null) {
+    const target = material ?? this.#material;
+    for (const tile of this.#active.values()) {
+      if (tile.mesh && tile.reflected && tile.mesh.material !== target) {
+        tile.mesh.material = target;
+      }
+    }
+  }
+
   dispose() {
     for (const tile of this.#active.values()) this.#remove(tile);
     this.#active.clear();
@@ -162,6 +172,19 @@ export class TerrainStream {
     tile.mesh.geometry.dispose();
   }
 
+  #canReflect(tx: number, tz: number, data: HeightTile) {
+    if (!this.#slice) return true;
+    const m = this.manifest;
+    const half = m.tileSize * 0.5;
+    const cx = m.originX + tx * m.tileSize + half;
+    const cz = m.originZ + tz * m.tileSize + half;
+    if (Math.hypot(cx - 812, cz - 2025) > 2800) return false;
+    for (let i = 0; i < data.length; i++) {
+      if (data[i] > 178) return true;
+    }
+    return false;
+  }
+
   #build(tile: Tile) {
     const m = this.manifest;
     const geometry = buildTerrainMesh(m, tile.coords, tile.data!, tile.wantedLOD);
@@ -169,9 +192,10 @@ export class TerrainStream {
       tile.mesh.geometry.dispose();
       tile.mesh.geometry = geometry;
     } else {
+      tile.reflected = this.#canReflect(tile.coords.x, tile.coords.z, tile.data!);
       tile.mesh = new Mesh(geometry, this.#material);
       tile.mesh.receiveShadow = tile.mesh.castShadow = true;
-      tile.mesh.layers.enable(REFLECTION_LAYER);
+      if (tile.reflected) tile.mesh.layers.enable(REFLECTION_LAYER);
       tile.mesh.position.set(m.originX + tile.coords.x * m.tileSize, 0, m.originZ + tile.coords.z * m.tileSize);
       this.group.add(tile.mesh);
     }

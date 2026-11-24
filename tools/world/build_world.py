@@ -60,21 +60,50 @@ def inlet_coordinates(x, y):
 
 
 def inlet_distance(x, y):
-    along,across = inlet_coordinates(x,y)
-    station = np.clip(along,-24,70)
-    radius = 7+7*smoothstep((station+25)/55)
-    bend = 1.6*np.sin(station/22)
-    return np.hypot(across-bend,along-station)-radius
+    along, across = inlet_coordinates(x, y)
+    station = np.clip(along, -56.0, 75.0)
+    bend = 1.6 * np.sin(station / 22.0) + 17.5 * smoothstep((-station - 6.0) / 48.0)
+    nw_taper = smoothstep((station + 56.0) / 48.0)
+    ne_radius = 2.6 + 8.0 * nw_taper + 3.4 * smoothstep((station - 2.0) / 34.0)
+    sw_flare = 46.0 * smoothstep((station - 5.2) / 13.0) + 22.0 * smoothstep((station - 18.0) / 26.0)
+    sw_radius = 2.6 + 8.0 * nw_taper + sw_flare
+    center = bend + 0.5 * (ne_radius - sw_radius)
+    radius = 0.5 * (ne_radius + sw_radius)
+    wobble_env = smoothstep((np.abs(along) - 5.5) / 8.0) * smoothstep((40.0 - along) / 22.0)
+    wobble = 1.4 * noise(x, y, 22.0, 95) * wobble_env
+    return np.hypot(across - center, along - station) - (radius + wobble)
 
 
 def inlet_terrain(x, y, height, level=180):
-    along,across = inlet_coordinates(x,y)
-    d = inlet_distance(x,y)
-    bed = -.65*smoothstep(-d/2.5)
-    bank = .14*smoothstep(d/2.5)+bank_rise(np.maximum(d-20,0))
-    target = level+np.where(d<0,bed,bank)
-    weight = smoothstep((100-abs(along-10))/50)*smoothstep((75-abs(across))/45)
-    return height+(np.minimum(height,target)-height)*weight
+    along, across = inlet_coordinates(x, y)
+    d = inlet_distance(x, y)
+    deep = 0.75 + 0.60 * smoothstep((along + 35.0) / 35.0) + 0.60 * smoothstep((along + 4.0) / 28.0)
+    slope_w = 3.6 + 1.2 * smoothstep((np.abs(along) - 4.0) / 10.0)
+    bed = -deep * smoothstep(-d / slope_w)
+    bank_natural = 0.14 * smoothstep(d / 3.0) + bank_rise(np.maximum(d - 3.5, 0.0))
+    bridge_pad = (
+        smoothstep((8.5 - np.abs(along)) / 3.0)
+        * smoothstep((26.5 - np.abs(across)) / 4.5)
+        * smoothstep((np.abs(across) - 10.2) / 1.6)
+    )
+    gate_d = np.hypot(x - 522.0, y + 1510.0)
+    gate_pad = smoothstep((15.0 - gate_d) / 7.5)
+    pad = np.maximum(bridge_pad, gate_pad)
+    bank_pad = 0.14 * smoothstep(d / 1.8) + bank_rise(np.maximum(d - 22.0, 0.0))
+    bank = bank_natural * (1.0 - pad) + bank_pad * pad
+    target = level + np.where(d < 0, bed, bank)
+    weight = (
+        smoothstep((68.0 + along) / 18.0)
+        * smoothstep((110.0 - along) / 40.0)
+        * smoothstep((76.0 - across) / 28.0)
+        * smoothstep((92.0 + across) / 35.0)
+    )
+    res = height + (np.minimum(height, target) - height) * weight
+    # Soften the SW peninsula mound behind Path 0 into a rounded lakeside cape
+    cape_r = np.hypot((x - 448.0) / 26.0, (-y - 1518.0) / 22.0)
+    spit = smoothstep((1.15 - cape_r) / 0.55)
+    low_spit = level + 0.45 + 0.35 * smoothstep((1515.0 + y) / 15.0)
+    return res * (1.0 - spit * 0.72) + np.minimum(res, low_spit) * (spit * 0.72)
 
 
 def lake_distance(x, y, lake, rivers):

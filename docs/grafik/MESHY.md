@@ -21,14 +21,14 @@ Beide Bildmodelle wurden mit exakt demselben Prompt je Pilot-Asset sowie `--aspe
 **Technisches Fazit zu den Meshy-Bildmodellen:**
 `nano-banana-2-lite` hat im Piloten nur 1 von 3 Assets bestanden (und selbst dort im 3D-Schritt zu `aspect_mismatch` und schwächerer Texturschärfe geführt). Negative Formvorgaben (`no thin twigs`) und subtile Oberflächenzustände (historische Verwitterung statt Neubau) setzt `gpt-image-2-5-flare` (3 von 3 bestanden) zuverlässig um.
 
-### 1.2 Verbindliche Regel für zukünftige Referenzbilder (Marks Credit-Sparregel)
+### 1.2 Verbindliche Regel für zukünftige Referenzbilder (**Marks Entscheidung 24.11.: Meshy, nicht Grok**)
 
-1. **Eigene Bildgenerierung / Grok bevorzugen (0 Meshy-Credits):**
-   Um das Meshy-Guthaben vollständig für `image-to-3d` und `multi-image-to-3d` zu reservieren, dürfen und sollen Referenzbilder für `image/chosen.png` künftig über die **eigene Bildgenerierung / Grok** erzeugt und lokal auf RGBA freigestellt werden (inklusive lokalem Padding auf mindestens 10 % Rand). Damit entfallen die 3–9 Credits pro Bildversuch komplett.
+1. **Referenzbilder kommen aus Meshy (`gpt-image-2-5-flare`, 9 Credits, `--remove-background true`):**
+   Mark hat am 24.11. entschieden, dass die Bildgenerierung wieder über Meshy läuft und **nicht** mehr lokal über Grok/Antigravity. Begründung: Die AAA-Bäume, das Gras- und das Wasser-System kommen ohne Meshy-Credits aus der Wiederverwendung von *Fantasy open world* (`docs/grafik/FANTASY_OPEN_WORLD_REUSE.md`), dadurch steht das Meshy-Budget für die übrigen wichtigen Assets frei — und `gpt-image-2-5-flare` hat die Bild-Checkliste im Piloten 3:0 gegen `nano-banana-2-lite` und die lokale Grok-Generierung gewonnen. Die frühere Credit-Sparregel (Grok zuerst) ist damit **aufgehoben**.
 2. **Pflichtprüfung vor 3D:**
-   Unabhängig von der Bildquelle durchläuft jedes `chosen.png` vor dem 3D-Aufruf zwingend die 7-Punkte-Checkliste aus `GRAFIK_PLAN.md` 7.2 (1 Objekt, >= 10 % Rand, sauberer Alphakanal ohne Saum/Löcher, flaches bedecktes Licht ohne Schlagschatten/Boden, 3D-taugliche Tiefe ohne dünne Zweig-/Laubnester, Palettenfarbe, Brief-Proportionen) und wird mit seinem SHA-256 in `image_qa.json` sowie `meshy.json` festgehalten.
-3. **Fallback auf Meshy-Bildgenerierung:**
-   Wird im Ausnahmefall direkt über `meshy text-to-image` generiert (z. B. für `--generate-multi-view true`), ist **`gpt-image-2-5-flare`** (9 Credits, `--remove-background true`) das Standardmodell.
+   Jedes `chosen.png` durchläuft vor dem 3D-Aufruf zwingend die 7-Punkte-Checkliste aus `GRAFIK_PLAN.md` 7.2 (1 Objekt, >= 10 % Rand, sauberer Alphakanal ohne Saum/Löcher, flaches bedecktes Licht ohne Schlagschatten/Boden, 3D-taugliche Tiefe ohne dünne Zweig-/Laubnester, Palettenfarbe, Brief-Proportionen) und wird mit seinem SHA-256 in `image_qa.json` sowie `meshy.json` festgehalten.
+3. **Multiview für Klasse-A-Heroes:**
+   Für Hero-Monumente und große Klippen (`A-multiview`, `multi-image-to-3d`) werden mehrere Ansichten desselben Objekts generiert (`--generate-multi-view true`), je Ansicht mit eigener Checklisten-Prüfung (`image_qa_view_N.json`).
 
 ### 1.3 Bewährte Prompt-Bausteine für Referenzbilder
 
