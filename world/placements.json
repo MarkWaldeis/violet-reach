@@ -74525,6 +74525,144 @@
       "yaw": -1.107137,
       "scale": 1,
       "y_offset": -3.1824
+    },
+    {
+      "asset": "arch_sandstone_a",
+      "x": 700,
+      "z": 1456,
+      "yaw": -1.287,
+      "scale": 1,
+      "y_offset": 0
+    },
+    {
+      "asset": "scree_pile_a",
+      "x": 708,
+      "z": 1207,
+      "yaw": 0.7,
+      "scale": 1.15,
+      "y_offset": -0.12,
+      "pitch": 0.04,
+      "roll": -0.03
+    },
+    {
+      "asset": "scree_pile_a",
+      "x": 720,
+      "z": 1213,
+      "yaw": 2.3,
+      "scale": 0.95,
+      "y_offset": -0.1,
+      "pitch": -0.03,
+      "roll": 0.05
+    },
+    {
+      "asset": "scree_pile_a",
+      "x": 685,
+      "z": 1230,
+      "yaw": 4.1,
+      "scale": 1.25,
+      "y_offset": -0.15,
+      "pitch": 0.05,
+      "roll": 0.02
+    },
+    {
+      "asset": "scree_pile_a",
+      "x": 698,
+      "z": 1248,
+      "yaw": 1.5,
+      "scale": 1.0,
+      "y_offset": -0.12,
+      "pitch": -0.04,
+      "roll": -0.04
+    },
+    {
+      "asset": "scree_pile_a",
+      "x": 706,
+      "z": 1270,
+      "yaw": 5.3,
+      "scale": 1.1,
+      "y_offset": -0.1,
+      "pitch": 0.02,
+      "roll": 0.05
+    },
+    {
+      "asset": "scree_pile_a",
+      "x": 698,
+      "z": 1274,
+      "yaw": 3.4,
+      "scale": 0.85,
+      "y_offset": -0.08,
+      "pitch": -0.05,
+      "roll": -0.02
+    },
+    {
+      "asset": "shore_rocks_wet_a",
+      "x": 562,
+      "z": 1546,
+      "yaw": 0.3,
+      "scale": 1.1,
+      "y_offset": -0.05,
+      "pitch": 0.02,
+      "roll": -0.03
+    },
+    {
+      "asset": "shore_rocks_wet_a",
+      "x": 578,
+      "z": 1552,
+      "yaw": -0.4,
+      "scale": 0.95,
+      "y_offset": -0.02,
+      "pitch": -0.02,
+      "roll": 0.02
+    },
+    {
+      "asset": "shore_rocks_wet_a",
+      "x": 594,
+      "z": 1558,
+      "yaw": 0.9,
+      "scale": 1.2,
+      "y_offset": 0,
+      "pitch": 0.03,
+      "roll": 0.02
+    },
+    {
+      "asset": "shore_rocks_wet_a",
+      "x": 641,
+      "z": 1532,
+      "yaw": 1.4,
+      "scale": 1.05,
+      "y_offset": -0.04,
+      "pitch": -0.02,
+      "roll": -0.02
+    },
+    {
+      "asset": "shore_rocks_wet_a",
+      "x": 644,
+      "z": 1538,
+      "yaw": 2.0,
+      "scale": 0.9,
+      "y_offset": -0.02,
+      "pitch": 0.02,
+      "roll": 0.03
+    },
+    {
+      "asset": "shore_rocks_wet_a",
+      "x": 688,
+      "z": 1450,
+      "yaw": 1.6,
+      "scale": 1.15,
+      "y_offset": -0.03,
+      "pitch": -0.03,
+      "roll": 0.02
+    },
+    {
+      "asset": "shore_rocks_wet_a",
+      "x": 682,
+      "z": 1462,
+      "yaw": 0.8,
+      "scale": 1.0,
+      "y_offset": -0.02,
+      "pitch": 0.02,
+      "roll": -0.02
     }
   ]
 }

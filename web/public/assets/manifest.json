@@ -98,6 +98,19 @@
       "bytes": 8144844
     },
     {
+      "id": "arch_sandstone_a",
+      "category": "rocks",
+      "title": "Sandstein-Canyonbogen A",
+      "file": "arch_sandstone_a.glb",
+      "size_m": [
+        40.689,
+        11.223,
+        27.45
+      ],
+      "bytes": 4702432,
+      "material_class": "sandstone"
+    },
+    {
       "id": "boulder_chalk_a",
       "category": "rocks",
       "title": "Kreidefels-Brocken A",
@@ -108,6 +121,32 @@
         1.738
       ],
       "bytes": 1006664,
+      "material_class": "rock_chalk"
+    },
+    {
+      "id": "scree_pile_a",
+      "category": "rocks",
+      "title": "Kalkstein-Geröllhaufen A",
+      "file": "scree_pile_a.glb",
+      "size_m": [
+        3.806,
+        3.779,
+        1.55
+      ],
+      "bytes": 1588900,
+      "material_class": "rock_chalk"
+    },
+    {
+      "id": "shore_rocks_wet_a",
+      "category": "rocks",
+      "title": "Nasse Uferfelsen-Gruppe A",
+      "file": "shore_rocks_wet_a.glb",
+      "size_m": [
+        2.994,
+        2.621,
+        1.316
+      ],
+      "bytes": 1394668,
       "material_class": "rock_chalk"
     },
     {
