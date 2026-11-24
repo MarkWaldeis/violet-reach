@@ -3,7 +3,7 @@
 // with density/height/dryness/colour taken from the same macro maps as the ground
 // shader, so the grass carpet blends seamlessly into the terrain at distance.
 import {
-  BufferGeometry, Color, DoubleSide, Group, InstancedBufferAttribute, InstancedMesh, MeshBasicMaterial,
+  BufferGeometry, Group, InstancedBufferAttribute, InstancedMesh,
 } from "three/webgpu";
 import { buildBladeClump } from "./grass-clump.ts";
 import { grassMaterial } from "./grass-material.ts";
@@ -87,12 +87,6 @@ export class GrassSystem {
     this.stats.cells = [...this.#cells.values()].filter((c) => c.mesh !== undefined && c.count > 0).length;
   }
 
-
-  /** QA helper: swap all cells to unlit red for render-path isolation. */
-  debugBasicMaterial() {
-    const red = new MeshBasicMaterial({ color: new Color(1, 0.1, 0.1), side: DoubleSide });
-    for (const child of this.group.children) (child as InstancedMesh).material = red;
-  }
   #build(cell: Cell) {
     this.stats.builds++;
     const { cellSize, density } = this.#opts;
