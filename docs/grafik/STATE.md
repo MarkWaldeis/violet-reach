@@ -44,6 +44,10 @@ Diese Datei reicht, damit eine neue Session nahtlos weitermacht. Nach jedem Arbe
 3. **normalNode ist VIEW-Space:** eine Konstante vec3(0,1,0) bedeutet Bildschirm-oben, nicht Welt-oben (Beleuchtung hing von der Kamera!). Fix: Welt-up + yaw-rotierte Geometrie-Normalen (10-28% Höhenanteil) per `transformNormalToView` — gibt zusätzlich plastische Tiefenwirkung pro Halm.
 Empirischer Nachweis für 1: colorNode=reines Weiß → Halme rendern im blassen Tint (grass-tune2-diagwhite.png). Hue-Pipeline: hueK (lush→oliv-frisch (0.82,1.38,0.60), straw bei dry) × Wurzel-zu-Spitze-Gradient (0.34→1.0) × Spitzen-Wärmung (1.48,1.30,0.82) × Quer-Schattierung × Hash-Variation — Konstanten modulweit in grass-material.ts, Probe grassPaletteProbe spiegelt Ist-Farben.
 
+### Placement-Bestand (world/placements.json, 1251 Einträge) — WICHTIG für Optimierung
+
+Instanz-Zahlen: **grass_tuft_a 64.120 (!)**, reed_cluster_a 12.384, fern_cluster_a 2.075, shrub_round_a 1.148, tree_broadleaf a/b/c 122/120/118, shore_rocks_wet_a 7, scree_pile_a 6, boulder_chalk_a 5. **Die alte grass_tuft-Lösung läuft parallel zum neuen GPU-Gras — doppelte Bedeckung, doppelte Dreiecke.** Integrations-Schritt nach Gras-Perf-Optimierung: A/B-Vergleich tuft vs GPU-Gras an gleicher Stelle, dann grass_tuft-Scatter-Einträge entfernen oder drastisch reduzieren — erwartet der größte einzelne Dreiecksposten. Erst danach finaler Bench. Ebenso dann: broadleaf a/b/c durch die reviewed Fantasy-Bäume ersetzen (tree_oak/beech/ancient/willow je nach Gate-Ergebnis; bush_lush/fern_lush können shrub_round/fern_cluster ergänzen oder ersetzen).
+
 ### Gras-Perf-Stand (bench p41-grass, LAST-KONTAMINIERT)
 
 Bench-Lauf während Blender/Browser-Agenten aktiv: ground 52.94/12.56 FPS, flight 56.18/11.57, längste Frames 133-250 ms (Last-Spikes, keine steady-state Gras-Kosten). **Aber echtes Signal: Dreiecke max 4.579.266 auf ground über 4M-Richtwert** (vor Gras ~2.37M an G3). Textur 936 MiB ok. Nach Agenten-Ende: sauberer Rerun nötig; falls Dreiecke weiterhin über Budget: Distanz-Instanzen/Dichte optimieren (fadeEnd=viewDistance bei high=96m, kaum tote Instanzen — eher Density/Clump-Geometrie/Distanzabstufung prüfen).
