@@ -2,7 +2,7 @@
   "id": "tree_ancient_a",
   "category": "vegetation",
   "title": "Knorriger Altbaum A",
-  "description": "Knorriger, weit ausladender Altbaum mit Landmarken-Charakter: echte verzweigte Tripo-Holzstruktur mit vorhandenem Eingrabe-Sockel und separaten gekrümmten 3D-Laubkarten mit weichen Kronennormalen. Laub ist von sattem Mittelgrün Richtung oliv-gelbgrün (#4A5426 zwischen leaf_green und grass_green), Rinde Richtung bark #41321D gegradet; Alpha-Laub, Metall 0 und Rauheit ≥ 0,65 sind exportfest verkabelt.",
+  "description": "Knorriger, weit ausladender Altbaum mit Landmarken-Charakter auf der verifizierten Tripo-Vorlage. Revision 2: Die großen Laubkarten sind deutlich verkleinert, gewölbt, verdreht, staffelpreisgekippt und mit Größenjitter verteilt; kleine Zweigzylinder laufen verjüngt aus und die Rinde nutzt geglättete Split-Normalen. Linear angehobene Schattenfarben plus ein sehr schwacher Transluzenz-/Rindenschattenfloor halten Kroneninneres als dunkles Oliv statt reinem Schwarz lesbar. Palette, Alpha-Test, UVs, Dreieckzahl und Eingrabe-Sockel bleiben erhalten.",
   "target_size_m": [
     12.0,
     13.0,
@@ -18,22 +18,8 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-builder-trees",
-  "review": {
-    "reviewer": "devin-gate-rev-b",
-    "scores": {
-      "silhouette": 9,
-      "form_detail": 7,
-      "material": 7,
-      "scale": 9,
-      "style": 8,
-      "defects": 5
-    },
-    "notes": "Abgelehnt: Starke Altbaum-Silhouette und guter Massstab, aber die Krone besteht in Nahsicht aus flachen gruen belegten Regalen; Unterseiten werden flaechig schwarz und viele dicke Aste laufen einfach spitz oder abgehackt aus. Fuer eine Landmarke muessen Blattvolumen, feinere Zweigenden und natuerlichere Schattierung nachgebaut werden.",
-    "round": 1,
-    "source_sha256": "3496d56c8763e92a096411f25c4daf4df5a5a134766b559a44e57f43dea67b80",
-    "sheet_sha256": "722b24b373afc87758f2c26e5b3151f3b5313bf0938366acf6b527c3b8361faf"
-  },
+  "review": null,
   "review_rounds": 1
 }

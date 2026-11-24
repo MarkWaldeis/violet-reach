@@ -2,7 +2,7 @@
   "id": "fern_lush_a",
   "category": "vegetation",
   "title": "Bodenfarn A",
-  "description": "Flacher, ausgreifender Bodenfarn für schattige Stammfüße und Unterwuchs: echte verzweigte Tripo-Holzstruktur mit vorhandenem Eingrabe-Sockel und separaten gekrümmten 3D-Laubkarten mit weichen Kronennormalen. Laub ist von sattem Mittelgrün Richtung oliv-gelbgrün (#4A5426 zwischen leaf_green und grass_green), Rinde Richtung bark #41321D gegradet; Alpha-Laub, Metall 0 und Rauheit ≥ 0,65 sind exportfest verkabelt.",
+  "description": "Flacher, ausgreifender Bodenfarn auf der verifizierten Tripo-Vorlage. Revision 2: Die Wedel sind in Länge, Winkel, Höhe und Bogen unregelmäßig gestaffelt, stärker gewölbt und ihre UVs nutzen den belaubten Texturbereich statt der kahlen Spitze; der frühere braune Block ist zu einer niedrigen dunklen Wurzelkrone reduziert. Angehobene dunkle Laubtexel und ein sehr schwacher Transluzenzfloor halten den Kern lesbar. Palette, Alpha-Test, Dreieckzahl und Eingrabe-Sockel bleiben erhalten.",
   "target_size_m": [
     2.0,
     1.8,
@@ -18,22 +18,8 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-builder-trees",
-  "review": {
-    "reviewer": "devin-gate-rev-b",
-    "scores": {
-      "silhouette": 7,
-      "form_detail": 7,
-      "material": 8,
-      "scale": 9,
-      "style": 7,
-      "defects": 7
-    },
-    "notes": "Abgelehnt: Einzelne Wedeltextur und Massstab sind brauchbar, aber die Gesamtsilhouette ist ein flacher, regelmaessiger Stern mit vielen langen kahlen Drahtspitzen und dadurch wenig ueppig. Die schwarze harte Kernzone und der sichtbare braune Block wirken kuenstlich. Wedel staerker bogenfoermig staffeln, Blattbesatz bis naeher an die Spitzen fuehren und die Krone auflockern.",
-    "round": 1,
-    "source_sha256": "dc980d98ccb91d3dd6fe84383e31e7446f0ce74216355887d057e46b9160088e",
-    "sheet_sha256": "2f501b038818d20ccebe022ab5f9fe5d80a730c6beb0ef71b949124b5007c2fe"
-  },
+  "review": null,
   "review_rounds": 1
 }

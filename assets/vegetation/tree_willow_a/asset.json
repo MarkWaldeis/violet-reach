@@ -2,7 +2,7 @@
   "id": "tree_willow_a",
   "category": "vegetation",
   "title": "Ufer-Weide A",
-  "description": "Uferbaum mit hängenden, weit herabfallenden Zweigvorhängen: echte verzweigte Tripo-Holzstruktur mit vorhandenem Eingrabe-Sockel und separaten gekrümmten 3D-Laubkarten mit weichen Kronennormalen. Laub ist von sattem Mittelgrün Richtung oliv-gelbgrün (#4A5426 zwischen leaf_green und grass_green), Rinde Richtung bark #41321D gegradet; Alpha-Laub, Metall 0 und Rauheit ≥ 0,65 sind exportfest verkabelt.",
+  "description": "Uferbaum mit hängenden Weidenvorhängen auf der verifizierten Tripo-Vorlage. Revision 2: Die Vorhangstreifen sind verschmälert, gewölbt, verdreht und mit nach innen gewichteter radialer Staffelung verteilt, damit die Krone weniger hohl wirkt; kleine Astenden sind verjüngt und Rindennormalen geglättet. Dunkle Weidenblätter sind stärker gammaangehoben, ein sehr schwacher Transluzenzfloor hält Rückseiten und Innenraum als strukturiertes Oliv lesbar. Palette, Alpha-Test, UVs, Dreieckzahl und Eingrabe-Sockel bleiben erhalten.",
   "target_size_m": [
     9.0,
     9.0,
@@ -18,22 +18,8 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-builder-trees",
-  "review": {
-    "reviewer": "devin-gate-rev-b",
-    "scores": {
-      "silhouette": 7,
-      "form_detail": 6,
-      "material": 6,
-      "scale": 9,
-      "style": 7,
-      "defects": 4
-    },
-    "notes": "Abgelehnt: Weidenidee und Massstab stimmen, aber die Vorhaenge sind repetitive flache Streifen mit riesigen rein schwarzen Rueckseiten; im Closeup stehen mechanisch abgeschnittene Astzylinder frei und die Krone wirkt innen hohl. Vorhaenge in schmalere, gestaffelte, gekruemmte Straenge zerlegen, Unterseiten aufhellen und Astenden organisch ueberziehen.",
-    "round": 1,
-    "source_sha256": "4c964d2a21bf7dcc9afa4edb480c44ce68f8dda609a3e3b93298e229473666d2",
-    "sheet_sha256": "f4a8fd25928e0b6572782cb1342d1bc24b9a413d9f3388c5e28a9671d6058d01"
-  },
+  "review": null,
   "review_rounds": 1
 }

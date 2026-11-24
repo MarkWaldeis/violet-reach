@@ -34,7 +34,7 @@ FOLIAGE_TARGET = "#4A5426"  # zwischen leaf_green #313C1D und grass_green #696F4
 FOLIAGE_STRENGTH = 0.60
 BARK_TARGET = "#2B2012"
 BARK_STRENGTH = 0.78
-ALPHA_CUTOFF = 0.34
+ALPHA_CUTOFF = 0.28
 ROUGHNESS_MIN = 0.65
 ASSET_KIND = "fern"
 GEOMETRY_SEED = 9606
@@ -42,7 +42,8 @@ CARD_CONFIG = dict()
 BARK_TAPER_CONFIG = dict()
 FOLIAGE_GAMMA = .78
 FOLIAGE_LIFT_FLOOR = .035
-FOLIAGE_TRANSLUCENCY = .010
+FOLIAGE_TRANSLUCENCY = .090
+BARK_TRANSLUCENCY = .025
 
 
 def _sha256_file(path):
@@ -354,6 +355,41 @@ def _reshape_foliage_cards(
     return {"cards": len(comps), "vertices": moved, "tilted_cards": tilted}
 
 
+def _recalc_foliage_normals(mesh, *, geom_weight=.56, up_weight=.68, radial_weight=.72):
+    """Re-author canopy split normals after card deformation, retaining soft volume shading."""
+    old = [x.vector.copy() for x in mesh.corner_normals]
+    acc = [Vector((0, 0, 0)) for _ in mesh.vertices]
+    for p in mesh.polygons:
+        if p.material_index != 1:
+            continue
+        n = p.normal * p.area
+        for v in p.vertices:
+            acc[v] += n
+    loop_poly = {}
+    for p in mesh.polygons:
+        for li in p.loop_indices:
+            loop_poly[li] = p
+    out = list(old)
+    for li, loop in enumerate(mesh.loops):
+        p = loop_poly[li]
+        if p.material_index != 1:
+            continue
+        v = loop.vertex_index
+        geom = acc[v].normalized() if acc[v].length > 1e-6 else Vector((0, 0, 1))
+        co = mesh.vertices[v].co
+        radial = Vector((co.x, co.y, 0.0))
+        if radial.length > .15:
+            canopy = (radial.normalized() * radial_weight + Vector((0, 0, up_weight))).normalized()
+        else:
+            canopy = Vector((0, 0, 1))
+        if geom.dot(canopy) < 0:
+            geom = -geom
+        out[li] = (geom * geom_weight + canopy * (1.0 - geom_weight)).normalized()
+    mesh.normals_split_custom_set(out)
+    mesh.update()
+    return len(out)
+
+
 def _taper_small_bark_tips(
     mesh,
     *,
@@ -473,25 +509,25 @@ def _reshape_fern_fronds(mesh, *, seed=0):
         h3 = _hash01(ci, 13, seed)
         h4 = _hash01(ci, 17, seed)
         longest = reach > max_reach * .94
-        if longest or h3 < .18:
-            length_scale = .985 + .030 * h1
-            tip_delta = -.025 + .035 * h2
-            arch_z = .008 + .018 * h4
+        if (longest and h3 < .43) or h3 < .08:
+            length_scale = .955 + .045 * h1
+            tip_delta = -.010 + .040 * h2
+            arch_z = .030 + .025 * h4
             width_scale = 1.00 + .025 * h2
-        elif h3 < .58:
-            length_scale = .90 + .08 * h1
-            tip_delta = .015 + .045 * h2
-            arch_z = .015 + .020 * h4
+        elif h3 < .68:
+            length_scale = .88 + .09 * h1
+            tip_delta = .020 + .045 * h2
+            arch_z = .025 + .020 * h4
             width_scale = 1.01 + .035 * h2
         else:
-            length_scale = .80 + .09 * h1
+            length_scale = .77 + .10 * h1
             tip_delta = .050 + .045 * h2
-            arch_z = .012 + .018 * h4
+            arch_z = .018 + .020 * h4
             width_scale = 1.02 + .04 * h2
-        yaw = math.radians((h4 - .5) * 9.0)
+        yaw = math.radians((h4 - .5) * 24.0)
         ca, sa = math.cos(yaw), math.sin(yaw)
-        sway = (h2 - .5) * .07
-        cup = .018 + .018 * h1
+        sway = (h2 - .5) * .12
+        cup = .045 + .030 * h1
         for v, u, w, co in rows:
             d = co - base
             y = d.dot(dirh) * length_scale
@@ -506,6 +542,24 @@ def _reshape_fern_fronds(mesh, *, seed=0):
             moved += 1
     mesh.update()
     return {"fronds": len(data), "vertices": moved, "max_reach": round(max_reach, 3)}
+
+
+def _compress_fern_frond_uvs(mesh, *, factor=.70):
+    """Map frond tips back into the leafy part of the atlas instead of its bare stem end."""
+    uvlay = mesh.uv_layers.active
+    comps = _foliage_components(mesh, 1)
+    changed = 0
+    for polys in comps:
+        loops = sorted({li for p in polys for li in p.loop_indices})
+        if not loops:
+            continue
+        vmin = min(uvlay.data[li].uv.y for li in loops)
+        for li in loops:
+            uv = uvlay.data[li].uv
+            uv.y = vmin + (uv.y - vmin) * factor
+            changed += 1
+    mesh.update()
+    return {"loops": changed, "factor": factor}
 
 
 def _shrink_fern_crown(mesh, *, z0=.018, height_scale=.24, radial_pull=.68):
@@ -532,6 +586,34 @@ def _shrink_fern_crown(mesh, *, z0=.018, height_scale=.24, radial_pull=.68):
         changed += 1
     mesh.update()
     return {"vertices": changed}
+
+
+def _smooth_bark_normals(mesh):
+    """Use area-weighted smooth split normals on wood while leaving foliage loops untouched."""
+    old = [x.vector.copy() for x in mesh.corner_normals]
+    acc = [Vector((0, 0, 0)) for _ in mesh.vertices]
+    for p in mesh.polygons:
+        if p.material_index != 0:
+            continue
+        n = p.normal * p.area
+        for v in p.vertices:
+            acc[v] += n
+    loop_poly = {}
+    for p in mesh.polygons:
+        for li in p.loop_indices:
+            loop_poly[li] = p
+    changed = 0
+    for li, loop in enumerate(mesh.loops):
+        p = loop_poly[li]
+        if p.material_index != 0:
+            continue
+        v = loop.vertex_index
+        if acc[v].length > 1e-6:
+            old[li] = acc[v].normalized()
+            changed += 1
+    mesh.normals_split_custom_set(old)
+    mesh.update()
+    return changed
 
 
 def _lift_foliage_albedo(mat, *, gamma, floor):
@@ -574,11 +656,22 @@ def _apply_asset_geometry(obj):
     mesh = obj.data
     if ASSET_KIND == "fern":
         fronds = _reshape_fern_fronds(mesh, seed=GEOMETRY_SEED)
+        uvs = _compress_fern_frond_uvs(mesh)
         crown = _shrink_fern_crown(mesh)
-        return {"fern_fronds": fronds, "root_crown": crown}
+        bark_normals = _smooth_bark_normals(mesh)
+        return {"fern_fronds": fronds, "frond_uvs": uvs, "root_crown": crown, "bark_normals": bark_normals}
     cards = _reshape_foliage_cards(mesh, **CARD_CONFIG)
     tips = _taper_small_bark_tips(mesh, **BARK_TAPER_CONFIG)
-    return {"cards": cards, "tapered_tips": tips}
+    bark_normals = _smooth_bark_normals(mesh)
+    normals = 0
+    if ASSET_KIND == "tree":
+        if "willow" in SLUG:
+            normals = _recalc_foliage_normals(mesh, geom_weight=.58, up_weight=.32, radial_weight=.86)
+        else:
+            normals = _recalc_foliage_normals(mesh, geom_weight=.56, up_weight=.68, radial_weight=.72)
+    # bush_lush_a keeps its authored canopy normals: they are already strongly
+    # volume-biased and recalculation darkened the dense interior in diagnostics.
+    return {"cards": cards, "tapered_tips": tips, "bark_normals": bark_normals, "foliage_normals": normals}
 
 
 def _occlusion_group():
@@ -648,6 +741,8 @@ def _configure_materials(obj, template_info):
     if lifted:
         graded["foliage_lifted"] = lifted
     _wire_foliage_translucency(foliage, FOLIAGE_TRANSLUCENCY)
+    # A much weaker floor on wood keeps shadowed twigs brown instead of colourless black.
+    _wire_foliage_translucency(bark, BARK_TRANSLUCENCY)
     for mat in (bark, foliage):
         bsdf = _principled(mat)
         bsdf.inputs["Metallic"].default_value = 0.0

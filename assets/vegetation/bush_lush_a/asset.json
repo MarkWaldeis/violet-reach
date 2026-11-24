@@ -2,7 +2,7 @@
   "id": "bush_lush_a",
   "category": "vegetation",
   "title": "Dichter Unterwuchs-Strauch A",
-  "description": "Dichter bodennaher Unterwuchs-Strauch für Waldsäume und Wiesenränder: echte verzweigte Tripo-Holzstruktur mit vorhandenem Eingrabe-Sockel und separaten gekrümmten 3D-Laubkarten mit weichen Kronennormalen. Laub ist von sattem Mittelgrün Richtung oliv-gelbgrün (#4A5426 zwischen leaf_green und grass_green), Rinde Richtung bark #41321D gegradet; Alpha-Laub, Metall 0 und Rauheit ≥ 0,65 sind exportfest verkabelt.",
+  "description": "Dichter bodennaher Unterwuchs-Strauch auf der verifizierten Tripo-Vorlage. Revision 2: Zu weit herausragende nackte Stengel sind verkürzt und organisch verjüngt, während die Laubkarten gewölbt, verdreht, leicht verkippt und mit Größenjitter verteilt sind. Geglättete Rindennormalen, angehobene dunkle Laubtexel und ein sehr schwacher Transluzenz-/Schattenfloor verhindern strukturlose schwarze Kernbereiche. Palette, Alpha-Test, UVs, Dreieckzahl und Eingrabe-Sockel bleiben erhalten.",
   "target_size_m": [
     3.3,
     3.0,
@@ -18,22 +18,8 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-builder-trees",
-  "review": {
-    "reviewer": "devin-gate-rev-b",
-    "scores": {
-      "silhouette": 8,
-      "form_detail": 7,
-      "material": 7,
-      "scale": 9,
-      "style": 8,
-      "defects": 5
-    },
-    "notes": "Abgelehnt: Dichte Grundform und Massstab passen, doch mehrere nackte Stengel ragen als hart abgeschnittene spitze Staebe aus dem Blattwerk. Innen kollabiert der Strauch fast komplett zu Schwarz und einige Karten lesen sich als flache Bahnen. Stengel organisch auslaufen lassen oder kuerzen, Innenlicht und Kartenausrichtung verbessern.",
-    "round": 1,
-    "source_sha256": "90d7d5c7a8f161c4feb01a8153a6b37dea595729038c434e144c4ac6f89fbea8",
-    "sheet_sha256": "d4b829fdaec2b89381e04091a5570323faa6d10408063ad054dd9b68e8525aa9"
-  },
+  "review": null,
   "review_rounds": 1
 }

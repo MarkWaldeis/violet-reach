@@ -2,7 +2,7 @@
   "id": "tree_beech_a",
   "category": "vegetation",
   "title": "Wiesen-Buche A",
-  "description": "Zweiter großer Laubbaum mit schlankerer, hochgewölbter Krone: echte verzweigte Tripo-Holzstruktur mit vorhandenem Eingrabe-Sockel und separaten gekrümmten 3D-Laubkarten mit weichen Kronennormalen. Laub ist von sattem Mittelgrün Richtung oliv-gelbgrün (#4A5426 zwischen leaf_green und grass_green), Rinde Richtung bark #41321D gegradet; Alpha-Laub, Metall 0 und Rauheit ≥ 0,65 sind exportfest verkabelt.",
+  "description": "Schlanker, hochgewölbter Laubbaum auf der verifizierten Tripo-Bachenvorlage. Revision 2: Laubkarten sind gewölbt, verdreht und anti-regalartig verkippt, behalten aber etwas mehr Fläche für eine dichtere Krone; Größenjitter lockert die früheren getrennten Laubscheiben auf. Rindennormalen sind geglättet, kleine Sprossenden verjüngt, dunkle Laubtexel angehoben und eine sehr schwache exportierbare Transluzenz-/Schattenbasis verhindert strukturlose Schwarzflächen. Palette, Alpha-Test, UVs, Dreieckzahl und Eingrabe-Sockel bleiben erhalten.",
   "target_size_m": [
     11.0,
     12.0,
@@ -18,22 +18,8 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-builder-trees",
-  "review": {
-    "reviewer": "devin-gate-rev-b",
-    "scores": {
-      "silhouette": 7,
-      "form_detail": 6,
-      "material": 7,
-      "scale": 9,
-      "style": 7,
-      "defects": 5
-    },
-    "notes": "Abgelehnt: Die Krone zerfaellt in wenige deutlich getrennte Laubscheiben mit viel nacktem Astgeruest; im Closeup sind flache kreuzende Karten und grosse schwarze Unterseiten sichtbar. Der Stammfuss endet in spitzen dreieckigen Zaehnen statt glaubwuerdiger Wurzeln. Kronendichte und Blatt- beziehungsweise Zweiganschluss muessen deutlich nachgearbeitet werden.",
-    "round": 1,
-    "source_sha256": "e6bb329fdc1568658f0688da7206069a31ba629818b00cc61d0f01cc537c9370",
-    "sheet_sha256": "21f3b0c15d7a049d3bb67a10e3e995e75236fab7e4b8c9c2bcb9d2de1c30e347"
-  },
+  "review": null,
   "review_rounds": 1
 }
