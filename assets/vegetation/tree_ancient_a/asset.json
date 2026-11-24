@@ -1,0 +1,24 @@
+{
+  "id": "tree_ancient_a",
+  "category": "vegetation",
+  "title": "Knorriger Altbaum A",
+  "description": "Knorriger, weit ausladender Altbaum mit Landmarken-Charakter: echte verzweigte Tripo-Holzstruktur mit vorhandenem Eingrabe-Sockel und separaten gekrümmten 3D-Laubkarten mit weichen Kronennormalen. Laub ist von sattem Mittelgrün Richtung oliv-gelbgrün (#4A5426 zwischen leaf_green und grass_green), Rinde Richtung bark #41321D gegradet; Alpha-Laub, Metall 0 und Rauheit ≥ 0,65 sind exportfest verkabelt.",
+  "target_size_m": [
+    12.0,
+    13.0,
+    11.0
+  ],
+  "lod_triangles": [
+    5290,
+    2000,
+    750,
+    220
+  ],
+  "texture_size": 2048,
+  "meshy_class": "B",
+  "material_class": "foliage",
+  "texture_format": "ktx2",
+  "status": "blender_review",
+  "builder": "devin-builder-trees",
+  "review": null
+}

@@ -1,0 +1,24 @@
+{
+  "id": "bush_lush_a",
+  "category": "vegetation",
+  "title": "Dichter Unterwuchs-Strauch A",
+  "description": "Dichter bodennaher Unterwuchs-Strauch für Waldsäume und Wiesenränder: echte verzweigte Tripo-Holzstruktur mit vorhandenem Eingrabe-Sockel und separaten gekrümmten 3D-Laubkarten mit weichen Kronennormalen. Laub ist von sattem Mittelgrün Richtung oliv-gelbgrün (#4A5426 zwischen leaf_green und grass_green), Rinde Richtung bark #41321D gegradet; Alpha-Laub, Metall 0 und Rauheit ≥ 0,65 sind exportfest verkabelt.",
+  "target_size_m": [
+    3.3,
+    3.0,
+    2.0
+  ],
+  "lod_triangles": [
+    1688,
+    700,
+    260,
+    96
+  ],
+  "texture_size": 1024,
+  "meshy_class": "B",
+  "material_class": "foliage",
+  "texture_format": "ktx2",
+  "status": "blender_review",
+  "builder": "devin-builder-trees",
+  "review": null
+}

@@ -1,0 +1,24 @@
+{
+  "id": "tree_willow_a",
+  "category": "vegetation",
+  "title": "Ufer-Weide A",
+  "description": "Uferbaum mit hängenden, weit herabfallenden Zweigvorhängen: echte verzweigte Tripo-Holzstruktur mit vorhandenem Eingrabe-Sockel und separaten gekrümmten 3D-Laubkarten mit weichen Kronennormalen. Laub ist von sattem Mittelgrün Richtung oliv-gelbgrün (#4A5426 zwischen leaf_green und grass_green), Rinde Richtung bark #41321D gegradet; Alpha-Laub, Metall 0 und Rauheit ≥ 0,65 sind exportfest verkabelt.",
+  "target_size_m": [
+    9.0,
+    9.0,
+    8.0
+  ],
+  "lod_triangles": [
+    2596,
+    1000,
+    380,
+    140
+  ],
+  "texture_size": 2048,
+  "meshy_class": "B",
+  "material_class": "foliage",
+  "texture_format": "ktx2",
+  "status": "blender_review",
+  "builder": "devin-builder-trees",
+  "review": null
+}

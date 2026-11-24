@@ -1,0 +1,24 @@
+{
+  "id": "fern_lush_a",
+  "category": "vegetation",
+  "title": "Bodenfarn A",
+  "description": "Flacher, ausgreifender Bodenfarn für schattige Stammfüße und Unterwuchs: echte verzweigte Tripo-Holzstruktur mit vorhandenem Eingrabe-Sockel und separaten gekrümmten 3D-Laubkarten mit weichen Kronennormalen. Laub ist von sattem Mittelgrün Richtung oliv-gelbgrün (#4A5426 zwischen leaf_green und grass_green), Rinde Richtung bark #41321D gegradet; Alpha-Laub, Metall 0 und Rauheit ≥ 0,65 sind exportfest verkabelt.",
+  "target_size_m": [
+    2.0,
+    1.8,
+    0.5
+  ],
+  "lod_triangles": [
+    448,
+    220,
+    96,
+    48
+  ],
+  "texture_size": 1024,
+  "meshy_class": "B",
+  "material_class": "foliage",
+  "texture_format": "ktx2",
+  "status": "blender_review",
+  "builder": "devin-builder-trees",
+  "review": null
+}

@@ -1,0 +1,48 @@
+{
+  "schema": "fantasy_open_world_import.v1",
+  "source_project": "Fantasy open world",
+  "staging_dir": "${VR_MESHY_DIR}/fantasy_open_world_import",
+  "library_blend": "blender_reference/tripo_trees.blend",
+  "library_sha256": "070d80d34fe5d2052d608b0524f5dd5ad304ed0c983a2ba000655754092e1b00",
+  "template": "V3_TPL_bush_lush_fern",
+  "template_slug": "bush_lush_fern",
+  "template_source_glb": "trees_raw/bush_lush_fern.glb",
+  "template_source_glb_sha256": "6ac8f7dee1c6afb9e685ec062287f83b2c04e7168950bc5d8690db880b1969ae",
+  "textures": {
+    "V3_img_bark_bush_lush_fern_albedo": {
+      "file": "leaf_textures/V3_img_bark_bush_lush_fern_albedo.png",
+      "sha256": "dc5339f61dda1e62816ca999b6700ebfd21f9afa3907bfb896d2481a5c11722c",
+      "role": "basecolor"
+    },
+    "V3_img_bark_bush_lush_fern_norm": {
+      "file": "leaf_textures/V3_img_bark_bush_lush_fern_norm.png",
+      "sha256": "b7227c067b4159731e694e9b353f86369239e8a1e4c709a57450e7c538fed545",
+      "role": "normal"
+    },
+    "V3_img_bark_bush_lush_fern_orm": {
+      "file": "leaf_textures/V3_img_bark_bush_lush_fern_orm.png",
+      "sha256": "cf723165476c1240dbeede4755699e3264a830968876032aa2c814c4f1903361",
+      "role": "occlusion_roughness_metallic"
+    },
+    "V3_img_foliage_bush_lush_fern_albedo": {
+      "file": "leaf_textures/V3_img_foliage_bush_lush_fern_albedo.png",
+      "sha256": "4e15938bbdbfbe57f6af0369a1591b5c9eb41033148cfa6f575f2e8561fed4f1",
+      "role": "basecolor"
+    },
+    "V3_img_foliage_bush_lush_fern_norm": {
+      "file": "leaf_textures/V3_img_foliage_bush_lush_fern_norm.png",
+      "sha256": "3d46e49b5a977ce0fe75f7c689b5e647137d5c25cd885b50e1fd2afc0faccb2f",
+      "role": "normal"
+    },
+    "V3_img_foliage_bush_lush_fern_orm": {
+      "file": "leaf_textures/V3_img_foliage_bush_lush_fern_orm.png",
+      "sha256": "fa70bf275f06b3c7e84f7284e0c1ff6a78993e3b3528523dae492e56bef72a58",
+      "role": "occlusion_roughness_metallic"
+    }
+  },
+  "hash_note": "manifest.json im Staging-Ordner hasht nur trees_raw/*.glb und tripo_trees.blend; die leaf_textures-SHA256 hier wurden beim Integrationsaufbau aus den unveraenderten PNG-Dateien berechnet. build.py verifiziert zusaetzlich, dass die in tripo_trees.blend gepackten PNG-Bytes exakt diesen Dateien entsprechen.",
+  "palettes": {
+    "foliage_target": "#4A5426",
+    "bark_target": "#41321D"
+  }
+}

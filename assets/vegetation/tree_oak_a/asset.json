@@ -1,0 +1,24 @@
+{
+  "id": "tree_oak_a",
+  "category": "vegetation",
+  "title": "Wiesen-Eiche A",
+  "description": "Großer breitkroniger Laubbaum für die zentrale Wiese: echte verzweigte Tripo-Holzstruktur mit Wurzelanlauf und unterirdischem Eingrabe-Sockel, dichte gekrümmte 3D-Laubkarten mit weichen Kronennormalen. Gegenüber der Fantasy-Open-World-Quelle sind Laub von sattem Mittelgrün auf oliv-gelbgrün (#4A5426-Zielrichtung zwischen leaf_green und grass_green) und die Rinde Richtung bark #41321D gegradet; Alpha-Laub, Metall 0 und Rauheit ≥ 0,65 sind exportfest verkabelt.",
+  "target_size_m": [
+    11.0,
+    12.0,
+    11.0
+  ],
+  "lod_triangles": [
+    3820,
+    1500,
+    550,
+    160
+  ],
+  "texture_size": 2048,
+  "meshy_class": "B",
+  "material_class": "foliage",
+  "texture_format": "ktx2",
+  "status": "blender_review",
+  "builder": "devin-builder-trees",
+  "review": null
+}

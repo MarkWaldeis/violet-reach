@@ -1,0 +1,48 @@
+{
+  "schema": "fantasy_open_world_import.v1",
+  "source_project": "Fantasy open world",
+  "staging_dir": "${VR_MESHY_DIR}/fantasy_open_world_import",
+  "library_blend": "blender_reference/tripo_trees.blend",
+  "library_sha256": "070d80d34fe5d2052d608b0524f5dd5ad304ed0c983a2ba000655754092e1b00",
+  "template": "V3_TPL_tree_meadow_oak",
+  "template_slug": "tree_meadow_oak",
+  "template_source_glb": "trees_raw/tree_meadow_oak.glb",
+  "template_source_glb_sha256": "7d7eece7264204038136a478ca4a1713420dbb6511a9b1ab6fb4bc5cd75c4c7d",
+  "textures": {
+    "V3_img_bark_tree_meadow_oak_albedo": {
+      "file": "leaf_textures/V3_img_bark_tree_meadow_oak_albedo.png",
+      "sha256": "6d14fcc717c435d7e0fc584574708b9292c72133c27ca265a9e43da28d62985f",
+      "role": "basecolor"
+    },
+    "V3_img_bark_tree_meadow_oak_norm": {
+      "file": "leaf_textures/V3_img_bark_tree_meadow_oak_norm.png",
+      "sha256": "2e3bebd35f75ace5614220ab051402e5ff6886290fd2db510c3dbb3b7f155062",
+      "role": "normal"
+    },
+    "V3_img_bark_tree_meadow_oak_orm": {
+      "file": "leaf_textures/V3_img_bark_tree_meadow_oak_orm.png",
+      "sha256": "681a647634b18c7c87b7418881047e5e2575febd79d36c2266f3e11446ab8906",
+      "role": "occlusion_roughness_metallic"
+    },
+    "V3_img_foliage_tree_meadow_oak_albedo": {
+      "file": "leaf_textures/V3_img_foliage_tree_meadow_oak_albedo.png",
+      "sha256": "212afffd5ec5a4c3c7f902a51643ad796fb06c5b3aa4223e82cc764edee75095",
+      "role": "basecolor"
+    },
+    "V3_img_foliage_tree_meadow_oak_norm": {
+      "file": "leaf_textures/V3_img_foliage_tree_meadow_oak_norm.png",
+      "sha256": "b682647c5e024797cc95d3d331173c0a9f3bba96fa39bceb1986f3121cf8caca",
+      "role": "normal"
+    },
+    "V3_img_foliage_tree_meadow_oak_orm": {
+      "file": "leaf_textures/V3_img_foliage_tree_meadow_oak_orm.png",
+      "sha256": "e4e8d0768e24b098cfbc73ac88eb4b9e774f386de537c834eca1fec6db5c31fc",
+      "role": "occlusion_roughness_metallic"
+    }
+  },
+  "hash_note": "manifest.json im Staging-Ordner hasht nur trees_raw/*.glb und tripo_trees.blend; die leaf_textures-SHA256 hier wurden beim Integrationsaufbau aus den unveraenderten PNG-Dateien berechnet. build.py verifiziert zusaetzlich, dass die in tripo_trees.blend gepackten PNG-Bytes exakt diesen Dateien entsprechen.",
+  "palettes": {
+    "foliage_target": "#4A5426",
+    "bark_target": "#41321D"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "schema": "fantasy_open_world_import.v1",
+  "source_project": "Fantasy open world",
+  "staging_dir": "${VR_MESHY_DIR}/fantasy_open_world_import",
+  "library_blend": "blender_reference/tripo_trees.blend",
+  "library_sha256": "070d80d34fe5d2052d608b0524f5dd5ad304ed0c983a2ba000655754092e1b00",
+  "template": "V3_TPL_bush_meadow_lush",
+  "template_slug": "bush_meadow_lush",
+  "template_source_glb": "trees_raw/bush_meadow_lush.glb",
+  "template_source_glb_sha256": "8ceccc4b87c89b638fd812aaf2c88153d6b0fe9abca1f278493501912e184c18",
+  "textures": {
+    "V3_img_bark_bush_meadow_lush_albedo": {
+      "file": "leaf_textures/V3_img_bark_bush_meadow_lush_albedo.png",
+      "sha256": "e7adbcb096b0052654c1eb1c710c26028ebbfbd96a38e93fc1f054bfe59f0eb9",
+      "role": "basecolor"
+    },
+    "V3_img_bark_bush_meadow_lush_norm": {
+      "file": "leaf_textures/V3_img_bark_bush_meadow_lush_norm.png",
+      "sha256": "35a5503d5bb2842e9e7ecb4d7d54df9aa57cd4d47b75938d2077e1b8b3eeb06c",
+      "role": "normal"
+    },
+    "V3_img_bark_bush_meadow_lush_orm": {
+      "file": "leaf_textures/V3_img_bark_bush_meadow_lush_orm.png",
+      "sha256": "5fd573cd85e372b1b512b379f3c825ecbfb04860f1d17f15d55866b2e0951c51",
+      "role": "occlusion_roughness_metallic"
+    },
+    "V3_img_foliage_bush_meadow_lush_albedo": {
+      "file": "leaf_textures/V3_img_foliage_bush_meadow_lush_albedo.png",
+      "sha256": "b3b48edbbdbe1c58919d5d1105d35ab8b054953d5f3145cd7fea6e7925ba8ec6",
+      "role": "basecolor"
+    },
+    "V3_img_foliage_bush_meadow_lush_norm": {
+      "file": "leaf_textures/V3_img_foliage_bush_meadow_lush_norm.png",
+      "sha256": "7b577bd90a2f65296698c28187f5f2d7d1661e0addaf6a3c34b0c1dedac2312e",
+      "role": "normal"
+    },
+    "V3_img_foliage_bush_meadow_lush_orm": {
+      "file": "leaf_textures/V3_img_foliage_bush_meadow_lush_orm.png",
+      "sha256": "84a06a71df72e0ee7d0b652753c129093138c14e25e58aacac46eb8285b0d909",
+      "role": "occlusion_roughness_metallic"
+    }
+  },
+  "hash_note": "manifest.json im Staging-Ordner hasht nur trees_raw/*.glb und tripo_trees.blend; die leaf_textures-SHA256 hier wurden beim Integrationsaufbau aus den unveraenderten PNG-Dateien berechnet. build.py verifiziert zusaetzlich, dass die in tripo_trees.blend gepackten PNG-Bytes exakt diesen Dateien entsprechen.",
+  "palettes": {
+    "foliage_target": "#4A5426",
+    "bark_target": "#41321D"
+  }
+}
