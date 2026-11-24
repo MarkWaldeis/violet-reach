@@ -11,8 +11,8 @@
 //   instanceColor (rgb) = macro-matched ground tint
 import { Color, DoubleSide, MeshStandardNodeMaterial } from "three/webgpu";
 import {
-  cameraPosition, clamp, color, dot, float, instanceColor, instancedBufferAttribute, mix, positionGeometry,
-  sin, cos, smoothstep, uniform, vec3, abs as tslAbs, attribute,
+  cameraPosition, clamp, dot, float, instanceColor, instancedBufferAttribute, mix, normalGeometry, positionGeometry,
+  sin, cos, smoothstep, transformNormalToView, uniform, vec3, abs as tslAbs, attribute,
 } from "three/tsl";
 import type { InstancedBufferAttribute, Node } from "three/webgpu";
 
@@ -22,7 +22,6 @@ export interface GrassInstanceData {
 }
 import { sunDirection } from "./atmosphere.ts";
 import { worldTime } from "./world-time.ts";
-import { swatch } from "./palette.ts";
 
 export interface GrassMaterialOptions {
   fadeStart?: number;
@@ -30,6 +29,18 @@ export interface GrassMaterialOptions {
   windStrength?: number;
   windSpeed?: number;
 }
+
+// Colour tuning constants — shared between the shader pipeline and the test probe.
+// Hue correction multipliers applied to the (externally auto-multiplied) linear macro tint:
+// green boosted, blue compressed → the olive macro tint shifts to fresh saturated meadow green.
+const LUSH_K = [0.82, 1.38, 0.60] as const;
+const STRAW_K = [1.12, 1.02, 0.45] as const;
+/** tip warming: red rises relative to green, blue stays compressed (sun-lit yellow-green tips). */
+const TIP_WARM = [1.48, 1.30, 0.82] as const;
+/** root brightness fraction of mid brightness. */
+const ROOT_SHADE = 0.34;
+/** representative linear-light meadow macro tint (srgb ~#686a43), for documentation/probe. */
+const REFERENCE_TINT = [0.134, 0.144, 0.054] as const;
 
 export function grassMaterial(instanceData?: GrassInstanceData, options: GrassMaterialOptions = {}) {
   const fadeStart = uniform(float(options.fadeStart ?? 70));
@@ -57,7 +68,7 @@ export function grassMaterial(instanceData?: GrassInstanceData, options: GrassMa
   // Per-instance yaw is derived deterministically from the instance hash (statistically
   // identical to a CPU-side random yaw, and the matrix rotation never reaches the shader).
   const distFade = smoothstep(fadeStart, fadeEnd, camDist).oneMinus();
-  const widthBoost = mix(float(1), float(1.30), smoothstep(14, 72, camDist)).mul(aShade.w);
+  const widthBoost = mix(float(1.22), float(1.45), smoothstep(14, 72, camDist)).mul(aShade.w);
   const lx = positionGeometry.x.mul(widthBoost).mul(distFade);
   const ly = positionGeometry.y.mul(aShade.z).mul(distFade);
   const lz = positionGeometry.z.mul(widthBoost).mul(distFade);
@@ -83,34 +94,77 @@ export function grassMaterial(instanceData?: GrassInstanceData, options: GrassMa
     instPos.z.add(rz).add(dz),
   );
 
-  // fragment: root-to-tip gradient between macro-matched base tint and dry/lush tip colour
-  const tint = instanceColor.rgb;
+  // fragment: root-to-tip gradient shaping. IMPORTANT: the macro tint is NOT multiplied
+  // in here — three.js already multiplies diffuseColor by instanceColor automatically
+  // (NodeMaterial.setupDiffuseColor, because mesh.instanceColor is set on the mesh).
+  // The tint arrives as proper linear colour (CPU-linearised in grass-system.ts).
+  // This node therefore only supplies hue correction + gradient shape + variation.
   const dry = aShade.y;
-  const lushTip = color(swatch("grass_green"));
-  const dryTip = color(swatch("grass_dry"));
-  const tipCol = mix(lushTip, dryTip, dry);
   const hclamped = clamp(hFrac, 0, 1);
-  const grad = mix(tint.mul(0.42), tint.mul(1.18).mul(mix(vec3(1, 1, 1), tipCol, 0.55)), smoothstep(0.05, 0.95, hclamped));
-  // per-instance variation + canopy shadow + macro AO baked into tint already at generation
-  const alb = grad.mul(mix(0.92, 1.08, bladeHash)).mul(aShade.x.mul(0.55).add(0.45));
+
+  // hue correction: the olive macro tint is shifted toward fresh saturated meadow green
+  // (green boosted, blue compressed — constant multipliers commute with the external tint).
+  // dry instances lean toward golden straw instead.
+  const lushK = vec3(...LUSH_K);
+  const strawK = vec3(...STRAW_K);
+  const hueK = mix(lushK, strawK, dry);
+
+  // two-segment brightness gradient: shaded roots, vivid mid, sun-lit yellow-green tips
+  // (red rises relative to green toward the tip, blue stays compressed — fresh straw-lit tips
+  // instead of washed-out pale ones)
+  const rootToMid = mix(float(ROOT_SHADE), float(1.0), smoothstep(0.0, 0.45, hclamped));
+  const tipWarm = mix(vec3(1, 1, 1), vec3(...TIP_WARM), smoothstep(0.42, 1.0, hclamped));
+
+  // across-blade shading: edges clearly darker, centre catches the light (plasticity)
+  const across = tslAbs(uv.x.sub(0.5)).mul(2);
+  const acrossShade = across.oneMinus().mul(0.18).add(0.88);
+
+  // per-blade variation: brightness + a subtle dry-golden lean on some blades (meadow variance)
+  const hashVar = mix(float(0.86), float(1.14), bladeHash);
+  const hueVarK = mix(hueK, strawK, bladeHash.mul(0.16));
+
+  // per-instance variation + canopy shadow
+  const alb = hueVarK.mul(rootToMid).mul(tipWarm).mul(acrossShade)
+    .mul(hashVar).mul(aShade.x.mul(0.55).add(0.45));
   material.colorNode = alb;
 
-  // soft up-tilted normals for coherent meadow lighting (mix toward up by height)
-  material.normalNode = vec3(0, 1, 0);
+  // Meadow lighting normals. NOTE: normalNode is interpreted in VIEW space (three.js
+  // materialNormal semantics) — a constant vec3(0,1,0) here would mean screen-space up,
+  // not world up, so lighting would wrongly depend on camera orientation. World-up is
+  // therefore converted properly. A modest share of the per-blade geometry normal
+  // (rotated by the same instance yaw as the positions) is mixed in toward the tips:
+  // keeps the coherent meadow look but gives individual blades plastic depth.
+  const nx = normalGeometry.x.mul(cy).sub(normalGeometry.z.mul(sy));
+  const nz = normalGeometry.x.mul(sy).add(normalGeometry.z.mul(cy));
+  const bladeNrm = vec3(nx, normalGeometry.y, nz).normalize();
+  const nrmMix = hFrac.mul(0.18).add(0.10);
+  const worldNrm = mix(vec3(0, 1, 0), bladeNrm, nrmMix).normalize();
+  material.normalNode = transformNormalToView(worldNrm);
 
-  // warm backlight toward the sun at blade tips (translucency), strongest in contre-jour
+  // warm backlight toward the sun at blade tips (translucency), strongest in contre-jour.
+  // Emissive bypasses the automatic instanceColor multiply, so the tint is applied here manually.
   const sunDot = clamp(dot(vec3(sunDirection), vec3(0, 1, 0)), 0, 1);
-  material.emissiveNode = alb.mul(vec3(1.10, 1.16, 0.72)).mul(hclamped.mul(hclamped)).mul(sunDot).mul(0.30);
+  material.emissiveNode = instanceColor.rgb.mul(alb).mul(vec3(1.08, 1.14, 0.70)).mul(hclamped.mul(hclamped)).mul(sunDot).mul(0.16);
 
   material.roughnessNode = mix(float(0.92), float(0.62), hclamped);
   return material;
 }
 
-/** Palette probe used by tests: confirms grass tones stay inside STYLE.md hues. */
+/**
+ * Palette probe used by tests: representative final blade colours (linear light) of the
+ * actual shader pipeline at the reference meadow tint — confirms grass tones stay inside
+ * STYLE.md hues. root = shaded blade foot, lushTip/dryTip = sun-lit blade tips.
+ */
 export function grassPaletteProbe() {
+  const scale = (k: readonly number[], brightness: number, warm: readonly number[] = [1, 1, 1]) =>
+    new Color(
+      REFERENCE_TINT[0] * k[0] * warm[0] * brightness,
+      REFERENCE_TINT[1] * k[1] * warm[1] * brightness,
+      REFERENCE_TINT[2] * k[2] * warm[2] * brightness,
+    );
   return {
-    root: new Color(swatch("leaf_shadow")).multiplyScalar(2.2),
-    lushTip: new Color(swatch("grass_green")),
-    dryTip: new Color(swatch("grass_dry")),
+    root: scale(LUSH_K, ROOT_SHADE),
+    lushTip: scale(LUSH_K, 1.0, TIP_WARM),
+    dryTip: scale(STRAW_K, 1.0, TIP_WARM),
   };
 }

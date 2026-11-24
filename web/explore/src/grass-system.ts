@@ -117,7 +117,10 @@ export class GrassSystem {
         hs * scale,
         scale,
       );
-      tint.push(s.tintR, s.tintG, s.tintB);
+      // macro bytes are sRGB-encoded; the terrain shader samples them with an SRGBColorSpace
+      // texture (auto-linearised), so the instance tint must be linearised here as well —
+      // otherwise blades render raw-sRGB-as-linear (bright but badly desaturated/muddy).
+      tint.push(srgbToLinear(s.tintR), srgbToLinear(s.tintG), srgbToLinear(s.tintB));
       placed++;
       this.stats.placed++;
     }
@@ -156,6 +159,11 @@ export class GrassSystem {
     this.group.add(mesh);
     this.stats.instances += placed;
   }
+}
+
+/** sRGB-encoded byte fraction (0..1) → linear-light fraction, matching the GPU's SRGBColorSpace decode. */
+export function srgbToLinear(c: number): number {
+  return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
 }
 
 /** pure helpers exposed for tests */

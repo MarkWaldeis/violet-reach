@@ -4,8 +4,8 @@ Diese Datei reicht, damit eine neue Session nahtlos weitermacht. Nach jedem Arbe
 
 ## Aktuell
 
-- Zweig: `grafik/next-level` — letzter Commit **`b0b5494`** "Phase 2 p2-r16 rendering work + Phase 4.1 GPU grass foundation"
-- Phase: **Phase 2 fast abgeschlossen** — Rendering von Antigravity reviewt, verifiziert und committed; Bench p2-r16 bestanden. **Phase 4.1 GPU-Gras Fundament implementiert** (noch nicht visuell verifiziert!).
+- Zweig: `grafik/next-level` — letzter Commit **`f7bb548`** "Grass: manual instance transform in positionNode — fixes invisible grass"
+- Phase: **Phase 2 fast abgeschlossen** — Bench p2-r16 bestanden. **Phase 4.1 GPU-Gras RENDERT + Farbtuning ABGESCHLOSSEN** (saftiges Wiesengrün, siehe unten — Doppeltint/sRGB/normalNode-Fallen). Parallel: 3 Felsen approved+werden exportiert/platziert, 6 Fantasy-Bäume in Revision nach Gate-Review.
 - Verifikation: **89/89 Explorer-Tests grün** (84 alt + 5 Gras), `tsc --noEmit` sauber, `vr.py check` grün (34 Assets).
 - Bench p2-r16 (sauberer Lauf, unbeladene Maschine): ground 59,79 FPS mean / 47,71 1%-low, flight 59,94 / 59,48, 0 Budget-Verletzungen, max 245 Draws, 896 MiB Textur. Der ursprüngliche r16-Fail (29er 1%-lows) war Load-Rauschen paralleler Blender-Jobs.
 - Meshy-Kostenbuch: **369 / 2000 Credits** verbraucht (Antigravity +228 für 10 Klasse-B-Modelle, 2 Bilder, 2 Klasse-A-Multiview), Kontostand 2791. Stopp bei 1800.
@@ -22,6 +22,24 @@ Diese Datei reicht, damit eine neue Session nahtlos weitermacht. Nach jedem Arbe
 4. **Capture-Lauf p2-r16 NEU fahren** (alter Lauf durch HMR kontaminiert, G1–G7/F1 evtl. noch valide in `devin-screenshotsiolet-reach\p2-r16\`): `node tools/qa/capture.mjs --run p2-r16` + `bench.mjs`, aber erst NACH Gras-Stabilisierung, sonst doppelt Arbeit.
 5. **3 blinde Reviews** der finalen Lesezeichen (G1, G5, F1, F2, H1 >= 8) -> Phase-2-Sign-off.
 6. **Danach:** genehmigte Assets exportieren + platzieren, Fantasy-Bäume gegen alte broadleaf-Bäume tauschen, Gras alte `grass_tuft_a`-Instanzen ersetzen oder ergänzen (A/B-Vergleich), Phasen 5-6.
+
+### GRAS-DURCHBRUCH 2025 — three.js Instancing-Semantik (WICHTIGSTES Wissen dieser Phase)
+
+**Root cause des unsichtbaren Grases:** In `NodeMaterial.setupPosition` (three.js source) läuft `instancedMesh(object)` ZUERST (positionLocal = instanceMatrix * positionLocal), danach `if (material.positionNode) positionLocal.assign(positionNode)` — ein custom positionNode **überschreibt die Instanzierung vollständig**. Alle 38.750 Halme renderten gestapelt am Zell-Ursprung (Weltnullpunkt). Diagnose-Kette: Rot-Test mit MeshBasicMaterial (kein positionNode) → Gras sichtbar an korrekten Positionen; positionNode=null-Klon des TSL-Materials → sichtbar; also positionNode der Übeltäter; three.js-Source bestätigte die Overwrite-Semantik.
+
+**Fix-Architektur (committed f7bb548):** komplette Instanz-Transformation manuell im positionNode — Yaw deterministisch aus `aInfo.w` (instance-hash) abgeleitet (`yaw = hash * 6.2831`, Rotation in xz), Width/Height-Skalierung aus aShade, Weltposition aus `aInfo.xyz` addiert, Wind danach. Attribute MÜSSEN per `instancedBufferAttribute(attr, 'vec4')` mit dem echten Attribut-Objekt gebunden werden (nicht namensbasiertes `attribute()`) → pro Zelle eigenes Material (`grassMaterial({aInfo, aShade}, …)` in grass-system.ts). Instanzmatrizen bleiben reine Translationen und sind nur noch für Frustum-Culling relevant.
+
+**Frustum-Culling-Falle (zweiter Bug davor):** `InstancedMesh.computeBoundingSphere` transformiert die Geometry-Sphäre mit den Instanzmatrizen — manuell in Weltkoordinaten gebaute boundingSphere wurde dadurch doppelt verschoben und alles gecullt. Fix: korrekte lokale Geometry-Bounds, keine manuelle Welt-Sphäre.
+
+**Weitere Fallen:** aInfo/aShade müssen `InstancedBufferAttribute` sein (nicht BufferAttribute). Debug-Hooks noch im Code: `window.__grass` in main.ts:110, `__gdbg` in main.ts:273ff, `debugBasicMaterial()` in grass-system.ts:92, div. `*.tmp.mjs` in web/explore — vor finalem Capture aufräumen. Test-Runner ist `node --test` (npm test), NICHT vitest.
+
+**Visueller Stand nach Fix:** Gras rendert und bedeckt die Wiese. **Farbtuning fertig (grass-tune7.png, Vergleich grass-before-after.png):** saftiges Frühlingswiesen-Grün mit gelbgrünen Spitzen, dunklen Wurzeln, pro-Halm-Variation — harmonisch zum olivfarbenen Boden, aber erkennbar frischer/heller. Perf-Grobmessung bei G3: +180-230k Tris, +15-24 Draws durch Gras.
+
+**GRAS-FARBEN — drei versteckte Fallen (Root causes des schlammig-braunen Bildes):**
+1. **Doppelter Tint:** three.js `NodeMaterial.setupDiffuseColor` multipliziert diffuseColor AUTOMATISCH mit `instanceColor`, sobald `mesh.instanceColor` gesetzt ist — das Material multiplizierte den Tint zusätzlich manuell → tint², extrem dunkel. colorNode darf den Tint daher NIE selbst enthalten (nur Hue-Korrektur/Gradient/Variation); Emissive wird dagegen NICHT auto-getintet und braucht den manuellen Faktor.
+2. **sRGB vs. linear:** die Makro-Tint-Bytes sind sRGB-kodiert; der Terrain-Shader bekommt sie per SRGBColorSpace-Textur auto-linearisiert, der CPU-Sampler aber reichte Rohwerte durch → entsättigtes Oliv. Fix: `srgbToLinear()` beim Befüllen des tint-Arrays in grass-system.ts.
+3. **normalNode ist VIEW-Space:** eine Konstante vec3(0,1,0) bedeutet Bildschirm-oben, nicht Welt-oben (Beleuchtung hing von der Kamera!). Fix: Welt-up + yaw-rotierte Geometrie-Normalen (10-28% Höhenanteil) per `transformNormalToView` — gibt zusätzlich plastische Tiefenwirkung pro Halm.
+Empirischer Nachweis für 1: colorNode=reines Weiß → Halme rendern im blassen Tint (grass-tune2-diagwhite.png). Hue-Pipeline: hueK (lush→oliv-frisch (0.82,1.38,0.60), straw bei dry) × Wurzel-zu-Spitze-Gradient (0.34→1.0) × Spitzen-Wärmung (1.48,1.30,0.82) × Quer-Schattierung × Hash-Variation — Konstanten modulweit in grass-material.ts, Probe grassPaletteProbe spiegelt Ist-Farben.
 
 ### Gras-System Architektur (Phase 4.1, committed, unverifiziert)
 
