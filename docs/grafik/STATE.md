@@ -4,7 +4,7 @@ Diese Datei reicht, damit eine neue Session nahtlos weitermacht. Nach jedem Arbe
 
 ## Aktuell
 
-- Zweig: `grafik/next-level` — letzter Commit **`f7bb548`** "Grass: manual instance transform in positionNode — fixes invisible grass"
+- Zweig: `grafik/next-level` — letzter Commit **`8045b61`** "Remove grass debug instrumentation" (Kette: f7bb548 Gras-Fix → 8e86404 Felsen platziert → a413710 Gras-Farbtuning → 8045b61 Cleanup)
 - Phase: **Phase 2 fast abgeschlossen** — Bench p2-r16 bestanden. **Phase 4.1 GPU-Gras RENDERT + Farbtuning ABGESCHLOSSEN** (saftiges Wiesengrün, siehe unten — Doppeltint/sRGB/normalNode-Fallen). Parallel: 3 Felsen approved+werden exportiert/platziert, 6 Fantasy-Bäume in Revision nach Gate-Review.
 - Verifikation: **89/89 Explorer-Tests grün** (84 alt + 5 Gras), `tsc --noEmit` sauber, `vr.py check` grün (34 Assets).
 - Bench p2-r16 (sauberer Lauf, unbeladene Maschine): ground 59,79 FPS mean / 47,71 1%-low, flight 59,94 / 59,48, 0 Budget-Verletzungen, max 245 Draws, 896 MiB Textur. Der ursprüngliche r16-Fail (29er 1%-lows) war Load-Rauschen paralleler Blender-Jobs.
@@ -30,6 +30,8 @@ Diese Datei reicht, damit eine neue Session nahtlos weitermacht. Nach jedem Arbe
 **Fix-Architektur (committed f7bb548):** komplette Instanz-Transformation manuell im positionNode — Yaw deterministisch aus `aInfo.w` (instance-hash) abgeleitet (`yaw = hash * 6.2831`, Rotation in xz), Width/Height-Skalierung aus aShade, Weltposition aus `aInfo.xyz` addiert, Wind danach. Attribute MÜSSEN per `instancedBufferAttribute(attr, 'vec4')` mit dem echten Attribut-Objekt gebunden werden (nicht namensbasiertes `attribute()`) → pro Zelle eigenes Material (`grassMaterial({aInfo, aShade}, …)` in grass-system.ts). Instanzmatrizen bleiben reine Translationen und sind nur noch für Frustum-Culling relevant.
 
 **Frustum-Culling-Falle (zweiter Bug davor):** `InstancedMesh.computeBoundingSphere` transformiert die Geometry-Sphäre mit den Instanzmatrizen — manuell in Weltkoordinaten gebaute boundingSphere wurde dadurch doppelt verschoben und alles gecullt. Fix: korrekte lokale Geometry-Bounds, keine manuelle Welt-Sphäre.
+
+**Gras-Farb-Pipeline-Fallen (a413710):** (1) three.js r186 multipliziert diffuse automatisch mit instanceColor sobald mesh.instanceColor gesetzt — colorNode darf den Tint NICHT nochmal enthalten (sonst tint²). (2) Makro-Bytes sind sRGB-kodiert — CPU-Sampler muss srgbToLinear() anwenden bevor Werte in lineare Renderpipeline gehen (GPU-Texturen mit SRGBColorSpace linearisieren automatisch, Buffer-Attribute nicht). (3) material.normalNode wird als VIEW-Space interpretiert — vec3(0,1,0) ist Bildschirm-oben nicht Welt-oben; für Welt-Normalen transformieren. Finale Gras-Farbwerte: hueK lush (0.82,1.38,0.60)/straw (1.12,1.02,0.45) × Wurzel→Mitte 0.34→1.0 × Spitzen-Wärmung (1.48,1.30,0.82). Memory-Repo hat Details.
 
 **Weitere Fallen:** aInfo/aShade müssen `InstancedBufferAttribute` sein (nicht BufferAttribute). Debug-Hooks noch im Code: `window.__grass` in main.ts:110, `__gdbg` in main.ts:273ff, `debugBasicMaterial()` in grass-system.ts:92, div. `*.tmp.mjs` in web/explore — vor finalem Capture aufräumen. Test-Runner ist `node --test` (npm test), NICHT vitest.
 
