@@ -42,10 +42,10 @@ const loadedClasses = new Map<string, LoadedDetailClass>();
 let manifestsPromise: Promise<void> | null = null;
 const patchedCache = new WeakMap<Material, Map<string, Material>>();
 
-/** Foliage-class assets may mix leaf cards with woody primitives; only the leaf materials receive foliage microdetail. */
+/** Foliage-class assets may mix leaf cards with woody primitives; leaves receive foliage detail, woody parts bark detail. */
 export function detailClassForMaterial(assetClass: string | undefined, materialName = "") {
   if (assetClass !== "foliage") return assetClass;
-  return /(?:^|[^a-z0-9])(?:bark|trunk|wood)(?:[^a-z0-9]|$)/i.test(materialName) ? undefined : assetClass;
+  return /(?:^|[^a-z0-9])(?:bark|trunk|wood)(?:[^a-z0-9]|$)/i.test(materialName) ? "bark" : assetClass;
 }
 
 function configureDetailTexture(tex: Texture): Texture {
@@ -107,6 +107,7 @@ export async function prepareDetailMapsForAssets(assetIds: string[]): Promise<vo
   for (const id of assetIds) {
     const cls = assetClassMap.get(id);
     if (cls && detailMetaMap.has(cls) && !loadedClasses.has(cls)) needed.add(cls);
+    if (cls === "foliage" && detailMetaMap.has("bark") && !loadedClasses.has("bark")) needed.add("bark");
   }
   if (!needed.size) return;
 
@@ -133,7 +134,7 @@ export async function prepareDetailMapsForAssets(assetIds: string[]): Promise<vo
 /**
  * Applies camera-faded world-space triplanar detail normal & roughness onto PBR asset materials
  * matching an entry's `material_class` (`3..22 m`), preserving all base PBR maps & alpha cutout state.
- * In mixed foliage assets, bark/trunk/wood materials keep their baked surface instead of leaf-scale detail.
+ * In mixed foliage assets, bark/trunk/wood materials use bark-scale instead of leaf-scale detail.
  */
 export function applyAssetDetailMap(material: Material, assetId: string): Material {
   const cls = detailClassForMaterial(assetClassMap.get(assetId), material.name);
