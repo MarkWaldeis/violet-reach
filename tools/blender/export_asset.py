@@ -1,8 +1,8 @@
 """blender -b <asset>.blend --python tools/blender/export_asset.py -- <asset_dir> <staging_dir>
 
 Turns the high-detail SOURCE into the game asset: LOD0 is decimated from the source and gets
-base colour, normal, roughness, occlusion and emission baked from it; lower LODs are decimated
-from LOD0 and share its textures. Writes <staging_dir>/<id>.raw.glb with nodes <id>_LOD0..n.
+base colour, normal, roughness, occlusion and emission baked from it; lower LODs are rebuilt or
+decimated from LOD0 and share its textures. Writes <staging_dir>/<id>.raw.glb with nodes <id>_LOD0..n.
 """
 import math
 import os
@@ -13,13 +13,20 @@ import bmesh  # noqa: E402
 import bpy  # noqa: E402
 import numpy as np  # noqa: E402
 import vrlib  # noqa: E402
-from canopy_lod import canopy_textures, mark_canopy, simplify_canopy  # noqa: E402
+from canopy_lod import (  # noqa: E402
+    canopy_alpha_cutoff as source_canopy_alpha_cutoff,
+    canopy_textures,
+    mark_canopy,
+    simplify_canopy,
+)
 
 asset_dir, export_dir = map(os.path.abspath, vrlib.script_args())
 meta = vrlib.load_meta(asset_dir)
 asset_id = meta["id"]
 tex = int(meta.get("texture_size", 2048))
 lod_tris = meta["lod_triangles"]
+canopy_alpha_cutoff = float(meta.get("canopy_alpha_cutoff", meta.get("alpha_cutoff", .35)))
+canopy_atlas_supersample = int(meta.get("canopy_atlas_supersample", 4))
 scene = bpy.context.scene
 vrlib.use_cycles_cpu(scene, 24)
 scene.cycles.use_denoising = False
@@ -360,6 +367,10 @@ if lod0.data.validate(verbose=False, clean_customdata=False):
 meshy_b = meta.get("meshy_class") == "B"
 decimate(lod0, lod_tris[0], preserve_uvs=meshy_b)
 source_materials = list(lod0.data.materials)
+if "canopy_alpha_cutoff" not in meta and "alpha_cutoff" not in meta:
+    extracted_cutoff = source_canopy_alpha_cutoff(source_materials)
+    if extracted_cutoff is not None:
+        canopy_alpha_cutoff = extracted_cutoff
 if meshy_b:
     emission_strength = meshy_finish(lod0, tex)
     images = {}
@@ -478,7 +489,9 @@ else:
 
 lods = [lod0]
 for i, target in enumerate(lod_tris[1:], start=1):
-    source = lods[-1] if has_canopy and i > 1 else lod0
+    # Canopy cards are projection impostors, not meshes that simplify well a second time.
+    # Always rebuild them from LOD0 so LOD2/3 do not accumulate LOD1's alpha and PCA loss.
+    source = lod0
     lod = source.copy()
     lod.data = source.data.copy()
     lod.name = f"{asset_id}_LOD{i}"
@@ -488,7 +501,9 @@ for i, target in enumerate(lod_tris[1:], start=1):
     if has_canopy:
         colour = bpy.data.images.get(source.get("canopy_albedo", "")) or images.get("basecolor")
         occlusion = bpy.data.images.get(source.get("canopy_occlusion", "")) or images.get("occlusion")
-    if not has_canopy or colour is None or not simplify_canopy(lod, target, decimate, colour, tex, planes=1 if i == 1 else 3, occlusion=occlusion):
+    if not has_canopy or colour is None or not simplify_canopy(
+            lod, target, decimate, colour, tex, planes=2 if i == 1 else 3, occlusion=occlusion,
+            alpha_cutoff=canopy_alpha_cutoff, supersample=canopy_atlas_supersample):
         decimate(lod, target, preserve_uvs=meshy_b)
     lods.append(lod)
 

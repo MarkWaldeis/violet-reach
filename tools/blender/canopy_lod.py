@@ -53,6 +53,20 @@ def canopy_textures(materials):
     return pick(albedo), pick(occlusion)
 
 
+def canopy_alpha_cutoff(materials):
+    """Return the shared alpha-cutout threshold of foliage materials, if unambiguous."""
+    values = set()
+    for index in foliage_indices(materials):
+        material = materials[index]
+        bsdf = material.node_tree.nodes.get("Principled BSDF") if material.node_tree else None
+        alpha = bsdf.inputs["Alpha"] if bsdf else None
+        for link in alpha.links if alpha and alpha.is_linked else []:
+            node = link.from_node
+            if node.type == "MATH" and node.operation == "GREATER_THAN":
+                values.add(round(float(node.inputs[1].default_value), 6))
+    return next(iter(values)) if len(values) == 1 else None
+
+
 def mark_canopy(obj, materials):
     leaves = foliage_indices(materials)
     if not leaves:
@@ -86,9 +100,81 @@ def restore_vertical_extent(mesh, low, high):
     mesh.update()
 
 
-def simplify_canopy(obj, target, simplify_wood, source_image, texture_size, planes=3, occlusion=None):
+def _orthonormal_basis(rows):
+    """Complete PCA/SVD rows to a deterministic orthonormal 3D basis."""
+    basis = []
+
+    def add(vector):
+        vector = np.array(vector, dtype=float)
+        for existing in basis:
+            vector -= np.dot(vector, existing) * existing
+        length = np.linalg.norm(vector)
+        if length <= 1e-9:
+            return False
+        basis.append(vector / length)
+        return len(basis) == 3
+
+    for row in rows:
+        if add(row):
+            break
+    for axis in np.eye(3):
+        if len(basis) == 3:
+            break
+        add(axis)
+    basis = np.array(basis)
+    for index in range(3):
+        pivot = np.argmax(np.abs(basis[index]))
+        if basis[index, pivot] < 0:
+            basis[index] *= -1
+    if np.linalg.det(basis) < 0:
+        basis[2] *= -1
+    return basis
+
+
+def _principal_basis(points):
+    points = np.asarray(points, dtype=float)
+    centred = points - points.mean(axis=0)
+    try:
+        _, _, rows = np.linalg.svd(centred, full_matrices=False)
+    except np.linalg.LinAlgError:
+        rows = []
+    return _orthonormal_basis(rows)
+
+
+def _plane_axes(points, cards):
+    """Return projection axes for one, two, or three impostor cards.
+
+    The two-card mode uses the PCA main plane and a second plane perpendicular to it.
+    Both planes contain the longest PCA axis, so the support card follows the elongated
+    direction of the patch instead of becoming an unrelated axis-aligned cross.
+    """
+    if cards in (1, 2):
+        basis = _principal_basis(points)
+        if cards == 1:
+            return [basis[[0, 1]]]
+        return [basis[[0, 1]], basis[[0, 2]]]
+    return [np.eye(3)[[0, 1]], np.eye(3)[[0, 2]], np.eye(3)[[1, 2]]]
+
+
+def _pad_degenerate_span(low, high, points):
+    """Keep mathematically valid card quads when a projection axis has zero thickness."""
+    extent = float(np.ptp(points, axis=0).max()) if len(points) else 0.0
+    minimum = max(extent * 1e-4, 1e-6)
+    for axis in range(2):
+        if high[axis] - low[axis] < minimum:
+            middle = (high[axis] + low[axis]) / 2
+            low[axis] = middle - minimum / 2
+            high[axis] = middle + minimum / 2
+    return low, high
+
+
+def simplify_canopy(obj, target, simplify_wood, source_image, texture_size, planes=3, occlusion=None,
+                    alpha_cutoff=.35, supersample=4):
     if target < 32:
         raise ValueError("Canopy LOD needs at least 32 triangles")
+    planes = int(planes)
+    if planes not in (1, 2, 3):
+        raise ValueError("Canopy LOD planes must be 1, 2 or 3")
     mesh = obj.data
     attribute = mesh.attributes.get(CANOPY_ATTRIBUTE)
     if attribute is None or not any(value.value for value in attribute.data):
@@ -131,7 +217,7 @@ def simplify_canopy(obj, target, simplify_wood, source_image, texture_size, plan
     centres = np.array([leaf[0] for leaf in leaves])
     origin = centres.min(axis=0)
     wood_target = max(12, int(target * .2))
-    cards = 3
+    cards = planes
 
     def partition(size):
         if size == 0:
@@ -179,13 +265,10 @@ def simplify_canopy(obj, target, simplify_wood, source_image, texture_size, plan
     mesh = obj.data
     restore_vertical_extent(mesh, wood_low, wood_high)
     wood_triangles = sum(len(face.vertices) - 2 for face in mesh.polygons)
-    if planes == 1 and len(leaves) * 2 <= target - wood_triangles:
-        cards = 1
     remaining = target - wood_triangles
+    while cards > 1 and remaining // (2 * cards) < 1 and remaining >= 2:
+        cards -= 1
     limit = remaining // (2 * cards)
-    if limit < 1 and cards > 1 and remaining >= 2:
-        cards = 1
-        limit = remaining // 2
     if limit < 1:
         limit = 1
     groups = partition(0)
@@ -204,20 +287,16 @@ def simplify_canopy(obj, target, simplify_wood, source_image, texture_size, plan
                for face in mesh.polygons]
     smooth = [face.use_smooth for face in mesh.polygons]
     wood_faces = len(faces)
-    atlas = FoliageAtlas(obj.name + "_foliage", source_image, texture_size, len(groups) * cards, occlusion)
+    atlas = FoliageAtlas(obj.name + "_foliage", source_image, texture_size, len(groups) * cards, occlusion,
+                         supersample=supersample, alpha_cutoff=alpha_cutoff)
     for group in groups:
         points = np.concatenate([leaf[1] for leaf in group])
         centre = (points.min(axis=0) + points.max(axis=0)) / 2
-        if cards == 1:
-            _, _, basis = np.linalg.svd(points - centre, full_matrices=False)
-            if np.cross(basis[0], basis[1])[2] < 0:
-                basis[1] *= -1
-            axes = [basis[:2]]
-        else:
-            axes = [np.eye(3)[[0, 1]], np.eye(3)[[0, 2]], np.eye(3)[[1, 2]]]
+        axes = _plane_axes(points, cards)
         for basis in axes:
             projected = (points - centre) @ basis.T
             low, high = projected.min(axis=0), projected.max(axis=0)
+            low, high = _pad_degenerate_span(low, high, points)
             offset = len(vertices)
             for x, y in [(low[0], low[1]), (high[0], low[1]), (high[0], high[1]), (low[0], high[1])]:
                 vertices.append(tuple(centre + x * basis[0] + y * basis[1]))
