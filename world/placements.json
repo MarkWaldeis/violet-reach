@@ -43319,7 +43319,7 @@
       }
     },
     {
-      "asset": "shrub_round_a",
+      "asset": "bush_lush_a",
       "scatter": {
         "seed": 24160,
         "count": 4,
@@ -43370,8 +43370,8 @@
         "min_height_above_water": 6,
         "max_height_above_water": 240,
         "scale": [
-          0.7,
-          1.22
+          0.72,
+          0.98
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -43439,7 +43439,7 @@
       }
     },
     {
-      "asset": "shrub_round_a",
+      "asset": "bush_lush_a",
       "scatter": {
         "seed": 24162,
         "count": 4,
@@ -43490,8 +43490,8 @@
         "min_height_above_water": 6,
         "max_height_above_water": 240,
         "scale": [
-          0.7,
-          1.22
+          0.72,
+          0.98
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -43559,7 +43559,7 @@
       }
     },
     {
-      "asset": "shrub_round_a",
+      "asset": "bush_lush_a",
       "scatter": {
         "seed": 24164,
         "count": 4,
@@ -43610,8 +43610,8 @@
         "min_height_above_water": 6,
         "max_height_above_water": 240,
         "scale": [
-          0.7,
-          1.22
+          0.72,
+          0.98
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -43679,7 +43679,7 @@
       }
     },
     {
-      "asset": "shrub_round_a",
+      "asset": "bush_lush_a",
       "scatter": {
         "seed": 24166,
         "count": 4,
@@ -43730,8 +43730,8 @@
         "min_height_above_water": 6,
         "max_height_above_water": 240,
         "scale": [
-          0.7,
-          1.22
+          0.72,
+          0.98
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -43799,7 +43799,7 @@
       }
     },
     {
-      "asset": "shrub_round_a",
+      "asset": "bush_lush_a",
       "scatter": {
         "seed": 24168,
         "count": 4,
@@ -43850,8 +43850,8 @@
         "min_height_above_water": 6,
         "max_height_above_water": 240,
         "scale": [
-          0.7,
-          1.22
+          0.72,
+          0.98
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -43919,7 +43919,7 @@
       }
     },
     {
-      "asset": "shrub_round_a",
+      "asset": "bush_lush_a",
       "scatter": {
         "seed": 24170,
         "count": 4,
@@ -43970,8 +43970,8 @@
         "min_height_above_water": 6,
         "max_height_above_water": 240,
         "scale": [
-          0.7,
-          1.22
+          0.72,
+          0.98
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -44039,7 +44039,7 @@
       }
     },
     {
-      "asset": "shrub_round_a",
+      "asset": "bush_lush_a",
       "scatter": {
         "seed": 24172,
         "count": 4,
@@ -44090,8 +44090,8 @@
         "min_height_above_water": 6,
         "max_height_above_water": 240,
         "scale": [
-          0.7,
-          1.22
+          0.72,
+          0.98
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -44159,7 +44159,7 @@
       }
     },
     {
-      "asset": "shrub_round_a",
+      "asset": "bush_lush_a",
       "scatter": {
         "seed": 24174,
         "count": 4,
@@ -44210,8 +44210,8 @@
         "min_height_above_water": 6,
         "max_height_above_water": 240,
         "scale": [
-          0.7,
-          1.22
+          0.72,
+          0.98
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -44279,7 +44279,7 @@
       }
     },
     {
-      "asset": "shrub_round_a",
+      "asset": "bush_lush_a",
       "scatter": {
         "seed": 24176,
         "count": 4,
@@ -44330,8 +44330,8 @@
         "min_height_above_water": 6,
         "max_height_above_water": 240,
         "scale": [
-          0.7,
-          1.22
+          0.72,
+          0.98
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -44399,7 +44399,7 @@
       }
     },
     {
-      "asset": "shrub_round_a",
+      "asset": "bush_lush_a",
       "scatter": {
         "seed": 24178,
         "count": 4,
@@ -44450,8 +44450,8 @@
         "min_height_above_water": 6,
         "max_height_above_water": 240,
         "scale": [
-          0.7,
-          1.22
+          0.72,
+          0.98
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -44519,7 +44519,7 @@
       }
     },
     {
-      "asset": "shrub_round_a",
+      "asset": "bush_lush_a",
       "scatter": {
         "seed": 24180,
         "count": 4,
@@ -44570,8 +44570,8 @@
         "min_height_above_water": 6,
         "max_height_above_water": 240,
         "scale": [
-          0.7,
-          1.22
+          0.72,
+          0.98
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -44639,7 +44639,7 @@
       }
     },
     {
-      "asset": "shrub_round_a",
+      "asset": "bush_lush_a",
       "scatter": {
         "seed": 24182,
         "count": 4,
@@ -44690,8 +44690,8 @@
         "min_height_above_water": 6,
         "max_height_above_water": 240,
         "scale": [
-          0.7,
-          1.22
+          0.72,
+          0.98
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -44759,7 +44759,7 @@
       }
     },
     {
-      "asset": "shrub_round_a",
+      "asset": "bush_lush_a",
       "scatter": {
         "seed": 24184,
         "count": 4,
@@ -44810,8 +44810,8 @@
         "min_height_above_water": 6,
         "max_height_above_water": 240,
         "scale": [
-          0.7,
-          1.22
+          0.72,
+          0.98
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -44879,7 +44879,7 @@
       }
     },
     {
-      "asset": "shrub_round_a",
+      "asset": "bush_lush_a",
       "scatter": {
         "seed": 24186,
         "count": 4,
@@ -44930,8 +44930,8 @@
         "min_height_above_water": 6,
         "max_height_above_water": 240,
         "scale": [
-          0.7,
-          1.22
+          0.72,
+          0.98
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -44999,7 +44999,7 @@
       }
     },
     {
-      "asset": "shrub_round_a",
+      "asset": "bush_lush_a",
       "scatter": {
         "seed": 24188,
         "count": 4,
@@ -45050,8 +45050,8 @@
         "min_height_above_water": 6,
         "max_height_above_water": 240,
         "scale": [
-          0.7,
-          1.22
+          0.72,
+          0.98
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -45119,7 +45119,7 @@
       }
     },
     {
-      "asset": "shrub_round_a",
+      "asset": "bush_lush_a",
       "scatter": {
         "seed": 24190,
         "count": 4,
@@ -45170,8 +45170,8 @@
         "min_height_above_water": 6,
         "max_height_above_water": 240,
         "scale": [
-          0.7,
-          1.22
+          0.72,
+          0.98
         ],
         "align_to_slope": true,
         "surface": "land",

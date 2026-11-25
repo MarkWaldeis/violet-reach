@@ -7,7 +7,7 @@ import { worldFiles } from "../scripts/world-content.mjs";
 import { pathMask } from "../src/hydrology.ts";
 import type { Slice } from "../src/slice.ts";
 
-const vegetation = ["tree_broadleaf_a", "tree_broadleaf_b", "tree_broadleaf_c", "tree_oak_a", "tree_beech_a", "tree_ancient_a", "tree_willow_a", "shrub_round_a", "bush_lush_a", "fern_cluster_a", "fern_lush_a", "reed_cluster_a"];
+const vegetation = ["tree_oak_a", "tree_beech_a", "tree_ancient_a", "tree_willow_a", "shrub_round_a", "bush_lush_a", "fern_cluster_a", "fern_lush_a", "reed_cluster_a"];
 const monuments = ["gate_white_a", "column_white_a", "stair_terrace_a"];
 const pilot = ["boulder_chalk_a", "ruin_wall_a", "trunk_acacia_a"];
 const rocks = ["arch_sandstone_a", "scree_pile_a", "shore_rocks_wet_a", "boulder_chalk_c"];
@@ -43,7 +43,11 @@ test("grove pilot replaces nine G2/G4 trees 1:1 with approved fantasy species", 
     return [polygon.reduce((x, pt) => x + pt[0], 0) / polygon.length, polygon.reduce((z, pt) => z + pt[1], 0) / polygon.length];
   };
   const species = ["tree_oak_a", "tree_beech_a", "tree_ancient_a", "tree_willow_a"];
-  const trees = placements.filter((p: { asset: string }) => species.includes(p.asset));
+  const trees = placements.filter((p: { asset: string; scatter?: { seed?: number; polygon?: [number, number][] } }) => {
+    if (!species.includes(p.asset)) return false;
+    const [cx, cz] = centre(p);
+    return cx >= 216 - 1e-6 && cx <= 240 + 1e-6 && cz >= 1520 - 1e-6 && cz <= 1535 + 1e-6;
+  });
   assert.equal(trees.length, 9);
   for (const p of trees) {
     const [cx, cz] = centre(p);
@@ -59,12 +63,10 @@ test("grove pilot replaces nine G2/G4 trees 1:1 with approved fantasy species", 
   assert.equal(at(237, 1535)?.asset, "tree_ancient_a");
   assert.equal(at(237, 1526)?.asset, "tree_beech_a");
   const count = (asset: string) => trees.filter((p: { asset: string }) => p.asset === asset).length;
-  assert.ok(count("tree_oak_a") > count("tree_beech_a") && count("tree_oak_a") > count("tree_willow_a"));
+  assert.equal(count("tree_oak_a"), 5);
+  assert.equal(count("tree_beech_a"), 3);
   assert.equal(count("tree_ancient_a"), 1);
-  for (const p of trees.filter((p: { asset: string }) => p.asset === "tree_willow_a")) {
-    const [cx, cz] = centre(p);
-    assert.ok(cx >= 216 - 1e-6 && cx <= 219 + 1e-6 && cz >= 1529 - 1e-6 && cz <= 1535 + 1e-6, `willow at ${cx},${cz} is not in the western near-water band`);
-  }
+  assert.equal(count("tree_willow_a"), 0, "the exact water-distance rule assigns no willow inside the elevated pilot rectangle");
   const ranges: Record<string, [number, number]> = { tree_oak_a: [0.95, 1.25], tree_beech_a: [0.95, 1.25], tree_ancient_a: [1.0, 1.1], tree_willow_a: [0.9, 1.15] };
   for (const p of trees) {
     assert.deepEqual(p.scatter.scale, ranges[p.asset as string], `${p.asset} uses the canonical rollout scale range`);
