@@ -2,58 +2,108 @@
   "asset": "trunk_baobab_a",
   "class": "B",
   "image": {
-    "task_id": "01a211ee-1ceb-73ef-b1e6-27fe669b4bc5",
+    "task_id": "01a21392-3f6b-72a5-aed6-47014b7a5599",
+    "operation_id": "vr-v3-20261125-trunk-baobab-image-a",
     "resource": "text-to-image",
     "ai_model": "gpt-image-2-5-flare",
-    "prompt": "A bare bottle-shaped baobab tree trunk with no leaves at all, only the massive trunk and stout primary limbs, about 12 m tall and 3 m wide at the swollen belly. Heavy flared buttress roots support a thick bottle-shaped trunk with irregular elephant-hide bark: long asymmetric vertical folds and creases following the trunk, varied in width and depth, weathered dark grey-brown (#41321D and #574D46). Near the top the trunk narrows into five or six short thick gnarled primary branches, each organically fused and tapering cleanly to rounded solid woody tips. No quilted, crosshatched or hammered surface pattern, no uniform tube limbs, no cut-off pipe ends, no flat circular caps, no foliage, no leaves, no thin twigs. single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
-    "aspect_ratio": "1:1",
+    "prompt": "A bare bottle-shaped baobab tree trunk with no leaves at all, about 12 m tall, with a very broad asymmetric crown approximately 9 m across, made of massive gnarled tapering primary branches spreading widely sideways and upward; the crown is much wider than the trunk and occupies the upper third. Heavy flared buttress roots support a thick bottle-like trunk about 3 m wide at the swollen belly, with irregular elephant-hide bark: long asymmetric vertical folds and creases, weathered dark grey-brown (#41321D and #574D46). Seven or eight thick primary limbs emerge at different heights, bend and zigzag organically, continuously narrow along their length, and most branch tips fork once into two smaller tapered woody ends; no blunt ends. No finger-like or hand-like arrangement, no sausage branches, no uniform tube limbs, no blunt hemispherical ends, no mandrake silhouette, no narrow columnar crown, no foliage, no leaves, no thin twigs. single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
     "remove_background": true,
     "credits": 9,
+    "aspect_ratio": "1:1",
     "file": "trunk_baobab_a/image/chosen.png",
-    "sha256": "6bb18104d5dc9ea8a9fefde41678e6ae419a4a1360feca9255b754a3672bf383"
+    "sha256": "31d9156f21dda81a437ede5dec26dd2678e2fe01f83d955ab6f80f30d499e195"
   },
   "model": {
-    "task_id": "01a211f6-1555-75c7-8ee3-53e7b212ecca",
+    "task_id": "01a21396-4a28-7610-8363-aa09127a90f3",
+    "operation_id": "vr-v3-20261125-trunk-baobab-model-a",
     "resource": "image-to-3d",
-    "model_type": "smart-topology",
-    "ai_model": "meshy-t2.5",
-    "target_polycount": 30000,
     "texture_model": "meshy-7",
     "enable_pbr": true,
     "texture_resolution": "4k",
+    "texture_prompt": "Weathered matte grey-brown elephant-hide bark with irregular vertical folds and gnarled tapering branches; dry natural wood, high roughness, no foliage, no black ends, no glossy surfaces.",
     "credits": 15,
-    "file": "trunk_baobab_a/model/B-v2/model.glb",
-    "sha256": "191f4c4d14257adbb2192d1063342268a225167410a9dd621b492a28c6c487c1"
+    "file": "trunk_baobab_a/model/B-v3/model.glb",
+    "sha256": "1889354327bca35eea0193513e271e5b878399e4303dc50a0b5ca0cf94024a29",
+    "model_type": "smart-topology",
+    "ai_model": "meshy-t2.5",
+    "target_polycount": 30000
   },
   "rework": {
     "date": "2026-11-25",
-    "reason": "gate form defects; budgeted Meshy regeneration from corrected v2 references",
+    "reason": "formal round-3 shape rejection; budgeted Meshy v3 regeneration from corrected references",
     "ledger_rows": {
-      "image": 30,
-      "model": 36
+      "image": 40,
+      "model": 43
+    },
+    "raw_model_qa": {
+      "triangles": 31406,
+      "boundary_edges": 112,
+      "boundary_loops": 27,
+      "parts": 1,
+      "bbox_size": [
+        0.9565429985523224,
+        0.42041000723838806,
+        0.8891600072383881
+      ],
+      "flags": {
+        "aspect_mismatch": true,
+        "holes": true
+      }
     },
     "previous_image": {
-      "task_id": null,
-      "resource": "own-image-gen",
-      "ai_model": "own-image-gen",
-      "prompt": "A bare bottle-shaped baobab tree trunk with no leaves at all, only the massive trunk and stout primary limbs, about 12 m tall and 3 m wide at the swollen belly, heavy flared buttress roots at the base, thick cylindrical bottle-shaped trunk with deep vertical folds and weathered elephant-hide furrowed dark grey-brown bark (#41321D and #574D46), tapering near the top into five short thick gnarled primary branches with blunt ends, no foliage, no leaves, no thin twigs, no fine branchlets. single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
+      "task_id": "01a211ee-1ceb-73ef-b1e6-27fe669b4bc5",
+      "resource": "text-to-image",
+      "ai_model": "gpt-image-2-5-flare",
+      "prompt": "A bare bottle-shaped baobab tree trunk with no leaves at all, only the massive trunk and stout primary limbs, about 12 m tall and 3 m wide at the swollen belly. Heavy flared buttress roots support a thick bottle-shaped trunk with irregular elephant-hide bark: long asymmetric vertical folds and creases following the trunk, varied in width and depth, weathered dark grey-brown (#41321D and #574D46). Near the top the trunk narrows into five or six short thick gnarled primary branches, each organically fused and tapering cleanly to rounded solid woody tips. No quilted, crosshatched or hammered surface pattern, no uniform tube limbs, no cut-off pipe ends, no flat circular caps, no foliage, no leaves, no thin twigs. single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
       "aspect_ratio": "1:1",
       "remove_background": true,
-      "credits": 0,
+      "credits": 9,
       "file": "trunk_baobab_a/image/chosen.png",
-      "sha256": "bf1799feb14256a3995fd94be607ccd372932945e479f7ff0a3510dfba86ffb3"
+      "sha256": "6bb18104d5dc9ea8a9fefde41678e6ae419a4a1360feca9255b754a3672bf383"
     },
     "previous_model": {
-      "task_id": "01a20d56-71a6-7715-8b09-b057633183b8",
+      "task_id": "01a211f6-1555-75c7-8ee3-53e7b212ecca",
       "resource": "image-to-3d",
       "model_type": "smart-topology",
+      "ai_model": "meshy-t2.5",
       "target_polycount": 30000,
       "texture_model": "meshy-7",
       "enable_pbr": true,
       "texture_resolution": "4k",
       "credits": 15,
-      "file": "trunk_baobab_a/model/B-v1/model.glb",
-      "sha256": "919775d77ef60a152526af0eb8bcb45d833c789c66ba764121b92045451a447f"
+      "file": "trunk_baobab_a/model/B-v2/model.glb",
+      "sha256": "191f4c4d14257adbb2192d1063342268a225167410a9dd621b492a28c6c487c1"
+    },
+    "previous_rework": {
+      "date": "2026-11-25",
+      "reason": "gate form defects; budgeted Meshy regeneration from corrected v2 references",
+      "ledger_rows": {
+        "image": 30,
+        "model": 36
+      },
+      "previous_image": {
+        "task_id": null,
+        "resource": "own-image-gen",
+        "ai_model": "own-image-gen",
+        "prompt": "A bare bottle-shaped baobab tree trunk with no leaves at all, only the massive trunk and stout primary limbs, about 12 m tall and 3 m wide at the swollen belly, heavy flared buttress roots at the base, thick cylindrical bottle-shaped trunk with deep vertical folds and weathered elephant-hide furrowed dark grey-brown bark (#41321D and #574D46), tapering near the top into five short thick gnarled primary branches with blunt ends, no foliage, no leaves, no thin twigs, no fine branchlets. single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
+        "aspect_ratio": "1:1",
+        "remove_background": true,
+        "credits": 0,
+        "file": "trunk_baobab_a/image/chosen.png",
+        "sha256": "bf1799feb14256a3995fd94be607ccd372932945e479f7ff0a3510dfba86ffb3"
+      },
+      "previous_model": {
+        "task_id": "01a20d56-71a6-7715-8b09-b057633183b8",
+        "resource": "image-to-3d",
+        "model_type": "smart-topology",
+        "target_polycount": 30000,
+        "texture_model": "meshy-7",
+        "enable_pbr": true,
+        "texture_resolution": "4k",
+        "credits": 15,
+        "file": "trunk_baobab_a/model/B-v1/model.glb",
+        "sha256": "919775d77ef60a152526af0eb8bcb45d833c789c66ba764121b92045451a447f"
+      }
     }
   }
 }

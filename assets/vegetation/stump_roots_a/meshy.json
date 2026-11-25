@@ -2,58 +2,107 @@
   "asset": "stump_roots_a",
   "class": "B",
   "image": {
-    "task_id": "01a211ec-c134-77f1-85e9-49ddb2862959",
+    "task_id": "01a21391-d234-748e-839b-94e35834d055",
+    "operation_id": "vr-v3-20261125-stump-roots-image-a",
     "resource": "text-to-image",
     "ai_model": "gpt-image-2-5-flare",
-    "prompt": "An old weathered tree stump with thick spreading surface roots, about 1.8 m wide at the root base and 1.2 m tall. The top is a natural snapped-off fibrous wood fracture: stringy torn fibers, deep radial splits and irregular cracked weathered brown heartwood (#665548), not carved spikes. Five or six thick continuous buttress roots grow seamlessly out of the trunk, remain unbroken, taper gradually outward and flatten into the underside, surrounded by heavy furrowed dark grey-brown bark (#41321D). No ornamental vertical crown plates, no hammered or chiseled relief, no separate shard pieces, no smooth saw cut, no abruptly clipped root ends, no leaves, no grass, no ground plane. single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
-    "aspect_ratio": "1:1",
+    "prompt": "An old weathered tree stump with thick spreading surface roots, about 1.8 m wide at the root base and 1.2 m tall. The crown is a massive irregular radially split fibrous broken wood fracture: one side slightly higher than the other, deep radial cracks running down into the trunk as narrow dark fissures, stringy torn fibers and chunky uneven splinter clumps of weathered brown heartwood (#665548), all organically continuous with the stump; the cracks do not divide the crown into separate plates. Five or six thick rounded surface roots grow seamlessly out of the trunk at uneven angles and lengths, remain unbroken, taper continuously from thick base to rounded outward tips and flatten only where they meet the underside; heavy furrowed dark grey-brown bark (#41321D). No vertical crown plates, no ornamental ribs, no carved scoop surfaces, no smooth ring of shards, no flat fins or paddle roots, no black holes or hollow black cavities, no smooth saw cut, no leaves, no grass, no ground plane. single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
     "remove_background": true,
     "credits": 9,
+    "aspect_ratio": "1:1",
     "file": "stump_roots_a/image/chosen.png",
-    "sha256": "1c4b8548f2ffe3d17bb2c1d38605942f54d577baa2d5922c5792abec42334bef"
+    "sha256": "3969bb1337d58d4fb2b9a57bc69094df23d275676ad15167387bc81725141b0e"
   },
   "model": {
-    "task_id": "01a211f5-d817-7516-9961-9cfc7c1b0f06",
+    "task_id": "01a21396-2f30-7396-977e-45fb8f8d1a0a",
+    "operation_id": "vr-v3-20261125-stump-roots-model-a",
     "resource": "image-to-3d",
-    "model_type": "smart-topology",
-    "ai_model": "meshy-t2.5",
-    "target_polycount": 30000,
     "texture_model": "meshy-7",
     "enable_pbr": true,
     "texture_resolution": "4k",
+    "texture_prompt": "Weathered dark grey-brown furrowed bark and matte brown fibrous broken heartwood; dry natural wood, continuous thick rounded surface roots, high roughness, no black holes, no ornamental vertical plates, no glossy surfaces.",
     "credits": 15,
-    "file": "stump_roots_a/model/B-v2/model.glb",
-    "sha256": "251e85c58792a135400ab257f4a17f323816e29ea119363a3b6e1d5d8b1feb11"
+    "file": "stump_roots_a/model/B-v3/model.glb",
+    "sha256": "3bd4f01edab336e0149551b113cc492a70add333f2e63d25cc65c3c8c25dc265",
+    "model_type": "smart-topology",
+    "ai_model": "meshy-t2.5",
+    "target_polycount": 30000
   },
   "rework": {
     "date": "2026-11-25",
-    "reason": "gate form defects; budgeted Meshy regeneration from corrected v2 references",
+    "reason": "formal round-3 shape rejection; budgeted Meshy v3 regeneration from corrected references",
     "ledger_rows": {
-      "image": 28,
-      "model": 34
+      "image": 39,
+      "model": 42
+    },
+    "raw_model_qa": {
+      "triangles": 31529,
+      "boundary_edges": 199,
+      "boundary_loops": 29,
+      "parts": 1,
+      "bbox_size": [
+        0.9492189884185791,
+        0.8515619933605194,
+        0.5063480138778687
+      ],
+      "flags": {
+        "holes": true
+      }
     },
     "previous_image": {
-      "task_id": null,
-      "resource": "own-image-gen",
-      "ai_model": "own-image-gen",
-      "prompt": "An old weathered tree stump with thick spreading surface roots, about 1.8 m wide at the root base and 1.2 m tall, a stout gnarled trunk base with an uneven jagged naturally broken top showing cracked weathered brown heartwood (#665548) and deep radial splits, surrounded by heavy furrowed dark grey-brown bark (#41321D) and five thick buttress roots flaring outward to a flat underside, no smooth saw cut, no leaves, no grass, no ground plane. single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
+      "task_id": "01a211ec-c134-77f1-85e9-49ddb2862959",
+      "resource": "text-to-image",
+      "ai_model": "gpt-image-2-5-flare",
+      "prompt": "An old weathered tree stump with thick spreading surface roots, about 1.8 m wide at the root base and 1.2 m tall. The top is a natural snapped-off fibrous wood fracture: stringy torn fibers, deep radial splits and irregular cracked weathered brown heartwood (#665548), not carved spikes. Five or six thick continuous buttress roots grow seamlessly out of the trunk, remain unbroken, taper gradually outward and flatten into the underside, surrounded by heavy furrowed dark grey-brown bark (#41321D). No ornamental vertical crown plates, no hammered or chiseled relief, no separate shard pieces, no smooth saw cut, no abruptly clipped root ends, no leaves, no grass, no ground plane. single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
       "aspect_ratio": "1:1",
       "remove_background": true,
-      "credits": 0,
+      "credits": 9,
       "file": "stump_roots_a/image/chosen.png",
-      "sha256": "349f58c94da9ff161a4da5de6dee2f1b1c29ae9c7b45228f0535299031985baa"
+      "sha256": "1c4b8548f2ffe3d17bb2c1d38605942f54d577baa2d5922c5792abec42334bef"
     },
     "previous_model": {
-      "task_id": "01a20d56-b570-7009-b5b9-6cb9e58f0e87",
+      "task_id": "01a211f5-d817-7516-9961-9cfc7c1b0f06",
       "resource": "image-to-3d",
       "model_type": "smart-topology",
+      "ai_model": "meshy-t2.5",
       "target_polycount": 30000,
       "texture_model": "meshy-7",
       "enable_pbr": true,
       "texture_resolution": "4k",
       "credits": 15,
-      "file": "stump_roots_a/model/B-v1/model.glb",
-      "sha256": "1874fd6ca7e0a3005ac3ae2ed87980c7dd5f787401960f86c786b67a3785bd1c"
+      "file": "stump_roots_a/model/B-v2/model.glb",
+      "sha256": "251e85c58792a135400ab257f4a17f323816e29ea119363a3b6e1d5d8b1feb11"
+    },
+    "previous_rework": {
+      "date": "2026-11-25",
+      "reason": "gate form defects; budgeted Meshy regeneration from corrected v2 references",
+      "ledger_rows": {
+        "image": 28,
+        "model": 34
+      },
+      "previous_image": {
+        "task_id": null,
+        "resource": "own-image-gen",
+        "ai_model": "own-image-gen",
+        "prompt": "An old weathered tree stump with thick spreading surface roots, about 1.8 m wide at the root base and 1.2 m tall, a stout gnarled trunk base with an uneven jagged naturally broken top showing cracked weathered brown heartwood (#665548) and deep radial splits, surrounded by heavy furrowed dark grey-brown bark (#41321D) and five thick buttress roots flaring outward to a flat underside, no smooth saw cut, no leaves, no grass, no ground plane. single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
+        "aspect_ratio": "1:1",
+        "remove_background": true,
+        "credits": 0,
+        "file": "stump_roots_a/image/chosen.png",
+        "sha256": "349f58c94da9ff161a4da5de6dee2f1b1c29ae9c7b45228f0535299031985baa"
+      },
+      "previous_model": {
+        "task_id": "01a20d56-b570-7009-b5b9-6cb9e58f0e87",
+        "resource": "image-to-3d",
+        "model_type": "smart-topology",
+        "target_polycount": 30000,
+        "texture_model": "meshy-7",
+        "enable_pbr": true,
+        "texture_resolution": "4k",
+        "credits": 15,
+        "file": "stump_roots_a/model/B-v1/model.glb",
+        "sha256": "1874fd6ca7e0a3005ac3ae2ed87980c7dd5f787401960f86c786b67a3785bd1c"
+      }
     }
   }
 }

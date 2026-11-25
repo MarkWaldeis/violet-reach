@@ -17,22 +17,8 @@
   "meshy_class": "B",
   "material_class": "bark",
   "texture_format": "ktx2",
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "blender-batch1",
-  "review": {
-    "reviewer": "independent-6add6f41",
-    "scores": {
-      "silhouette": 8,
-      "form_detail": 6,
-      "material": 8,
-      "scale": 9,
-      "style": 7,
-      "defects": 7
-    },
-    "notes": "Rejected: ornamentale senkrechte Kronenplatten/glatte scoop-Flaechen statt faseriger Fraktur, flache finnenartige Wurzeln, schwarze Basis-/Pinhole-Regionen; Grundform erneut generieren.",
-    "round": 3,
-    "source_sha256": "85303f33a30aabdc7211f341c25bd3f6fd40a42fba7968638749236f63d70315",
-    "sheet_sha256": "ea3607d06ade557b5b8096c729270f8cd7b850800caec07c04854a4a139db384"
-  },
+  "review": null,
   "review_rounds": 3
 }

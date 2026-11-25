@@ -17,22 +17,8 @@
   "meshy_class": "A",
   "material_class": "stone_white",
   "texture_format": "ktx2",
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "blender-batch2",
-  "review": {
-    "reviewer": "independent-d17248a9",
-    "scores": {
-      "silhouette": 8,
-      "form_detail": 5,
-      "material": 6,
-      "scale": 9,
-      "style": 7,
-      "defects": 4
-    },
-    "notes": "Rejected: zentrale Spaltkante blasig/wabig/verbacken statt scharf gebrochen, verstopfte Innenflaechen und zu dichte kraterige Porenstruktur; Grundform neu generieren.",
-    "round": 3,
-    "source_sha256": "41cd1baa6f5908f245b6e9c5b2b3d517144260d4700fc445c45fad7f4c49601b",
-    "sheet_sha256": "95954473db90e1fcb2b8023567b37edc2fefdd0f7fd1509bfb5ee5d877695d54"
-  },
+  "review": null,
   "review_rounds": 3
 }

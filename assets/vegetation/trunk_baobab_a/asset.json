@@ -17,22 +17,8 @@
   "meshy_class": "B",
   "material_class": "bark",
   "texture_format": "ktx2",
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "blender-batch1",
-  "review": {
-    "reviewer": "independent-b6c5b25a",
-    "scores": {
-      "silhouette": 7,
-      "form_detail": 6,
-      "material": 7,
-      "scale": 7,
-      "style": 6,
-      "defects": 8
-    },
-    "notes": "Rejected: hand-/wurstfoermige Primaeraste mit stumpfen Enden, zu schmale saulenartige Gesamtproportion und mandrake-artige obere Gabelung; Grundform/Referenz neu aufsetzen.",
-    "round": 3,
-    "source_sha256": "70a300e831658e5dc8ce641baa958b0b57ceac6117b2c003e992a456c29c855a",
-    "sheet_sha256": "be905a2322081f2f8ea551fd47113171ea460c98f43f827a8090f923d8b166f2"
-  },
+  "review": null,
   "review_rounds": 3
 }

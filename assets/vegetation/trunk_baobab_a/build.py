@@ -1,9 +1,9 @@
-"""Flaschenbaum Stamm A / Baobab (trunk_baobab_a) — Meshy Klasse B, Rework v2.
+"""Flaschenbaum Stamm A / Baobab (trunk_baobab_a) — Meshy Klasse B, Rework v3.
 
-Das v2-Rohmodell hat unregelmäßige Elephant-skin-Längsfalten und sauber
-verjüngte Primäräste bereits in Geometrie und Textur.  Die v1-Kappen,
-prozeduralen Ridges und starke Albedo-/Normalenkorrektur sind entfernt; übrig
-bleiben technische Pinhole-Füllung, Material-Clamp und Boden-Skirt.
+Das v3-Rohmodell hat eine breite Krone aus sich verjüngenden, teils gegabelten
+Primärästen und unregelmäßige Elephant-skin-Längsfalten bereits in Geometrie
+und Textur.  Die alten Formkorrekturen bleiben entfernt; übrig bleiben
+technische Pinhole-Füllung, Material-Clamp und Boden-Skirt.
 """
 import os
 
@@ -16,7 +16,7 @@ ASSET_DIR = os.path.dirname(os.path.abspath(__file__))
 def build():
     objs = vrmeshy.load_raw(ASSET_DIR)
     vrmeshy.drop_loose(objs, min_fraction=0.02)
-    vrmeshy.normalize(objs, height=12.0, yaw_deg=31.3)
+    vrmeshy.normalize(objs, height=12.0, yaw_deg=0.0)
     main = objs[0]
 
     # Keine prozeduralen Astkappen oder aufgesetzten Rinden-Ridges mehr.  Nur
