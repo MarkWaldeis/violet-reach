@@ -18,8 +18,23 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-builder-trees",
-  "review": null,
-  "review_rounds": 2
+  "review": {
+    "reviewer": "devin-gate-rev-d",
+    "verdict": "rejected",
+    "scores": {
+      "silhouette": 9,
+      "form_detail": 7,
+      "material": 7,
+      "scale": 9,
+      "style": 8,
+      "defects": 7
+    },
+    "notes": "Abgelehnt, knapp: Silhouette und Kronenfüllung sind jetzt aus allen Rotationen brauchbar, Wurzelflare und Astkragen sind echte Verbesserungen. In der Nahsicht bleiben aber breite gekreuzte Alpha-Blattbahnen/regalartige horizontale Cluster klar erkennbar; am Kronenrand stehen dünne schwarze Sprossspitzen frei und der Wurzelfuß behält spitze facettierte Zähne. Innenäste wirken sehr dunkel und glatt. Für AAA neben den Felsen müssen Karten weiter verkleinert/stärker gestaffelt und die verbleibenden Enden/Fußzacken organisch aufgelöst werden.",
+    "round": 3,
+    "source_sha256": "f346aa411f7bd37cf4c2d429b19df8be684d5564260dfc00165fa700f3c3a591",
+    "sheet_sha256": "5444ef9cb3ae130011939bc1bf857e1c1f0c30bc993b93888093616ceb3cdb81"
+  },
+  "review_rounds": 3
 }

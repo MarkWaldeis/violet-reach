@@ -18,8 +18,23 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-builder-trees",
-  "review": null,
-  "review_rounds": 2
+  "review": {
+    "reviewer": "devin-gate-rev-d",
+    "verdict": "rejected",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 6,
+      "material": 7,
+      "scale": 9,
+      "style": 7,
+      "defects": 5
+    },
+    "notes": "Abgelehnt: Der hängende Habitus ist deutlich besser und der Stammfuß sauberer. Aus mehreren Rotationen bleibt die Krone aber ein offenes Gestell mit separaten Vorhangbändern; im Closeup sind die Streifen als breite Alpha-Ribbons erkennbar. Entscheidend: mehrere Seitenäste enden weiterhin sichtbar stumpf/abgeschnitten, die R3-Endkappen erfassen offenbar nur hochliegende Enden. Für Freigabe alle Astenden schließen und Vorhänge feiner/verzweigter aufbauen.",
+    "round": 3,
+    "source_sha256": "eb1149936bcead712bdbf5feb32740627c6bd1fec367e5bd2a99d7e67f0eaf95",
+    "sheet_sha256": "22075bd965b1c64125dcf100ffe8f294bb3d8b8437b36bd9e2cbee82ee7684a9"
+  },
+  "review_rounds": 3
 }

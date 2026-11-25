@@ -18,8 +18,23 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "blender_review",
+  "status": "approved",
   "builder": "devin-builder-trees",
-  "review": null,
-  "review_rounds": 2
+  "review": {
+    "reviewer": "devin-gate-rev-d",
+    "verdict": "approved",
+    "scores": {
+      "silhouette": 9,
+      "form_detail": 8,
+      "material": 8,
+      "scale": 9,
+      "style": 8,
+      "defects": 8
+    },
+    "notes": "Freigegeben: Dichter, glaubwürdiger Unterwuchs mit unregelmäßiger Silhouette und guter Füllung aus allen Rotationen. Die Tochterkarten sitzen deutlich dichter, die früheren freien Stachelgerüste sind überwiegend eingebunden, und die Blattmaterialien lesen sich auch im Closeup strukturiert. Restrisiko nicht blockierend: einzelne planare Karten und wenige sehr gerade dunkle Stiele bleiben erkennbar; die Unterseite ist dunkel. Für den Export geeignet.",
+    "round": 3,
+    "source_sha256": "41e9dffff3d827d50f1ef44d56ef088831ebddc0cee4ca5129c51daa4526b552",
+    "sheet_sha256": "318e83f112e88aa8ea8fc00427513274662bc8cdd31ddd7dc8a201183ed6cf2a"
+  },
+  "review_rounds": 3
 }

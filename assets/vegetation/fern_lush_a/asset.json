@@ -18,8 +18,23 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-builder-trees",
-  "review": null,
-  "review_rounds": 2
+  "review": {
+    "reviewer": "devin-gate-rev-d",
+    "verdict": "rejected",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 6,
+      "material": 7,
+      "scale": 9,
+      "style": 6,
+      "defects": 5
+    },
+    "notes": "Abgelehnt: Die Wedel sind zahlreicher und die zylindrische Topfform ist reduziert, aber das Asset bleibt eine sehr regelmäßige flache Speerrosette. Im Base-Closeup steht weiterhin eine facettierte braune Schale/Platte mit schwarzem Kern statt mehrerer bodennaher Wedelherzen; viele Wedel enden als kahle gerade Linien oder breite Bänder. Die drei versetzten Herzen sind geometrisch vorhanden, visuell aber zu klein/nahe beieinander. Kein AAA-Unterwuchs.",
+    "round": 3,
+    "source_sha256": "dfae35cd887dd2d3ee36f27cc205999b11c21fa713434015c6f13b77d560f6c9",
+    "sheet_sha256": "46f4d0276062f0020d328dc53bee56f5c2f24636e6b60b6fb4053fbb9f3c7999"
+  },
+  "review_rounds": 3
 }

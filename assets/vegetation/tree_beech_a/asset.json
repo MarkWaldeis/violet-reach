@@ -18,8 +18,23 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-builder-trees",
-  "review": null,
-  "review_rounds": 2
+  "review": {
+    "reviewer": "devin-gate-rev-d",
+    "verdict": "rejected",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 6,
+      "material": 7,
+      "scale": 9,
+      "style": 7,
+      "defects": 5
+    },
+    "notes": "Abgelehnt: Die neue Füllung reicht nicht. Die Krone bleibt als offenes Gerüst mit getrennten Pompom-/Kartenclustern lesbar; im Closeup dominieren große ebene Blattbahnen, ein schwarzer glatter Stamm und besonders ein scharfes Y-förmiges Ast-Speertrio. Der Wurzelfuß ist besser, aber immer noch zackig. Die R2-Hauptmängel (hohle Krone, nacktes Gerüst, spitze/abgeschnittene Enden) sind nur teilweise reduziert.",
+    "round": 3,
+    "source_sha256": "cc1e3b9133de9319fc82ef915db63f52138c598cddf3e5b266869cd90a094f7a",
+    "sheet_sha256": "3208c31fb65a2795c1eaadabc575857de5d149d4bf91fa29e67ebabeebfdb5cb"
+  },
+  "review_rounds": 3
 }

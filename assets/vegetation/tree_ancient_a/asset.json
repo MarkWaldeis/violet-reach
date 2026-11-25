@@ -18,8 +18,23 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-builder-trees",
-  "review": null,
-  "review_rounds": 2
+  "review": {
+    "reviewer": "devin-gate-rev-d",
+    "verdict": "rejected",
+    "scores": {
+      "silhouette": 9,
+      "form_detail": 6,
+      "material": 6,
+      "scale": 9,
+      "style": 8,
+      "defects": 5
+    },
+    "notes": "Abgelehnt: Starke Landmarksilhouette und sichtbar dichteres Kroneninnenvolumen, aber die Nahsicht bleibt unter AA/AAA: große flache Blattregale, fast schwarze kantige Innenäste und mehrere lange schwarze Speerspitzen an freien Enden. Der neue Wurzelfuß ist weicher, wirkt jedoch teilweise topf-/kolbenartig. Tapering allein kaschiert die abgehackten Enden nicht; feinere Zweigverzweigung und kleinere Cluster fehlen weiterhin.",
+    "round": 3,
+    "source_sha256": "094979cc3d03fa3b195c08bd6cc67560a92711e71d30360f51c306722a2c2734",
+    "sheet_sha256": "4c8df56fdbaced52688a4b09ded62b24e977b678bb5386e41fdd7d655a94b1e2"
+  },
+  "review_rounds": 3
 }
