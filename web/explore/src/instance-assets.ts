@@ -21,7 +21,7 @@ export function simplifiedReflectionLOD(levels: number[]) {
 
 interface Instance extends InstancePlacement { order: number; matrix: Matrix4; tint: Color; sphere: { centre: Vector3; radius: number }; lod: number }
 interface Part { mesh: InstancedMesh; local: Matrix4; reflection?: InstancedMesh }
-interface AssetBatch { parts: Part[][]; chunks: Chunk<Instance>[]; size: number; maxDistance: number; lodScale: number; lodRatio: number; aerialLODScale: number; reflectionIndex: number; signature?: number }
+interface AssetBatch { id: string; parts: Part[][]; chunks: Chunk<Instance>[]; size: number; maxDistance: number; lodScale: number; lodRatio: number; aerialLODScale: number; reflectionIndex: number; signature?: number }
 
 export class InstanceAssets {
   readonly group = new Group();
@@ -30,7 +30,7 @@ export class InstanceAssets {
   #projection = new Matrix4();
   #matrix = new Matrix4();
   #updated = -Infinity;
-  stats = { assets: 0, total: 0, lods: [] as number[], visibleChunks: 0, chunks: 0 };
+  stats = { assets: 0, total: 0, lods: [] as number[], visibleChunks: 0, chunks: 0, byAsset: {} as Record<string, { lods: number[]; reflections: number }> };
 
   static async load(
     placements: InstancePlacement[],
@@ -123,7 +123,7 @@ export class InstanceAssets {
           return parts;
         });
         const chunks = spatialChunks(instances, (p) => rootRadius * p.scale);
-        result.#batches.push({ parts, chunks, size, maxDistance: settings.maxDistance, lodScale: settings.lodScale, lodRatio: settings.lodRatio, aerialLODScale: settings.aerialLODScale, reflectionIndex });
+        result.#batches.push({ id, parts, chunks, size, maxDistance: settings.maxDistance, lodScale: settings.lodScale, lodRatio: settings.lodRatio, aerialLODScale: settings.aerialLODScale, reflectionIndex });
       }
     } finally {
       ktx2?.dispose();
@@ -141,10 +141,12 @@ export class InstanceAssets {
     this.#frustum.setFromProjectionMatrix(this.#projection, camera.coordinateSystem);
     const planes = this.#frustum.planes.map((p) => ({ ...p.normal, constant: p.constant }));
     const counts: number[] = [];
+    const byAsset: Record<string, { lods: number[]; reflections: number }> = {};
     let visibleChunks = 0, chunks = 0;
     for (const batch of this.#batches) {
       const distances = aerialLODDistances(lodDistances(batch.size * batch.lodScale, batch.parts.length, viewportHeight, camera.fov, batch.maxDistance, batch.lodRatio), heightAboveGround, batch.aerialLODScale);
       const written = batch.parts.map(() => 0);
+      const batchCounts = batch.parts.map(() => 0);
       let reflectionWritten = 0;
       let signature = 0;
       for (const chunk of batch.chunks) {
@@ -159,6 +161,7 @@ export class InstanceAssets {
           if (!batch.parts[lod].some((part) => part.mesh.castShadow) && !chunkVisible(instance.sphere, camera.position, planes, Infinity)) continue;
           signature = Math.imul(signature ^ (instance.order + 1), 16777619) ^ (lod + 1);
           const index = written[lod]++;
+          batchCounts[lod]++;
           for (const part of batch.parts[lod]) {
             this.#matrix.multiplyMatrices(instance.matrix, part.local);
             part.mesh.setMatrixAt(index, this.#matrix);
@@ -208,7 +211,8 @@ export class InstanceAssets {
           }
         }
       });
+      byAsset[batch.id] = { lods: batchCounts, reflections: reflectionWritten };
     }
-    this.stats = { ...this.stats, lods: counts, visibleChunks, chunks };
+    this.stats = { ...this.stats, lods: counts, visibleChunks, chunks, byAsset };
   }
 }

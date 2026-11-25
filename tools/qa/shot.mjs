@@ -33,7 +33,11 @@ try {
     await waitReady(page, 120_000, id);
     const s = await page.evaluate(() => window.__vr.stats());
     await page.screenshot({ path: join(dir, `${id}.png`) });
-    console.log(`${id}: ${join(dir, `${id}.png`)} agl=${s.camera.agl?.toFixed(2)} y=${s.camera.y.toFixed(1)} tris=${s.triangles} draws=${s.drawCalls}`);
+    const treeLods = Object.entries(s.assets?.byAsset ?? {})
+      .filter(([asset]) => asset.startsWith("tree_"))
+      .map(([asset, v]) => `${asset}:${v.lods.join("/")} r${v.reflections}`)
+      .join(" ");
+    console.log(`${id}: ${join(dir, `${id}.png`)} agl=${s.camera.agl?.toFixed(2)} y=${s.camera.y.toFixed(1)} tris=${s.triangles} draws=${s.drawCalls}${treeLods ? ` trees=${treeLods}` : ""}`);
   }
 } catch (error) {
   console.error(error.message ?? error);
