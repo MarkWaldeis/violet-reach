@@ -43,8 +43,8 @@
   ],
   "export": {
     "file": "export/tree_oak_a.glb",
-    "bytes": 8998656,
-    "sha256": "f21e19853a11e9277505b374b9c4d0fed45b1b989017058e6ce9c421906307b0",
+    "bytes": 9611580,
+    "sha256": "d7bb91f5b9969607e5dd673f55ec19530b2258d6f149f5e2afac19a46a0645f8",
     "source_sha256": "d1a37c4b7c2b8166d5ede19cbac9bd3a90d3934e377e04c935cc9d0705dde989",
     "sheet_sha256": "b56985aa877a36ba7cda60427a6a5d0bbeeef7f4d796f67eeabad160b1f984b9",
     "lod_triangles": [

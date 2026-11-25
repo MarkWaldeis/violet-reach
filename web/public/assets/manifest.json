@@ -222,7 +222,7 @@
         1.889,
         0.854
       ],
-      "bytes": 4356936,
+      "bytes": 4510720,
       "material_class": "foliage"
     },
     {
@@ -297,7 +297,7 @@
         12.117,
         11.569
       ],
-      "bytes": 8703260,
+      "bytes": 9314592,
       "material_class": "foliage"
     },
     {
@@ -310,7 +310,7 @@
         11.491,
         11.323
       ],
-      "bytes": 7934524,
+      "bytes": 8521996,
       "material_class": "foliage"
     },
     {
@@ -359,7 +359,7 @@
         11.897,
         11.482
       ],
-      "bytes": 8998656,
+      "bytes": 9611580,
       "material_class": "foliage"
     },
     {
@@ -372,7 +372,7 @@
         8.985,
         8.999
       ],
-      "bytes": 8373144,
+      "bytes": 9530836,
       "material_class": "foliage"
     },
     {
@@ -411,7 +411,7 @@
         8.479,
         12.125
       ],
-      "bytes": 4800400,
+      "bytes": 4800660,
       "material_class": "bark"
     }
   ]

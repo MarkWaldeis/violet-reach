@@ -43,8 +43,8 @@
   ],
   "export": {
     "file": "export/fern_lush_a.glb",
-    "bytes": 4356936,
-    "sha256": "f888564df9a690e7b1fc00dbcb3ed0d496bcfb02d2c31162738d9f1f2a7c7061",
+    "bytes": 4510720,
+    "sha256": "2201f3718c9baab916cdba60b40d143edde9f0d63a2e82da17f5028de9b53980",
     "source_sha256": "102b7fc06d8e3b0290091a5ac04e83e88d79f0a1b2db3c4061a5a44d37a199ef",
     "sheet_sha256": "92e1cc67d8f24cb93fd72d154f9a21326f5f88d7409eb789a42355cbaae3eec8",
     "lod_triangles": [

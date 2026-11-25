@@ -43,8 +43,8 @@
   ],
   "export": {
     "file": "export/tree_willow_a.glb",
-    "bytes": 8373144,
-    "sha256": "04c98ac260cdf24c6ac66da531374feac16b2bb8c12717e3dc205ce647838ae5",
+    "bytes": 9530836,
+    "sha256": "b03df2e52f71a3b04a3fff89442e247fbbaa8c430a0751bf77babd2ec7aaaf03",
     "source_sha256": "dfe1c0bbbdb63bc691eac46c7bbad2cece7f18285cc471e6f211a346bca2ecfe",
     "sheet_sha256": "4669d252b6e648b6b9b111902c9d01f5b3902d46dd1557bb5aef1c5fe49f97d9",
     "lod_triangles": [
