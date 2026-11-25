@@ -37,9 +37,9 @@
   },
   "review_rounds": 5,
   "size_m": [
-    8.66,
-    8.739,
-    8.954
+    8.81,
+    8.985,
+    8.999
   ],
   "export": {
     "file": "export/tree_willow_a.glb",
