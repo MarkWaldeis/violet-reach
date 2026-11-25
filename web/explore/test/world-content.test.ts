@@ -67,8 +67,7 @@ test("grove pilot replaces nine G2/G4 trees 1:1 with approved fantasy species", 
   }
   const ranges: Record<string, [number, number]> = { tree_oak_a: [0.95, 1.25], tree_beech_a: [0.95, 1.25], tree_ancient_a: [1.0, 1.1], tree_willow_a: [0.9, 1.15] };
   for (const p of trees) {
-    const [cx, cz] = centre(p);
-    assert.deepEqual(p.scatter.scale, Math.abs(cx - 240) < 0.5 && Math.abs(cz - 1520) < 0.5 ? [0.95, 1.1] : ranges[p.asset as string]);
+    assert.deepEqual(p.scatter.scale, ranges[p.asset as string], `${p.asset} uses the canonical rollout scale range`);
   }
 });
 
