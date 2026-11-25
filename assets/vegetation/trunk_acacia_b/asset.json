@@ -17,7 +17,7 @@
   "meshy_class": "B",
   "material_class": "bark",
   "texture_format": "ktx2",
-  "status": "approved",
+  "status": "exported",
   "builder": "blender-batch1",
   "review": {
     "reviewer": "independent-b6c5b25a",
@@ -34,5 +34,23 @@
     "source_sha256": "d845145cfe3ae16cbbc67af1bf1d1e1adc7b5b6fef7e293f79960da997faefe2",
     "sheet_sha256": "a7d3deb85529361d5e518819f0744c259438936e11c0c8c4791c229a82b307fc"
   },
-  "review_rounds": 3
+  "review_rounds": 3,
+  "size_m": [
+    8.961,
+    7.763,
+    6.9
+  ],
+  "export": {
+    "file": "export/trunk_acacia_b.glb",
+    "bytes": 5298432,
+    "sha256": "d3ee43b2cc00fa33580ac760f4fad6cfa89dc9c230745096183c8ad29605c465",
+    "source_sha256": "d845145cfe3ae16cbbc67af1bf1d1e1adc7b5b6fef7e293f79960da997faefe2",
+    "sheet_sha256": "a7d3deb85529361d5e518819f0744c259438936e11c0c8c4791c229a82b307fc",
+    "lod_triangles": [
+      30000,
+      9000,
+      2500
+    ],
+    "texture_size": 2048
+  }
 }

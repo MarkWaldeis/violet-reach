@@ -137,6 +137,19 @@
       "material_class": "rock_chalk"
     },
     {
+      "id": "rock_slab_a",
+      "category": "rocks",
+      "title": "Kalkstein-Felsplatte A",
+      "file": "rock_slab_a.glb",
+      "size_m": [
+        4.0,
+        3.462,
+        0.984
+      ],
+      "bytes": 1604728,
+      "material_class": "rock_chalk"
+    },
+    {
       "id": "scree_pile_a",
       "category": "rocks",
       "title": "Kalkstein-Geröllhaufen A",
@@ -223,6 +236,19 @@
         0.639
       ],
       "bytes": 594168
+    },
+    {
+      "id": "log_fallen_a",
+      "category": "vegetation",
+      "title": "Umgestürzter Baumstamm A",
+      "file": "log_fallen_a.glb",
+      "size_m": [
+        4.807,
+        1.856,
+        1.715
+      ],
+      "bytes": 1807572,
+      "material_class": "bark"
     },
     {
       "id": "reed_cluster_a",
@@ -347,6 +373,19 @@
         10.588
       ],
       "bytes": 4717204,
+      "material_class": "bark"
+    },
+    {
+      "id": "trunk_acacia_b",
+      "category": "vegetation",
+      "title": "Schirmakazie Stamm B (mehrstämmig)",
+      "file": "trunk_acacia_b.glb",
+      "size_m": [
+        8.961,
+        7.763,
+        6.9
+      ],
+      "bytes": 5298432,
       "material_class": "bark"
     }
   ]

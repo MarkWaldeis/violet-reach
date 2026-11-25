@@ -17,7 +17,7 @@
   "meshy_class": "B",
   "material_class": "bark",
   "texture_format": "ktx2",
-  "status": "approved",
+  "status": "exported",
   "builder": "blender-batch1",
   "review": {
     "reviewer": "independent-6add6f41",
@@ -34,5 +34,23 @@
     "source_sha256": "7fab93e9358a946f97bc6b0e88ee4427a5d131a226de40ef3aac5ac0605cb1d5",
     "sheet_sha256": "962816732d33b1e4898273ffec319809baf3b2711956f060760e5f26ebfba0c0"
   },
-  "review_rounds": 3
+  "review_rounds": 3,
+  "size_m": [
+    4.807,
+    1.856,
+    1.715
+  ],
+  "export": {
+    "file": "export/log_fallen_a.glb",
+    "bytes": 1807572,
+    "sha256": "3f6b12fe46f13ebb28f047fd1ad6ef904637f26e79ae0e94f3403fd2b14a2ae4",
+    "source_sha256": "7fab93e9358a946f97bc6b0e88ee4427a5d131a226de40ef3aac5ac0605cb1d5",
+    "sheet_sha256": "962816732d33b1e4898273ffec319809baf3b2711956f060760e5f26ebfba0c0",
+    "lod_triangles": [
+      30000,
+      8000,
+      2000
+    ],
+    "texture_size": 1024
+  }
 }
