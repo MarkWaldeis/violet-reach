@@ -49,6 +49,50 @@
       "shadowLODs": 1,
       "tintVariation": 0.09
     },
+    "tree_oak_a": {
+      "maxDistance": 1600,
+      "lodScale": 0.12,
+      "lodRatio": 6,
+      "aerialLODScale": 2.0,
+      "maxLOD": 3,
+      "shadowLODs": 1,
+      "tintVariation": 0.09
+    },
+    "tree_beech_a": {
+      "maxDistance": 1600,
+      "lodScale": 0.12,
+      "lodRatio": 6,
+      "aerialLODScale": 2.0,
+      "maxLOD": 3,
+      "shadowLODs": 1,
+      "tintVariation": 0.09
+    },
+    "tree_ancient_a": {
+      "maxDistance": 1600,
+      "lodScale": 0.11,
+      "lodRatio": 6,
+      "aerialLODScale": 2.0,
+      "maxLOD": 3,
+      "shadowLODs": 1,
+      "tintVariation": 0.09
+    },
+    "tree_willow_a": {
+      "maxDistance": 1600,
+      "lodScale": 0.14,
+      "lodRatio": 6,
+      "aerialLODScale": 2.0,
+      "maxLOD": 3,
+      "shadowLODs": 1,
+      "tintVariation": 0.09
+    },
+    "fern_lush_a": {
+      "maxDistance": 80,
+      "lodScale": 0.21,
+      "lodRatio": 4,
+      "maxLOD": 3,
+      "shadowLODs": 0,
+      "tintVariation": 0.1
+    },
     "shrub_round_a": {
       "maxDistance": 260,
       "lodScale": 0.2,

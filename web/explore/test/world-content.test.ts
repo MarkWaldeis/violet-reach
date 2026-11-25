@@ -7,7 +7,7 @@ import { worldFiles } from "../scripts/world-content.mjs";
 import { pathMask } from "../src/hydrology.ts";
 import type { Slice } from "../src/slice.ts";
 
-const vegetation = ["tree_broadleaf_a", "tree_broadleaf_b", "tree_broadleaf_c", "shrub_round_a", "bush_lush_a", "fern_cluster_a", "reed_cluster_a"];
+const vegetation = ["tree_broadleaf_a", "tree_broadleaf_b", "tree_broadleaf_c", "tree_oak_a", "tree_beech_a", "tree_ancient_a", "tree_willow_a", "shrub_round_a", "bush_lush_a", "fern_cluster_a", "fern_lush_a", "reed_cluster_a"];
 const monuments = ["gate_white_a", "column_white_a", "stair_terrace_a"];
 const pilot = ["boulder_chalk_a", "ruin_wall_a", "trunk_acacia_a"];
 const rocks = ["arch_sandstone_a", "scree_pile_a", "shore_rocks_wet_a", "boulder_chalk_c"];
@@ -33,6 +33,61 @@ test("approved violet accents replace proof placements and are partly buried", (
     assert.ok(p.y_offset < -1 && p.y_offset > -2);
     assert.ok(Math.abs(p.pitch) > 0 && Math.abs(p.roll) > 0);
     assert.ok(Math.hypot(p.x - 534, p.z - 1457) < 35);
+  }
+});
+
+test("grove pilot replaces nine G2/G4 trees 1:1 with approved fantasy species", () => {
+  const { placements } = JSON.parse(readFileSync(worldFiles().get("placements.json")!, "utf8"));
+  const centre = (p: { scatter?: { polygon?: [number, number][] } }) => {
+    const polygon = p.scatter?.polygon ?? [];
+    return [polygon.reduce((x, pt) => x + pt[0], 0) / polygon.length, polygon.reduce((z, pt) => z + pt[1], 0) / polygon.length];
+  };
+  const species = ["tree_oak_a", "tree_beech_a", "tree_ancient_a", "tree_willow_a"];
+  const trees = placements.filter((p: { asset: string }) => species.includes(p.asset));
+  assert.equal(trees.length, 9);
+  for (const p of trees) {
+    const [cx, cz] = centre(p);
+    assert.ok(cx >= 216 - 1e-6 && cx <= 240 + 1e-6 && cz >= 1520 - 1e-6 && cz <= 1535 + 1e-6, `${p.asset} at ${cx},${cz} outside the grove pilot rect`);
+    assert.equal(p.scatter.count, 1);
+    assert.equal(p.scatter.seed >= 24144 && p.scatter.seed <= 24159, true);
+  }
+  const at = (x: number, z: number) => trees.find((p: { scatter?: { polygon?: [number, number][] } }) => {
+    const [cx, cz] = centre(p); return Math.abs(cx - x) < 0.5 && Math.abs(cz - z) < 0.5;
+  });
+  assert.equal(at(228, 1523)?.asset, "tree_oak_a");
+  assert.equal(at(240, 1520)?.asset, "tree_ancient_a");
+  assert.equal(at(237, 1526)?.asset, "tree_beech_a");
+  const count = (asset: string) => trees.filter((p: { asset: string }) => p.asset === asset).length;
+  assert.ok(count("tree_oak_a") > count("tree_beech_a") && count("tree_oak_a") > count("tree_willow_a"));
+  assert.equal(count("tree_ancient_a"), 1);
+  for (const p of trees.filter((p: { asset: string }) => p.asset === "tree_willow_a")) {
+    const [cx, cz] = centre(p);
+    assert.ok(cx >= 216 - 1e-6 && cx <= 219 + 1e-6 && cz >= 1529 - 1e-6 && cz <= 1535 + 1e-6, `willow at ${cx},${cz} is not in the western near-water band`);
+  }
+  const ranges: Record<string, [number, number]> = { tree_oak_a: [0.95, 1.25], tree_beech_a: [0.95, 1.25], tree_ancient_a: [1.0, 1.3], tree_willow_a: [0.9, 1.15] };
+  for (const p of trees) assert.deepEqual(p.scatter.scale, ranges[p.asset as string]);
+});
+
+test("grove pilot converts only three fern rings near G2/G4 to fern_lush_a", () => {
+  const { placements } = JSON.parse(readFileSync(worldFiles().get("placements.json")!, "utf8"));
+  const centre = (p: { scatter?: { polygon?: [number, number][] } }) => {
+    const polygon = p.scatter?.polygon ?? [];
+    return [polygon.reduce((x, pt) => x + pt[0], 0) / polygon.length, polygon.reduce((z, pt) => z + pt[1], 0) / polygon.length];
+  };
+  const ferns = placements.filter((p: { asset: string }) => p.asset === "fern_lush_a");
+  assert.equal(ferns.length, 3);
+  const g2 = [230.7, 1526], g4 = [237.8, 1517.6];
+  for (const p of ferns) {
+    const [cx, cz] = centre(p);
+    assert.ok(Math.hypot(cx - g2[0], cz - g2[1]) < 9 || Math.hypot(cx - g4[0], cz - g4[1]) < 9, `fern_lush_a at ${cx},${cz} is not near G2/G4`);
+    assert.deepEqual(p.scatter.scale, [0.5, 0.9]);
+    assert.equal(p.scatter.count, 7);
+  }
+  assert.ok(placements.some((p: { asset: string }) => p.asset === "fern_cluster_a"));
+  const slice: Slice = JSON.parse(readFileSync(worldFiles().get("slice.json")!, "utf8"));
+  for (const asset of ["tree_oak_a", "tree_beech_a", "tree_ancient_a", "tree_willow_a", "fern_lush_a"]) {
+    assert.equal(slice.asset_options?.[asset]?.maxLOD, 3);
+    assert.equal(slice.asset_options?.[asset]?.lodRatio, asset.startsWith("fern") ? 4 : 6);
   }
 });
 

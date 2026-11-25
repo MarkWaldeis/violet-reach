@@ -12,7 +12,7 @@ import { applyAssetDetailMap, prepareDetailMapsForAssets } from "./detail-maps.t
 import { REFLECTION_LAYER } from "./quality.ts";
 
 const REFLECTED_HERO_ASSETS = new Set(["gate_white_a", "bridge_arch_a", "column_white_a", "stair_terrace_a", "trunk_acacia_a"]);
-const REFLECTED_CANOPY_ASSETS = new Set(["tree_broadleaf_a", "tree_broadleaf_b", "tree_broadleaf_c"]);
+const REFLECTED_CANOPY_ASSETS = new Set(["tree_broadleaf_a", "tree_broadleaf_b", "tree_broadleaf_c", "tree_oak_a", "tree_beech_a", "tree_ancient_a", "tree_willow_a"]);
 
 interface Instance extends InstancePlacement { order: number; matrix: Matrix4; tint: Color; sphere: { centre: Vector3; radius: number }; lod: number }
 interface Part { mesh: InstancedMesh; local: Matrix4 }
