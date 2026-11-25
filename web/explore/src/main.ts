@@ -286,8 +286,9 @@ async function main() {
     frames++;
     frameId++;
     const p = camera.position, t = terrainStatus(), a = assets?.stats;
-    const signature = [ready, t.complete, t.lods, t.pending, a?.lods, a?.visibleChunks, p.x, p.y, p.z, nav.yaw, nav.pitch].join("|");
-    probeReady = ready && t.complete && stability.observe(signature) >= STABLE_FRAMES;
+    const grassPending = grass?.stats.suspended ? 0 : grass?.stats.pendingVisible ?? 0;
+    const signature = [ready, t.complete, t.lods, t.pending, a?.lods, a?.visibleChunks, grassPending, p.x, p.y, p.z, nav.yaw, nav.pitch].join("|");
+    probeReady = ready && t.complete && grassPending === 0 && stability.observe(signature) >= STABLE_FRAMES;
     const record = { now, frameMs, cpuMs: performance.now() - cpuStart, triangles: renderer.info.render.triangles, drawCalls: renderer.info.render.drawCalls };
     history.push(record);
     if (waiting.length) {

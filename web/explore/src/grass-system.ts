@@ -94,7 +94,7 @@ export class GrassSystem {
   stats = {
     cells: 0, instances: 0, visibleInstances: 0, triangles: 0,
     skipDensity: 0, skipHeight: 0, placed: 0, builds: 0, updates: 0, wanted: 0,
-    pending: 0, building: 0, slots: 0, pooled: 0, suspended: 0,
+    pending: 0, pendingVisible: 0, building: 0, slots: 0, pooled: 0, suspended: 0,
   };
 
   constructor(sampler: GrassMacroSampler, heightAt: (x: number, z: number) => number | undefined, options: GrassSystemOptions = {}, maxHeightInRect?: (minX: number, minZ: number, maxX: number, maxZ: number) => number | undefined) {
@@ -194,14 +194,16 @@ export class GrassSystem {
       Math.hypot((b.cx + 0.5) * cellSize - px, (b.cz + 0.5) * cellSize - pz)
     );
     const deadline = performance.now() + Math.max(0, buildBudgetMs);
-    let completed = 0;
+    let completed = 0, pendingVisible = 0;
     for (const cell of pending) {
       if (!this.#cellPotentiallyVisible(cell, px, pz, py)) continue;
+      pendingVisible++;
       if (completed >= maxBuildPerFrame) break;
       if (completed > 0 && performance.now() >= deadline) break;
       if (!this.#buildSlice(cell, deadline)) break; // budget exhausted inside the active cell
       completed++;
     }
+    this.stats.pendingVisible = pendingVisible;
   }
 
   /**
