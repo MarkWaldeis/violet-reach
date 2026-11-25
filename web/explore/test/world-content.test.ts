@@ -55,7 +55,8 @@ test("grove pilot replaces nine G2/G4 trees 1:1 with approved fantasy species", 
     const [cx, cz] = centre(p); return Math.abs(cx - x) < 0.5 && Math.abs(cz - z) < 0.5;
   });
   assert.equal(at(228, 1523)?.asset, "tree_oak_a");
-  assert.equal(at(240, 1520)?.asset, "tree_ancient_a");
+  assert.equal(at(240, 1520)?.asset, "tree_oak_a");
+  assert.equal(at(237, 1535)?.asset, "tree_ancient_a");
   assert.equal(at(237, 1526)?.asset, "tree_beech_a");
   const count = (asset: string) => trees.filter((p: { asset: string }) => p.asset === asset).length;
   assert.ok(count("tree_oak_a") > count("tree_beech_a") && count("tree_oak_a") > count("tree_willow_a"));
@@ -64,8 +65,11 @@ test("grove pilot replaces nine G2/G4 trees 1:1 with approved fantasy species", 
     const [cx, cz] = centre(p);
     assert.ok(cx >= 216 - 1e-6 && cx <= 219 + 1e-6 && cz >= 1529 - 1e-6 && cz <= 1535 + 1e-6, `willow at ${cx},${cz} is not in the western near-water band`);
   }
-  const ranges: Record<string, [number, number]> = { tree_oak_a: [0.95, 1.25], tree_beech_a: [0.95, 1.25], tree_ancient_a: [1.0, 1.3], tree_willow_a: [0.9, 1.15] };
-  for (const p of trees) assert.deepEqual(p.scatter.scale, ranges[p.asset as string]);
+  const ranges: Record<string, [number, number]> = { tree_oak_a: [0.95, 1.25], tree_beech_a: [0.95, 1.25], tree_ancient_a: [1.0, 1.1], tree_willow_a: [0.9, 1.15] };
+  for (const p of trees) {
+    const [cx, cz] = centre(p);
+    assert.deepEqual(p.scatter.scale, Math.abs(cx - 240) < 0.5 && Math.abs(cz - 1520) < 0.5 ? [0.95, 1.1] : ranges[p.asset as string]);
+  }
 });
 
 test("grove pilot converts only three fern rings near G2/G4 to fern_lush_a", () => {
@@ -80,8 +84,8 @@ test("grove pilot converts only three fern rings near G2/G4 to fern_lush_a", () 
   for (const p of ferns) {
     const [cx, cz] = centre(p);
     assert.ok(Math.hypot(cx - g2[0], cz - g2[1]) < 9 || Math.hypot(cx - g4[0], cz - g4[1]) < 9, `fern_lush_a at ${cx},${cz} is not near G2/G4`);
-    assert.deepEqual(p.scatter.scale, [0.5, 0.9]);
-    assert.equal(p.scatter.count, 7);
+    assert.deepEqual(p.scatter.scale, [0.8, 1.15]);
+    assert.equal(p.scatter.count, 10);
   }
   assert.ok(placements.some((p: { asset: string }) => p.asset === "fern_cluster_a"));
   const slice: Slice = JSON.parse(readFileSync(worldFiles().get("slice.json")!, "utf8"));

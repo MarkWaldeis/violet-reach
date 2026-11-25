@@ -19,14 +19,14 @@
       "id": "G2",
       "label": "Im Hain unter einer Krone, Gegenlicht zur Sonne",
       "mode": "walk",
-      "x": 230.7,
-      "z": 1526,
+      "x": 232.2,
+      "z": 1527.4,
       "agl": 1.7,
       "yaw": 0.735,
-      "pitch": 0.32,
+      "pitch": 0.16,
       "fov": 57,
       "references": ["art/reference/ref_13_forest_ground.jpg"],
-      "focus": "Gegenlicht, Strahlen, Laub. Hain bei (215–250, 1485–1547); Kamera 4 m südöstlich des Baums (228,1523), Blick genau in Sonnenazimut (yaw 0,735) und 0,32 rad nach oben, Sonne steht im oberen Bilddrittel hinter der Krone."
+      "focus": "Gegenlicht, Strahlen, Laub und sichtbarer Waldboden. Hain bei (215–250, 1485–1547); Kamera etwa 6 m südöstlich des Eichenbaums (228,1523) am Kronenrand, Blick in Sonnenazimut (yaw 0,735) und nur moderat nach oben, damit Stamm, Krone und Bodenvegetation gemeinsam prüfbar sind."
     },
     {
       "id": "G3",
@@ -45,14 +45,14 @@
       "id": "G4",
       "label": "Neben dickem Stamm, Bodenpflanzen im Vordergrund",
       "mode": "walk",
-      "x": 237.8,
-      "z": 1517.6,
+      "x": 235.9,
+      "z": 1515.5,
       "agl": 1.7,
       "yaw": -2.35,
       "pitch": -0.22,
       "fov": 57,
       "references": ["art/reference/ref_14_grass_light.jpg"],
-      "focus": "Rinde, Bodenpflanzen aus der Nähe. 3 m nordwestlich des Baums (240,1520) mit Farnring, Blick nach SO auf die sonnenbeschienene Stammseite, leicht nach unten."
+      "focus": "Rinde, Wurzelanlauf und Bodenpflanzen aus der Nähe. Etwa 6 m nordwestlich des Baums (240,1520) mit Farnring, Blick nach SO auf die sonnenbeschienene Stammseite, leicht nach unten; der Stamm soll wichtig sein, aber nicht die gesamte Bildmitte verdecken."
     },
     {
       "id": "G5",
