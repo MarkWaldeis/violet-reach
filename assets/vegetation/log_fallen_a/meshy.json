@@ -2,26 +2,58 @@
   "asset": "log_fallen_a",
   "class": "B",
   "image": {
-    "task_id": null,
-    "resource": "own-image-gen",
-    "ai_model": "own-image-gen",
-    "prompt": "A large weathered fallen tree trunk log lying horizontally, about 6 m long and 1 m thick, a heavy cylindrical deadwood log with a broken flared root buttress and hollow core opening at one end, a splintered broken timber end at the other, and two short thick broken branch stubs along the side, rough deeply furrowed dark grey-brown bark (#41321D) and weathered brown heartwood (#665548), flat resting underside, no leaves, no thin twigs, no grass, no dirt clods. single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
+    "task_id": "01a211ec-5746-76ad-bda6-b90a592526a9",
+    "resource": "text-to-image",
+    "ai_model": "gpt-image-2-5-flare",
+    "prompt": "A large weathered fallen tree trunk log lying horizontally, about 6 m long and 1 m thick, a heavy cylindrical deadwood log with a broken flared root buttress at one end and a splintered broken timber end at the other. Both broken ends must read as volumetric solid wood: visible fibrous end grain, torn layered splinters, deep cracks and uneven thick cross-sections, with any hollow cavity enclosed by thick broken wood walls. Two short thick broken branch stubs along the side, rough deeply furrowed dark grey-brown bark (#41321D), weathered brown heartwood (#665548), flat resting underside. No flat end cap, no smooth closing disc, no paper-thin hollow shell, no leaves, no thin twigs, no grass, no dirt clods. single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
     "aspect_ratio": "1:1",
     "remove_background": true,
-    "credits": 0,
+    "credits": 9,
     "file": "log_fallen_a/image/chosen.png",
-    "sha256": "993e3fa9a6d1f0d0b236686863ba7f373529c0ca3a7edf214d25f930e7bc5c4"
+    "sha256": "574d22a4b86d3bce85b0acd85f93def605f3b4e6ef3eb6fd57fda3fadd7a215e"
   },
   "model": {
-    "task_id": "01a20d56-ab16-7557-9ff4-0a87ca10463d",
+    "task_id": "01a211f5-b736-7689-87bd-47f168838214",
     "resource": "image-to-3d",
     "model_type": "smart-topology",
+    "ai_model": "meshy-t2.5",
     "target_polycount": 30000,
     "texture_model": "meshy-7",
     "enable_pbr": true,
     "texture_resolution": "4k",
     "credits": 15,
-    "file": "log_fallen_a/model/B-v1/model.glb",
-    "sha256": "6542569ad7bd7ec6833577eac341f1280640114a21c013bd55c54792bc7be29a"
+    "file": "log_fallen_a/model/B-v2/model.glb",
+    "sha256": "0ba95c077606f8044dd0f4d33e71b7b3f665a6f18411f7fb6018bb8f4fc5d039"
+  },
+  "rework": {
+    "date": "2026-11-25",
+    "reason": "gate form defects; budgeted Meshy regeneration from corrected v2 references",
+    "ledger_rows": {
+      "image": 27,
+      "model": 33
+    },
+    "previous_image": {
+      "task_id": null,
+      "resource": "own-image-gen",
+      "ai_model": "own-image-gen",
+      "prompt": "A large weathered fallen tree trunk log lying horizontally, about 6 m long and 1 m thick, a heavy cylindrical deadwood log with a broken flared root buttress and hollow core opening at one end, a splintered broken timber end at the other, and two short thick broken branch stubs along the side, rough deeply furrowed dark grey-brown bark (#41321D) and weathered brown heartwood (#665548), flat resting underside, no leaves, no thin twigs, no grass, no dirt clods. single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
+      "aspect_ratio": "1:1",
+      "remove_background": true,
+      "credits": 0,
+      "file": "log_fallen_a/image/chosen.png",
+      "sha256": "993e3fa9a6d1f0d0b236686863ba7f373529c0ca3a7edf214d25f930e7bc5c4"
+    },
+    "previous_model": {
+      "task_id": "01a20d56-ab16-7557-9ff4-0a87ca10463d",
+      "resource": "image-to-3d",
+      "model_type": "smart-topology",
+      "target_polycount": 30000,
+      "texture_model": "meshy-7",
+      "enable_pbr": true,
+      "texture_resolution": "4k",
+      "credits": 15,
+      "file": "log_fallen_a/model/B-v1/model.glb",
+      "sha256": "6542569ad7bd7ec6833577eac341f1280640114a21c013bd55c54792bc7be29a"
+    }
   }
 }

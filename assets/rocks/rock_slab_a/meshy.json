@@ -2,22 +2,54 @@
   "asset": "rock_slab_a",
   "class": "B",
   "image": {
-    "source": "external_cyan_cutout",
-    "prompt": "A wide flat stratified chalk limestone rock slab outcrop, about 3.8 m wide and 0.8 m thick, composed of two to three broad stepped horizontal sedimentary limestone plates stacked naturally together, mostly flat weathered top deck with shallow fracture cracks and pitted texture, sharp blocky vertical broken rock edges around the perimeter showing layered strata seams, pale warm chalk-beige stone (#BCB296) with darker recessed strata bands (#9B8E7E), flat solid underside. single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
-    "credits": 0,
+    "task_id": "01a211ee-3c30-7037-819d-0c05f9ef0252",
+    "resource": "text-to-image",
+    "ai_model": "gpt-image-2-5-flare",
+    "prompt": "A naturally broken wide flat stratified chalk limestone rock slab outcrop, irregular asymmetric roughly oval/angular outline, about 3.8 m wide, 2.8 m deep and 0.8 m thick, composed of two to three broad sedimentary limestone plates naturally stacked with slightly offset edges. The mostly flat weathered walkable top has shallow fracture cracks and pits; the perimeter is naturally fractured rock with uneven vertical breaks, chipped corners, layered strata seams and variable thickness, pale warm chalk-beige stone (#BCB296) with darker recessed strata bands (#9B8E7E), flat solid underside. It must read as a natural broken sediment slab, not manufactured furniture: no regular hexagon, no symmetrical tabletop shape, no concrete paver or table slab, no machined rim, no vertical fill stripes. single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
+    "aspect_ratio": "1:1",
+    "remove_background": true,
+    "credits": 9,
     "file": "rock_slab_a/image/chosen.png",
-    "sha256": "473e7e91069d45945c5118a937cb03691668df9b5229ec6b136663c62ef6b90a"
+    "sha256": "c9e6ce691a6739132c48f97c25cb43714893ac06463cba0dd8b7aefae097f469"
   },
   "model": {
-    "task_id": "01a20d59-0365-755b-a2bd-30268b9ee762",
+    "task_id": "01a211f6-36b4-7136-b277-2d17a45de512",
     "resource": "image-to-3d",
     "model_type": "smart-topology",
+    "ai_model": "meshy-t2.5",
     "target_polycount": 30000,
     "texture_model": "meshy-7",
     "enable_pbr": true,
     "texture_resolution": "4k",
     "credits": 15,
-    "file": "rock_slab_a/model/B-v1/model.glb",
-    "sha256": "d659b8191159e8f11d34f324d974c2d8aabd4aeb307047203638d906c473a6e6"
+    "file": "rock_slab_a/model/B-v2/model.glb",
+    "sha256": "39ed3b08634ae3eb6a0e8e7daafb85fd474dcb3d76cd97ebef90404cc2b80f43"
+  },
+  "rework": {
+    "date": "2026-11-25",
+    "reason": "gate form defects; budgeted Meshy regeneration from corrected v2 references",
+    "ledger_rows": {
+      "image": 31,
+      "model": 37
+    },
+    "previous_image": {
+      "source": "external_cyan_cutout",
+      "prompt": "A wide flat stratified chalk limestone rock slab outcrop, about 3.8 m wide and 0.8 m thick, composed of two to three broad stepped horizontal sedimentary limestone plates stacked naturally together, mostly flat weathered top deck with shallow fracture cracks and pitted texture, sharp blocky vertical broken rock edges around the perimeter showing layered strata seams, pale warm chalk-beige stone (#BCB296) with darker recessed strata bands (#9B8E7E), flat solid underside. single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
+      "credits": 0,
+      "file": "rock_slab_a/image/chosen.png",
+      "sha256": "473e7e91069d45945c5118a937cb03691668df9b5229ec6b136663c62ef6b90a"
+    },
+    "previous_model": {
+      "task_id": "01a20d59-0365-755b-a2bd-30268b9ee762",
+      "resource": "image-to-3d",
+      "model_type": "smart-topology",
+      "target_polycount": 30000,
+      "texture_model": "meshy-7",
+      "enable_pbr": true,
+      "texture_resolution": "4k",
+      "credits": 15,
+      "file": "rock_slab_a/model/B-v1/model.glb",
+      "sha256": "d659b8191159e8f11d34f324d974c2d8aabd4aeb307047203638d906c473a6e6"
+    }
   }
 }

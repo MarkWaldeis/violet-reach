@@ -2,26 +2,58 @@
   "asset": "trunk_acacia_b",
   "class": "B",
   "image": {
-    "task_id": null,
-    "resource": "own-image-gen",
-    "ai_model": "own-image-gen",
-    "prompt": "A bare multi-stemmed umbrella thorn acacia tree trunk with no leaves at all, only the trunks and thick main branches, about 7 m tall, three stout leaning trunks rising together from a single shared flared root base and forking outward and upward into thick sculptural primary branches that end in a wide flat horizontal umbrella-shaped canopy plane, no foliage, no leaves, no thin twigs, no fine branch tips, dark grey-brown deeply furrowed bark (#41321D). single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
+    "task_id": "01a211ed-c3be-7630-98cc-96d93ad2fb0d",
+    "resource": "text-to-image",
+    "ai_model": "gpt-image-2-5-flare",
+    "prompt": "A bare multi-stemmed umbrella thorn acacia tree trunk with no leaves at all, only the trunks and thick main branches, about 7 m tall. Three stout leaning trunks rise together from a single shared flared root base and are organically fused there; every fork is a smooth continuous grown junction with bark flowing around it. The trunks fork outward and upward into thick sculptural primary branches forming a wide flat horizontal umbrella-shaped canopy plane, and all branch ends taper cleanly and naturally into solid woody tips. No cut-off pipe ends, no blunt cylindrical tube stubs, no flat circular caps, no hard intersections or intersecting rods, no foliage, no leaves, no thin twigs, dark grey-brown deeply furrowed bark (#41321D). single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
     "aspect_ratio": "1:1",
     "remove_background": true,
-    "credits": 0,
+    "credits": 9,
     "file": "trunk_acacia_b/image/chosen.png",
-    "sha256": "a859c160a20bc7d58a8a8feee4594057354529305b0a9a201f1e32c0e7cb4e95"
+    "sha256": "ad027d35ad9e603e124e6380433064b1c036e7fef42378efb86fdc09be76b849"
   },
   "model": {
-    "task_id": "01a20d54-f9b1-70d2-82c9-e3a40d4bf486",
+    "task_id": "01a211f5-f976-7505-abdf-673e3de3d019",
     "resource": "image-to-3d",
     "model_type": "smart-topology",
+    "ai_model": "meshy-t2.5",
     "target_polycount": 30000,
     "texture_model": "meshy-7",
     "enable_pbr": true,
     "texture_resolution": "4k",
     "credits": 15,
-    "file": "trunk_acacia_b/model/B-v1/model.glb",
-    "sha256": "8a116200f35f20fd9af95f1836c60f5f461c13c083263fd4ad3e4ed36b6fc34d"
+    "file": "trunk_acacia_b/model/B-v2/model.glb",
+    "sha256": "eb6865b4aabc895db1aefb45a30c368b60e2c874ae8264b324c48f2cc9a17afa"
+  },
+  "rework": {
+    "date": "2026-11-25",
+    "reason": "gate form defects; budgeted Meshy regeneration from corrected v2 references",
+    "ledger_rows": {
+      "image": 29,
+      "model": 35
+    },
+    "previous_image": {
+      "task_id": null,
+      "resource": "own-image-gen",
+      "ai_model": "own-image-gen",
+      "prompt": "A bare multi-stemmed umbrella thorn acacia tree trunk with no leaves at all, only the trunks and thick main branches, about 7 m tall, three stout leaning trunks rising together from a single shared flared root base and forking outward and upward into thick sculptural primary branches that end in a wide flat horizontal umbrella-shaped canopy plane, no foliage, no leaves, no thin twigs, no fine branch tips, dark grey-brown deeply furrowed bark (#41321D). single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
+      "aspect_ratio": "1:1",
+      "remove_background": true,
+      "credits": 0,
+      "file": "trunk_acacia_b/image/chosen.png",
+      "sha256": "a859c160a20bc7d58a8a8feee4594057354529305b0a9a201f1e32c0e7cb4e95"
+    },
+    "previous_model": {
+      "task_id": "01a20d54-f9b1-70d2-82c9-e3a40d4bf486",
+      "resource": "image-to-3d",
+      "model_type": "smart-topology",
+      "target_polycount": 30000,
+      "texture_model": "meshy-7",
+      "enable_pbr": true,
+      "texture_resolution": "4k",
+      "credits": 15,
+      "file": "trunk_acacia_b/model/B-v1/model.glb",
+      "sha256": "8a116200f35f20fd9af95f1836c60f5f461c13c083263fd4ad3e4ed36b6fc34d"
+    }
   }
 }

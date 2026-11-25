@@ -2,10 +2,10 @@
   "asset": "monument_split_disc_a",
   "class": "A",
   "image": {
-    "task_id": "01a20d5e-c07d-71ed-8c66-686a5194968c",
+    "task_id": "01a211f0-8ca3-760a-a1b9-f1727fd28e1b",
     "resource": "text-to-image",
     "ai_model": "gpt-image-2-5-flare",
-    "prompt": "A monumental ancient island stone monument, about 40 m tall, 28 m wide and 20 m deep, featuring a broad three-tiered circular stepped limestone plinth base supporting two colossal curved monolith halves of a split upright stone disc leaning slightly toward each other with a dramatic open diagonal wedge cleft slicing between them, both massive stone halves solidly anchored and fused into the stepped circular base with zero floating parts, architectural pale weathered ivory and cool grey-beige limestone (#DCCDB1, #E8DABE, #AAA9A4) with large smooth cut-stone faces, fine masonry seams, sharp fractured cliff-like edges along the central split, subtle pores and weathering stains, solid thick sculpture with clear 3D depth from all angles, straight flat circular base. single isolated object, whole object visible, nothing cropped, at least 10 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 80 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no water, no grass, plain neutral light grey background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
+    "prompt": "Front, side and rear views of exactly the same monumental ancient island stone monument, about 40 m tall, 28 m wide and 20 m deep. A broad three-tiered circular stepped limestone plinth supports two colossal curved monolith halves of a split upright stone disc leaning slightly toward each other, separated by a dramatic open diagonal wedge cleft. Both massive monolith halves continue down into and are massively fused with the shared plinth through broad continuous load-bearing contact, one connected object, zero floating parts. Large smooth mineral monolithic limestone surfaces have only sparse subtle tooling, natural pores and weathering stains; the central split edges are sharp fractured rock. Architectural pale weathered ivory and cool grey-beige limestone (#DCCDB1, #E8DABE, #AAA9A4), solid thick sculpture with clear 3D depth from all angles, straight flat circular base. No regular panel grid, no rectangular stone tiles across the faces, no woven or web pattern, no crosshatch, no fabric relief, no fragile narrow contact points. single isolated object, whole object visible, nothing cropped, at least 10 percent empty margin on all sides, centered, fills about 80 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no water, no grass, plain neutral light grey background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
     "generate_multi_view": true,
     "remove_background": true,
     "credits": 9,
@@ -15,17 +15,52 @@
       "monument_split_disc_a/image/view_0.png",
       "monument_split_disc_a/image/view_2.png"
     ],
-    "sha256": "6e79be466a8c0fdbe0b13719eef847607c1a9a0ba7cf19e4244af806a7419682"
+    "sha256": "34151122a665ea3810bee666dd4331325a719599dabfba8341216bf9d4c65df0"
   },
   "model": {
-    "task_id": "01a20d65-662a-705e-87a0-36ef476664a8",
+    "task_id": "01a211f6-5ad3-74a2-96cb-1f27e1e44b7d",
     "resource": "multi-image-to-3d",
     "model_type": "standard",
     "texture_model": "meshy-7",
     "enable_pbr": true,
     "texture_resolution": "4k",
     "credits": 30,
-    "file": "monument_split_disc_a/model/A-v1/model.glb",
-    "sha256": "613cd6f7406ac07aefc8adccf8229d0901619f9533d9895f9e874a629ae7d932"
+    "file": "monument_split_disc_a/model/A-v2/model.glb",
+    "sha256": "ddaffab1958e3d49b36a83bc53dab2654d9d30ab0f93171b42bbd6f2f24eddbb"
+  },
+  "rework": {
+    "date": "2026-11-25",
+    "reason": "gate form defects; budgeted Meshy regeneration from corrected v2 references",
+    "ledger_rows": {
+      "image": 32,
+      "model": 38
+    },
+    "previous_image": {
+      "task_id": "01a20d5e-c07d-71ed-8c66-686a5194968c",
+      "resource": "text-to-image",
+      "ai_model": "gpt-image-2-5-flare",
+      "prompt": "A monumental ancient island stone monument, about 40 m tall, 28 m wide and 20 m deep, featuring a broad three-tiered circular stepped limestone plinth base supporting two colossal curved monolith halves of a split upright stone disc leaning slightly toward each other with a dramatic open diagonal wedge cleft slicing between them, both massive stone halves solidly anchored and fused into the stepped circular base with zero floating parts, architectural pale weathered ivory and cool grey-beige limestone (#DCCDB1, #E8DABE, #AAA9A4) with large smooth cut-stone faces, fine masonry seams, sharp fractured cliff-like edges along the central split, subtle pores and weathering stains, solid thick sculpture with clear 3D depth from all angles, straight flat circular base. single isolated object, whole object visible, nothing cropped, at least 10 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 80 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no water, no grass, plain neutral light grey background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
+      "generate_multi_view": true,
+      "remove_background": true,
+      "credits": 9,
+      "file": "monument_split_disc_a/image/view_1.png",
+      "files": [
+        "monument_split_disc_a/image/view_1.png",
+        "monument_split_disc_a/image/view_0.png",
+        "monument_split_disc_a/image/view_2.png"
+      ],
+      "sha256": "6e79be466a8c0fdbe0b13719eef847607c1a9a0ba7cf19e4244af806a7419682"
+    },
+    "previous_model": {
+      "task_id": "01a20d65-662a-705e-87a0-36ef476664a8",
+      "resource": "multi-image-to-3d",
+      "model_type": "standard",
+      "texture_model": "meshy-7",
+      "enable_pbr": true,
+      "texture_resolution": "4k",
+      "credits": 30,
+      "file": "monument_split_disc_a/model/A-v1/model.glb",
+      "sha256": "613cd6f7406ac07aefc8adccf8229d0901619f9533d9895f9e874a629ae7d932"
+    }
   }
 }

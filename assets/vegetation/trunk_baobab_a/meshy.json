@@ -2,26 +2,58 @@
   "asset": "trunk_baobab_a",
   "class": "B",
   "image": {
-    "task_id": null,
-    "resource": "own-image-gen",
-    "ai_model": "own-image-gen",
-    "prompt": "A bare bottle-shaped baobab tree trunk with no leaves at all, only the massive trunk and stout primary limbs, about 12 m tall and 3 m wide at the swollen belly, heavy flared buttress roots at the base, thick cylindrical bottle-shaped trunk with deep vertical folds and weathered elephant-hide furrowed dark grey-brown bark (#41321D and #574D46), tapering near the top into five short thick gnarled primary branches with blunt ends, no foliage, no leaves, no thin twigs, no fine branchlets. single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
+    "task_id": "01a211ee-1ceb-73ef-b1e6-27fe669b4bc5",
+    "resource": "text-to-image",
+    "ai_model": "gpt-image-2-5-flare",
+    "prompt": "A bare bottle-shaped baobab tree trunk with no leaves at all, only the massive trunk and stout primary limbs, about 12 m tall and 3 m wide at the swollen belly. Heavy flared buttress roots support a thick bottle-shaped trunk with irregular elephant-hide bark: long asymmetric vertical folds and creases following the trunk, varied in width and depth, weathered dark grey-brown (#41321D and #574D46). Near the top the trunk narrows into five or six short thick gnarled primary branches, each organically fused and tapering cleanly to rounded solid woody tips. No quilted, crosshatched or hammered surface pattern, no uniform tube limbs, no cut-off pipe ends, no flat circular caps, no foliage, no leaves, no thin twigs. single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
     "aspect_ratio": "1:1",
     "remove_background": true,
-    "credits": 0,
+    "credits": 9,
     "file": "trunk_baobab_a/image/chosen.png",
-    "sha256": "bf1799feb14256a3995fd94be607ccd372932945e479f7ff0a3510dfba86ffb3"
+    "sha256": "6bb18104d5dc9ea8a9fefde41678e6ae419a4a1360feca9255b754a3672bf383"
   },
   "model": {
-    "task_id": "01a20d56-71a6-7715-8b09-b057633183b8",
+    "task_id": "01a211f6-1555-75c7-8ee3-53e7b212ecca",
     "resource": "image-to-3d",
     "model_type": "smart-topology",
+    "ai_model": "meshy-t2.5",
     "target_polycount": 30000,
     "texture_model": "meshy-7",
     "enable_pbr": true,
     "texture_resolution": "4k",
     "credits": 15,
-    "file": "trunk_baobab_a/model/B-v1/model.glb",
-    "sha256": "919775d77ef60a152526af0eb8bcb45d833c789c66ba764121b92045451a447f"
+    "file": "trunk_baobab_a/model/B-v2/model.glb",
+    "sha256": "191f4c4d14257adbb2192d1063342268a225167410a9dd621b492a28c6c487c1"
+  },
+  "rework": {
+    "date": "2026-11-25",
+    "reason": "gate form defects; budgeted Meshy regeneration from corrected v2 references",
+    "ledger_rows": {
+      "image": 30,
+      "model": 36
+    },
+    "previous_image": {
+      "task_id": null,
+      "resource": "own-image-gen",
+      "ai_model": "own-image-gen",
+      "prompt": "A bare bottle-shaped baobab tree trunk with no leaves at all, only the massive trunk and stout primary limbs, about 12 m tall and 3 m wide at the swollen belly, heavy flared buttress roots at the base, thick cylindrical bottle-shaped trunk with deep vertical folds and weathered elephant-hide furrowed dark grey-brown bark (#41321D and #574D46), tapering near the top into five short thick gnarled primary branches with blunt ends, no foliage, no leaves, no thin twigs, no fine branchlets. single isolated object, whole object visible, nothing cropped, at least 12 percent empty margin on all sides, three-quarter view from slightly above, centered, fills about 78 percent of the frame, flat even overcast lighting, no cast shadows, no rim light, no ground plane, no grass, uniform solid bright cyan (#00D8FF) studio background, photorealistic, matte surface, fine surface detail, no text, no watermark, no people.",
+      "aspect_ratio": "1:1",
+      "remove_background": true,
+      "credits": 0,
+      "file": "trunk_baobab_a/image/chosen.png",
+      "sha256": "bf1799feb14256a3995fd94be607ccd372932945e479f7ff0a3510dfba86ffb3"
+    },
+    "previous_model": {
+      "task_id": "01a20d56-71a6-7715-8b09-b057633183b8",
+      "resource": "image-to-3d",
+      "model_type": "smart-topology",
+      "target_polycount": 30000,
+      "texture_model": "meshy-7",
+      "enable_pbr": true,
+      "texture_resolution": "4k",
+      "credits": 15,
+      "file": "trunk_baobab_a/model/B-v1/model.glb",
+      "sha256": "919775d77ef60a152526af0eb8bcb45d833c789c66ba764121b92045451a447f"
+    }
   }
 }
