@@ -43862,7 +43862,7 @@
       "asset": "fern_lush_a",
       "scatter": {
         "seed": 24169,
-        "count": 10,
+        "count": 16,
         "polygon": [
           [
             231.246,
@@ -43910,8 +43910,8 @@
         "min_height_above_water": 6,
         "max_height_above_water": 240,
         "scale": [
-          0.8,
-          1.15
+          0.85,
+          1.2
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -44582,7 +44582,7 @@
       "asset": "fern_lush_a",
       "scatter": {
         "seed": 24181,
-        "count": 10,
+        "count": 16,
         "polygon": [
           [
             240.094,
@@ -44630,8 +44630,8 @@
         "min_height_above_water": 6,
         "max_height_above_water": 240,
         "scale": [
-          0.8,
-          1.15
+          0.85,
+          1.2
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -45062,7 +45062,7 @@
       "asset": "fern_lush_a",
       "scatter": {
         "seed": 24189,
-        "count": 10,
+        "count": 16,
         "polygon": [
           [
             242.878,
@@ -45110,8 +45110,8 @@
         "min_height_above_water": 6,
         "max_height_above_water": 240,
         "scale": [
-          0.8,
-          1.15
+          0.85,
+          1.2
         ],
         "align_to_slope": true,
         "surface": "land",

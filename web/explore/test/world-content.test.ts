@@ -84,8 +84,8 @@ test("grove pilot converts only three fern rings near G2/G4 to fern_lush_a", () 
   for (const p of ferns) {
     const [cx, cz] = centre(p);
     assert.ok(Math.hypot(cx - g2[0], cz - g2[1]) < 9 || Math.hypot(cx - g4[0], cz - g4[1]) < 9, `fern_lush_a at ${cx},${cz} is not near G2/G4`);
-    assert.deepEqual(p.scatter.scale, [0.8, 1.15]);
-    assert.equal(p.scatter.count, 10);
+    assert.deepEqual(p.scatter.scale, [0.85, 1.2]);
+    assert.equal(p.scatter.count, 16);
   }
   assert.ok(placements.some((p: { asset: string }) => p.asset === "fern_cluster_a"));
   const slice: Slice = JSON.parse(readFileSync(worldFiles().get("slice.json")!, "utf8"));
