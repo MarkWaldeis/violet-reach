@@ -8,7 +8,8 @@ import bpy
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parent))
-from canopy_lod import CANOPY_ATTRIBUTE, _plane_axes, canopy_alpha_cutoff, mark_canopy, simplify_canopy
+from canopy_lod import (CANOPY_ATTRIBUTE, _plane_axes, canopy_alpha_cutoff, mark_canopy,
+                        restore_vertical_extent, simplify_canopy)
 from foliage_atlas import FoliageAtlas
 
 
@@ -185,6 +186,21 @@ with tempfile.TemporaryDirectory() as folder:
     assert material["alphaMode"] == "MASK" and abs(material["alphaCutoff"] - .35) < 1e-6, material
     assert material["doubleSided"] and "normalTexture" not in material
 print("PASS: foliage exports as double-sided alpha MASK with cutoff 0.35, not transparent BLEND")
+
+# Regression for clustered wood simplification: invisible vertices left behind by collapsed
+# triangles must not define the trunk span that restore_vertical_extent preserves.
+restore_mesh = bpy.data.meshes.new("Restore orphan fixture")
+restore_mesh.from_pydata([
+    (0, 0, 0), (0, 0, 3), (1, 0, 3),
+    (0, 0, 9.4),  # faceless remnant, as produced by the old clustered fallback
+], [], [(0, 1, 2)])
+restore_mesh.update()
+restore_vertical_extent(restore_mesh, 0, 9.4)
+restored_visible_z = [restore_mesh.vertices[index].co.z for face in restore_mesh.polygons
+                      for index in face.vertices]
+assert abs(min(restored_visible_z)) < 1e-5 and abs(max(restored_visible_z) - 9.4) < 1e-5, restored_visible_z
+print("PASS: vertical restore measures only face-referenced wood vertices")
+
 chained = near_lod.copy()
 chained.data = near_lod.data.copy()
 bpy.context.scene.collection.objects.link(chained)

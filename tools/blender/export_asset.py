@@ -84,6 +84,12 @@ def _cluster_geometry(mesh, cell_size):
                 face_uvs[layer.name].append([tuple(layer.data[corner_loops[c]].uv) for c in corners])
     if not faces:
         return None
+    # Cells whose triangles all collapsed away must not survive as invisible vertices.
+    # They otherwise inflate mesh bounds and downstream trunk-height restoration.
+    used = sorted({index for triangle in faces for index in triangle})
+    compact = {index: compacted for compacted, index in enumerate(used)}
+    positions = positions[used]
+    faces = [tuple(compact[index] for index in triangle) for triangle in faces]
     return positions, faces, materials, smoothing, face_uvs, len(faces)
 
 

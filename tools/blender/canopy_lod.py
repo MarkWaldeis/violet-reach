@@ -84,13 +84,18 @@ def restore_vertical_extent(mesh, low, high):
     Edge collapse and clustering both erode thin lower trunks first: a mesh can fit the
     triangle budget while its lowest remaining vertex floats well above the ground.  The
     vertical span is a silhouette/ground-contact constraint, so restore exactly that span
-    after simplification.  This intentionally does not invent detail; it only stops the
-    coarse proxy from losing the trunk endpoint that was present in its input.
+    after simplification.  Only face-referenced vertices define the current span: stray
+    vertices are invisible in the exported proxy and must not compress its silhouette.
+    This intentionally does not invent detail; it only stops the coarse proxy from losing
+    the trunk endpoint that was present in its input.
     """
     if not mesh.vertices or high - low <= 1e-9:
         return
-    current_low = min(vertex.co.z for vertex in mesh.vertices)
-    current_high = max(vertex.co.z for vertex in mesh.vertices)
+    referenced = {index for face in mesh.polygons for index in face.vertices}
+    if not referenced:
+        return
+    current_low = min(mesh.vertices[index].co.z for index in referenced)
+    current_high = max(mesh.vertices[index].co.z for index in referenced)
     current_span = current_high - current_low
     if current_span <= 1e-9:
         return

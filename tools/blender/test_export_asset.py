@@ -10,6 +10,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).parent))
 import vrlib
+from canopy_lod import restore_vertical_extent
 
 for obj in list(bpy.data.objects):
     bpy.data.objects.remove(obj, do_unlink=True)
@@ -72,6 +73,32 @@ with tempfile.TemporaryDirectory() as folder:
     assert result["images"]["normal"].colorspace_settings.name == "Non-Color"
     assert (asset / "leaf.raw.glb").is_file()
 print("PASS: disconnected thin leaf welds into bounded LODs; both source colours bake without black face centres")
+
+# Regression for the last-resort vertex clusterer: the tiny high triangle collapses away at
+# the selected grid size.  Its cluster positions must not remain as invisible vertices that
+# make restore_vertical_extent measure a longer trunk than the visible faces actually have.
+cluster_mesh = bpy.data.meshes.new("Cluster orphan regression")
+cluster_mesh.from_pydata([
+    (0, 0, 0), (4, 0, 0), (0, 0, 6),
+    (4, 0, 9.1), (4.3, 0, 9.4), (4, 0.3, 9.2),
+], [], [(0, 1, 2), (3, 4, 5)])
+cluster_mesh.update()
+cluster_obj = bpy.data.objects.new("Cluster orphan regression", cluster_mesh)
+bpy.context.scene.collection.objects.link(cluster_obj)
+cluster_low = min(vertex.co.z for vertex in cluster_mesh.vertices)
+cluster_high = max(vertex.co.z for vertex in cluster_mesh.vertices)
+assert result["_vertex_cluster_decimate"](cluster_obj, 1)
+assert 0 < vrlib.triangle_count([cluster_obj]) <= 1
+referenced = sorted({index for face in cluster_obj.data.polygons for index in face.vertices})
+assert len(cluster_obj.data.vertices) == len(referenced), (len(cluster_obj.data.vertices), referenced)
+restore_vertical_extent(cluster_obj.data, cluster_low, cluster_high)
+visible_z = [cluster_obj.data.vertices[index].co.z for face in cluster_obj.data.polygons
+             for index in face.vertices]
+visible_span = max(visible_z) - min(visible_z)
+assert abs(min(visible_z) - cluster_low) < 1e-5, (min(visible_z), cluster_low)
+assert abs(max(visible_z) - cluster_high) < 1e-5, (max(visible_z), cluster_high)
+print(f"PASS: clustered fallback drops faceless cells; visible wood span restores to "
+      f"{visible_span:.3f}/{cluster_high - cluster_low:.3f}")
 
 # ---- class B: a prepared Meshy raw model exports without a re-bake ----
 import hashlib
