@@ -202,3 +202,21 @@ test("grass distance LOD uses uniform count prefixes, far geometry and bounded r
   assert.ok(sys.stats.slots <= slots + 2, `Render-Slots werden wieder verwendet: ${slots} → ${sys.stats.slots}`);
   sys.dispose();
 });
+
+test("grass system suspends streaming when vertical camera distance exceeds the fade range", () => {
+  const sys = new GrassSystem(uniformGrassSampler(), () => 10, { cellSize: 16, viewDistance: 20, density: 2, buildBudgetMs: 8 }, () => 45);
+  for (let i = 0; i < 120; i++) sys.update(400, 1500, 11.7);
+  assert.ok(sys.stats.cells > 0, "Bodenkamera streamt Gras");
+  sys.update(400, 1500, 60);
+  assert.equal(sys.stats.suspended, 0, "nahe höhere Grassflächen verhindern das Abschalten");
+  assert.ok(sys.stats.cells > 0);
+  sys.update(400, 1500, 131);
+  assert.equal(sys.stats.suspended, 1);
+  assert.equal(sys.stats.cells, 0);
+  assert.equal(sys.stats.instances, 0);
+  assert.equal(sys.group.children.length, 0, "unsichtbare Fernzellen werden aus dem Streaming entfernt");
+  for (let i = 0; i < 120; i++) sys.update(400, 1500, 11.7);
+  assert.equal(sys.stats.suspended, 0);
+  assert.ok(sys.stats.cells > 0, "beim Abstieg wird der Ring erneut aufgebaut");
+  sys.dispose();
+});

@@ -105,7 +105,7 @@ async function main() {
       ultra: { viewDistance: 128, density: 6.5 },
     };
     const gq = grassQuality[quality.name] ?? grassQuality.high;
-    grass = new GrassSystem(sampler, (x, z) => terrain.fullHeightAt(x, z) ?? terrain.heightAt(x, z), gq);
+    grass = new GrassSystem(sampler, (x, z) => terrain.fullHeightAt(x, z) ?? terrain.heightAt(x, z), gq, (minX, minZ, maxX, maxZ) => terrain.maxHeightInRect(minX, minZ, maxX, maxZ));
     scene.add(grass.group);
   }
   const nav = new Navigation(camera, terrain.manifest, (x, z) => terrain.heightAt(x, z));
@@ -267,7 +267,7 @@ async function main() {
     const dt = Math.max(0, Math.min(0.05, (now - last) / 1000));
     last = now;
     terrain.update(position.x, position.z, now);
-    grass?.update(position.x, position.z);
+    grass?.update(position.x, position.z, position.y);
     if (!ready && !failed) {
       ready = applyPose();
       if (ready) {

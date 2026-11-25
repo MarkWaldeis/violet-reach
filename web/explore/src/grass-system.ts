@@ -50,6 +50,7 @@ interface Cell {
   build?: CellBuild;
   /** full near-ring instance count independent of the currently applied distance-density count */
   count: number;
+  maxY?: number | null;
 }
 
 interface CellBuild {
@@ -80,6 +81,7 @@ export class GrassSystem {
   #base: Record<"near" | "far", BufferGeometry>;
   #sampler: GrassMacroSampler;
   #heightAt: (x: number, z: number) => number | undefined;
+  #maxHeightInRect?: (minX: number, minZ: number, maxX: number, maxZ: number) => number | undefined;
   #opts: Required<GrassSystemOptions>;
   #lastKey = "";
   #scatterTarget: number;
@@ -92,12 +94,13 @@ export class GrassSystem {
   stats = {
     cells: 0, instances: 0, visibleInstances: 0, triangles: 0,
     skipDensity: 0, skipHeight: 0, placed: 0, builds: 0, updates: 0, wanted: 0,
-    pending: 0, building: 0, slots: 0, pooled: 0,
+    pending: 0, building: 0, slots: 0, pooled: 0, suspended: 0,
   };
 
-  constructor(sampler: GrassMacroSampler, heightAt: (x: number, z: number) => number | undefined, options: GrassSystemOptions = {}) {
+  constructor(sampler: GrassMacroSampler, heightAt: (x: number, z: number) => number | undefined, options: GrassSystemOptions = {}, maxHeightInRect?: (minX: number, minZ: number, maxX: number, maxZ: number) => number | undefined) {
     this.#sampler = sampler;
     this.#heightAt = heightAt;
+    this.#maxHeightInRect = maxHeightInRect;
     const cellSize = options.cellSize ?? 16;
     const viewDistance = options.viewDistance ?? 96;
     this.#opts = {
@@ -130,9 +133,29 @@ export class GrassSystem {
     this.#scatterOrder = cellScatterOrder(this.#scatterCapacity, 113.17);
   }
 
-  update(px: number, pz: number) {
+  update(px: number, pz: number, py?: number) {
     this.stats.updates++;
     const { cellSize, viewDistance } = this.#opts;
+    const groundY = this.#heightAt(px, pz);
+    let verticalDistance = 0;
+    if (py !== undefined && groundY !== undefined) {
+      let supportY = groundY;
+      if (py - groundY > viewDistance * 0.5 && this.#maxHeightInRect) {
+        const radius = viewDistance + cellSize * 1.25;
+        supportY = this.#maxHeightInRect(px - radius, pz - radius, px + radius, pz + radius) ?? groundY;
+      }
+      verticalDistance = py - supportY;
+    }
+    if (verticalDistance > viewDistance) {
+      for (const cell of this.#cells.values()) this.#releaseCell(cell);
+      this.#cells.clear();
+      this.#lastKey = "";
+      this.stats.wanted = 0;
+      this.stats.suspended = 1;
+      this.#refreshStats();
+      return;
+    }
+    this.stats.suspended = 0;
     const ccx = Math.floor(px / cellSize), ccz = Math.floor(pz / cellSize);
     const ring = Math.ceil(viewDistance / cellSize);
     const key = `${ccx},${ccz}`;
@@ -155,13 +178,13 @@ export class GrassSystem {
       this.stats.wanted = wanted.size;
     }
 
-    this.#buildBudgeted(px, pz);
-    this.#updateDistanceLODs(px, pz);
+    this.#buildBudgeted(px, pz, py);
+    this.#updateDistanceLODs(px, pz, py);
     this.#refreshStats();
   }
 
   /** Process the nearest incomplete cells, but never more than buildBudgetMs in one frame. */
-  #buildBudgeted(px: number, pz: number) {
+  #buildBudgeted(px: number, pz: number, py?: number) {
     const { cellSize, maxBuildPerFrame, buildBudgetMs } = this.#opts;
     const pending = [...this.#cells.values()].filter((c) => c.mesh === undefined);
     if (!pending.length) return;
@@ -173,6 +196,7 @@ export class GrassSystem {
     const deadline = performance.now() + Math.max(0, buildBudgetMs);
     let completed = 0;
     for (const cell of pending) {
+      if (!this.#cellPotentiallyVisible(cell, px, pz, py)) continue;
       if (completed >= maxBuildPerFrame) break;
       if (completed > 0 && performance.now() >= deadline) break;
       if (!this.#buildSlice(cell, deadline)) break; // budget exhausted inside the active cell
@@ -312,15 +336,31 @@ export class GrassSystem {
    * Apply distance LODs without rebuilding: count prefixes are uniform because of the shuffled
    * scatter order, and geometry switching only selects near/far shared vertex data on the slot.
    */
-  #updateDistanceLODs(px: number, pz: number) {
+  #updateDistanceLODs(px: number, pz: number, py?: number) {
     for (const cell of this.#cells.values()) {
       if (!cell.mesh || !cell.slot || !cell.count) continue;
+      if (!this.#cellPotentiallyVisible(cell, px, pz, py)) {
+        cell.mesh.count = 0;
+        continue;
+      }
       const distance = this.#cellDistance(cell, px, pz);
       const useFar = distance >= this.#opts.geometryLodDistance;
       const geometry = useFar ? cell.slot.farGeometry : cell.slot.nearGeometry;
       if (cell.mesh.geometry !== geometry) cell.mesh.geometry = geometry;
       cell.mesh.count = this.#visibleCount(cell.count, distance);
     }
+  }
+
+  #cellPotentiallyVisible(cell: Cell, px: number, pz: number, py?: number) {
+    if (py === undefined || !this.#maxHeightInRect) return true;
+    if (cell.maxY === undefined) {
+      const x0 = cell.cx * this.#opts.cellSize, z0 = cell.cz * this.#opts.cellSize;
+      cell.maxY = this.#maxHeightInRect(x0, z0, x0 + this.#opts.cellSize, z0 + this.#opts.cellSize) ?? null;
+    }
+    if (cell.maxY === null) return true;
+    const horizontal = Math.max(0, this.#cellDistance(cell, px, pz) - this.#opts.cellSize * Math.SQRT1_2);
+    const vertical = Math.max(0, py - (cell.maxY + 1.5));
+    return Math.hypot(horizontal, vertical) <= this.#opts.viewDistance;
   }
 
   #visibleCount(count: number, distance: number): number {

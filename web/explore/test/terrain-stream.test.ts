@@ -101,3 +101,21 @@ test("render and full-resolution ground share unmodified exported heights", asyn
   assert.ok(Math.abs(terrain.heightAt(128, 64)! - terrain.fullHeightAt(128, 64)!) < 0.00001);
   terrain.dispose(); material.dispose();
 });
+
+test("maxHeightInRect finds pinned full-resolution maxima and refuses incomplete coverage", async (t) => {
+  const m = { version: 1 as const, tilesX: 2, tilesZ: 1, tileSize: 128, samples: 65, originX: 0, originZ: 0, minHeight: 0, maxHeight: 100 };
+  t.mock.method(globalThis, "fetch", async () => {
+    const data = new Uint16Array(m.samples ** 2);
+    data[32 * m.samples + 16] = 20000;
+    data[32 * m.samples + 40] = 60000;
+    return new Response(data.buffer);
+  });
+  const material = new MeshBasicMaterial(), terrain = new TerrainStream(m, new URL("https://terrain.test/manifest.json"), material);
+  await terrain.preloadSlice({ minX: 0, minZ: 0, maxX: 100, maxZ: 100 });
+  const low = terrain.maxHeightInRect(0, 0, 40, 64)!;
+  const high = terrain.maxHeightInRect(0, 0, 120, 64)!;
+  assert.ok(low > 30 && low < 31, `nur der erste Gipfel liegt im engen Rechteck: ${low}`);
+  assert.ok(high > 91 && high < 92, `das weitere Rechteck enthält den höheren Gipfel: ${high}`);
+  assert.equal(terrain.maxHeightInRect(0, 0, 200, 64), undefined, "fehlende Nachbarkachel ist nicht konservativ genug");
+  terrain.dispose(); material.dispose();
+});

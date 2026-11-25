@@ -76,6 +76,33 @@ export class TerrainStream {
     return sampleTile(data, m.samples, 1, (x - m.originX) / m.tileSize - coords.x, (z - m.originZ) / m.tileSize - coords.z);
   }
 
+  maxHeightInRect(minX: number, minZ: number, maxX: number, maxZ: number): number | undefined {
+    const m = this.manifest;
+    const from = worldTile(m, minX, minZ), to = worldTile(m, maxX, maxZ);
+    let max = -Infinity, missing = false, found = false;
+    for (let tz = from.z; tz <= to.z; tz++) for (let tx = from.x; tx <= to.x; tx++) {
+      const key = tileKey({ x: tx, z: tz });
+      const data = this.#pinned.get(key) ?? this.#active.get(key)?.data;
+      if (!data) { missing = true; continue; }
+      const x0 = m.originX + tx * m.tileSize, z0 = m.originZ + tz * m.tileSize;
+      const n = m.samples, last = n - 1;
+      const ix0 = Math.max(0, Math.floor((minX - x0) / m.tileSize * last) - 1);
+      const ix1 = Math.min(last, Math.ceil((maxX - x0) / m.tileSize * last) + 1);
+      const iz0 = Math.max(0, Math.floor((minZ - z0) / m.tileSize * last) - 1);
+      const iz1 = Math.min(last, Math.ceil((maxZ - z0) / m.tileSize * last) + 1);
+      if (ix1 < ix0 || iz1 < iz0) continue;
+      found = true;
+      for (let iz = iz0; iz <= iz1; iz++) {
+        const row = iz * n;
+        for (let ix = ix0; ix <= ix1; ix++) {
+          const h = data[row + ix];
+          if (h > max) max = h;
+        }
+      }
+    }
+    return missing || !found ? undefined : max;
+  }
+
   update(x: number, z: number, now: number) {
     if (Math.hypot(x - this.#last.x, z - this.#last.z) >= Math.min(24, this.manifest.tileSize / 2)) {
       this.#last = { x, z };
