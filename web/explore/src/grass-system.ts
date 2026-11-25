@@ -270,10 +270,10 @@ export class GrassSystem {
       // macro bytes are sRGB-encoded; the terrain shader samples them with an SRGBColorSpace
       // texture (auto-linearised), so the instance tint must be linearised here as well —
       // otherwise blades render raw-sRGB-as-linear (bright but badly desaturated/muddy).
-      const i3 = i * 3;
-      tint[i3] = srgbToLinear(s.tintR);
-      tint[i3 + 1] = srgbToLinear(s.tintG);
-      tint[i3 + 2] = srgbToLinear(s.tintB);
+      tint[i4] = srgbToLinear(s.tintR);
+      tint[i4 + 1] = srgbToLinear(s.tintG);
+      tint[i4 + 2] = srgbToLinear(s.tintB);
+      tint[i4 + 3] = 1;
     }
 
     this.#finishBuild(cell, job);
@@ -312,7 +312,7 @@ export class GrassSystem {
     // Only the placed prefix changed. Fixed-capacity slots are reused across sparse and dense cells,
     // so partial update ranges avoid re-uploading hundreds of unused instances on every streaming reuse.
     for (const [attribute, itemSize] of [
-      [slot.aInfo, 4], [slot.aShade, 4], [slot.tint, 3],
+      [slot.aInfo, 4], [slot.aShade, 4], [slot.tint, 4],
     ] as Array<[InstancedBufferAttribute, number]>) {
       attribute.clearUpdateRanges();
       attribute.addUpdateRange(0, job.placed * itemSize);
@@ -414,9 +414,9 @@ export class GrassSystem {
     const capacity = this.#scatterCapacity;
     const aInfo = new InstancedBufferAttribute(new Float32Array(capacity * 4), 4);
     const aShade = new InstancedBufferAttribute(new Float32Array(capacity * 4), 4);
-    const tint = new InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
-    const nearGeometry = this.#instanceGeometry(this.#base.near, aInfo, aShade);
-    const farGeometry = this.#instanceGeometry(this.#base.far, aInfo, aShade);
+    const tint = new InstancedBufferAttribute(new Float32Array(capacity * 4), 4);
+    const nearGeometry = this.#instanceGeometry(this.#base.near, aInfo, aShade, tint);
+    const farGeometry = this.#instanceGeometry(this.#base.far, aInfo, aShade, tint);
     // Resolve aInfo/aShade by geometry attribute name rather than baking the per-slot attribute
     // objects into the TSL node graph. BufferAttributeNode hashes object identity, which would give
     // every pooled slot its own shader/pipeline cache key; geometry attributes keep the same step
@@ -426,7 +426,6 @@ export class GrassSystem {
     // initialisation pass; the fixed-capacity matrix attribute below is the one really used.
     const mesh = new InstancedMesh(nearGeometry, cellMaterial, 0);
     mesh.instanceMatrix = new InstancedBufferAttribute(new Float32Array(capacity * 16), 16);
-    mesh.instanceColor = tint;
     mesh.count = 0;
     mesh.castShadow = false;
     mesh.receiveShadow = true;
@@ -437,7 +436,7 @@ export class GrassSystem {
     return slot;
   }
 
-  #instanceGeometry(base: BufferGeometry, aInfo: InstancedBufferAttribute, aShade: InstancedBufferAttribute) {
+  #instanceGeometry(base: BufferGeometry, aInfo: InstancedBufferAttribute, aShade: InstancedBufferAttribute, tint: InstancedBufferAttribute) {
     const geometry = new BufferGeometry();
     geometry.index = base.index;
     for (const name of ["position", "uv", "color", "normal"] as const) {
@@ -446,6 +445,7 @@ export class GrassSystem {
     }
     geometry.setAttribute("aInfo", aInfo);
     geometry.setAttribute("aShade", aShade);
+    geometry.setAttribute("aTint", tint);
     return geometry;
   }
 

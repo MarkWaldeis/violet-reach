@@ -8,10 +8,10 @@
 // Instanced attributes per cell geometry:
 //   aInfo  = vec4(worldX, worldY, worldZ, instanceHash)
 //   aShade = vec4(canopyShadow, dryMix, heightScale, widthMul)
-//   instanceColor (rgb) = macro-matched ground tint
+//   aTint  = vec4(macro-matched linear ground tint rgb, unused alpha)
 import { Color, DoubleSide, MeshStandardNodeMaterial } from "three/webgpu";
 import {
-  cameraPosition, clamp, dot, float, instanceColor, instancedBufferAttribute, mix, normalGeometry, positionGeometry,
+  cameraPosition, clamp, dot, float, instancedBufferAttribute, mix, normalGeometry, positionGeometry,
   sin, cos, smoothstep, transformNormalToView, uniform, vec3, abs as tslAbs, attribute,
 } from "three/tsl";
 import type { InstancedBufferAttribute, Node } from "three/webgpu";
@@ -54,6 +54,7 @@ export function grassMaterial(instanceData?: GrassInstanceData, options: GrassMa
   const vcol = attribute("color", "vec4");
   const aInfo = (instanceData ? instancedBufferAttribute(instanceData.aInfo, "vec4") : attribute("aInfo", "vec4")) as Node<"vec4">;
   const aShade = (instanceData ? instancedBufferAttribute(instanceData.aShade, "vec4") : attribute("aShade", "vec4")) as Node<"vec4">;
+  const aTint = attribute("aTint", "vec4") as Node<"vec4">;
   const hFrac = uv.y;
   const bladeHash = vcol.r;
   const flex = vcol.g;
@@ -94,11 +95,9 @@ export function grassMaterial(instanceData?: GrassInstanceData, options: GrassMa
     instPos.z.add(rz).add(dz),
   );
 
-  // fragment: root-to-tip gradient shaping. IMPORTANT: the macro tint is NOT multiplied
-  // in here — three.js already multiplies diffuseColor by instanceColor automatically
-  // (NodeMaterial.setupDiffuseColor, because mesh.instanceColor is set on the mesh).
-  // The tint arrives as proper linear colour (CPU-linearised in grass-system.ts).
-  // This node therefore only supplies hue correction + gradient shape + variation.
+  // fragment: root-to-tip gradient shaping. The macro tint arrives as proper linear colour
+  // in aTint (CPU-linearised in grass-system.ts). It is carried in a vec4 attribute instead of
+  // instanceColor because WebGPU otherwise pads every vec3 colour update through a full-capacity copy.
   const dry = aShade.y;
   const hclamped = clamp(hFrac, 0, 1);
 
@@ -126,7 +125,7 @@ export function grassMaterial(instanceData?: GrassInstanceData, options: GrassMa
   // per-instance variation + canopy shadow
   const alb = hueVarK.mul(rootToMid).mul(tipWarm).mul(acrossShade)
     .mul(hashVar).mul(aShade.x.mul(0.55).add(0.45));
-  material.colorNode = alb;
+  material.colorNode = aTint.rgb.mul(alb);
 
   // Meadow lighting normals. NOTE: normalNode is interpreted in VIEW space (three.js
   // materialNormal semantics) — a constant vec3(0,1,0) here would mean screen-space up,
@@ -142,9 +141,9 @@ export function grassMaterial(instanceData?: GrassInstanceData, options: GrassMa
   material.normalNode = transformNormalToView(worldNrm);
 
   // warm backlight toward the sun at blade tips (translucency), strongest in contre-jour.
-  // Emissive bypasses the automatic instanceColor multiply, so the tint is applied here manually.
+  // Emissive bypasses diffuse colour and therefore applies the same linear tint explicitly.
   const sunDot = clamp(dot(vec3(sunDirection), vec3(0, 1, 0)), 0, 1);
-  material.emissiveNode = instanceColor.rgb.mul(alb).mul(vec3(1.08, 1.14, 0.70)).mul(hclamped.mul(hclamped)).mul(sunDot).mul(0.16);
+  material.emissiveNode = aTint.rgb.mul(alb).mul(vec3(1.08, 1.14, 0.70)).mul(hclamped.mul(hclamped)).mul(sunDot).mul(0.16);
 
   material.roughnessNode = mix(float(0.92), float(0.62), hclamped);
   return material;
