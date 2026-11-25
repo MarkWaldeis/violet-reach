@@ -18,8 +18,22 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-builder-trees",
-  "review": null,
-  "review_rounds": 4
+  "review": {
+    "reviewer": "devin-gate-rev-r5",
+    "scores": {
+      "silhouette": 9,
+      "form_detail": 7,
+      "material": 7,
+      "scale": 9,
+      "style": 8,
+      "defects": 7
+    },
+    "notes": "Reject. Strong ancient silhouette, but closeup is dominated by thick near-black smooth plastic limbs and several bare tapered spear-like terminals; triangular plate roots stay too hard. Lift bark albedo/detail, integrate or shorten terminals with twig and leaf growth, and round or soften the root plates.",
+    "round": 5,
+    "source_sha256": "3f7811781e624c5f0e5895845e028ad0e9144c5befc6ef112779c70a504b6e68",
+    "sheet_sha256": "30089bdab8a194c1ffb6dc5567ed98b01cfdebbe9365804c0ffab6abf1719f72"
+  },
+  "review_rounds": 5
 }

@@ -18,8 +18,22 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "blender_review",
+  "status": "approved",
   "builder": "devin-builder-trees",
-  "review": null,
-  "review_rounds": 4
+  "review": {
+    "reviewer": "devin-gate-rev-r5",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 8,
+      "scale": 9,
+      "style": 8,
+      "defects": 8
+    },
+    "notes": "Approved narrowly. Weeping habit reads from every turn and the former rectangular curtains are broken into varied ragged hanging pieces. Nonblocking polish: a few flat or square-ended strips, stiff upright blades and dark smooth branch sections remain.",
+    "round": 5,
+    "source_sha256": "dc7f98ff95377309ba3789b221cad3d16c38174e045260b28ca9c1d23bef4a1e",
+    "sheet_sha256": "4669d252b6e648b6b9b111902c9d01f5b3902d46dd1557bb5aef1c5fe49f97d9"
+  },
+  "review_rounds": 5
 }
