@@ -12,7 +12,7 @@
 //   · distant cells switch the shared clump vertex data from curved 18-triangle clumps to
 //     straight 6-triangle clumps while keeping the exact same instances and material inputs
 import {
-  BufferGeometry, Group, InstancedBufferAttribute, InstancedMesh,
+  BufferGeometry, Group, InstancedBufferAttribute, InstancedMesh, Sphere, Vector3,
 } from "three/webgpu";
 import { buildBladeClump, clumpTriangles } from "./grass-clump.ts";
 import { grassMaterial } from "./grass-material.ts";
@@ -60,6 +60,8 @@ interface CellBuild {
   /** conservative upper bound of macro density in this cell; also the importance-sampling scale */
   densityScale: number;
   placed: number;
+  minY: number;
+  maxY: number;
   slot: CellSlot;
   sample: GrassMacroSample;
   point: GrassScatterPoint;
@@ -107,7 +109,7 @@ export class GrassSystem {
       cellSize,
       viewDistance,
       density: options.density ?? 5.5,
-      maxBuildPerFrame: options.maxBuildPerFrame ?? 8,
+      maxBuildPerFrame: options.maxBuildPerFrame ?? 2,
       buildBudgetMs: options.buildBudgetMs ?? 1.5,
       distanceDensityFactor: options.distanceDensityFactor ?? 0.5,
       // Keep full density everywhere before the material's existing fade/width compensation.
@@ -226,7 +228,6 @@ export class GrassSystem {
     const info = job.slot.aInfo.array as Float32Array;
     const shade = job.slot.aShade.array as Float32Array;
     const tint = job.slot.tint.array as Float32Array;
-    const matrix = job.slot.mesh.instanceMatrix.array as Float32Array;
     let sinceClockCheck = 0;
 
     while (job.cursor < job.total) {
@@ -251,6 +252,8 @@ export class GrassSystem {
 
       const scale = 0.72 + pt.h2 * 0.55;
       const hs = 0.65 + s.heightScale * 0.7;
+      job.minY = Math.min(job.minY, y);
+      job.maxY = Math.max(job.maxY, y);
       const i = job.placed++;
       const i4 = i * 4;
       info[i4] = pt.x;
@@ -268,15 +271,6 @@ export class GrassSystem {
       tint[i3] = srgbToLinear(s.tintR);
       tint[i3 + 1] = srgbToLinear(s.tintG);
       tint[i3 + 2] = srgbToLinear(s.tintB);
-
-      // per-instance transforms: pure translation to the world position (rotation/scale are
-      // encoded in geometry fan-out and aShade, so wind direction stays world-coherent). All
-      // off-diagonal entries are zero in the fixed-capacity matrix buffer and never need rewriting.
-      const mo = i * 16;
-      matrix[mo] = 1; matrix[mo + 5] = 1; matrix[mo + 10] = 1; matrix[mo + 15] = 1;
-      matrix[mo + 12] = info[i4];
-      matrix[mo + 13] = info[i4 + 1];
-      matrix[mo + 14] = info[i4 + 2];
     }
 
     this.#finishBuild(cell, job);
@@ -290,6 +284,8 @@ export class GrassSystem {
       orderCursor: Math.floor(hash2(cell.cx, cell.cz, 29.71) * this.#scatterCapacity),
       densityScale,
       placed: 0,
+      minY: Infinity,
+      maxY: -Infinity,
       slot: this.#acquireSlot(),
       sample: { density: 0, heightScale: 0, dryMix: 0, canopyShadow: 1, tintR: 0.4, tintG: 0.42, tintB: 0.26, ao: 1 },
       point: { x: 0, z: 0, h1: 0, h2: 0 },
@@ -313,7 +309,7 @@ export class GrassSystem {
     // Only the placed prefix changed. Fixed-capacity slots are reused across sparse and dense cells,
     // so partial update ranges avoid re-uploading hundreds of unused instances on every streaming reuse.
     for (const [attribute, itemSize] of [
-      [slot.aInfo, 4], [slot.aShade, 4], [slot.tint, 3], [slot.mesh.instanceMatrix, 16],
+      [slot.aInfo, 4], [slot.aShade, 4], [slot.tint, 3],
     ] as Array<[InstancedBufferAttribute, number]>) {
       attribute.clearUpdateRanges();
       attribute.addUpdateRange(0, job.placed * itemSize);
@@ -323,9 +319,13 @@ export class GrassSystem {
     slot.mesh.geometry = slot.nearGeometry;
     slot.mesh.name = `grass_${cell.cx}_${cell.cz}`;
     // Culling must cover the full instance set, not only the currently applied distance-density
-    // prefix. computeBoundingSphere() intentionally uses mesh.count before the prefix is reduced.
-    slot.mesh.boundingSphere = null;
-    slot.mesh.computeBoundingSphere();
+    // prefix. The custom grass shader positions blades from aInfo, so instance matrices are not
+    // maintained at all; derive conservative cell bounds directly instead of paying an O(n) matrix pass.
+    const y0 = job.minY - 0.1, y1 = job.maxY + 2.0;
+    slot.mesh.boundingSphere = new Sphere(
+      new Vector3((cell.cx + 0.5) * this.#opts.cellSize, (y0 + y1) / 2, (cell.cz + 0.5) * this.#opts.cellSize),
+      Math.hypot(this.#opts.cellSize * Math.SQRT1_2 + 1.5, (y1 - y0) / 2),
+    );
     cell.count = job.placed;
     cell.mesh = slot.mesh;
     cell.slot = slot;

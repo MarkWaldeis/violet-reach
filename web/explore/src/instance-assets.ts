@@ -14,9 +14,9 @@ import { REFLECTION_LAYER } from "./quality.ts";
 const REFLECTED_HERO_ASSETS = new Set(["gate_white_a", "bridge_arch_a", "column_white_a", "stair_terrace_a", "trunk_acacia_a"]);
 const REFLECTED_CANOPY_ASSETS = new Set(["tree_broadleaf_a", "tree_broadleaf_b", "tree_broadleaf_c"]);
 
-interface Instance extends InstancePlacement { matrix: Matrix4; tint: Color; sphere: { centre: Vector3; radius: number }; lod: number }
+interface Instance extends InstancePlacement { order: number; matrix: Matrix4; tint: Color; sphere: { centre: Vector3; radius: number }; lod: number }
 interface Part { mesh: InstancedMesh; local: Matrix4 }
-interface AssetBatch { parts: Part[][]; chunks: Chunk<Instance>[]; size: number; maxDistance: number; lodScale: number; lodRatio: number; aerialLODScale: number }
+interface AssetBatch { parts: Part[][]; chunks: Chunk<Instance>[]; size: number; maxDistance: number; lodScale: number; lodRatio: number; aerialLODScale: number; signature?: number }
 
 export class InstanceAssets {
   readonly group = new Group();
@@ -65,11 +65,11 @@ export class InstanceAssets {
         const rootRadius = bounds.getCenter(new Vector3()).length() + size / 2;
         const localSphere = bounds.getBoundingSphere(new Sphere());
         const settings = assetRenderOptions(size, options, byAsset[id]);
-        const instances: Instance[] = placements.filter((p) => p.asset === id).map((p) => {
+        const instances: Instance[] = placements.filter((p) => p.asset === id).map((p, order) => {
           const rotation = placementRotation(p);
           const matrix = new Matrix4().compose(new Vector3(p.x, p.y, p.z), rotation, new Vector3().setScalar(p.scale));
           const sphere = localSphere.clone().applyMatrix4(matrix);
-          return { ...p, matrix, sphere: { centre: sphere.center, radius: sphere.radius }, tint: new Color(...instanceTint(p.x, p.z, settings.tintVariation)), lod: -1 };
+          return { ...p, order, matrix, sphere: { centre: sphere.center, radius: sphere.radius }, tint: new Color(...instanceTint(p.x, p.z, settings.tintVariation)), lod: -1 };
         });
         const parts = ordered.filter((level) => level <= settings.maxLOD).map((level, index) => {
           const parts: Part[] = [];
@@ -121,6 +121,7 @@ export class InstanceAssets {
     for (const batch of this.#batches) {
       const distances = aerialLODDistances(lodDistances(batch.size * batch.lodScale, batch.parts.length, viewportHeight, camera.fov, batch.maxDistance, batch.lodRatio), heightAboveGround, batch.aerialLODScale);
       const written = batch.parts.map(() => 0);
+      let signature = 0;
       for (const chunk of batch.chunks) {
         chunks++;
         if (!chunkVisible(chunk, camera.position, planes, batch.maxDistance * 1.12)) continue;
@@ -131,6 +132,7 @@ export class InstanceAssets {
           const lod = instance.lod = instanceLOD(distance, scaledDistances, instance.lod);
           if (lod === batch.parts.length) continue;
           if (!batch.parts[lod].some((part) => part.mesh.castShadow) && !chunkVisible(instance.sphere, camera.position, planes, Infinity)) continue;
+          signature = Math.imul(signature ^ (instance.order + 1), 16777619) ^ (lod + 1);
           const index = written[lod]++;
           for (const part of batch.parts[lod]) {
             this.#matrix.multiplyMatrices(instance.matrix, part.local);
@@ -139,12 +141,15 @@ export class InstanceAssets {
           }
         }
       }
+      for (const count of written) signature = Math.imul(signature ^ (count + 1), 16777619);
+      const unchanged = batch.signature === signature;
+      batch.signature = signature;
       batch.parts.forEach((parts, lod) => {
         counts[lod] = (counts[lod] ?? 0) + written[lod];
         for (const part of parts) {
           part.mesh.count = written[lod];
           part.mesh.visible = written[lod] > 0;
-          if (written[lod]) {
+          if (written[lod] && !unchanged) {
             const matrix = part.mesh.instanceMatrix, tint = part.mesh.instanceColor!;
             matrix.clearUpdateRanges();
             matrix.addUpdateRange(0, written[lod] * matrix.itemSize);
