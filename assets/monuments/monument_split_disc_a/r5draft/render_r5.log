@@ -1,0 +1,25 @@
+00:01.156  blend            | Read blend: "C:\Users\Mark Waldeis\Desktop\Violet Reach\assets\monuments\monument_split_disc_a\monument_split_disc_a.blend"
+C:\Users\Mark Waldeis\Desktop\Violet Reach\assets\monuments\monument_split_disc_a\r5draft\render_r5.py:46: DeprecationWarning: 'World.use_nodes' is expected to be removed in Blender 6.0
+  world.use_nodes = True
+C:\Users\Mark Waldeis\Desktop\Violet Reach\assets\monuments\monument_split_disc_a\r5draft\render_r5.py:81: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  gmat.use_nodes = True
+C:\Users\Mark Waldeis\Desktop\Violet Reach\assets\monuments\monument_split_disc_a\r5draft\render_r5.py:94: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  fmat.use_nodes = True
+00:16.109  render           | Saved: 'C:\Users\Mark Waldeis\Desktop\Violet Reach\assets\monuments\monument_split_disc_a\r5draft\render\.tiles-da0w0o96\turn_020.png'
+00:26.344  render           | Saved: 'C:\Users\Mark Waldeis\Desktop\Violet Reach\assets\monuments\monument_split_disc_a\r5draft\render\.tiles-da0w0o96\turn_065.png'
+00:36.078  render           | Saved: 'C:\Users\Mark Waldeis\Desktop\Violet Reach\assets\monuments\monument_split_disc_a\r5draft\render\.tiles-da0w0o96\turn_110.png'
+00:43.828  render           | Saved: 'C:\Users\Mark Waldeis\Desktop\Violet Reach\assets\monuments\monument_split_disc_a\r5draft\render\.tiles-da0w0o96\turn_155.png'
+00:51.391  render           | Saved: 'C:\Users\Mark Waldeis\Desktop\Violet Reach\assets\monuments\monument_split_disc_a\r5draft\render\.tiles-da0w0o96\turn_200.png'
+00:59.234  render           | Saved: 'C:\Users\Mark Waldeis\Desktop\Violet Reach\assets\monuments\monument_split_disc_a\r5draft\render\.tiles-da0w0o96\turn_245.png'
+01:06.781  render           | Saved: 'C:\Users\Mark Waldeis\Desktop\Violet Reach\assets\monuments\monument_split_disc_a\r5draft\render\.tiles-da0w0o96\turn_290.png'
+01:14.187  render           | Saved: 'C:\Users\Mark Waldeis\Desktop\Violet Reach\assets\monuments\monument_split_disc_a\r5draft\render\.tiles-da0w0o96\turn_335.png'
+01:24.406  render           | Saved: 'C:\Users\Mark Waldeis\Desktop\Violet Reach\assets\monuments\monument_split_disc_a\r5draft\render\.tiles-da0w0o96\closeup_upper.png'
+01:34.328  render           | Saved: 'C:\Users\Mark Waldeis\Desktop\Violet Reach\assets\monuments\monument_split_disc_a\r5draft\render\.tiles-da0w0o96\closeup_base.png'
+C:\Users\Mark Waldeis\Desktop\Violet Reach\assets\monuments\monument_split_disc_a\r5draft\render_r5.py:103: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  mat.use_nodes = True
+01:41.453  render           | Saved: 'C:\Users\Mark Waldeis\Desktop\Violet Reach\assets\monuments\monument_split_disc_a\r5draft\render\.tiles-da0w0o96\wire.png'
+01:48.391  render           | Saved: 'C:\Users\Mark Waldeis\Desktop\Violet Reach\assets\monuments\monument_split_disc_a\r5draft\render\.tiles-da0w0o96\clay.png'
+VR_RESULT {'triangles': 219726, 'size_m': [30.952, 19.209, 40.375], 'objects': 5, 'samples': 16, 'render_seconds': 107.2, 'blender': '5.2.2 LTS', 'tiles': ['turn_020', 'turn_065', 'turn_110', 'turn_155', 'turn_200', 'turn_245', 'turn_290', 'turn_335', 'closeup_upper', 'closeup_base', 'wire', 'clay']}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:37:04)
+
+Blender quit

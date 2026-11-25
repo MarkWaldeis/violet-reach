@@ -37,9 +37,9 @@
   },
   "review_rounds": 5,
   "size_m": [
-    10.615,
-    11.491,
-    11.323
+    10.161,
+    11.295,
+    11.218
   ],
   "export": {
     "file": "export/tree_beech_a.glb",

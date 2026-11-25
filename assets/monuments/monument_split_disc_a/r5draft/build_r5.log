@@ -1,0 +1,13 @@
+23:38:19 | INFO: Data are loaded, start creating Blender stuff
+23:38:19 | INFO: Blender create Mesh node 0
+23:38:19 | INFO: glTF import finished in 0.53s
+VR_GEOMETRY_REPAIR {'fracture': {'affected': 30709, 'weight_max': 1.0, 'dx_abs_mean': 0.1151279812759589, 'amplitude': 0.52, 'max_abs_dx': 0.52}}
+VR_SOCKET {'rims': 4, 'triangles_est': 768}
+VR_STONE_REGRAIN {'images': 1, 'hf_before': [0.03998356685042381], 'hf_after': [0.003571771155664988], 'pit_pixels': 48875, 'hf_reduction': 0.910669021375037}
+VR_CLEFT_STRIPE {'polys': 70863, 'tris': 70975, 'mask_frac': 0.17277145385742188, 'mask_max': 1.0000000000000113, 'images': 1}
+VR_NORMAL_REPAIR {'normal_images': 1, 'keep': 0.1, 'xy_compress': 0.72, 'nodes': 1}
+Info: Saved as "monument_split_disc_a.blend"
+VR_RESULT {'triangles': 219726, 'size_m': [30.952, 19.209, 40.375], 'min_z': -1.5}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:37:04)
+
+Blender quit

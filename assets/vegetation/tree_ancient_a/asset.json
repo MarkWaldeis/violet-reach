@@ -37,9 +37,9 @@
   },
   "review_rounds": 6,
   "size_m": [
-    12.057,
-    12.117,
-    11.569
+    11.555,
+    11.971,
+    11.401
   ],
   "export": {
     "file": "export/tree_ancient_a.glb",
