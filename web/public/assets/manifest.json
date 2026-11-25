@@ -275,6 +275,19 @@
       "bytes": 3086624
     },
     {
+      "id": "stump_roots_a",
+      "category": "vegetation",
+      "title": "Alter Baumstumpf mit Wurzelanlauf A",
+      "file": "stump_roots_a.glb",
+      "size_m": [
+        2.096,
+        1.922,
+        1.404
+      ],
+      "bytes": 1643252,
+      "material_class": "bark"
+    },
+    {
       "id": "tree_ancient_a",
       "category": "vegetation",
       "title": "Knorriger Altbaum A",
