@@ -64,6 +64,28 @@ def mark_canopy(obj, materials):
     return any(value.value for value in attribute.data)
 
 
+def restore_vertical_extent(mesh, low, high):
+    """Map a simplified trunk back to its pre-simplification vertical extent.
+
+    Edge collapse and clustering both erode thin lower trunks first: a mesh can fit the
+    triangle budget while its lowest remaining vertex floats well above the ground.  The
+    vertical span is a silhouette/ground-contact constraint, so restore exactly that span
+    after simplification.  This intentionally does not invent detail; it only stops the
+    coarse proxy from losing the trunk endpoint that was present in its input.
+    """
+    if not mesh.vertices or high - low <= 1e-9:
+        return
+    current_low = min(vertex.co.z for vertex in mesh.vertices)
+    current_high = max(vertex.co.z for vertex in mesh.vertices)
+    current_span = current_high - current_low
+    if current_span <= 1e-9:
+        return
+    scale = (high - low) / current_span
+    for vertex in mesh.vertices:
+        vertex.co.z = low + (vertex.co.z - current_low) * scale
+    mesh.update()
+
+
 def simplify_canopy(obj, target, simplify_wood, source_image, texture_size, planes=3, occlusion=None):
     if target < 32:
         raise ValueError("Canopy LOD needs at least 32 triangles")
@@ -151,8 +173,11 @@ def simplify_canopy(obj, target, simplify_wood, source_image, texture_size, plan
     bm.to_mesh(mesh)
     bm.free()
     mesh.update()
+    wood_low = min((vertex.co.z for vertex in mesh.vertices), default=0.0)
+    wood_high = max((vertex.co.z for vertex in mesh.vertices), default=0.0)
     simplify_wood(obj, wood_target)
     mesh = obj.data
+    restore_vertical_extent(mesh, wood_low, wood_high)
     wood_triangles = sum(len(face.vertices) - 2 for face in mesh.polygons)
     if planes == 1 and len(leaves) * 2 <= target - wood_triangles:
         cards = 1

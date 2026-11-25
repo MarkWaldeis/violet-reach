@@ -120,7 +120,18 @@ print("PASS: foliage exports as double-sided alpha MASK with cutoff 0.35, not tr
 chained = near_lod.copy()
 chained.data = near_lod.data.copy()
 bpy.context.scene.collection.objects.link(chained)
-assert simplify_canopy(chained, 160, lambda *_: None, bpy.data.images[near_lod["canopy_albedo"]], 512, 3, bpy.data.images[near_lod["canopy_occlusion"]])
+
+
+def squash_wood_for_regression_test(obj, _target):
+    for vertex in obj.data.vertices:
+        vertex.co.z = 2 + vertex.co.z * .5
+    obj.data.update()
+
+
+assert simplify_canopy(chained, 160, squash_wood_for_regression_test, bpy.data.images[near_lod["canopy_albedo"]], 512, 3, bpy.data.images[near_lod["canopy_occlusion"]])
+woody = np.array([chained.data.vertices[index].co[:] for face in chained.data.polygons
+                  if not chained.data.attributes[CANOPY_ATTRIBUTE].data[face.index].value for index in face.vertices])
+assert abs(woody[:, 2].min()) < 1e-6 and woody[:, 2].max() > 2.59
 for axes in [(0, 1), (0, 2), (1, 2)]:
     bounds = positions[:, axes].min(axis=0), positions[:, axes].max(axis=0)
     before, after = projection(near_lod, axes, bounds), projection(chained, axes, bounds)

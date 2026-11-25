@@ -43,8 +43,8 @@
   ],
   "export": {
     "file": "export/tree_beech_a.glb",
-    "bytes": 8374792,
-    "sha256": "567403af0f764e49d96cf090af58b4ed97570a117bb1f704203b909ded21b4ef",
+    "bytes": 7934524,
+    "sha256": "2847f0d7dc7b999288d5de40fdcdca84f96aba29947122fe32e79a58e083b887",
     "source_sha256": "505ba443ea70e1e92ad25258542e353225a60737c3a1aadd960a7f2a37cce45c",
     "sheet_sha256": "d10d4985a8ba2ffab92a7190019259efa5a40fb7cdd468f8b80b2ae927c2ac10",
     "lod_triangles": [

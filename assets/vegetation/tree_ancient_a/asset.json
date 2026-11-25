@@ -43,8 +43,8 @@
   ],
   "export": {
     "file": "export/tree_ancient_a.glb",
-    "bytes": 8678044,
-    "sha256": "94ecb8eb05eb771f68df447cb3c06bb553b5fb8d750295c53bc290a8dfffa19c",
+    "bytes": 8703260,
+    "sha256": "42ba6e83d9fe922d39ca8a917ff14e71048e29bb9e226d621a0a6b9fac43e7bb",
     "source_sha256": "d851aaf9f0c467624c4a10bb8b5083403f407e14a11da6c0e1f85417f37b9dbf",
     "sheet_sha256": "b1fffd8b287039242c1b863557c5d007d647407f310197519066437fd496a96a",
     "lod_triangles": [

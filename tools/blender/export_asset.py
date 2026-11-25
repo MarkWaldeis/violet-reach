@@ -32,6 +32,109 @@ def select_only(objs, active):
     bpy.context.view_layer.objects.active = active
 
 
+def _cluster_geometry(mesh, cell_size):
+    """Vertex-cluster mesh triangles in memory; returns geometry plus per-corner UVs."""
+    vertices = np.array([v.co[:] for v in mesh.vertices], dtype=float)
+    if not len(vertices) or not mesh.polygons:
+        return None
+    keys = np.floor((vertices - vertices.min(axis=0)) / max(float(cell_size), 1e-9)).astype(np.int64)
+    cells = {}
+    remap = []
+    for index, key in enumerate(keys):
+        key = tuple(int(v) for v in key)
+        if key not in cells:
+            cells[key] = len(cells)
+        remap.append(cells[key])
+    positions = np.zeros((len(cells), 3), dtype=float)
+    counts = np.zeros(len(cells), dtype=float)
+    for index, cell in enumerate(remap):
+        positions[cell] += vertices[index]
+        counts[cell] += 1
+    positions /= counts[:, None]
+
+    uv_layers = list(mesh.uv_layers)
+    faces = []
+    materials = []
+    smoothing = []
+    face_uvs = {layer.name: [] for layer in uv_layers}
+    seen = set()
+    for face in mesh.polygons:
+        corner_vertices = list(face.vertices)
+        corner_loops = list(face.loop_indices)
+        for j in range(1, len(corner_vertices) - 1):
+            corners = (0, j, j + 1)
+            triangle = tuple(remap[corner_vertices[c]] for c in corners)
+            if len(set(triangle)) < 3:
+                continue
+            key = tuple(sorted(triangle)) + (face.material_index,)
+            if key in seen:
+                continue
+            seen.add(key)
+            faces.append(triangle)
+            materials.append(face.material_index)
+            smoothing.append(face.use_smooth)
+            for layer in uv_layers:
+                face_uvs[layer.name].append([tuple(layer.data[corner_loops[c]].uv) for c in corners])
+    if not faces:
+        return None
+    return positions, faces, materials, smoothing, face_uvs, len(faces)
+
+
+def _replace_with_clustered_mesh(obj, clustered):
+    positions, faces, materials, smoothing, face_uvs, _ = clustered
+    old = obj.data
+    result = bpy.data.meshes.new(old.name + "_clustered")
+    result.from_pydata([tuple(v) for v in positions], [], faces)
+    result.update()
+    for material in old.materials:
+        result.materials.append(material)
+    for index, face in enumerate(result.polygons):
+        face.material_index = materials[index]
+        face.use_smooth = smoothing[index]
+    for layer in old.uv_layers:
+        uv = result.uv_layers.new(name=layer.name)
+        for face, coordinates in zip(result.polygons, face_uvs[layer.name]):
+            for loop, coordinate in zip(face.loop_indices, coordinates):
+                uv.data[loop].uv = coordinate
+    obj.data = result
+    if old.users == 0:
+        bpy.data.meshes.remove(old)
+
+
+def _vertex_cluster_decimate(obj, target):
+    """Last-resort triangle-budget simplification for non-manifold wood proxies.
+
+    Blender's collapse decimator can stop at a local minimum on the deeply chained,
+    non-manifold bark meshes.  Vertex clustering is less precise, but it is topology-
+    independent and is only used after collapse stops making progress.  A binary search
+    picks the finest grid cell that still fits the triangle budget.
+    """
+    mesh = obj.data
+    vertices = np.array([v.co[:] for v in mesh.vertices], dtype=float)
+    if not len(vertices):
+        return False
+    scale = float(np.ptp(vertices, axis=0).max())
+    if scale <= 0:
+        return False
+    low, high = 0.0, scale
+    best = None
+    for _ in range(30):
+        middle = (low + high) / 2
+        clustered = _cluster_geometry(mesh, middle)
+        count = clustered[-1] if clustered else 0
+        if 0 < count <= target:
+            best = clustered
+            high = middle
+        elif count > target:
+            low = middle
+        else:
+            high = middle
+    if best is None:
+        return False
+    _replace_with_clustered_mesh(obj, best)
+    return vrlib.triangle_count([obj]) <= target
+
+
 def decimate(obj, target, preserve_uvs=False):
     select_only([obj], obj)
     lo, hi = vrlib.world_bounds([obj])
@@ -88,6 +191,8 @@ def decimate(obj, target, preserve_uvs=False):
         if preserve_uvs:
             modifier.delimit = {"UV"}
         bpy.ops.object.modifier_apply(modifier=modifier.name)
+    if vrlib.triangle_count([obj]) > target:
+        _vertex_cluster_decimate(obj, target)
 
 
 def _sanitize_meshy_uvs(obj):
