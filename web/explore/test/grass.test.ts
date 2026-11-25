@@ -198,6 +198,11 @@ test("grass distance LOD uses uniform count prefixes, far geometry and bounded r
   assert.ok(vertexCounts.has(30), "Nahzellen nutzen gekrümmte 5-Vertexpaare/18-Dreiecks-Büschel");
   assert.ok(vertexCounts.has(18), "Fernzellen nutzen vereinfachte 3-Vertexpaare/6-Dreiecks-Büschel");
   assert.ok(sys.stats.triangles < sys.stats.instances * 18, "Dreiecksschätzung berücksichtigt LOD");
+  const first = meshes[0] as unknown as { boundingSphere?: { center: { x: number; z: number }; radius: number }; instanceMatrix: { array: ArrayLike<number> } };
+  assert.ok(first.boundingSphere, "analytische Zellbounds vorhanden");
+  assert.ok(first.boundingSphere!.radius > 8, "Zellbounds decken die ganze Zelle");
+  assert.ok(Math.abs(first.boundingSphere!.center.x % 16 - 8) < 1e-4 || Math.abs((first.boundingSphere!.center.x % 16) + 8) < 1e-4, "Bounds sind zellzentriert");
+  assert.ok([...first.instanceMatrix.array].every((v) => v === 0), "Grass-Shader braucht keine Instanzmatrizen");
   const slots = sys.stats.slots;
   for (let i = 0; i < 120; i++) sys.update(900, 1500);
   assert.ok(sys.stats.slots <= slots + 2, `Render-Slots werden wieder verwendet: ${slots} → ${sys.stats.slots}`);
