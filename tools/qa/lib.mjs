@@ -102,7 +102,11 @@ export async function launchChrome() {
 }
 
 export function appURL(query) {
-  const q = new URLSearchParams(Object.entries(query).filter(([, v]) => v !== undefined && v !== false).map(([k, v]) => [k, String(v)]));
+  const q = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (value === undefined || value === false) continue;
+    for (const item of Array.isArray(value) ? value : [value]) q.append(key, String(item));
+  }
   return `${ORIGIN}/?${q}`;
 }
 

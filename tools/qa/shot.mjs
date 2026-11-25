@@ -9,7 +9,12 @@ const poses = [];
 const rest = [];
 for (const arg of process.argv.slice(2)) (/^[\w-]+=/.test(arg) ? poses : rest).push(arg);
 const opts = {};
-for (let i = 0; i < rest.length; i += 2) opts[rest[i].replace(/^--/, "")] = rest[i + 1];
+for (let i = 0; i < rest.length; i += 2) {
+  const key = rest[i].replace(/^--/, "");
+  if (opts[key] === undefined) opts[key] = rest[i + 1];
+  else if (Array.isArray(opts[key])) opts[key].push(rest[i + 1]);
+  else opts[key] = [opts[key], rest[i + 1]];
+}
 if (!poses.length) { console.error("Keine Posen angegeben (id=x,agl,z,yaw,pitch)"); process.exit(2); }
 const dir = runDir(opts.run ?? `shot-${timestamp()}`);
 const server = await ensureServer();
@@ -25,7 +30,7 @@ try {
     return { id, v: numbers, agl: parts.length === 5 };
   });
   const [first] = parsed;
-  const { page } = await openApp(context, { hud: 0, freeze: 1, agl: 1, cam: first.v.join(","), fov: opts.fov ?? 57, quality: opts.quality ?? "high" }, { label: first.id });
+  const { page } = await openApp(context, { hud: 0, freeze: 1, agl: 1, cam: first.v.join(","), fov: opts.fov ?? 57, quality: opts.quality ?? "high", qaPlacement: opts.qaPlacement }, { label: first.id });
   const check = validateBackend(await page.evaluate(() => window.__vr.stats()), false);
   console.log(check.valid ? check.label : `UNGÜLTIG: ${check.reason}`);
   for (const { id, v, agl } of parsed) {
