@@ -372,8 +372,10 @@ export class GrassSystem {
     const end = Math.max(start + 0.001, this.#opts.distanceDensityEnd);
     const factor = Math.min(1, Math.max(0, this.#opts.distanceDensityFactor));
     if (distance <= start) return count;
+    // At fadeEnd the shader scales blades to exactly zero; drawing a retained far prefix beyond
+    // that radius is pure vertex cost with no possible pixel output.
+    if (distance >= end) return 0;
     const farCount = Math.max(1, Math.round(count * factor));
-    if (distance >= end) return farCount;
     const t = Math.min(1, Math.max(0, (distance - start) / (end - start)));
     const smooth = t * t * (3 - 2 * t);
     const fraction = 1 - (1 - factor) * smooth;
