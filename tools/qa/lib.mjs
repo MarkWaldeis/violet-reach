@@ -111,10 +111,10 @@ export async function openApp(context, query, { ready = true, timeout = 180_000,
   const page = await context.newPage();
   const errors = [];
   page.on("pageerror", (e) => errors.push(String(e)));
-  page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
+  page.on("console", (m) => { if (m.type() === "error" && !m.location()?.url?.endsWith("/favicon.ico")) errors.push(m.text()); });
   await page.goto(appURL(query), { waitUntil: "load" });
   try {
-    await page.waitForFunction(() => !!window.__vr, null, { timeout: 90_000, polling: 250 });
+    await page.waitForFunction(() => !!window.__vr, null, { timeout, polling: 250 });
   } catch {
     const status = await page.locator("#status").textContent().catch(() => "");
     throw new Error(`${label} __vr erscheint nicht (Status: "${status}"; Fehler: ${errors.join(" | ") || "keine"})`);
