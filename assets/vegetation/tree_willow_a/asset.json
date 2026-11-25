@@ -21,20 +21,19 @@
   "status": "modeling",
   "builder": "devin-builder-trees",
   "review": {
-    "reviewer": "devin-gate-rev-d",
-    "verdict": "rejected",
+    "reviewer": "devin-gate-rev-r4-independent",
     "scores": {
-      "silhouette": 8,
+      "silhouette": 9,
       "form_detail": 6,
       "material": 7,
       "scale": 9,
-      "style": 7,
-      "defects": 5
+      "style": 8,
+      "defects": 4
     },
-    "notes": "Abgelehnt: Der hängende Habitus ist deutlich besser und der Stammfuß sauberer. Aus mehreren Rotationen bleibt die Krone aber ein offenes Gestell mit separaten Vorhangbändern; im Closeup sind die Streifen als breite Alpha-Ribbons erkennbar. Entscheidend: mehrere Seitenäste enden weiterhin sichtbar stumpf/abgeschnitten, die R3-Endkappen erfassen offenbar nur hochliegende Enden. Für Freigabe alle Astenden schließen und Vorhänge feiner/verzweigter aufbauen.",
-    "round": 3,
-    "source_sha256": "eb1149936bcead712bdbf5feb32740627c6bd1fec367e5bd2a99d7e67f0eaf95",
-    "sheet_sha256": "22075bd965b1c64125dcf100ffe8f294bb3d8b8437b36bd9e2cbee82ee7684a9"
+    "notes": "Rejected: the drooping silhouette and scale are convincing, but the upper crown contains numerous thick blunt or bulbous wooden end caps/sawn segments, especially along the left and upper-right branches. The base remains a truncated stump/pot rim rather than spreading roots, and outer hanging foliage repeats as rectangular strips. Replace caps with continuously tapered fine twigs or remove/hide them, break strip edges into smaller varied leaflets, and rebuild ground contact.",
+    "round": 4,
+    "source_sha256": "37c04eb25164ada8d6e2bb8f4b06f44d0ab9ec41222a0c88f197272e41c892f0",
+    "sheet_sha256": "75780e2f0c1ac99c557c3cfd058ca37adede31f19614e08baf9e22e089f22e75"
   },
-  "review_rounds": 3
+  "review_rounds": 4
 }

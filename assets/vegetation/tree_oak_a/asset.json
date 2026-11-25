@@ -21,20 +21,19 @@
   "status": "modeling",
   "builder": "devin-builder-trees",
   "review": {
-    "reviewer": "devin-gate-rev-d",
-    "verdict": "rejected",
+    "reviewer": "devin-gate-rev-r4-independent",
     "scores": {
       "silhouette": 9,
       "form_detail": 7,
-      "material": 7,
+      "material": 8,
       "scale": 9,
       "style": 8,
-      "defects": 7
+      "defects": 6
     },
-    "notes": "Abgelehnt, knapp: Silhouette und Kronenfüllung sind jetzt aus allen Rotationen brauchbar, Wurzelflare und Astkragen sind echte Verbesserungen. In der Nahsicht bleiben aber breite gekreuzte Alpha-Blattbahnen/regalartige horizontale Cluster klar erkennbar; am Kronenrand stehen dünne schwarze Sprossspitzen frei und der Wurzelfuß behält spitze facettierte Zähne. Innenäste wirken sehr dunkel und glatt. Für AAA neben den Felsen müssen Karten weiter verkleinert/stärker gestaffelt und die verbleibenden Enden/Fußzacken organisch aufgelöst werden.",
-    "round": 3,
-    "source_sha256": "f346aa411f7bd37cf4c2d429b19df8be684d5564260dfc00165fa700f3c3a591",
-    "sheet_sha256": "5444ef9cb3ae130011939bc1bf857e1c1f0c30bc993b93888093616ceb3cdb81"
+    "notes": "Rejected: distant silhouette, scale and olive massing are good, and the crown no longer reads as one large connected card. However closeup_base still fails as a macroform: the root collar is a pleated vertical skirt of sharp triangular plates with a hard lower rim/flat dark underside rather than roots running horizontally into the ground. Some outer foliage also reads as floating edge-on cards. Rebuild the base as several uneven surface roots partly buried below z=0, remove the visible bottom cap/rim, and anchor edge tufts more clearly to twigs.",
+    "round": 4,
+    "source_sha256": "92de351a744fbf22aa2db8d02410d9a36308607fdaa4bc0d71e846b8f77b4609",
+    "sheet_sha256": "e6553aa9eb46ae957108bf3a08c2475a1db4b5012bff413e0a93f53f810fc5a9"
   },
-  "review_rounds": 3
+  "review_rounds": 4
 }

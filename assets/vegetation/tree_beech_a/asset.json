@@ -21,20 +21,19 @@
   "status": "modeling",
   "builder": "devin-builder-trees",
   "review": {
-    "reviewer": "devin-gate-rev-d",
-    "verdict": "rejected",
+    "reviewer": "devin-gate-rev-r4-independent",
     "scores": {
       "silhouette": 8,
       "form_detail": 6,
-      "material": 7,
+      "material": 6,
       "scale": 9,
       "style": 7,
       "defects": 5
     },
-    "notes": "Abgelehnt: Die neue Füllung reicht nicht. Die Krone bleibt als offenes Gerüst mit getrennten Pompom-/Kartenclustern lesbar; im Closeup dominieren große ebene Blattbahnen, ein schwarzer glatter Stamm und besonders ein scharfes Y-förmiges Ast-Speertrio. Der Wurzelfuß ist besser, aber immer noch zackig. Die R2-Hauptmängel (hohle Krone, nacktes Gerüst, spitze/abgeschnittene Enden) sind nur teilweise reduziert.",
-    "round": 3,
-    "source_sha256": "cc1e3b9133de9319fc82ef915db63f52138c598cddf3e5b266869cd90a094f7a",
-    "sheet_sha256": "3208c31fb65a2795c1eaadabc575857de5d149d4bf91fa29e67ebabeebfdb5cb"
+    "notes": "Rejected: crown fullness and scale are improved, but closeups still show a smooth near-black plastic trunk and dark bare Y/spear ends. A thick horizontal branch at the upper trunk ends in conspicuous flat cut cylindrical discs. The base is a vertical pleated collar of triangular plates with a hard lower edge, not spreading surface roots. Rework branch terminations into tapered twig-bearing ends or remove them, add readable bark structure without flattening the dark undersides, and rebuild the root flare horizontally.",
+    "round": 4,
+    "source_sha256": "69710ffad426faf33568af369b6ac1fb086d78664147a04b4709e95e0e8d8fae",
+    "sheet_sha256": "fc91472e5cf16025c3082c108cbc3c5e7c8a9a0ca8ddef3ac2c0778adc84b14d"
   },
-  "review_rounds": 3
+  "review_rounds": 4
 }

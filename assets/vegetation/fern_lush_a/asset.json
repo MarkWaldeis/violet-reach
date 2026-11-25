@@ -21,20 +21,19 @@
   "status": "modeling",
   "builder": "devin-builder-trees",
   "review": {
-    "reviewer": "devin-gate-rev-d",
-    "verdict": "rejected",
+    "reviewer": "devin-gate-rev-r4-independent",
     "scores": {
-      "silhouette": 7,
-      "form_detail": 6,
-      "material": 7,
-      "scale": 9,
-      "style": 6,
-      "defects": 5
+      "silhouette": 5,
+      "form_detail": 4,
+      "material": 5,
+      "scale": 8,
+      "style": 5,
+      "defects": 3
     },
-    "notes": "Abgelehnt: Die Wedel sind zahlreicher und die zylindrische Topfform ist reduziert, aber das Asset bleibt eine sehr regelmäßige flache Speerrosette. Im Base-Closeup steht weiterhin eine facettierte braune Schale/Platte mit schwarzem Kern statt mehrerer bodennaher Wedelherzen; viele Wedel enden als kahle gerade Linien oder breite Bänder. Die drei versetzten Herzen sind geometrisch vorhanden, visuell aber zu klein/nahe beieinander. Kein AAA-Unterwuchs.",
-    "round": 3,
-    "source_sha256": "dfae35cd887dd2d3ee36f27cc205999b11c21fa713434015c6f13b77d560f6c9",
-    "sheet_sha256": "46f4d0276062f0020d328dc53bee56f5c2f24636e6b60b6fb4053fbb9f3c7999"
+    "notes": "Rejected: the plant still does not read as a lush fern; it reads as a dark spiky spider/rosette. closeup_base shows a black central cavity/slab-like shadow mass and sharp brown triangular spikes radiating over the ground. Fronds are angular ribbons with bare stick-like tips. Rebuild the centre as green overlapping frond bases at soil level, remove exposed spike rootlets and the black core, and make fronds arching, tapered and leafy all the way to the tip.",
+    "round": 4,
+    "source_sha256": "0d4668634eb2c9f46b25af135b77e3878f44ddca198cd889ca2084e328bd59b8",
+    "sheet_sha256": "f60b4e3b6f7b1d38fe00d3714d92990fc84def6bcefb4b781e289b97b4f9e804"
   },
-  "review_rounds": 3
+  "review_rounds": 4
 }

@@ -34,18 +34,18 @@ TARGET_SIZE_M = (2.0, 1.8, 0.5)  # ungefähr, oberirdische Höhe im Quelltemplat
 FOLIAGE_TARGET = "#596536"  # zwischen leaf_green #313C1D und grass_green #696F44
 FOLIAGE_STRENGTH = 0.65
 BARK_TARGET = "#4A3320"
-BARK_STRENGTH = 0.55
+BARK_STRENGTH = 0.34
 ALPHA_CUTOFF = 0.28
 ROUGHNESS_MIN = 0.65
 ASSET_KIND = "fern"
 GEOMETRY_SEED = 9606
 CARD_CONFIG = dict()
 BARK_TAPER_CONFIG = dict()
-FILL_CONFIG = dict(attach_high=False, fraction=.96, second_fraction=.45,
-                   width_range=(.60, .86), length_range=(.55, .82),
-                   yaw_deg=38, pitch_deg=18, roll_deg=18,
-                   normal_offset=.008, tangent_offset=.015,
-                   inward_fraction=0.0, inward_pull=0.0, z_jitter=.010, seed=GEOMETRY_SEED)
+FILL_CONFIG = dict(attach_high=False, fraction=1.0, second_fraction=1.0, third_fraction=.70,
+                   width_range=(.66, .95), length_range=(.62, 1.00),
+                   yaw_deg=44, pitch_deg=32, roll_deg=22,
+                   normal_offset=.024, tangent_offset=.026,
+                   inward_fraction=0.0, inward_pull=0.0, z_jitter=.034, seed=GEOMETRY_SEED)
 ROOT_CONFIG = None
 BRANCH_COLLARS = ()
 SHOOT_COLLAR_CONFIG = None
@@ -574,6 +574,7 @@ def _duplicate_foliage_clusters(
     attach_high=False,
     fraction=.55,
     second_fraction=0.0,
+    third_fraction=0.0,
     width_range=(.55, .75),
     length_range=(.58, .80),
     yaw_deg=35,
@@ -601,6 +602,7 @@ def _duplicate_foliage_clusters(
         ci = feat["ci"]
         count = (1 if _hash01(ci, 101, seed) < fraction else 0)
         count += (1 if _hash01(ci, 103, seed) < second_fraction else 0)
+        count += (1 if _hash01(ci, 105, seed) < third_fraction else 0)
         if not count:
             continue
         faces = [bm_faces[i] for i in feat["poly_indices"] if i < len(bm_faces)]
@@ -767,10 +769,11 @@ def _append_mound(bm, centre, *, radius, height, sides=18, rings=3, seed=0,
         ring = []
         for i in range(sides):
             a = 2.0 * math.pi * i / sides
-            organic = 1.0 + .11 * math.sin(3.0 * a + phase1) + .055 * math.sin(5.0 * a + phase2 + j)
+            organic = 1.0 + .20 * math.sin(3.0 * a + phase1) + .10 * math.sin(5.0 * a + phase2 + j)
+            organic += .07 * math.sin(9.0 * a + phase1 * 1.7 + rf * 3.1)
             rr = radius * rf * organic
             dome = max(0.0, 1.0 - rf * rf) ** .68
-            znoise = height * .10 * math.sin(4.0 * a + phase2 + rf * 2.1) * rf
+            znoise = height * .30 * math.sin(4.0 * a + phase2 + rf * 2.1) * rf
             ring.append(bm.verts.new(centre + Vector((math.cos(a) * rr, math.sin(a) * rr,
                                                        height * dome + znoise))))
         ring_verts.append(ring)
@@ -1009,11 +1012,12 @@ def _scatter_fern_hearts(mesh, *, seed=0):
         base_mean += f["base"]
     base_mean /= len(features)
     heart_angles = (math.radians(18), math.radians(143), math.radians(266))
-    heart_radii = (.185, .160, .205)
+    heart_radii = (.270, .225, .300)
+    heart_z = (.000, .038, -.018)
     hearts = []
-    for a, r in zip(heart_angles, heart_radii):
+    for a, r, hz in zip(heart_angles, heart_radii, heart_z):
         hearts.append(Vector((base_mean.x + math.cos(a) * r,
-                              base_mean.y + math.sin(a) * r, base_mean.z)))
+                              base_mean.y + math.sin(a) * r, base_mean.z + hz)))
     moved = 0
     used = []
     for feat in features:
@@ -1025,18 +1029,18 @@ def _scatter_fern_hearts(mesh, *, seed=0):
         h1 = _hash01(feat["ci"], 101, seed)
         h2 = _hash01(feat["ci"], 107, seed)
         if h1 < .22:
-            heart = base_mean + Vector(((h1 - .11) * .35, (h2 - .5) * .055, 0.0))
+            heart = base_mean + Vector(((h1 - .11) * .35, (h2 - .5) * .055, .012 + .020 * h2))
         else:
             ang = math.atan2(direction.y, direction.x)
             diffs = [abs((ang - a + math.pi) % (2.0 * math.pi) - math.pi) for a in heart_angles]
             hi = diffs.index(min(diffs))
-            jitter_r = (h2 - .5) * .045
-            jitter_a = (h1 - .5) * .18
+            jitter_r = (h2 - .5) * .070
+            jitter_a = (h1 - .5) * .26
             heart = hearts[hi] + Vector((math.cos(ang + jitter_a) * jitter_r,
                                          math.sin(ang + jitter_a) * jitter_r, 0.0))
         used.append(heart.copy())
         shift = heart - feat["base"]
-        shift.z = 0.0
+        shift.z = heart.z - base_mean.z
         for v in feat["verts"]:
             mesh.vertices[v].co += shift
             moved += 1
@@ -1048,26 +1052,32 @@ def _scatter_fern_hearts(mesh, *, seed=0):
 
 
 def _bury_fern_crown(mesh):
-    """Sink the cylindrical template core below the later soil mound instead of merely shrinking it."""
-    verts = sorted({v for p in mesh.polygons if p.material_index == 0 for v in p.vertices})
-    if not verts:
-        return {"vertices": 0}
-    pts = np.array([mesh.vertices[v].co[:] for v in verts], dtype=float)
-    above = pts[pts[:, 2] > 0.0]
-    if not len(above):
-        return {"vertices": 0}
-    centre = Vector((float(above[:, 0].mean()), float(above[:, 1].mean()), 0.0))
-    changed = 0
-    for v in verts:
-        co = mesh.vertices[v].co
-        if co.z <= 0.0:
-            continue
-        horiz = Vector((co.x - centre.x, co.y - centre.y, 0.0))
-        mesh.vertices[v].co = Vector((centre.x + horiz.x * .72,
-                                      centre.y + horiz.y * .72, co.z * .10))
-        changed += 1
+    """Remove the template's wooden above-ground crown plates outright.
+
+    R3 only squashed the cylinder; the reviewer still read the flattened shell as
+    faceted brown plates with a black core, and no amount of additional shrinking
+    keeps the wide plates from peeking out beside the soil mound. The below-ground
+    burial socket stays untouched; above ground the fern now consists of fronds,
+    soil mound, heart nubs and rootlets only.
+    """
+    kill = [p.index for p in mesh.polygons
+            if p.material_index == 0 and p.center.z > .002]
+    if not kill:
+        return {"vertices": 0, "faces_removed": 0}
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+    bm.faces.ensure_lookup_table()
+    doomed = [bm.faces[i] for i in kill if i < len(bm.faces)]
+    bmesh.ops.delete(bm, geom=doomed, context="FACES")
+    # verwaiste Punkte der geloeschten Platten mit entfernen, aber nur solche ohne
+    # verbleibende Flaeche (die Erdverankerung unter z=0 muss intakt bleiben)
+    loose = [v for v in bm.verts if not v.link_faces]
+    if loose:
+        bmesh.ops.delete(bm, geom=loose, context="VERTS")
+    bm.to_mesh(mesh)
     mesh.update()
-    return {"vertices": changed}
+    bm.free()
+    return {"vertices": len(loose), "faces_removed": len(doomed)}
 
 
 def _add_fern_root_mound(mesh, centre_data, *, seed=0):
@@ -1076,21 +1086,23 @@ def _add_fern_root_mound(mesh, centre_data, *, seed=0):
         base = Vector(centre_data["base"])
     else:
         base = Vector((0, 0, .005))
-    base.z = -.012
+    base.z = -.010
     centres = [Vector(c) for c in centre_data.get("centres", [])]
     bm = bmesh.new()
     bm.from_mesh(mesh)
     made = 0
-    made += len(_append_mound(bm, base, radius=.285, height=.020, sides=20, rings=3, seed=seed))
-    for ci, c in enumerate(centres[:8]):
-        c.z = -.002
-        made += len(_append_mound(bm, c, radius=.055, height=.018, sides=10, rings=2, seed=seed + 30 + ci))
+    # Kein Erdkuppel-Plug und keine Herd-Nubs mehr: selbst flache, erodierte
+    # braune Kuppeln lasen sich im Nahbereich weiterhin als schwebende braune
+    # Scheiben/Pilze. Der Farn waechst jetzt schlicht aus dem Boden; die Wedel-
+    # basis verdunkelt das Zentrum natuerlich. Nur die Oberflaechenwurzeln
+    # bleiben als organische Verankerung.
+    centres = centres[:0]
     for ri in range(7):
         a = 2.0 * math.pi * ri / 7.0 + (_hash01(ri, 83, seed) - .5) * .30
         radial = Vector((math.cos(a), math.sin(a), .05 + .06 * _hash01(ri, 89, seed))).normalized()
         start = base + Vector((math.cos(a) * .055, math.sin(a) * .055, .014))
-        made += len(_append_tapered_tip(bm, start, radial, length=.19 + .06 * _hash01(ri, 97, seed),
-                                        radius=.020 + .006 * _hash01(ri, 101, seed), sides=7,
+        made += len(_append_tapered_tip(bm, start, radial, length=.16 + .06 * _hash01(ri, 97, seed),
+                                        radius=.012 + .004 * _hash01(ri, 101, seed), sides=6,
                                         seed=seed + 120 + ri))
     bm.to_mesh(mesh)
     mesh.update()
@@ -1124,33 +1136,38 @@ def _reshape_fern_fronds(mesh, *, seed=0):
         h3 = _hash01(ci, 13, seed)
         h4 = _hash01(ci, 17, seed)
         longest = reach > max_reach * .94
-        if (longest and h3 < .43) or h3 < .08:
-            length_scale = .92 + .07 * h1
-            tip_delta = -.055 + .035 * h2
-            arch_z = .110 + .045 * h4
+        if (longest and h3 < .38) or h3 < .06:
+            length_scale = .86 + .15 * h1
+            tip_delta = -.095 + .070 * h2
+            arch_z = .100 + .050 * h4
             width_scale = .78 + .08 * h2
-        elif h3 < .68:
-            length_scale = .82 + .09 * h1
-            tip_delta = -.025 + .030 * h2
-            arch_z = .095 + .040 * h4
+        elif h3 < .66:
+            length_scale = .71 + .16 * h1
+            tip_delta = -.045 + .045 * h2
+            arch_z = .100 + .050 * h4
             width_scale = .82 + .08 * h2
         else:
-            length_scale = .68 + .10 * h1
-            tip_delta = .000 + .035 * h2
-            arch_z = .075 + .030 * h4
+            length_scale = .54 + .15 * h1
+            tip_delta = -.010 + .040 * h2
+            arch_z = .115 + .050 * h4
             width_scale = .84 + .08 * h2
-        yaw = math.radians((h4 - .5) * 24.0)
+        yaw = math.radians((h4 - .5) * 38.0)
         ca, sa = math.cos(yaw), math.sin(yaw)
-        sway = (h2 - .5) * .12
+        sway = (h2 - .5) * .16
         cup = .045 + .030 * h1
+        pinch = .38 + .30 * h3
+        zlift = (h1 - .5) * .045
         for v, u, w, co in rows:
             d = co - base
             y = d.dot(dirh) * length_scale
             x = d.dot(side) * width_scale
+            taper_t = max(0.0, (w - .45) / .55)
+            x *= 1.0 - pinch * taper_t * taper_t
             x += sway * math.sin(math.pi * w)
             z = co.z + tip_delta * w + arch_z * math.sin(math.pi * w)
             z += cup * .35 * math.sin(math.pi * u) * (0.5 + 0.5 * math.sin(math.pi * w))
-            z = min(z, .525)
+            z += zlift * math.sin(math.pi * w)
+            z = min(max(z, .004), .53)
             xr = x * ca - y * sa
             yr = x * sa + y * ca
             mesh.vertices[v].co = base + side * xr + dirh * yr + Vector((0, 0, z - base.z))
@@ -1271,7 +1288,7 @@ def _apply_asset_geometry(obj):
     mesh = obj.data
     if ASSET_KIND == "fern":
         fronds = _reshape_fern_fronds(mesh, seed=GEOMETRY_SEED)
-        uvs = _compress_fern_frond_uvs(mesh)
+        uvs = _compress_fern_frond_uvs(mesh, factor=.58)
         hearts = _scatter_fern_hearts(mesh, seed=GEOMETRY_SEED)
         crown = _bury_fern_crown(mesh)
         fill = _duplicate_foliage_clusters(mesh, **FILL_CONFIG)
