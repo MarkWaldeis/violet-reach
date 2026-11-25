@@ -18,7 +18,7 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "approved",
+  "status": "exported",
   "builder": "devin-builder-trees",
   "review": {
     "reviewer": "devin-gate-rev-d",
@@ -36,5 +36,24 @@
     "source_sha256": "41e9dffff3d827d50f1ef44d56ef088831ebddc0cee4ca5129c51daa4526b552",
     "sheet_sha256": "318e83f112e88aa8ea8fc00427513274662bc8cdd31ddd7dc8a201183ed6cf2a"
   },
-  "review_rounds": 3
+  "review_rounds": 3,
+  "size_m": [
+    2.992,
+    2.894,
+    2.119
+  ],
+  "export": {
+    "file": "export/bush_lush_a.glb",
+    "bytes": 4816648,
+    "sha256": "e8f3825990592110880910ab0750aac2ef535bcecce2051607f9c59fce985f37",
+    "source_sha256": "41e9dffff3d827d50f1ef44d56ef088831ebddc0cee4ca5129c51daa4526b552",
+    "sheet_sha256": "318e83f112e88aa8ea8fc00427513274662bc8cdd31ddd7dc8a201183ed6cf2a",
+    "lod_triangles": [
+      1688,
+      700,
+      260,
+      96
+    ],
+    "texture_size": 1024
+  }
 }

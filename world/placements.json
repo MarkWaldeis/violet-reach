@@ -73991,6 +73991,132 @@
       "y_offset": -0.02,
       "pitch": 0.02,
       "roll": -0.02
+    },
+    {
+      "asset": "boulder_chalk_c",
+      "x": 686.2,
+      "z": 1200.8,
+      "yaw": 0.72,
+      "scale": 0.96,
+      "y_offset": -0.2,
+      "pitch": 0.06,
+      "roll": -0.05
+    },
+    {
+      "asset": "boulder_chalk_c",
+      "x": 697.2,
+      "z": 1202.6,
+      "yaw": 2.38,
+      "scale": 1.08,
+      "y_offset": -0.08,
+      "pitch": -0.03,
+      "roll": 0.05
+    },
+    {
+      "asset": "boulder_chalk_c",
+      "x": 699.5,
+      "z": 1210,
+      "yaw": 4.18,
+      "scale": 0.9,
+      "y_offset": -0.18,
+      "pitch": 0.05,
+      "roll": 0.04
+    },
+    {
+      "asset": "bush_lush_a",
+      "scatter": {
+        "seed": 26101,
+        "count": 8,
+        "polygon": [
+          [
+            242.2,
+            1523.7
+          ],
+          [
+            246.8,
+            1523
+          ],
+          [
+            250,
+            1526.2
+          ],
+          [
+            249.3,
+            1532.8
+          ],
+          [
+            245,
+            1535.2
+          ],
+          [
+            242,
+            1532
+          ],
+          [
+            241.8,
+            1527
+          ]
+        ],
+        "min_spacing": 3.2,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 240,
+        "scale": [
+          0.72,
+          0.98
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.8
+      }
+    },
+    {
+      "asset": "bush_lush_a",
+      "scatter": {
+        "seed": 26102,
+        "count": 7,
+        "polygon": [
+          [
+            241.8,
+            1508.4
+          ],
+          [
+            246,
+            1507.8
+          ],
+          [
+            249.6,
+            1510.7
+          ],
+          [
+            249,
+            1516.2
+          ],
+          [
+            245,
+            1518.4
+          ],
+          [
+            241.7,
+            1515.6
+          ],
+          [
+            241.4,
+            1511
+          ]
+        ],
+        "min_spacing": 3.2,
+        "max_slope": 26,
+        "min_height_above_water": 6,
+        "max_height_above_water": 240,
+        "scale": [
+          0.72,
+          0.98
+        ],
+        "align_to_slope": true,
+        "surface": "land",
+        "path_clearance": 0.8
+      }
     }
   ]
 }

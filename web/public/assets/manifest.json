@@ -124,6 +124,19 @@
       "material_class": "rock_chalk"
     },
     {
+      "id": "boulder_chalk_c",
+      "category": "rocks",
+      "title": "Kreidefels-Findling C",
+      "file": "boulder_chalk_c.glb",
+      "size_m": [
+        2.164,
+        1.299,
+        1.17
+      ],
+      "bytes": 1408080,
+      "material_class": "rock_chalk"
+    },
+    {
       "id": "scree_pile_a",
       "category": "rocks",
       "title": "Kalkstein-Geröllhaufen A",
@@ -160,6 +173,19 @@
         1.145
       ],
       "bytes": 5120352
+    },
+    {
+      "id": "bush_lush_a",
+      "category": "vegetation",
+      "title": "Dichter Unterwuchs-Strauch A",
+      "file": "bush_lush_a.glb",
+      "size_m": [
+        2.992,
+        2.894,
+        2.119
+      ],
+      "bytes": 4816648,
+      "material_class": "foliage"
     },
     {
       "id": "fern_cluster_a",

@@ -2,15 +2,15 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { worldFiles } from "../scripts/world-content.mjs";
 import { pathMask } from "../src/hydrology.ts";
 import type { Slice } from "../src/slice.ts";
 
-const vegetation = ["tree_broadleaf_a", "tree_broadleaf_b", "tree_broadleaf_c", "shrub_round_a", "fern_cluster_a", "reed_cluster_a"];
+const vegetation = ["tree_broadleaf_a", "tree_broadleaf_b", "tree_broadleaf_c", "shrub_round_a", "bush_lush_a", "fern_cluster_a", "reed_cluster_a"];
 const monuments = ["gate_white_a", "column_white_a", "stair_terrace_a"];
 const pilot = ["boulder_chalk_a", "ruin_wall_a", "trunk_acacia_a"];
-const rocks = ["arch_sandstone_a", "scree_pile_a", "shore_rocks_wet_a"];
+const rocks = ["arch_sandstone_a", "scree_pile_a", "shore_rocks_wet_a", "boulder_chalk_c"];
 
 test("approved spire landmark is slightly buried and the energy core stays out", () => {
   const { placements } = JSON.parse(readFileSync(worldFiles().get("placements.json")!, "utf8"));
@@ -61,12 +61,14 @@ test("world content includes real terrain and only registered placed assets", ()
   for (const key of ["terrain/manifest.json", "slice.json", "hydrology.json", "placements.json", "assets/crystal_cluster_b.glb", "assets/crystal_spire_a.glb", "assets/bridge_arch_a.glb", "assets/lake_shore_a.glb", ...[...vegetation, ...monuments, ...pilot, ...rocks].map((asset) => `assets/${asset}.glb`)]) assert.ok(files.has(key));
   assert.equal([...files.keys()].filter((p) => p.endsWith(".glb")).length, 4 + vegetation.length + monuments.length + pilot.length + rocks.length);
 });
-for (const asset of ["bridge_arch_a", "lake_shore_a", "crystal_spire_a", ...vegetation, ...monuments, ...pilot, ...rocks]) test(`${asset} export contains all three named LODs`, () => {
-  const glb = readFileSync(worldFiles().get(`assets/${asset}.glb`)!);
+for (const asset of ["bridge_arch_a", "lake_shore_a", "crystal_spire_a", ...vegetation, ...monuments, ...pilot, ...rocks]) test(`${asset} export contains the LODs declared in asset.json`, () => {
+  const glbPath = worldFiles().get(`assets/${asset}.glb`)!;
+  const glb = readFileSync(glbPath);
   assert.equal(glb.toString("ascii", 0, 4), "glTF");
   const document = JSON.parse(glb.toString("utf8", 20, 20 + glb.readUInt32LE(12)));
-  assert.deepEqual(document.nodes.map((node: { name?: string }) => node.name).filter((name?: string) => name?.startsWith(`${asset}_LOD`)).sort(),
-    [`${asset}_LOD0`, `${asset}_LOD1`, `${asset}_LOD2`]);
+  const meta = JSON.parse(readFileSync(resolve(dirname(glbPath), "../asset.json"), "utf8")) as { lod_triangles: unknown[] };
+  const actual = document.nodes.map((node: { name?: string }) => node.name).filter((name?: string) => name?.startsWith(`${asset}_LOD`)).sort();
+  assert.deepEqual(actual, meta.lod_triangles.map((_, lod) => `${asset}_LOD${lod}`));
 });
 test("world content rejects non-exported and unknown assets, empty placements work, failed gate propagates", () => {
   const repo = mkdtempSync(resolve(tmpdir(), "vr-content-"));

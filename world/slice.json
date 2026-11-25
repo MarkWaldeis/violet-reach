@@ -55,6 +55,12 @@
       "shadowLODs": 0,
       "tintVariation": 0.12
     },
+    "bush_lush_a": {
+      "maxDistance": 260,
+      "lodScale": 0.2,
+      "shadowLODs": 0,
+      "tintVariation": 0.12
+    },
     "fern_cluster_a": {
       "maxDistance": 70,
       "lodScale": 0.22,
