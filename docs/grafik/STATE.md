@@ -180,3 +180,13 @@ Median aus 3 unabhängigen Prüfern (`reviewer_a`, `reviewer_b`, `reviewer_c`; E
   - `p2-r10`: `0` Budget-Verstöße (`59,94 / 59,94 FPS`, `897 MiB`), falsche Tal-Kreideflecken & `H1`-Naht beseitigt; 3 blinde Prüfer noch `FAIL` (`hWave`-Stipple, durchgehender Schaumring, glatte Grünhügel, fehlende Strände/Spiegelungen).
   - `p2-r11`: Planarer Reflector (`0.35`), `36 m` Makro-Körnung, `64 m` Schichtfels, durchgehende Strände und gefleckter Schaum umgesetzt (optisch großer Sprung), jedoch `bench.mjs` `FAIL` (Exit `4`, `5` Verstöße: `ground` `58,51 FPS` Mean / `24,37` 1% Low / `66,9 ms` Max / `6,05 Mio.` Tris / `386` Draws) durch volle Szenen-/CSM-Neurenderung im Reflector.
   - **`p2-r12` (aktueller Pause-Stand):** `REFLECTION_LAYER = 1`, `resolutionScale: 0.25` & Shadow-Reuse-Wrapper implementiert; `84/84` Explorer-Unit-Tests & `vite build` grün. `capture.mjs --run p2-r12 --seq` wurde beim Pausieren nach den 13 Lesezeichen-Screenshots (`G1`..`H2` in `C:\Users\Mark Waldeis\devin-screenshots\violet-reach\p2-r12\`) gestoppt; Sichtung, `bench.mjs --run p2-r12` und 3 blinde Prüfer stehen beim Fortsetzen an erster Stelle aus.
+
+
+---
+
+## Phase 2 — Vegetations-Export und Streaming-Performance (aktuell)
+
+- **Fantasy-Vegetation approved + exportiert:** `tree_oak_a`, `tree_beech_a`, `tree_ancient_a`, `tree_willow_a`, `fern_lush_a` sind alle approved und exportiert (`web/public/assets/*.glb`, Manifest synchron, `vr.py check` grün: 34 Assets). Export-LOD-Zielwerte: oak `[3820,1500,550,160]`, beech `[2700,1100,420,140]`, ancient `[5290,2000,750,220]`, willow `[2596,1000,380,140]`, fern `[448,220,96,48]`; Export-Pipeline trianguliert vor Decimate, damit LOD-Budgets in Dreiecken stimmen.
+- **Grass-Streaming root cause:** Spikes sind exakt an 16-m-Graszellgrenzen synchronisiert (z. B. x352/368/384/400/416/432/448 und z1392/1408/1424). Terrain-x512 ist ausgeschlossen. Hauptmechanismus: Ring-Edge-Builds + Completion-Bursts + viele separate WebGPU-`writeBuffer`-Uploads; 59 % der Gras-Uploadbytes waren semantisch ungenutzte `instanceMatrix`-Daten.
+- **Commits seitdem:** `e2b7b68` Subsystem-Frame-Timing + pendingVisible-Fix; `e3d2c37` Grass ohne Matrix-Upload, analytische Bounds, `maxBuildPerFrame=2`, keine unchanged Asset-Matrix/Tint-Reuploads; anschließend Vegetationsexport committed.
+- **Läuft gerade:** sauberer Ground-Bench `ground-streamfix` zur Verifikation. Danach Hain-Pilot der neuen Vegetation gemäß Integrationsplan: zuerst 8–15 Bäume + wenige Farnringe um G2/G4, Reflexionsliste erweitern, `slice.json` vier-LOD-Werte, Tests synchron, Captures G2/G4/G1/F2/F3, dann Bench; kein shrub-Massentausch.
