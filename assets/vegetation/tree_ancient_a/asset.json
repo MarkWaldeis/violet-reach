@@ -18,8 +18,22 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "blender_review",
+  "status": "approved",
   "builder": "devin-builder-trees",
-  "review": null,
-  "review_rounds": 5
+  "review": {
+    "reviewer": "devin-gate-rev-r6",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 8,
+      "scale": 9,
+      "style": 8,
+      "defects": 8
+    },
+    "notes": "Approved narrowly. R6 addresses the prior blockers: the bark now reads warm brown with visible fibrous/gnarled structure rather than black plastic; most outer terminals continue into tapered twigs with attached leaf tufts; and the base reads as separate rounded surface roots rather than a continuous collar. The crown is broad, open and suitably ancient at correct 12 m scale. Nonblocking polish: a few perimeter leaf cards still read planar or nearly floating, several large scaffold limbs remain smooth/waxy in closeup, and isolated root tips/ground intersections remain sharp.",
+    "round": 6,
+    "source_sha256": "d851aaf9f0c467624c4a10bb8b5083403f407e14a11da6c0e1f85417f37b9dbf",
+    "sheet_sha256": "b1fffd8b287039242c1b863557c5d007d647407f310197519066437fd496a96a"
+  },
+  "review_rounds": 6
 }
