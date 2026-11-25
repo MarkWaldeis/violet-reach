@@ -144,6 +144,10 @@ test("bookmarks: 13 fixed views inside the slice, existing references, sequences
     assert.ok(Array.isArray(m.references) && m.focus.length > 10, m.id);
     for (const r of m.references) assert.ok(existsSync(new URL(`../../../${r}`, import.meta.url)), r);
   }
+  const views = new Map(doc.bookmarks.map((m: { id: string }) => [m.id, m]));
+  assert.ok(views.get("G2").pitch >= 0.10 && views.get("G2").pitch <= 0.18);
+  const g4 = views.get("G4");
+  assert.ok(Math.hypot(g4.x - 240, g4.z - 1520) >= 5.5 && Math.hypot(g4.x - 240, g4.z - 1520) <= 7);
   assert.deepEqual(doc.sequences.map((s: { id: string }) => s.id), ["walk", "fly"]);
   assert.deepEqual(doc.routes.map((s: { id: string }) => s.id), ["ground", "flight"]);
   for (const s of [...doc.sequences, ...doc.routes]) {

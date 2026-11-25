@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { aerialLODDistances, assetRenderOptions, chunkVisible, instanceLOD, instanceTint, lodDistances, spatialChunks } from "../src/instance-lod.ts";
+import { simplifiedReflectionLOD } from "../src/instance-assets.ts";
 
 test("asset rendering overrides preserve defaults and validate finite distance, quality and shadow limits", () => {
   assert.deepEqual(assetRenderOptions(2), { maxDistance: 80, lodScale: 1, lodRatio: 3, aerialLODScale: 1, tintVariation: 0, shadowLODs: 2, maxLOD: Number.MAX_SAFE_INTEGER });
@@ -109,4 +110,11 @@ test("individual bounds reject offscreen instances in a visible chunk", () => {
   assert.equal(chunkVisible({ centre: items[0], radius: 2 }, camera, planes, Infinity), true);
   assert.equal(chunkVisible({ centre: { x: 0, y: 0, z: 1 }, radius: 2 }, camera, planes, Infinity), true);
   assert.equal(chunkVisible(chunk, camera, [], Infinity), true);
+});
+
+test("canopy reflection proxy uses the first simplified LOD and respects LOD0-only caps", () => {
+  assert.equal(simplifiedReflectionLOD([0, 1, 2, 3]), 1);
+  assert.equal(simplifiedReflectionLOD([0, 2, 3]), 2);
+  assert.equal(simplifiedReflectionLOD([0]), -1);
+  assert.equal(simplifiedReflectionLOD([]), -1);
 });

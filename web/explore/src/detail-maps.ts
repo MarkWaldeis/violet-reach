@@ -42,6 +42,12 @@ const loadedClasses = new Map<string, LoadedDetailClass>();
 let manifestsPromise: Promise<void> | null = null;
 const patchedCache = new WeakMap<Material, Map<string, Material>>();
 
+/** Foliage-class assets may mix leaf cards with woody primitives; only the leaf materials receive foliage microdetail. */
+export function detailClassForMaterial(assetClass: string | undefined, materialName = "") {
+  if (assetClass !== "foliage") return assetClass;
+  return /(?:^|[^a-z0-9])(?:bark|trunk|wood)(?:[^a-z0-9]|$)/i.test(materialName) ? undefined : assetClass;
+}
+
 function configureDetailTexture(tex: Texture): Texture {
   tex.colorSpace = LinearSRGBColorSpace;
   tex.wrapS = RepeatWrapping;
@@ -127,15 +133,12 @@ export async function prepareDetailMapsForAssets(assetIds: string[]): Promise<vo
 /**
  * Applies camera-faded world-space triplanar detail normal & roughness onto PBR asset materials
  * matching an entry's `material_class` (`3..22 m`), preserving all base PBR maps & alpha cutout state.
+ * In mixed foliage assets, bark/trunk/wood materials keep their baked surface instead of leaf-scale detail.
  */
 export function applyAssetDetailMap(material: Material, assetId: string): Material {
-  const cls = assetClassMap.get(assetId);
+  const cls = detailClassForMaterial(assetClassMap.get(assetId), material.name);
   const detail = cls ? loadedClasses.get(cls) : undefined;
   if (!cls || !detail) return material;
-  // Mixed tree assets are classified as foliage for their leaf cards. Their bark materials
-  // must not inherit the very fine foliage microdetail: on a close trunk it reads as noise
-  // rather than bark. Leaf materials keep the foliage detail; woody parts use their baked maps.
-  if (cls === "foliage" && /(?:^|_)mat_bark|bark|trunk|wood/i.test(material.name ?? "")) return material;
   if (!(material instanceof MeshStandardMaterial) && !(material instanceof MeshStandardNodeMaterial)) {
     return material;
   }

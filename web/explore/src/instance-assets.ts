@@ -14,9 +14,14 @@ import { REFLECTION_LAYER } from "./quality.ts";
 const REFLECTED_HERO_ASSETS = new Set(["gate_white_a", "bridge_arch_a", "column_white_a", "stair_terrace_a", "trunk_acacia_a"]);
 const REFLECTED_CANOPY_ASSETS = new Set(["tree_broadleaf_a", "tree_broadleaf_b", "tree_broadleaf_c", "tree_oak_a", "tree_beech_a", "tree_ancient_a", "tree_willow_a"]);
 
+/** First simplified LOD usable as the reflection proxy for canopy assets, or -1 when capped to LOD0. */
+export function simplifiedReflectionLOD(levels: number[]) {
+  return levels.find((level) => level > 0) ?? -1;
+}
+
 interface Instance extends InstancePlacement { order: number; matrix: Matrix4; tint: Color; sphere: { centre: Vector3; radius: number }; lod: number }
 interface Part { mesh: InstancedMesh; local: Matrix4; reflection?: InstancedMesh }
-interface AssetBatch { parts: Part[][]; chunks: Chunk<Instance>[]; size: number; maxDistance: number; lodScale: number; lodRatio: number; aerialLODScale: number; signature?: number }
+interface AssetBatch { parts: Part[][]; chunks: Chunk<Instance>[]; size: number; maxDistance: number; lodScale: number; lodRatio: number; aerialLODScale: number; reflectionIndex: number; signature?: number }
 
 export class InstanceAssets {
   readonly group = new Group();
@@ -71,7 +76,10 @@ export class InstanceAssets {
           const sphere = localSphere.clone().applyMatrix4(matrix);
           return { ...p, order, matrix, sphere: { centre: sphere.center, radius: sphere.radius }, tint: new Color(...instanceTint(p.x, p.z, settings.tintVariation)), lod: -1 };
         });
-        const parts = ordered.filter((level) => level <= settings.maxLOD).map((level, index) => {
+        const renderLevels = ordered.filter((level) => level <= settings.maxLOD);
+        const reflectionLOD = REFLECTED_CANOPY_ASSETS.has(id) ? simplifiedReflectionLOD(renderLevels) : -1;
+        const reflectionIndex = reflectionLOD >= 0 ? renderLevels.indexOf(reflectionLOD) : -1;
+        const parts = renderLevels.map((level, index) => {
           const parts: Part[] = [];
           for (const source of levels.get(level)!) {
             const materials = Array.isArray(source.material) ? source.material : [source.material];
@@ -94,11 +102,11 @@ export class InstanceAssets {
               }
               result.group.add(mesh);
               const part: Part = { mesh, local: source.matrixWorld.clone() };
-              if (REFLECTED_CANOPY_ASSETS.has(id) && !REFLECTED_HERO_ASSETS.has(id) && level === 1) {
+              if (index === reflectionIndex) {
                 // Trees closest to the viewer use LOD0 in the main pass. Reflecting only their
                 // assigned LOD mesh would therefore omit exactly the nearest shoreline crowns.
-                // This reflection-only LOD1 proxy keeps the main pass cheap while giving those
-                // trees a simplified water reflection.
+                // This reflection-only simplified-LOD proxy keeps the main pass cheap while giving
+                // those trees a simplified water reflection.
                 const reflection = new InstancedMesh(geometry, mat, instances.length);
                 reflection.name = `${id}_REFLECT_LOD${level}`;
                 reflection.count = 0;
@@ -115,7 +123,7 @@ export class InstanceAssets {
           return parts;
         });
         const chunks = spatialChunks(instances, (p) => rootRadius * p.scale);
-        result.#batches.push({ parts, chunks, size, maxDistance: settings.maxDistance, lodScale: settings.lodScale, lodRatio: settings.lodRatio, aerialLODScale: settings.aerialLODScale });
+        result.#batches.push({ parts, chunks, size, maxDistance: settings.maxDistance, lodScale: settings.lodScale, lodRatio: settings.lodRatio, aerialLODScale: settings.aerialLODScale, reflectionIndex });
       }
     } finally {
       ktx2?.dispose();
@@ -156,13 +164,13 @@ export class InstanceAssets {
             part.mesh.setMatrixAt(index, this.#matrix);
             part.mesh.setColorAt(index, instance.tint);
           }
-          if (lod === 0 && batch.parts.length > 1) {
-            const reflectionIndex = reflectionWritten++;
-            for (const part of batch.parts[1]) {
+          if (lod === 0 && batch.reflectionIndex >= 0) {
+            const proxyIndex = reflectionWritten++;
+            for (const part of batch.parts[batch.reflectionIndex]) {
               if (!part.reflection) continue;
               this.#matrix.multiplyMatrices(instance.matrix, part.local);
-              part.reflection.setMatrixAt(reflectionIndex, this.#matrix);
-              part.reflection.setColorAt(reflectionIndex, instance.tint);
+              part.reflection.setMatrixAt(proxyIndex, this.#matrix);
+              part.reflection.setColorAt(proxyIndex, instance.tint);
             }
           }
         }
