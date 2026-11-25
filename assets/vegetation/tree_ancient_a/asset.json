@@ -18,22 +18,8 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-builder-trees",
-  "review": {
-    "reviewer": "devin-gate-rev-c",
-    "scores": {
-      "silhouette": 9,
-      "form_detail": 6,
-      "material": 6,
-      "scale": 9,
-      "style": 8,
-      "defects": 5
-    },
-    "notes": "Abgelehnt: Starke Silhouette, aber nur geringe inhaltliche Verbesserung: grosse blattbelegte Regale bleiben flach, das dunkle Ast- und Stamminnere dominiert die Nahsicht und viele Aeste laufen als schwarze spitze Stacheln oder abgehackte Zapfen aus. Das Restdunkel ist weiterhin zu hoch und der Emissionsfloor macht Schattenblaetter flach. Als Landmarke braucht es echte feinere Zweigverzweigung, kleinere Blattcluster und natuerlichere Transluzenz statt Selbstaufhellung.",
-    "round": 2,
-    "source_sha256": "b85f654e3f7cf3ab1bd8308524614496d2157031483b3497a9a08f863a310d92",
-    "sheet_sha256": "f81d6861892fc00c7e35c48cda0ac51fc9f4968245da2817a2350d0b7903d966"
-  },
+  "review": null,
   "review_rounds": 2
 }
