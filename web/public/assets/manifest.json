@@ -200,6 +200,19 @@
       "bytes": 2776896
     },
     {
+      "id": "fern_lush_a",
+      "category": "vegetation",
+      "title": "Bodenfarn A",
+      "file": "fern_lush_a.glb",
+      "size_m": [
+        1.828,
+        1.889,
+        0.854
+      ],
+      "bytes": 4356940,
+      "material_class": "foliage"
+    },
+    {
       "id": "grass_tuft_a",
       "category": "vegetation",
       "title": "Grasbüschel A",
@@ -236,6 +249,32 @@
       "bytes": 3086624
     },
     {
+      "id": "tree_ancient_a",
+      "category": "vegetation",
+      "title": "Knorriger Altbaum A",
+      "file": "tree_ancient_a.glb",
+      "size_m": [
+        12.057,
+        12.117,
+        11.569
+      ],
+      "bytes": 8678044,
+      "material_class": "foliage"
+    },
+    {
+      "id": "tree_beech_a",
+      "category": "vegetation",
+      "title": "Wiesen-Buche A",
+      "file": "tree_beech_a.glb",
+      "size_m": [
+        10.615,
+        11.491,
+        11.323
+      ],
+      "bytes": 8374792,
+      "material_class": "foliage"
+    },
+    {
       "id": "tree_broadleaf_a",
       "category": "vegetation",
       "title": "Breitkroniger Laubbaum A",
@@ -270,6 +309,32 @@
         6.958
       ],
       "bytes": 9960708
+    },
+    {
+      "id": "tree_oak_a",
+      "category": "vegetation",
+      "title": "Wiesen-Eiche A",
+      "file": "tree_oak_a.glb",
+      "size_m": [
+        10.466,
+        11.897,
+        11.482
+      ],
+      "bytes": 8794660,
+      "material_class": "foliage"
+    },
+    {
+      "id": "tree_willow_a",
+      "category": "vegetation",
+      "title": "Ufer-Weide A",
+      "file": "tree_willow_a.glb",
+      "size_m": [
+        8.81,
+        8.985,
+        8.999
+      ],
+      "bytes": 8696728,
+      "material_class": "foliage"
     },
     {
       "id": "trunk_acacia_a",

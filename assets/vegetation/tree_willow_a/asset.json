@@ -18,7 +18,7 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "approved",
+  "status": "exported",
   "builder": "devin-builder-trees",
   "review": {
     "reviewer": "devin-gate-rev-r5",
@@ -35,5 +35,24 @@
     "source_sha256": "dc7f98ff95377309ba3789b221cad3d16c38174e045260b28ca9c1d23bef4a1e",
     "sheet_sha256": "4669d252b6e648b6b9b111902c9d01f5b3902d46dd1557bb5aef1c5fe49f97d9"
   },
-  "review_rounds": 5
+  "review_rounds": 5,
+  "size_m": [
+    8.81,
+    8.985,
+    8.999
+  ],
+  "export": {
+    "file": "export/tree_willow_a.glb",
+    "bytes": 8696728,
+    "sha256": "e10189cf316c4920240db4bd65241e9725005195d4cb602fd6b3dbb61caf16fb",
+    "source_sha256": "dc7f98ff95377309ba3789b221cad3d16c38174e045260b28ca9c1d23bef4a1e",
+    "sheet_sha256": "4669d252b6e648b6b9b111902c9d01f5b3902d46dd1557bb5aef1c5fe49f97d9",
+    "lod_triangles": [
+      2596,
+      1000,
+      380,
+      140
+    ],
+    "texture_size": 2048
+  }
 }

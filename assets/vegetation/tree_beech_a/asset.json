@@ -18,7 +18,7 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "approved",
+  "status": "exported",
   "builder": "devin-builder-trees",
   "review": {
     "reviewer": "devin-gate-rev-r5",
@@ -35,5 +35,24 @@
     "source_sha256": "505ba443ea70e1e92ad25258542e353225a60737c3a1aadd960a7f2a37cce45c",
     "sheet_sha256": "d10d4985a8ba2ffab92a7190019259efa5a40fb7cdd468f8b80b2ae927c2ac10"
   },
-  "review_rounds": 5
+  "review_rounds": 5,
+  "size_m": [
+    10.615,
+    11.491,
+    11.323
+  ],
+  "export": {
+    "file": "export/tree_beech_a.glb",
+    "bytes": 8374792,
+    "sha256": "567403af0f764e49d96cf090af58b4ed97570a117bb1f704203b909ded21b4ef",
+    "source_sha256": "505ba443ea70e1e92ad25258542e353225a60737c3a1aadd960a7f2a37cce45c",
+    "sheet_sha256": "d10d4985a8ba2ffab92a7190019259efa5a40fb7cdd468f8b80b2ae927c2ac10",
+    "lod_triangles": [
+      2700,
+      1100,
+      420,
+      140
+    ],
+    "texture_size": 2048
+  }
 }

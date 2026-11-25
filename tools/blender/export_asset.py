@@ -70,15 +70,24 @@ def decimate(obj, target, preserve_uvs=False):
             remove.extend(vertices)
             floor -= min(2, count)
     bmesh.ops.delete(mesh, geom=remove, context="VERTS")
+    # Decimate's ratio is counted in mesh faces, but the asset budgets are counted in
+    # triangles.  Large meshy/ngon faces otherwise survive almost unchanged and can put
+    # chained low LODs far over budget; triangulation makes both units agree without
+    # changing the source shape.
+    bmesh.ops.triangulate(mesh, faces=list(mesh.faces))
     mesh.to_mesh(obj.data)
     obj.data.update()
     mesh.free()
-    modifier = obj.modifiers.new("dec", "DECIMATE")
-    modifier.ratio = min(1.0, target / max(1, vrlib.triangle_count([obj])))
-    modifier.use_collapse_triangulate = True
-    if preserve_uvs:
-        modifier.delimit = {"UV"}
-    bpy.ops.object.modifier_apply(modifier=modifier.name)
+    for _ in range(3):
+        triangles = vrlib.triangle_count([obj])
+        if triangles <= target:
+            break
+        modifier = obj.modifiers.new("dec", "DECIMATE")
+        modifier.ratio = min(1.0, target / max(1, triangles))
+        modifier.use_collapse_triangulate = True
+        if preserve_uvs:
+            modifier.delimit = {"UV"}
+        bpy.ops.object.modifier_apply(modifier=modifier.name)
 
 
 def _sanitize_meshy_uvs(obj):
