@@ -53,6 +53,17 @@ def canopy_textures(materials):
     return pick(albedo), pick(occlusion)
 
 
+def canopy_emission_strength(materials):
+    """Return the shared foliage emission strength, if unambiguous."""
+    values = set()
+    for index in foliage_indices(materials):
+        material = materials[index]
+        bsdf = material.node_tree.nodes.get("Principled BSDF") if material.node_tree else None
+        if bsdf and bsdf.inputs["Emission Color"].is_linked:
+            values.add(round(float(bsdf.inputs["Emission Strength"].default_value), 6))
+    return next(iter(values)) if len(values) == 1 else 0.0
+
+
 def canopy_alpha_cutoff(materials):
     """Return the shared alpha-cutout threshold of foliage materials, if unambiguous."""
     values = set()
@@ -174,7 +185,7 @@ def _pad_degenerate_span(low, high, points):
 
 
 def simplify_canopy(obj, target, simplify_wood, source_image, texture_size, planes=3, occlusion=None,
-                    alpha_cutoff=.35, supersample=4):
+                    alpha_cutoff=.35, supersample=4, emission_strength=0.0):
     if target < 32:
         raise ValueError("Canopy LOD needs at least 32 triangles")
     planes = int(planes)
@@ -293,7 +304,7 @@ def simplify_canopy(obj, target, simplify_wood, source_image, texture_size, plan
     smooth = [face.use_smooth for face in mesh.polygons]
     wood_faces = len(faces)
     atlas = FoliageAtlas(obj.name + "_foliage", source_image, texture_size, len(groups) * cards, occlusion,
-                         supersample=supersample, alpha_cutoff=alpha_cutoff)
+                         supersample=supersample, alpha_cutoff=alpha_cutoff, emission_strength=emission_strength)
     for group in groups:
         points = np.concatenate([leaf[1] for leaf in group])
         centre = (points.min(axis=0) + points.max(axis=0)) / 2

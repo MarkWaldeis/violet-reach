@@ -15,6 +15,7 @@ import numpy as np  # noqa: E402
 import vrlib  # noqa: E402
 from canopy_lod import (  # noqa: E402
     canopy_alpha_cutoff as source_canopy_alpha_cutoff,
+    canopy_emission_strength as source_canopy_emission_strength,
     canopy_textures,
     mark_canopy,
     simplify_canopy,
@@ -383,6 +384,7 @@ if meshy_b:
     has_canopy = mark_canopy(lod0, source_materials)
     if has_canopy:
         canopy_albedo, canopy_occlusion = canopy_textures(source_materials)
+        canopy_emission = source_canopy_emission_strength(source_materials)
         if canopy_albedo:
             lod0["canopy_albedo"] = canopy_albedo.name
             if canopy_occlusion:
@@ -509,7 +511,7 @@ for i, target in enumerate(lod_tris[1:], start=1):
         occlusion = bpy.data.images.get(source.get("canopy_occlusion", "")) or images.get("occlusion")
     if not has_canopy or colour is None or not simplify_canopy(
             lod, target, decimate, colour, tex, planes=2 if i == 1 else 3, occlusion=occlusion,
-            alpha_cutoff=canopy_alpha_cutoff, supersample=canopy_atlas_supersample):
+            alpha_cutoff=canopy_alpha_cutoff, supersample=canopy_atlas_supersample, emission_strength=canopy_emission):
         decimate(lod, target, preserve_uvs=meshy_b)
     lods.append(lod)
 

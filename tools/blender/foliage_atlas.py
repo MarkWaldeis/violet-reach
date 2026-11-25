@@ -6,7 +6,7 @@ import numpy as np
 
 
 class FoliageAtlas:
-    def __init__(self, name, source, size, count, occlusion=None, supersample=4, alpha_cutoff=.35):
+    def __init__(self, name, source, size, count, occlusion=None, supersample=4, alpha_cutoff=.35, emission_strength=0.0):
         self.size = size
         self.columns = math.ceil(math.sqrt(count))
         self.tile = size // self.columns
@@ -16,6 +16,7 @@ class FoliageAtlas:
         if not 1 <= self.supersample <= 8:
             raise ValueError("Foliage atlas supersampling must be between 1 and 8")
         self.alpha_cutoff = float(alpha_cutoff)
+        self.emission_strength = float(emission_strength)
         if not 0 <= self.alpha_cutoff <= 1:
             raise ValueError("Foliage alpha cutoff must be between 0 and 1")
         self.pixels = np.zeros((size, size, 4), dtype=np.float32)
@@ -194,6 +195,9 @@ class FoliageAtlas:
         texture = nodes.new("ShaderNodeTexImage")
         texture.image = self.image
         links.new(texture.outputs["Color"], shader.inputs["Base Color"])
+        if self.emission_strength > 0:
+            links.new(texture.outputs["Color"], shader.inputs["Emission Color"])
+            shader.inputs["Emission Strength"].default_value = self.emission_strength
         clip = nodes.new("ShaderNodeMath")
         clip.operation = "GREATER_THAN"
         clip.inputs[1].default_value = self.alpha_cutoff
