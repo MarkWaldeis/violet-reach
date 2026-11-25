@@ -17,8 +17,22 @@
   "meshy_class": "B",
   "material_class": "bark",
   "texture_format": "ktx2",
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "blender-batch1",
-  "review": null,
-  "review_rounds": 3
+  "review": {
+    "reviewer": "independent-60d323da",
+    "scores": {
+      "silhouette": 5,
+      "form_detail": 6,
+      "material": 6,
+      "scale": 5,
+      "style": 7,
+      "defects": 8
+    },
+    "notes": "v3 rejected: crown is massively planar (x/y about 2.6), proportion brief missed, claw/whip-like branch endings and crackled non-elephant bark remain.",
+    "round": 4,
+    "source_sha256": "5135f91ae30ee01a4acc2079580d6578c4c78a6eac8625b7439fc929258018d1",
+    "sheet_sha256": "7257fc6883463c56591d797ca1f4cfd44fc9a9b8141c13cb26835341c0219eaf"
+  },
+  "review_rounds": 4
 }

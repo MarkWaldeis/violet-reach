@@ -17,8 +17,22 @@
   "meshy_class": "B",
   "material_class": "bark",
   "texture_format": "ktx2",
-  "status": "blender_review",
+  "status": "approved",
   "builder": "blender-batch1",
-  "review": null,
-  "review_rounds": 3
+  "review": {
+    "reviewer": "independent-60d323da",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 8,
+      "scale": 8,
+      "style": 8,
+      "defects": 8
+    },
+    "notes": "v3 knapp approved: fibrous radial crown and continuous roots fix the v2 blockers; residual thin splinters and slightly wide footprint are nonblocking.",
+    "round": 4,
+    "source_sha256": "7b7f1cb30ffa6dd1ded3b41a45495f035a01d90e00b947a7e23f59c5dc207f9f",
+    "sheet_sha256": "4ab784141946e90c3d8cecb4d963c38a5505da4e39f7193b9d80ab7d6710f263"
+  },
+  "review_rounds": 4
 }
