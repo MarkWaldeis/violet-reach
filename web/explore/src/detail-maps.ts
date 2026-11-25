@@ -132,6 +132,10 @@ export function applyAssetDetailMap(material: Material, assetId: string): Materi
   const cls = assetClassMap.get(assetId);
   const detail = cls ? loadedClasses.get(cls) : undefined;
   if (!cls || !detail) return material;
+  // Mixed tree assets are classified as foliage for their leaf cards. Their bark materials
+  // must not inherit the very fine foliage microdetail: on a close trunk it reads as noise
+  // rather than bark. Leaf materials keep the foliage detail; woody parts use their baked maps.
+  if (cls === "foliage" && /(?:^|_)mat_bark|bark|trunk|wood/i.test(material.name ?? "")) return material;
   if (!(material instanceof MeshStandardMaterial) && !(material instanceof MeshStandardNodeMaterial)) {
     return material;
   }

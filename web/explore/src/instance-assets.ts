@@ -15,7 +15,7 @@ const REFLECTED_HERO_ASSETS = new Set(["gate_white_a", "bridge_arch_a", "column_
 const REFLECTED_CANOPY_ASSETS = new Set(["tree_broadleaf_a", "tree_broadleaf_b", "tree_broadleaf_c", "tree_oak_a", "tree_beech_a", "tree_ancient_a", "tree_willow_a"]);
 
 interface Instance extends InstancePlacement { order: number; matrix: Matrix4; tint: Color; sphere: { centre: Vector3; radius: number }; lod: number }
-interface Part { mesh: InstancedMesh; local: Matrix4 }
+interface Part { mesh: InstancedMesh; local: Matrix4; reflection?: InstancedMesh }
 interface AssetBatch { parts: Part[][]; chunks: Chunk<Instance>[]; size: number; maxDistance: number; lodScale: number; lodRatio: number; aerialLODScale: number; signature?: number }
 
 export class InstanceAssets {
@@ -93,7 +93,23 @@ export class InstanceAssets {
                 mesh.layers.enable(REFLECTION_LAYER);
               }
               result.group.add(mesh);
-              parts.push({ mesh, local: source.matrixWorld.clone() });
+              const part: Part = { mesh, local: source.matrixWorld.clone() };
+              if (REFLECTED_CANOPY_ASSETS.has(id) && !REFLECTED_HERO_ASSETS.has(id) && level === 1) {
+                // Trees closest to the viewer use LOD0 in the main pass. Reflecting only their
+                // assigned LOD mesh would therefore omit exactly the nearest shoreline crowns.
+                // This reflection-only LOD1 proxy keeps the main pass cheap while giving those
+                // trees a simplified water reflection.
+                const reflection = new InstancedMesh(geometry, mat, instances.length);
+                reflection.name = `${id}_REFLECT_LOD${level}`;
+                reflection.count = 0;
+                reflection.setColorAt(0, new Color(1, 1, 1));
+                reflection.frustumCulled = false;
+                reflection.castShadow = reflection.receiveShadow = false;
+                reflection.layers.set(REFLECTION_LAYER);
+                result.group.add(reflection);
+                part.reflection = reflection;
+              }
+              parts.push(part);
             }
           }
           return parts;
@@ -121,6 +137,7 @@ export class InstanceAssets {
     for (const batch of this.#batches) {
       const distances = aerialLODDistances(lodDistances(batch.size * batch.lodScale, batch.parts.length, viewportHeight, camera.fov, batch.maxDistance, batch.lodRatio), heightAboveGround, batch.aerialLODScale);
       const written = batch.parts.map(() => 0);
+      let reflectionWritten = 0;
       let signature = 0;
       for (const chunk of batch.chunks) {
         chunks++;
@@ -139,9 +156,19 @@ export class InstanceAssets {
             part.mesh.setMatrixAt(index, this.#matrix);
             part.mesh.setColorAt(index, instance.tint);
           }
+          if (lod === 0 && batch.parts.length > 1) {
+            const reflectionIndex = reflectionWritten++;
+            for (const part of batch.parts[1]) {
+              if (!part.reflection) continue;
+              this.#matrix.multiplyMatrices(instance.matrix, part.local);
+              part.reflection.setMatrixAt(reflectionIndex, this.#matrix);
+              part.reflection.setColorAt(reflectionIndex, instance.tint);
+            }
+          }
         }
       }
       for (const count of written) signature = Math.imul(signature ^ (count + 1), 16777619);
+      signature = Math.imul(signature ^ (reflectionWritten + 1), 16777619);
       const unchanged = batch.signature === signature;
       batch.signature = signature;
       batch.parts.forEach((parts, lod) => {
@@ -157,6 +184,19 @@ export class InstanceAssets {
             tint.clearUpdateRanges();
             tint.addUpdateRange(0, written[lod] * tint.itemSize);
             tint.needsUpdate = true;
+          }
+          if (part.reflection) {
+            part.reflection.count = reflectionWritten;
+            part.reflection.visible = reflectionWritten > 0;
+            if (reflectionWritten && !unchanged) {
+              const matrix = part.reflection.instanceMatrix, tint = part.reflection.instanceColor!;
+              matrix.clearUpdateRanges();
+              matrix.addUpdateRange(0, reflectionWritten * matrix.itemSize);
+              matrix.needsUpdate = true;
+              tint.clearUpdateRanges();
+              tint.addUpdateRange(0, reflectionWritten * tint.itemSize);
+              tint.needsUpdate = true;
+            }
           }
         }
       });
