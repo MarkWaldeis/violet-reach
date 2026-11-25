@@ -17,23 +17,22 @@
   "meshy_class": "B",
   "material_class": "rock_chalk",
   "texture_format": "ktx2",
-  "status": "modeling",
+  "status": "approved",
   "builder": "blender-batch2",
   "review": {
-    "reviewer": "devin-gate-rev-e",
+    "reviewer": "independent-d17248a9",
     "scores": {
-      "silhouette": 7,
-      "form_detail": 6,
-      "material": 7,
-      "scale": 9,
-      "style": 5,
-      "defects": 4
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 8,
+      "scale": 8,
+      "style": 8,
+      "defects": 8
     },
-    "verdict": "rejected",
-    "notes": "Abgelehnt: Die Schichtkanten sind ordentlich und die schwarzen Grossloecher sind reduziert, aber die Platte bleibt eine fast perfekt flache sechseckige Tischplatte mit wenigen verbliebenen dunklen Dreieckspunkten. Der untere Fuell-/Eingrabebereich bildet eine gleichmaessig vertikal gerippte Gardine, die selbst bei teilweiser Vergrabung an Hangkanten auffallen wuerde. In Summe wirkt das Asset wie ein gefertigter Beton-Pflasterstein mit Wellpappensockel, nicht wie ein natuerlicher Kalkstein neben den freigegebenen Felsen.",
-    "round": 2,
-    "source_sha256": "9e910568fdc5679a21995012a3474d6b8499600c328e320775c992e3a37203c2",
-    "sheet_sha256": "cd84abc9bb6d6e6f5fad41be1f0b482a22a91e475fb2a5141fa1195d146c3cf5"
+    "notes": "Approved knapp: natuerliche sedimentaere Platte mit gebrochenen Raendern und sauberer Fuellung; nonblocking polish nur weniger repetitive Körnung und tiefere Oberseitenrisse.",
+    "round": 3,
+    "source_sha256": "68834d70717ee412d3542bc0ef955f18a01c723ac5b8e64a3d254fb87ae3411b",
+    "sheet_sha256": "257b1135436766e52b57a62b8ce231f9b3e62d501ce69f146f699d7a16dbf87b"
   },
-  "review_rounds": 2
+  "review_rounds": 3
 }
