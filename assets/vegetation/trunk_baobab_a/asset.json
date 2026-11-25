@@ -20,20 +20,19 @@
   "status": "modeling",
   "builder": "blender-batch1",
   "review": {
-    "reviewer": "devin-gate-rev-e",
+    "reviewer": "independent-b6c5b25a",
     "scores": {
-      "silhouette": 9,
+      "silhouette": 7,
       "form_detail": 6,
-      "material": 4,
-      "scale": 10,
+      "material": 7,
+      "scale": 7,
       "style": 6,
-      "defects": 5
+      "defects": 8
     },
-    "verdict": "rejected",
-    "notes": "Abgelehnt: Die Baobab-Gesamtform, Wurzelwulste und der Massstab sind weiterhin ueberzeugend. Das Closeup wird jedoch von einem regelmaessigen quadratischen Quilt-/Crosshatch-Muster dominiert; der Stamm wirkt wie gepolstertes Leder oder glatter Ton, nicht wie elefantenhautartige Rinde. Die Primaeraste enden ausserdem als stumpfe Rohre mit sichtbaren Kappen. Trotz guter Fernwirkung ist die Material- und Nahsichtqualitaet klar unter dem Gate.",
-    "round": 2,
-    "source_sha256": "f30c175dc86a36ae63ed1b88da3c7006f93c7780c3798daf2800af8037a145f2",
-    "sheet_sha256": "9aabebe269af84ccd69462aa4698a33637288f4bd8a09b279700073efcc6f32c"
+    "notes": "Rejected: hand-/wurstfoermige Primaeraste mit stumpfen Enden, zu schmale saulenartige Gesamtproportion und mandrake-artige obere Gabelung; Grundform/Referenz neu aufsetzen.",
+    "round": 3,
+    "source_sha256": "70a300e831658e5dc8ce641baa958b0b57ceac6117b2c003e992a456c29c855a",
+    "sheet_sha256": "be905a2322081f2f8ea551fd47113171ea460c98f43f827a8090f923d8b166f2"
   },
-  "review_rounds": 2
+  "review_rounds": 3
 }

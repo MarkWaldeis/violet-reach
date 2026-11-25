@@ -17,23 +17,22 @@
   "meshy_class": "B",
   "material_class": "bark",
   "texture_format": "ktx2",
-  "status": "modeling",
+  "status": "approved",
   "builder": "blender-batch1",
   "review": {
-    "reviewer": "devin-gate-rev-e",
+    "reviewer": "independent-b6c5b25a",
     "scores": {
-      "silhouette": 8,
-      "form_detail": 5,
-      "material": 6,
-      "scale": 10,
-      "style": 6,
-      "defects": 4
+      "silhouette": 9,
+      "form_detail": 8,
+      "material": 8,
+      "scale": 9,
+      "style": 8,
+      "defects": 9
     },
-    "verdict": "rejected",
-    "notes": "Abgelehnt: Schirmakazien-Silhouette und Massstab passen, die Reparatur der Astenden ist aber deutlich als automatische Kappenloesung lesbar: viele Enden bleiben abgeschnittene Rohre oder facettierte, steinartige Pfropfen, und zentrale Aste schneiden sich weiterhin hart. Die Rinde besteht in der Nahsicht aus gleichfoermigen Wellenlinien. Gegenueber der freigegebenen Akazie wirkt das Geruest wie ein billiges Draht-/Rohrmodell und braucht eine organische Neuerzeugung.",
-    "round": 2,
-    "source_sha256": "77e56324d8dc4ea10fe8ddd701fdb2ae6a19cd9c16558e206402c6c9cd0aeb46",
-    "sheet_sha256": "b77a41e46951474394e17a0fb888693fafb67cc636e2d77772beb32459581e24"
+    "notes": "Approved knapp: klare Schirmakazie, organische Gabelungen und saubere Bodenintegration; nonblocking polish nur weichere Astenden und laengsgerichtetere Rinde.",
+    "round": 3,
+    "source_sha256": "d845145cfe3ae16cbbc67af1bf1d1e1adc7b5b6fef7e293f79960da997faefe2",
+    "sheet_sha256": "a7d3deb85529361d5e518819f0744c259438936e11c0c8c4791c229a82b307fc"
   },
-  "review_rounds": 2
+  "review_rounds": 3
 }
