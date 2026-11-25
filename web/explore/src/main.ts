@@ -266,8 +266,11 @@ async function main() {
     driver?.(now, history.last);
     const dt = Math.max(0, Math.min(0.05, (now - last) / 1000));
     last = now;
+    const terrainStart = performance.now();
     terrain.update(position.x, position.z, now);
+    const grassStart = performance.now();
     grass?.update(position.x, position.z, position.y);
+    const grassDone = performance.now();
     if (!ready && !failed) {
       ready = applyPose();
       if (ready) {
@@ -281,15 +284,22 @@ async function main() {
     if (ready) nav.update(dt);
     atmosphere.update(camera);
     const fullHeight = terrain.fullHeightAt(position.x, position.z);
+    const assetsStart = performance.now();
     assets?.update(camera, stage.clientHeight, now, fullHeight === undefined ? 0 : Math.max(0, position.y - fullHeight));
+    const renderStart = performance.now();
     post.render();
+    const renderDone = performance.now();
     frames++;
     frameId++;
     const p = camera.position, t = terrainStatus(), a = assets?.stats;
     const grassPending = grass?.stats.suspended ? 0 : grass?.stats.pendingVisible ?? 0;
     const signature = [ready, t.complete, t.lods, t.pending, a?.lods, a?.visibleChunks, grassPending, p.x, p.y, p.z, nav.yaw, nav.pitch].join("|");
     probeReady = ready && t.complete && grassPending === 0 && stability.observe(signature) >= STABLE_FRAMES;
-    const record = { now, frameMs, cpuMs: performance.now() - cpuStart, triangles: renderer.info.render.triangles, drawCalls: renderer.info.render.drawCalls };
+    const record = {
+      now, frameMs, cpuMs: performance.now() - cpuStart, triangles: renderer.info.render.triangles, drawCalls: renderer.info.render.drawCalls,
+      terrainMs: grassStart - terrainStart, grassMs: grassDone - grassStart, assetsMs: renderStart - assetsStart, renderMs: renderDone - renderStart,
+      grassCells: grass?.stats.cells ?? 0, grassPending: grass?.stats.pendingVisible ?? 0, grassBuilding: grass?.stats.building ?? 0, grassSlots: grass?.stats.slots ?? 0,
+    };
     history.push(record);
     if (waiting.length) {
       const resolved = waiting;

@@ -10,7 +10,11 @@ import type { CameraPose } from "./qa-params.ts";
 export const STABLE_FRAMES = 30;
 export const FRAME_HISTORY = 240;
 
-export interface FrameRecord { now: number; frameMs: number; cpuMs: number; triangles: number; drawCalls: number }
+export interface FrameRecord {
+  now: number; frameMs: number; cpuMs: number; triangles: number; drawCalls: number;
+  terrainMs?: number; grassMs?: number; assetsMs?: number; renderMs?: number;
+  grassCells?: number; grassPending?: number; grassBuilding?: number; grassSlots?: number;
+}
 export interface AdapterInfo { vendor: string; architecture: string; device: string; description: string }
 export interface TerrainStatus { lods: number[]; total: number; loaded: number; failed: number; pending: number; complete: boolean }
 export interface VRStats {

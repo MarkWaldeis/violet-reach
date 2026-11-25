@@ -190,6 +190,7 @@ test("grass distance LOD uses uniform count prefixes, far geometry and bounded r
   const sys = new GrassSystem(uniformGrassSampler(), () => 10, { cellSize: 16, viewDistance: 40, density: 2, buildBudgetMs: 8, maxBuildPerFrame: 8 });
   for (let i = 0; i < 120; i++) sys.update(400, 1500);
   assert.equal(sys.stats.pending, 0, "Ring vollständig gebaut");
+  assert.equal(sys.stats.pendingVisible, 0, "Readiness-Zähler wird nach dem letzten Build wieder null");
   assert.ok(sys.stats.instances > 500, `Vollzählige Instanzen: ${sys.stats.instances}`);
   assert.ok(sys.stats.visibleInstances < sys.stats.instances, `Fernzellen reduziert: ${sys.stats.visibleInstances}/${sys.stats.instances}`);
   const meshes = sys.group.children as unknown as Array<{ count: number; geometry: { getAttribute(name: string): { count: number } } }>;

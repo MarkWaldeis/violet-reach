@@ -186,7 +186,8 @@ export class GrassSystem {
   /** Process the nearest incomplete cells, but never more than buildBudgetMs in one frame. */
   #buildBudgeted(px: number, pz: number, py?: number) {
     const { cellSize, maxBuildPerFrame, buildBudgetMs } = this.#opts;
-    const pending = [...this.#cells.values()].filter((c) => c.mesh === undefined);
+    const pending = [...this.#cells.values()].filter((c) => c.mesh === undefined && this.#cellPotentiallyVisible(c, px, pz, py));
+    this.stats.pendingVisible = pending.length;
     if (!pending.length) return;
     pending.sort((a, b) =>
       Number(!!b.build) - Number(!!a.build) ||
@@ -194,16 +195,13 @@ export class GrassSystem {
       Math.hypot((b.cx + 0.5) * cellSize - px, (b.cz + 0.5) * cellSize - pz)
     );
     const deadline = performance.now() + Math.max(0, buildBudgetMs);
-    let completed = 0, pendingVisible = 0;
+    let completed = 0;
     for (const cell of pending) {
-      if (!this.#cellPotentiallyVisible(cell, px, pz, py)) continue;
-      pendingVisible++;
       if (completed >= maxBuildPerFrame) break;
       if (completed > 0 && performance.now() >= deadline) break;
       if (!this.#buildSlice(cell, deadline)) break; // budget exhausted inside the active cell
       completed++;
     }
-    this.stats.pendingVisible = pendingVisible;
   }
 
   /**
