@@ -18,22 +18,8 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-builder-trees",
-  "review": {
-    "reviewer": "devin-gate-rev-r4-independent",
-    "scores": {
-      "silhouette": 9,
-      "form_detail": 6,
-      "material": 7,
-      "scale": 9,
-      "style": 8,
-      "defects": 4
-    },
-    "notes": "Rejected: the drooping silhouette and scale are convincing, but the upper crown contains numerous thick blunt or bulbous wooden end caps/sawn segments, especially along the left and upper-right branches. The base remains a truncated stump/pot rim rather than spreading roots, and outer hanging foliage repeats as rectangular strips. Replace caps with continuously tapered fine twigs or remove/hide them, break strip edges into smaller varied leaflets, and rebuild ground contact.",
-    "round": 4,
-    "source_sha256": "37c04eb25164ada8d6e2bb8f4b06f44d0ab9ec41222a0c88f197272e41c892f0",
-    "sheet_sha256": "75780e2f0c1ac99c557c3cfd058ca37adede31f19614e08baf9e22e089f22e75"
-  },
+  "review": null,
   "review_rounds": 4
 }

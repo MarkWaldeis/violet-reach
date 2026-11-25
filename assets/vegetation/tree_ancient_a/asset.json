@@ -18,22 +18,8 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-builder-trees",
-  "review": {
-    "reviewer": "devin-gate-rev-r4-independent",
-    "scores": {
-      "silhouette": 9,
-      "form_detail": 6,
-      "material": 7,
-      "scale": 9,
-      "style": 8,
-      "defects": 5
-    },
-    "notes": "Rejected: the broad ancient-tree silhouette and scale are strong, but closeup_upper still contains multiple long bare dark spear shoots projecting outside the foliage at the upper-left, upper-centre and right edge. The exposed scaffold is too smooth/plastic for the amount of screen space it occupies. closeup_base ends in a continuous flat circular rim/pot-like underside with almost no horizontal root spread. Shorten, bend and foliage-integrate the protruding shoots, improve taper and bark structure, and replace the rim with irregular surface roots.",
-    "round": 4,
-    "source_sha256": "97b946302ef33ef6b5a03a8ca7ea72cf72d61907dcaf0fed64e774175945e995",
-    "sheet_sha256": "9270cbcc48e3fe87ff3da7572efb4b677fd403d7a18c973db2cb29a3bdb1e252"
-  },
+  "review": null,
   "review_rounds": 4
 }

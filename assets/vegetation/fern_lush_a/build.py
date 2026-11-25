@@ -1080,6 +1080,162 @@ def _bury_fern_crown(mesh):
     return {"vertices": len(loose), "faces_removed": len(doomed)}
 
 
+def _replace_fern_rootstock(mesh):
+    """Remove all spike-like template bark and replace it by a low hidden rhizome."""
+    bm=bmesh.new(); bm.from_mesh(mesh)
+    doomed=[f for f in bm.faces if f.material_index==0]
+    if doomed: bmesh.ops.delete(bm,geom=doomed,context="FACES")
+    loose=[v for v in bm.verts if not v.link_faces]
+    if loose: bmesh.ops.delete(bm,geom=loose,context="VERTS")
+    uv=bm.loops.layers.uv.active
+    zs=(-.350,-.240,-.100,-.006)
+    rs=(.045,.055,.050,.035)
+    sides=12; rings=[]; faces=[]
+    for j,(z,r) in enumerate(zip(zs,rs)):
+        ring=[]
+        for i in range(sides):
+            a=2*math.pi*i/sides
+            rr=r*(1+.10*math.sin(3*a+j*.9)+.045*math.sin(7*a-j*.4))
+            ring.append(bm.verts.new((math.cos(a)*rr,math.sin(a)*rr,z)))
+        rings.append(ring)
+    for j in range(len(zs)-1):
+        for i in range(sides):
+            ni=(i+1)%sides
+            f=bm.faces.new((rings[j][i],rings[j][ni],rings[j+1][ni],rings[j+1][i])); f.material_index=0; faces.append(f)
+            if uv:
+                u0=i/sides; u1=(i+1)/sides
+                for loop,co in zip(f.loops,((u0,j/3),(u1,j/3),(u1,(j+1)/3),(u0,(j+1)/3))): loop[uv].uv=co
+    cap=bm.faces.new(tuple(reversed(rings[0]))); cap.material_index=0; faces.append(cap)
+    cap=bm.faces.new(tuple(rings[-1])); cap.material_index=0; faces.append(cap)
+    bm.to_mesh(mesh); mesh.update(); bm.free()
+    return {"template_bark_faces":len(doomed),"rootstock_faces":len(faces)}
+
+
+def _bezier_point(p0,p1,p2,p3,t):
+    u=1.0-t
+    return p0*(u**3)+p1*(3*u*u*t)+p2*(3*u*t*t)+p3*(t**3)
+
+
+def _write_face_uvs(face,uv_layer,uvs):
+    if uv_layer is not None:
+        for loop,uv in zip(face.loops,uvs):
+            loop[uv_layer].uv=uv
+
+
+def _clear_template_foliage(mesh):
+    """Remove the spider-like template ribbons before rebuilding the fern procedurally."""
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+    doomed = [f for f in bm.faces if f.material_index == 1]
+    if doomed:
+        bmesh.ops.delete(bm, geom=doomed, context="FACES")
+    loose = [v for v in bm.verts if not v.link_faces]
+    if loose:
+        bmesh.ops.delete(bm, geom=loose, context="VERTS")
+    bm.to_mesh(mesh)
+    mesh.update()
+    bm.free()
+    return {"faces_removed": len(doomed), "loose_vertices": len(loose)}
+
+
+def _append_fern_frond(bm, yaw, *, reach, base_z, arch, tip_z, width, seed,
+                       atlas_half=0, segments=11):
+    """Append one softly arching fern frond as a segmented tapered ribbon.
+
+    UVs use one complete authored fern frond half-atlas, so the alpha texture stays
+    leafy through the tip.  The centreline is a vertical-to-arching cubic Bezier and the
+    three-vertex-wide ribbon is gently cambered rather than a flat angular strip.
+    """
+    radial = Vector((math.cos(yaw), math.sin(yaw), 0.0))
+    side = Vector((-math.sin(yaw), math.cos(yaw), 0.0))
+    h1 = _hash01(seed, 601)
+    h2 = _hash01(seed, 607)
+    h3 = _hash01(seed, 613)
+    p0 = radial * .018 + Vector((0, 0, base_z))
+    p1 = radial * (reach * (.025 + .025 * h1)) + Vector((0, 0, base_z + arch * (.78 + .12 * h2)))
+    p2 = radial * (reach * (.58 + .08 * h2)) + side * ((h3 - .5) * reach * .08) + Vector((0, 0, base_z + arch))
+    p3 = radial * reach + side * ((h3 - .5) * reach * .16) + Vector((0, 0, tip_z))
+    uv_layer = bm.loops.layers.uv.active
+    if atlas_half:
+        u0, u1 = .580, .820
+    else:
+        u0, u1 = .090, .320
+    lattice = {}
+    centres = []
+    for j in range(segments):
+        t = j / (segments - 1)
+        centre = _bezier_point(p0, p1, p2, p3, t)
+        # A small sideways oscillation breaks the comb-straight ribbon rhythm without
+        # disturbing the overall drooping/arching habitus.
+        centre += side * (math.sin(math.pi * t) * (h2 - .5) * reach * .055)
+        centres.append(centre)
+        width_here = width * (.82 + .18 * math.sin(math.pi * min(t * 1.35, 1.0))) * (1.0 - .30 * t)
+        for iu in range(3):
+            u = iu / 2.0
+            centred = u - .5
+            camber = (1.0 - centred * centred * 4.0) * (.018 + .018 * h1) * math.sin(math.pi * t)
+            twist = (h3 - .5) * .045 * math.sin(math.pi * t)
+            pos = centre + side * (centred * width_here + twist * math.sin(math.pi * t))
+            pos += radial * camber + Vector((0, 0, camber * .35))
+            lattice[(iu, j)] = bm.verts.new(pos)
+    faces = []
+    for j in range(segments - 1):
+        t0 = j / (segments - 1)
+        t1 = (j + 1) / (segments - 1)
+        for iu in range(2):
+            keys = ((iu, j), (iu + 1, j), (iu + 1, j + 1), (iu, j + 1))
+            face = bm.faces.new(tuple(lattice[k] for k in keys))
+            face.material_index = 1
+            uvs = []
+            for ku, kj in keys:
+                uu = u0 + (ku / 2.0) * (u1 - u0)
+                vv = .095 + (kj / (segments - 1)) * .890
+                uvs.append((uu, vv))
+            _write_face_uvs(face, uv_layer, uvs)
+            faces.append(face)
+    return faces
+
+
+def _build_procedural_fern_rosette(mesh, *, seed=0):
+    """Build the R5 fern from overlapping green fronds; no brown root spikes/core slab."""
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+    layers = (
+        # count, reach range, base z, arch range, tip z range, width range
+        (16, (.86, 1.00), .014, (.27, .37), (.025, .105), (.300, .390)),
+        (11, (.50, .73), .032, (.33, .45), (.095, .225), (.260, .340)),
+        (8, (.28, .49), .052, (.38, .50), (.285, .455), (.210, .285)),
+        (9, (.08, .22), .058, (.25, .36), (.155, .295), (.170, .240)),
+    )
+    made = 0
+    fronds = 0
+    index = 0
+    for layer_no, (count, reaches, base_z, arches, tips, widths) in enumerate(layers):
+        for k in range(count):
+            h1 = _hash01(layer_no, k, 617, seed)
+            h2 = _hash01(layer_no, k, 619, seed)
+            h3 = _hash01(layer_no, k, 623, seed)
+            h4 = _hash01(layer_no, k, 631, seed)
+            # Even coverage with deterministic gaps/clumps; layers are phase-shifted so
+            # their bases overlap into a green fibrous crown rather than a black cavity.
+            yaw = 2.0 * math.pi * ((k + .18 * layer_no + (h1 - .5) * .42) / count)
+            yaw += (h2 - .5) * .10
+            reach = reaches[0] + (reaches[1] - reaches[0]) * h2
+            arch = arches[0] + (arches[1] - arches[0]) * h3
+            tip = tips[0] + (tips[1] - tips[0]) * h4
+            width = widths[0] + (widths[1] - widths[0]) * h1
+            faces = _append_fern_frond(bm, yaw, reach=reach, base_z=base_z + (h3 - .5) * .012,
+                                       arch=arch, tip_z=tip, width=width,
+                                       seed=seed + layer_no * 100 + k, atlas_half=(index + layer_no) % 2)
+            made += len(faces)
+            fronds += 1
+            index += 1
+    bm.to_mesh(mesh)
+    mesh.update()
+    bm.free()
+    return {"fronds": fronds, "faces": made, "layers": len(layers)}
+
+
 def _add_fern_root_mound(mesh, centre_data, *, seed=0):
     """Cover the buried core with a low soil/root mound, heart nubs and tapered surface roots."""
     if centre_data.get("base"):
@@ -1287,17 +1443,15 @@ def _wire_foliage_translucency(mat, strength):
 def _apply_asset_geometry(obj):
     mesh = obj.data
     if ASSET_KIND == "fern":
-        fronds = _reshape_fern_fronds(mesh, seed=GEOMETRY_SEED)
-        uvs = _compress_fern_frond_uvs(mesh, factor=.58)
-        hearts = _scatter_fern_hearts(mesh, seed=GEOMETRY_SEED)
+        cleared = _clear_template_foliage(mesh)
         crown = _bury_fern_crown(mesh)
-        fill = _duplicate_foliage_clusters(mesh, **FILL_CONFIG)
-        soil = _add_fern_root_mound(mesh, hearts, seed=GEOMETRY_SEED)
+        rootstock = _replace_fern_rootstock(mesh)
+        rosette = _build_procedural_fern_rosette(mesh, seed=GEOMETRY_SEED)
         bark_normals = _smooth_bark_normals(mesh)
-        foliage_normals = _recalc_foliage_normals(mesh, geom_weight=.35, up_weight=.72, radial_weight=.25)
-        return {"fern_fronds": fronds, "frond_uvs": uvs, "wedelherzen": hearts,
-                "root_crown": crown, "cluster_fill": fill, "soil_roots": soil,
-                "bark_normals": bark_normals, "foliage_normals": foliage_normals}
+        foliage_normals = _recalc_foliage_normals(mesh, geom_weight=.42, up_weight=.82, radial_weight=.24)
+        return {"template_foliage_cleared": cleared, "root_crown": crown, "rootstock": rootstock,
+                "procedural_rosette": rosette, "bark_normals": bark_normals,
+                "foliage_normals": foliage_normals}
     cards = _reshape_foliage_cards(mesh, **CARD_CONFIG)
     fill = _duplicate_foliage_clusters(mesh, **FILL_CONFIG)
     tips = _taper_small_bark_tips(mesh, **BARK_TAPER_CONFIG)
@@ -1306,13 +1460,6 @@ def _apply_asset_geometry(obj):
         shoot_collars=SHOOT_COLLAR_CONFIG, tip_caps=TIP_CAP_CONFIG)
     bark_normals = _smooth_bark_normals(mesh)
     normals = 0
-    if ASSET_KIND == "tree":
-        if "willow" in SLUG:
-            normals = _recalc_foliage_normals(mesh, geom_weight=.60, up_weight=.30, radial_weight=.82)
-        else:
-            normals = _recalc_foliage_normals(mesh, geom_weight=.60, up_weight=.58, radial_weight=.68)
-    elif ASSET_KIND == "bush":
-        normals = _recalc_foliage_normals(mesh, geom_weight=.66, up_weight=.50, radial_weight=.56)
     return {"cards": cards, "cluster_fill": fill, "tapered_tips": tips,
             "procedural_bark": bark_geometry, "bark_normals": bark_normals,
             "foliage_normals": normals}

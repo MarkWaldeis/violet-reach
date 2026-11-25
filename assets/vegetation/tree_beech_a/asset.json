@@ -18,22 +18,8 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "devin-builder-trees",
-  "review": {
-    "reviewer": "devin-gate-rev-r4-independent",
-    "scores": {
-      "silhouette": 8,
-      "form_detail": 6,
-      "material": 6,
-      "scale": 9,
-      "style": 7,
-      "defects": 5
-    },
-    "notes": "Rejected: crown fullness and scale are improved, but closeups still show a smooth near-black plastic trunk and dark bare Y/spear ends. A thick horizontal branch at the upper trunk ends in conspicuous flat cut cylindrical discs. The base is a vertical pleated collar of triangular plates with a hard lower edge, not spreading surface roots. Rework branch terminations into tapered twig-bearing ends or remove them, add readable bark structure without flattening the dark undersides, and rebuild the root flare horizontally.",
-    "round": 4,
-    "source_sha256": "69710ffad426faf33568af369b6ac1fb086d78664147a04b4709e95e0e8d8fae",
-    "sheet_sha256": "fc91472e5cf16025c3082c108cbc3c5e7c8a9a0ca8ddef3ac2c0778adc84b14d"
-  },
+  "review": null,
   "review_rounds": 4
 }

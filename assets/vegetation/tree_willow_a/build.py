@@ -34,7 +34,7 @@ TARGET_SIZE_M = (9.0, 9.0, 8.0)  # ungefähr, oberirdische Höhe im Quelltemplat
 FOLIAGE_TARGET = "#4A5426"  # zwischen leaf_green #313C1D und grass_green #696F44
 FOLIAGE_STRENGTH = 0.60
 BARK_TARGET = "#41321D"
-BARK_STRENGTH = 0.48
+BARK_STRENGTH = 0.36
 ALPHA_CUTOFF = 0.34
 ROUGHNESS_MIN = 0.65
 ASSET_KIND = "tree"
@@ -55,8 +55,9 @@ FILL_CONFIG = dict(attach_high=True, fraction=1.0, second_fraction=.90, third_fr
                    yaw_deg=60, pitch_deg=8, roll_deg=24,
                    normal_offset=.10, tangent_offset=.20,
                    inward_fraction=.30, inward_pull=.38, z_jitter=.22, seed=GEOMETRY_SEED)
-ROOT_CONFIG = dict(height=1.12, trunk_radius=.43, min_flare=.20, max_flare=.88, sides=24,
-                   margin=.045, falloff=1.45)
+ROOT_CONFIG = dict(count=8, trunk_radius=.43, base_z=.43,
+                   length_range=(.78, 1.38), radius_range=(.145, .225),
+                   bury_range=(.065, .145), sides=8, rings=7, oval=.48)
 BRANCH_COLLARS = (
     dict(angle_deg=15, z=2.15, length=.95, radius=.23, up=.36, surface_radius=.43),
     dict(angle_deg=180, z=2.20, length=.95, radius=.23, up=.34, surface_radius=.43),
@@ -71,7 +72,7 @@ TIP_CAP_CONFIG = dict(zmin=2.55, min_radius=.50, cluster_radius=.72, min_points=
 FOLIAGE_GAMMA = .66
 FOLIAGE_LIFT_FLOOR = .040
 FOLIAGE_TRANSLUCENCY = .115
-BARK_TRANSLUCENCY = .055
+BARK_TRANSLUCENCY = .078
 
 
 def _sha256_file(path):
@@ -1031,6 +1032,422 @@ def _append_root_flare(bm, mesh, centre, *, height, trunk_radius, min_flare, max
     faces.append(bm.faces.new(tuple(reversed(ring_verts[0]))))
     _finish_bm_faces(bm, faces, 0, centre)
     return faces
+
+
+def _bury_template_root_plates(mesh):
+    """Push the template's separate pleated root-collar insert fully below grade."""
+    changed = 0
+    buried = 0
+    for comp in _material_components(mesh, 0):
+        if not (70 <= len(comp["polys"]) <= 240):
+            continue
+        pts = np.array([mesh.vertices[v].co[:] for v in comp["verts"]], dtype=float)
+        if not len(pts):
+            continue
+        zmin, zmax = float(pts[:, 2].min()), float(pts[:, 2].max())
+        if zmin > -.20 or zmax < .25 or zmax > .95:
+            continue
+        for v in comp["verts"]:
+            co = mesh.vertices[v].co
+            if co.z > -.018:
+                co.z = -.022 - (co.z + .018) * .48
+                changed += 1
+        buried += 1
+    if changed:
+        mesh.update()
+    return {"components": buried, "vertices": changed}
+
+
+def _bezier_point(p0, p1, p2, p3, t):
+    u = 1.0 - t
+    return p0 * (u ** 3) + p1 * (3.0 * u * u * t) + p2 * (3.0 * u * t * t) + p3 * (t ** 3)
+
+
+def _write_face_uvs(face, uv_layer, uvs):
+    if uv_layer is not None:
+        for loop, uv in zip(face.loops, uvs):
+            loop[uv_layer].uv = uv
+
+
+def _append_curved_tube(bm, points, radii, *, sides=6, seed=0, material_index=0,
+                        oval=(1.0, .78), cap_start=True, cap_end=True, irregular=.04):
+    """Append a tapered irregular tube along a curved point sequence."""
+    if len(points) != len(radii) or len(points) < 2:
+        return []
+    uv_layer = bm.loops.layers.uv.active
+    zup = Vector((0, 0, 1))
+    rings = []
+    faces = []
+    phase1 = _hash01(seed, 3) * 2.0 * math.pi
+    phase2 = _hash01(seed, 7) * 2.0 * math.pi
+    count = len(points)
+    for j, (point, radius) in enumerate(zip(points, radii)):
+        if j == 0:
+            tangent = points[1] - points[0]
+        elif j == count - 1:
+            tangent = points[-1] - points[-2]
+        else:
+            tangent = points[j + 1] - points[j - 1]
+        if tangent.length < 1e-6:
+            tangent = zup.copy()
+        tangent.normalize()
+        side = tangent.cross(zup)
+        if side.length < 1e-5:
+            side = Vector((1, 0, 0))
+        side.normalize()
+        upv = side.cross(tangent)
+        if upv.length < 1e-5:
+            upv = zup.copy()
+        upv.normalize()
+        ring = []
+        for i in range(sides):
+            a = 2.0 * math.pi * i / sides
+            organic = 1.0 + irregular * math.sin(3.0 * a + phase1 + j * .57)
+            organic += irregular * .55 * math.sin(5.0 * a + phase2 - j * .31)
+            rr = max(radius * organic, .0012)
+            ring.append(bm.verts.new(point + side * (math.cos(a) * rr * oval[0]) +
+                                     upv * (math.sin(a) * rr * oval[1])))
+        rings.append(ring)
+    for j in range(count - 1):
+        t0 = j / max(count - 1, 1)
+        t1 = (j + 1) / max(count - 1, 1)
+        for i in range(sides):
+            ni = (i + 1) % sides
+            face = bm.faces.new((rings[j][i], rings[j][ni], rings[j + 1][ni], rings[j + 1][i]))
+            face.material_index = material_index
+            u0, u1 = i / sides, (i + 1) / sides
+            _write_face_uvs(face, uv_layer, ((u0, t0), (u1, t0), (u1, t1), (u0, t1)))
+            faces.append(face)
+    if cap_start:
+        cap = bm.faces.new(tuple(reversed(rings[0])))
+        cap.material_index = material_index
+        faces.append(cap)
+    if cap_end:
+        cap = bm.faces.new(tuple(rings[-1]))
+        cap.material_index = material_index
+        faces.append(cap)
+    return faces
+
+
+def _append_surface_roots(bm, centre, *, count, trunk_radius, base_z, length_range,
+                          radius_range, bury_range=(.07, .16), sides=7, rings=7,
+                          seed=0, oval=.70):
+    """Append separate tapering horizontal roots that dive below z=0 individually."""
+    made = []
+    centre = Vector((centre.x, centre.y, 0.0))
+    for ri in range(count):
+        h1 = _hash01(ri, 11, seed)
+        h2 = _hash01(ri, 17, seed)
+        h3 = _hash01(ri, 23, seed)
+        h4 = _hash01(ri, 29, seed)
+        h5 = _hash01(ri, 37, seed)
+        angle = 2.0 * math.pi * (ri + (h1 - .5) * .82) / count + (h2 - .5) * .10
+        radial = Vector((math.cos(angle), math.sin(angle), 0.0))
+        tangent = Vector((-radial.y, radial.x, 0.0))
+        length = length_range[0] + (length_range[1] - length_range[0]) * h2
+        root_radius = radius_range[0] + (radius_range[1] - radius_range[0]) * h3
+        bury = bury_range[0] + (bury_range[1] - bury_range[0]) * h4
+        start_z = base_z * (.86 + .28 * h5)
+        bend = (h4 - .5) * length * .34
+        bend2 = bend * 1.35 + (h1 - .5) * length * .12
+        p0 = centre + radial * (trunk_radius * .30) + Vector((0, 0, start_z))
+        p1 = centre + radial * (trunk_radius * .90) + tangent * (bend * .12) + Vector((0, 0, start_z * .70))
+        p2 = centre + radial * (trunk_radius + length * .48) + tangent * bend + Vector((0, 0, .008 + .022 * h3))
+        p3 = centre + radial * (trunk_radius + length) + tangent * bend2 + Vector((0, 0, -bury))
+        pts = [_bezier_point(p0, p1, p2, p3, j / max(rings - 1, 1)) for j in range(rings)]
+        ground_t = .64 + .13 * h1
+        for j, pt in enumerate(pts):
+            t = j / max(rings - 1, 1)
+            if t < ground_t:
+                q = t / ground_t
+                pt.z = start_z * ((1.0 - q) ** 1.32)
+            else:
+                q = (t - ground_t) / max(1.0 - ground_t, 1e-6)
+                pt.z = -bury * (q ** .72)
+        radii = [.018 + (root_radius - .018) * ((1.0 - j / max(rings - 1, 1)) ** .78)
+                 for j in range(rings)]
+        made.extend(_append_curved_tube(bm, pts, radii, sides=sides, seed=seed + 600 + ri * 19,
+                                        material_index=0, oval=(1.0, oval), irregular=.065))
+    return {"roots": count, "faces": len(made)}
+
+
+def _flute_trunk_bark(mesh, *, trunk_radius, height=3.2, seed=0):
+    """Subtly flute the lower trunk surface so bark catches light as structure."""
+    centre = _estimate_trunk_center(mesh)
+    changed = 0
+    phase = _hash01(seed, 131) * 2.0 * math.pi
+    for v in sorted({v for p in mesh.polygons if p.material_index == 0 for v in p.vertices}):
+        co = mesh.vertices[v].co
+        if not (.10 < co.z < height):
+            continue
+        dx, dy = co.x - centre.x, co.y - centre.y
+        r = math.hypot(dx, dy)
+        if r < trunk_radius * .42 or r > trunk_radius * 1.48:
+            continue
+        a = math.atan2(dy, dx)
+        zfade = min(1.0, (co.z - .10) / .34)
+        zfade *= 1.0 - .42 * max(0.0, co.z - height * .66) / max(height * .34, 1e-6)
+        wave = .62 * math.sin(7.0 * a + co.z * 4.7 + phase)
+        wave += .38 * math.sin(13.0 * a - co.z * 3.1 + phase * .37)
+        amp = trunk_radius * .064 * zfade
+        if r > 1e-6:
+            co.x += dx / r * wave * amp
+            co.y += dy / r * wave * amp
+            changed += 1
+    if changed:
+        mesh.update()
+    return {"vertices": changed}
+
+
+def _smooth_lower_trunk_flare(mesh, *, trunk_radius, seed=0):
+    """Collapse blade-like template buttress plates into a broad continuous trunk flare.
+
+    Separate surface roots provide the horizontal root structure; the underlying trunk
+    scaffold only needs a rounded, slightly uneven flare rather than triangular fins.
+    """
+    centre=_estimate_trunk_center(mesh); changed=0; phase=_hash01(seed,557)*2*math.pi
+    ids=sorted({v for p in mesh.polygons if p.material_index==0 for v in p.vertices})
+    for vi in ids:
+        co=mesh.vertices[vi].co
+        if not (.025<co.z<1.18): continue
+        dx,dy=co.x-centre.x,co.y-centre.y; r=math.hypot(dx,dy)
+        if r<.10: continue
+        t=co.z/1.18
+        target=trunk_radius*(1.18-.28*t)
+        a=math.atan2(dy,dx)
+        target*=1.0+.030*math.sin(5*a+co.z*2.1+phase)+.018*math.sin(9*a-co.z*3.0)
+        if r>target:
+            newr=target+(r-target)*.24
+        elif r<target*.76:
+            newr=r+(target*.76-r)*.34
+        else:
+            continue
+        scale=newr/r
+        co.x=centre.x+dx*scale; co.y=centre.y+dy*scale; changed+=1
+    if changed: mesh.update()
+    return {"vertices":changed}
+
+
+def _leaf_atlas_rect(h, *, willow=False):
+    hu = _hash01(h, 401)
+    hv = _hash01(h, 409)
+    u0 = .008 if hu < .5 else .508
+    v0 = .008 if hv < .5 else .508
+    return (u0, v0, u0 + .484, v0 + .484)
+
+
+def _append_leaf_card(bm, base, vhat, *, width, length, seed=0, material_index=1,
+                      uv_rect=(.008, .008, .492, .492), reverse_v=False, cup=.045,
+                      twist_deg=24.0, pinch=.24):
+    """Append a small 2x2-quad leaf-cluster card with its stem edge at base."""
+    if vhat.length < 1e-6:
+        return []
+    vhat = vhat.normalized()
+    horizontal = Vector((vhat.x, vhat.y, 0.0))
+    if horizontal.length > 1e-5:
+        uhat = Vector((-horizontal.y, horizontal.x, 0.0)).normalized()
+    else:
+        uhat = Vector((1, 0, 0))
+    nhat = uhat.cross(vhat)
+    if nhat.length < 1e-6:
+        nhat = Vector((0, 0, 1))
+    nhat.normalize()
+    uv_layer = bm.loops.layers.uv.active
+    h1 = _hash01(seed, 421)
+    h2 = _hash01(seed, 427)
+    twist = math.radians((h1 * 2.0 - 1.0) * twist_deg)
+    curl = (h2 - .5) * width * .18
+    lattice = {}
+    for iv in range(3):
+        w = iv / 2.0
+        angle = twist * (w - .5)
+        ca, sa = math.cos(angle), math.sin(angle)
+        u2 = uhat * ca + nhat * sa
+        n2 = nhat * ca - uhat * sa
+        for iu in range(3):
+            u = iu / 2.0
+            centred = u - .5
+            x = centred * width * (1.0 - pinch * w)
+            camber = (1.0 - centred * centred * 4.0) * cup * math.sin(math.pi * w)
+            lattice[(iu, iv)] = bm.verts.new(base + vhat * (length * w) + u2 * x +
+                                             n2 * camber + uhat * (curl * math.sin(math.pi * w)))
+    faces = []
+    umin, vmin, umax, vmax = uv_rect
+    for iv in range(2):
+        for iu in range(2):
+            keys = ((iu, iv), (iu + 1, iv), (iu + 1, iv + 1), (iu, iv + 1))
+            face = bm.faces.new(tuple(lattice[k] for k in keys))
+            face.material_index = material_index
+            uvs = []
+            for ku, kv in keys:
+                uu = umin + (ku / 2.0) * (umax - umin)
+                vv = vmax - (kv / 2.0) * (vmax - vmin) if reverse_v else vmin + (kv / 2.0) * (vmax - vmin)
+                uvs.append((uu, vv))
+            _write_face_uvs(face, uv_layer, uvs)
+            faces.append(face)
+    return faces
+
+
+def _append_terminal_growth(bm, cap_data, shoot_data, *, seed=0, willow=False):
+    """Finish blunt ends as fine tapered twig whorls plus anchored leaf tufts."""
+    made = {"twig_faces": 0, "twigs": 0, "leaf_cards": 0, "terminal_shoots": 0}
+    zup = Vector((0, 0, 1))
+
+    def leaf_tuft(pos, direction, size_seed, count, scale=1.0):
+        if direction.length < 1e-6:
+            direction = zup.copy()
+        direction = direction.normalized()
+        e1, e2 = _orthogonal_frame(direction)
+        for k in range(count):
+            h1 = _hash01(size_seed, k, 431)
+            h2 = _hash01(size_seed, k, 437)
+            h3 = _hash01(size_seed, k, 439)
+            spin = 2.0 * math.pi * (k / max(count, 1) + h1 * .23)
+            lateral = e1 * math.cos(spin) + e2 * math.sin(spin)
+            if willow:
+                outward = Vector((direction.x, direction.y, 0.0))
+                if outward.length < 1e-5:
+                    outward = lateral.copy()
+                outward.normalize()
+                vhat = (outward * (.25 + .20 * h2) + Vector((0, 0, -1.0))).normalized()
+                length = (.42 + .18 * h2) * scale
+                width = (.30 + .13 * h3) * scale
+            else:
+                vhat = (direction * (.72 + .16 * h2) + zup * (.24 + .22 * h3) + lateral * .16).normalized()
+                length = (.48 + .22 * h2) * scale
+                width = (.46 + .20 * h3) * scale
+            base = pos - vhat * (.055 + .035 * h1) + lateral * (.014 + .024 * h3)
+            rect = _leaf_atlas_rect(size_seed + k * 13, willow=willow)
+            faces = _append_leaf_card(bm, base, vhat, width=width, length=length,
+                                      seed=seed + size_seed * 17 + k, uv_rect=rect,
+                                      reverse_v=willow, cup=.035 + .025 * h2,
+                                      twist_deg=28, pinch=.28 if willow else .22)
+            made["leaf_cards"] += len(faces) // 4
+
+    for si, data in enumerate(shoot_data or ()):
+        tip = data["base"] + data["axis"] * data["length"]
+        h = _hash01(data["ci"], si, 443)
+        leaf_tuft(tip, data["axis"], seed + 700 + si, 1 + (1 if h > .42 else 0), scale=.88 + .20 * h)
+        made["terminal_shoots"] += 1
+
+    for ci, data in enumerate(cap_data or ()):
+        axis = data["axis"].normalized()
+        tip = data["tip"]
+        radius = data["radius"]
+        h0 = _hash01(data["ci"], 449, seed)
+        whorl = 2 + (1 if radius > .145 or h0 > .62 else 0)
+        e1, e2 = _orthogonal_frame(axis)
+        inset = max(.115, radius * .52)
+        spread = min(radius * .30, .052)
+        for k in range(whorl):
+            h1 = _hash01(data["ci"], k, 451, seed)
+            h2 = _hash01(data["ci"], k, 457, seed)
+            h3 = _hash01(data["ci"], k, 461, seed)
+            h4 = _hash01(data["ci"], k, 467, seed)
+            ang = 2.0 * math.pi * (k / whorl + h1 * .19)
+            lateral = e1 * math.cos(ang) + e2 * math.sin(ang)
+            start = tip - axis * (inset * (.86 + .20 * h2)) + lateral * (spread * (.35 + .55 * h3))
+            direction = axis * (.82 + .10 * h2) + lateral * (.28 + .18 * h3) + zup * ((h4 - .42) * .10)
+            if direction.length < 1e-6:
+                direction = axis.copy()
+            direction.normalize()
+            length = max(.24, min(.50, radius * 1.45 + .14)) * (.86 + .24 * h1)
+            curl = (.025 + .045 * h2) * (1.0 if h3 > .5 else -1.0)
+            lift = (.018 + .050 * h4) if not willow else (-.015 - .035 * h4)
+            pts = []
+            radii = []
+            base_r = min(max(radius * (.22 + .08 * h2), .013), .043)
+            rings = 5
+            for j in range(rings):
+                t = j / (rings - 1)
+                pos = start + direction * (length * t)
+                pos += lateral * (curl * math.sin(math.pi * t * .5))
+                pos += zup * (lift * t * t)
+                pts.append(pos)
+                radii.append(.004 + (base_r - .004) * ((1.0 - t) ** .82))
+            faces = _append_curved_tube(bm, pts, radii, sides=5, seed=seed + 900 + ci * 31 + k,
+                                        material_index=0, oval=(1.0, .86), irregular=.055)
+            made["twig_faces"] += len(faces)
+            made["twigs"] += 1
+            leaf_tuft(pts[-1], direction, seed + 1000 + ci * 17 + k, 2 if h2 > .30 else 1,
+                      scale=.92 + .18 * h3)
+    return made
+
+
+def _raggedize_willow_cards(mesh, *, seed=0):
+    """Skew/pinch willow cards and vary their UV windows without changing their droop."""
+    uvlay = mesh.uv_layers.active
+    changed = 0
+    loops_changed = 0
+    for ci, polys in enumerate(_foliage_components(mesh, 1)):
+        rows = _component_rows(mesh, polys)
+        if len(rows) != 4:
+            continue
+        center = Vector((0, 0, 0))
+        for v, u, w, co in rows:
+            center += co
+        center /= len(rows)
+        pu0 = _mean_row(rows, lambda u, w: u < .2)
+        pu1 = _mean_row(rows, lambda u, w: u > .8)
+        pv0 = _mean_row(rows, lambda u, w: w < .2)
+        pv1 = _mean_row(rows, lambda u, w: w > .8)
+        au, av = pu1 - pu0, pv1 - pv0
+        if au.length < 1e-5 or av.length < 1e-5:
+            continue
+        uhat, vhat = au.normalized(), av.normalized()
+        nhat = uhat.cross(vhat)
+        if nhat.length < 1e-5:
+            continue
+        nhat.normalize()
+        h1 = _hash01(ci, 501, seed)
+        h2 = _hash01(ci, 503, seed)
+        h3 = _hash01(ci, 509, seed)
+        h4 = _hash01(ci, 521, seed)
+        shear = (h2 - .5) * .22
+        pinch_free = .16 + .24 * h1
+        pinch_base = .05 + .12 * h4
+        length_jitter = .84 + .18 * h3
+        for v, u, w, co in rows:
+            d = co - center
+            x = d.dot(uhat)
+            y = d.dot(vhat) * length_jitter
+            z = d.dot(nhat)
+            end = abs(w - .5) * 2.0
+            pinch = pinch_free * (end ** 1.7) + pinch_base * ((1.0 - end) ** 2)
+            corner_sign = 1.0 if (u > .5) == (w > .5) else -1.0
+            x *= 1.0 - pinch * (1.0 + .28 * corner_sign * (h3 - .5))
+            x += shear * (w - .5) * max(abs(x) * 2.0, .18)
+            y += (h4 - .5) * .055 * math.sin(math.pi * u)
+            # Roll each independent curtain piece around its drooping axis and bow it
+            # sideways along the length.  This is what breaks the repeated parallel
+            # rectangular-strip rhythm while preserving the overall downward habitus.
+            roll = math.radians((h1 - .5) * 52.0) * math.sin(math.pi * min(max(w, 0.0), 1.0))
+            ca, sa = math.cos(roll), math.sin(roll)
+            x, z = x * ca + z * sa, z * ca - x * sa
+            z += (h2 - .5) * .10 * math.sin(math.pi * w)
+            x += (h3 - .5) * .05 * math.sin(math.pi * w)
+            mesh.vertices[v].co = center + uhat * x + vhat * y + nhat * z
+            changed += 1
+        loop_ids = sorted({li for p in polys for li in p.loop_indices})
+        if loop_ids and uvlay:
+            us = [uvlay.data[li].uv.x for li in loop_ids]
+            vs = [uvlay.data[li].uv.y for li in loop_ids]
+            umin, umax = min(us), max(us)
+            vmin, vmax = min(vs), max(vs)
+            in_u0 = .012 + .052 * h1
+            in_u1 = .012 + .052 * h2
+            in_v0 = .004 + .025 * h3
+            in_v1 = .004 + .025 * h4
+            for li in loop_ids:
+                uv = uvlay.data[li].uv
+                nu = (uv.x - umin) / max(umax - umin, 1e-8)
+                nv = (uv.y - vmin) / max(vmax - vmin, 1e-8)
+                uv.x = umin + in_u0 + nu * max((umax - umin) - in_u0 - in_u1, .01)
+                uv.y = vmin + in_v0 + nv * max((vmax - vmin) - in_v0 - in_v1, .01)
+                loops_changed += 1
+    if changed:
+        mesh.update()
+    return {"cards_ragged": changed // 4, "vertices": changed, "uv_loops": loops_changed}
 def _small_shoot_data(mesh, min_faces=32, max_faces=48):
     comps = _material_components(mesh, 0)
     small_ids = {id(c) for c in comps if min_faces <= len(c["polys"]) <= max_faces}
@@ -1133,22 +1550,58 @@ def _tip_cap_candidates(mesh, *, zmin, min_radius, cluster_radius, min_points, s
         out.sort(key=lambda d: -(d["tip"].z + math.hypot(d["tip"].x, d["tip"].y) * .45))
         out = out[:max_caps]
     return out
+
+def _shrink_blunt_terminal_mesh(mesh, cap_data):
+    """Taper original scaffold geometry at detected dead ends before adding twigs.
+
+    Without this the old flat/cylindrical end face remains visible behind the new
+    terminal growth.  Vertices in a small local end zone are collapsed progressively
+    toward the branch axis and pulled slightly back, producing a continuous wooden
+    taper rather than a sawn disc.
+    """
+    ids=sorted({v for p in mesh.polygons if p.material_index==0 for v in p.vertices})
+    changed=0
+    for data in cap_data or ():
+        axis=data["axis"].normalized(); tip=data["tip"]; radius=data["radius"]
+        influence=max(radius*2.45,.24)
+        for vi in ids:
+            co=mesh.vertices[vi].co
+            vec=co-tip; back=-vec.dot(axis)
+            if back < -radius*.30 or back > influence: continue
+            axial=tip-axis*back
+            perp=co-axial; pr=perp.length
+            if pr>max(radius*1.90,.09): continue
+            q=max(0.0,min(1.0,back/influence))
+            radial_scale=.20+.80*(q**.72)
+            retreat=(1.0-q)**2*radius*.34
+            co[:]=axial+perp*radial_scale-axis*retreat
+            changed+=1
+    if changed: mesh.update()
+    return {"vertices":changed}
+
+
 def _add_procedural_bark_geometry(mesh, *, seed=0, root=None, collars=(), shoot_collars=None,
                                   tip_caps=None):
-    """Attach new bark geometry: root flare, joint collars and closed tapered tips."""
+    """Attach new bark/foliage construction: surface roots, junction collars and terminal growth."""
+    root_burial = _bury_template_root_plates(mesh)
     centre = _estimate_trunk_center(mesh)
-    shoot_data = _small_shoot_data(mesh) if shoot_collars else []
+    shoot_data = _small_shoot_data(mesh) if shoot_collars or tip_caps else []
     cap_data = []
     if tip_caps:
         cap_args = {k: v for k, v in tip_caps.items()
                     if k in {"zmin", "min_radius", "cluster_radius", "min_points", "seed",
                              "dead_end", "max_caps", "min_cap_radius"}}
         cap_data = _tip_cap_candidates(mesh, **cap_args)
+    blunt_terminal_mesh = _shrink_blunt_terminal_mesh(mesh, cap_data)
     bm = bmesh.new()
     bm.from_mesh(mesh)
-    made = {"root_flare": 0, "branch_collars": 0, "shoot_collars": 0, "tip_caps": 0}
+    made = {"root_plates_buried": root_burial, "blunt_terminal_mesh": blunt_terminal_mesh, "surface_roots": {"roots": 0, "faces": 0},
+            "branch_collars": 0, "shoot_collars": 0, "terminal_growth": {}}
     if root:
-        made["root_flare"] = len(_append_root_flare(bm, mesh, centre, seed=seed, **root))
+        root_args = {k: v for k, v in root.items()
+                     if k in {"count", "trunk_radius", "base_z", "length_range", "radius_range",
+                              "bury_range", "sides", "rings", "oval"}}
+        made["surface_roots"] = _append_surface_roots(bm, centre, seed=seed, **root_args)
     for ci, cfg in enumerate(collars or ()):
         angle = math.radians(cfg["angle_deg"])
         radial = Vector((math.cos(angle), math.sin(angle), 0.0))
@@ -1170,14 +1623,8 @@ def _add_procedural_bark_geometry(mesh, *, seed=0, root=None, collars=(), shoot_
                 bm, ccentre, data["axis"], length=length, radius=radius,
                 sides=8, rings=5, seed=seed + 200 + si, oval=.82))
     if tip_caps:
-        lo, hi = tip_caps.get("length_range", (.34, .54))
-        for ci, data in enumerate(cap_data):
-            length = lo + (hi - lo) * data["hash"]
-            length = max(length, data["radius"] * tip_caps.get("length_radius_mul", 2.1))
-            base = data["tip"] - data["axis"] * tip_caps.get("inset", .10)
-            made["tip_caps"] += len(_append_tapered_tip(
-                bm, base, data["axis"], length=length, radius=data["radius"],
-                sides=8, seed=seed + 400 + ci))
+        made["terminal_growth"] = _append_terminal_growth(
+            bm, cap_data, shoot_data, seed=seed, willow=("willow" in SLUG))
     bm.to_mesh(mesh)
     mesh.update()
     bm.free()
@@ -1453,7 +1900,13 @@ def _apply_asset_geometry(obj):
         split = _split_foliage_cards(mesh, seed=SPLIT_CONFIG.get("seed", 0))
     cards = _reshape_foliage_cards(mesh, **CARD_CONFIG)
     fill = _duplicate_foliage_clusters(mesh, **FILL_CONFIG)
+    willow_ragged = {"cards_ragged": 0}
+    if "willow" in SLUG:
+        willow_ragged = _raggedize_willow_cards(mesh, seed=GEOMETRY_SEED)
     tips = _taper_small_bark_tips(mesh, **BARK_TAPER_CONFIG)
+    lower_flare = _smooth_lower_trunk_flare(mesh, trunk_radius=ROOT_CONFIG.get("trunk_radius", .5), seed=GEOMETRY_SEED)
+    fluting = _flute_trunk_bark(mesh, trunk_radius=ROOT_CONFIG.get("trunk_radius", .5),
+                                height=3.4, seed=GEOMETRY_SEED)
     bark_geometry = _add_procedural_bark_geometry(
         mesh, seed=GEOMETRY_SEED, root=ROOT_CONFIG, collars=BRANCH_COLLARS,
         shoot_collars=SHOOT_COLLAR_CONFIG, tip_caps=TIP_CAP_CONFIG)
@@ -1466,7 +1919,8 @@ def _apply_asset_geometry(obj):
             normals = _recalc_foliage_normals(mesh, geom_weight=.60, up_weight=.58, radial_weight=.68)
     elif ASSET_KIND == "bush":
         normals = _recalc_foliage_normals(mesh, geom_weight=.66, up_weight=.50, radial_weight=.56)
-    return {"cards": cards, "card_split": split, "cluster_fill": fill, "tapered_tips": tips,
+    return {"cards": cards, "card_split": split, "cluster_fill": fill,
+            "willow_ragged": willow_ragged, "tapered_tips": tips, "lower_trunk_flare": lower_flare, "trunk_fluting": fluting,
             "procedural_bark": bark_geometry, "bark_normals": bark_normals,
             "foliage_normals": normals}
 
@@ -1537,7 +1991,7 @@ def _configure_materials(obj, template_info):
     lifted = _lift_foliage_albedo(foliage, gamma=FOLIAGE_GAMMA, floor=FOLIAGE_LIFT_FLOOR)
     if lifted:
         graded["foliage_lifted"] = lifted
-    bark_lifted = _lift_foliage_albedo(bark, gamma=.86, floor=.022)
+    bark_lifted = _lift_foliage_albedo(bark, gamma=.74, floor=.032)
     if bark_lifted:
         graded["bark_lifted"] = bark_lifted
     _wire_foliage_translucency(foliage, FOLIAGE_TRANSLUCENCY)
