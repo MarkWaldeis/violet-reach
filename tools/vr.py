@@ -66,7 +66,12 @@ def save(asset_dir, meta):
 
 def sha256(path):
     with open(path, "rb") as f:
-        return hashlib.sha256(f.read()).hexdigest()
+        data = f.read()
+    # Source receipts must be stable across Windows/editor line-ending conversions.
+    # Binary assets keep exact byte hashes; Python/JSON text inputs are LF-normalised.
+    if Path(path).suffix.lower() in {".py", ".json"}:
+        data = data.replace(bytes([13, 10]), bytes([10])).replace(bytes([13]), bytes([10]))
+    return hashlib.sha256(data).hexdigest()
 
 
 def source_hash(asset_dir):

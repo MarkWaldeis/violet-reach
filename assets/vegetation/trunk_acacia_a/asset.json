@@ -31,7 +31,7 @@
     },
     "notes": "Charakteristische Schirmakazien-Silhouette (11,65 x 9,70 x 10,59 m) mit leicht geneigtem Hauptstamm, Brettwurzelansatz und flach geschichteter Astkrone. Mattes Rindenmaterial trifft STYLE.md und Referenzen sehr gut.",
     "round": 1,
-    "source_sha256": "7712fff66c7d3a7583cab465dd51e1a099c0829651949db56f4908b9523119d3",
+    "source_sha256": "69cb96ceb584603b84678b7a2a52fba3bba8c6b179c5bf51877a8edd6d099545",
     "sheet_sha256": "a538e26bae1aa4150dbf1bf59dba1e4b87adcce448a819909f205592fb5180e7"
   },
   "review_rounds": 1,
@@ -44,7 +44,7 @@
     "file": "export/trunk_acacia_a.glb",
     "bytes": 4717204,
     "sha256": "6ec46144b7ae33e9014fad3c7c0f63ced681c9e300912e7760627416ddc7e911",
-    "source_sha256": "7712fff66c7d3a7583cab465dd51e1a099c0829651949db56f4908b9523119d3",
+    "source_sha256": "69cb96ceb584603b84678b7a2a52fba3bba8c6b179c5bf51877a8edd6d099545",
     "sheet_sha256": "a538e26bae1aa4150dbf1bf59dba1e4b87adcce448a819909f205592fb5180e7",
     "lod_triangles": [
       30000,

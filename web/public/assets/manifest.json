@@ -400,6 +400,19 @@
       ],
       "bytes": 5298432,
       "material_class": "bark"
+    },
+    {
+      "id": "trunk_baobab_a",
+      "category": "vegetation",
+      "title": "Flaschenbaum Stamm A (Baobab)",
+      "file": "trunk_baobab_a.glb",
+      "size_m": [
+        9.025,
+        8.479,
+        12.125
+      ],
+      "bytes": 4800400,
+      "material_class": "bark"
     }
   ]
 }

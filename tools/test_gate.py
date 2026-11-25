@@ -192,6 +192,11 @@ def main():
         with patch.object(vr, "sha256", side_effect=lambda p: "changed" if str(p).endswith("vrmeshy.py") else real_sha256(p)):
             results.append(expect("comments and strings do not opt into vrmeshy", [] if vr.source_hash(d) == baseline else ["changed"], None))
         Path(d, "build.py").write_text("def build(): pass\n")
+        Path(d, "build.py").write_bytes(("def build(): pass" + chr(10)).encode())
+        lf_hash = vr.source_hash(d)
+        Path(d, "build.py").write_bytes(("def build(): pass" + chr(13) + chr(10)).encode())
+        results.append(expect("source hash ignores CRLF conversion", [] if vr.source_hash(d) == lf_hash else ["changed"], None))
+        Path(d, "build.py").write_bytes(("def build(): pass" + chr(10)).encode())
         Path(d, "meshy.json").write_text('{"asset":"thing","model":{"sha256":"a"}}\n')
         baseline = vr.source_hash(d)
         Path(d, "meshy.json").write_text('{"asset":"thing","model":{"sha256":"b"}}\n')

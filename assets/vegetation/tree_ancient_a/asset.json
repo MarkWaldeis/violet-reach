@@ -32,7 +32,7 @@
     },
     "notes": "Approved narrowly. R6 addresses the prior blockers: the bark now reads warm brown with visible fibrous/gnarled structure rather than black plastic; most outer terminals continue into tapered twigs with attached leaf tufts; and the base reads as separate rounded surface roots rather than a continuous collar. The crown is broad, open and suitably ancient at correct 12 m scale. Nonblocking polish: a few perimeter leaf cards still read planar or nearly floating, several large scaffold limbs remain smooth/waxy in closeup, and isolated root tips/ground intersections remain sharp.",
     "round": 6,
-    "source_sha256": "d851aaf9f0c467624c4a10bb8b5083403f407e14a11da6c0e1f85417f37b9dbf",
+    "source_sha256": "e308ede46f0c9193bd80c813c85dcd03d65cd409e7444884054d66054c7a8e91",
     "sheet_sha256": "b1fffd8b287039242c1b863557c5d007d647407f310197519066437fd496a96a"
   },
   "review_rounds": 6,
@@ -45,7 +45,7 @@
     "file": "export/tree_ancient_a.glb",
     "bytes": 8703260,
     "sha256": "42ba6e83d9fe922d39ca8a917ff14e71048e29bb9e226d621a0a6b9fac43e7bb",
-    "source_sha256": "d851aaf9f0c467624c4a10bb8b5083403f407e14a11da6c0e1f85417f37b9dbf",
+    "source_sha256": "e308ede46f0c9193bd80c813c85dcd03d65cd409e7444884054d66054c7a8e91",
     "sheet_sha256": "b1fffd8b287039242c1b863557c5d007d647407f310197519066437fd496a96a",
     "lod_triangles": [
       5290,

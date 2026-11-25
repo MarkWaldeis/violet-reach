@@ -31,7 +31,7 @@
     },
     "notes": "Klar geschichteter Kreidefels-Brocken (2,60 x 1,66 x 1,74 m) mit ausmodellierten horizontalen Schichtbaenken und senkrechten Bruchkanten. Glaubwuerdige Nahoberflaeche, mattes Kreide-/Kalksteinmaterial gemaess STYLE.md, frei von Mesh- oder Sockeldefekten.",
     "round": 1,
-    "source_sha256": "059fcbdd46efc0f7fa92b0e597e724ef349478b864d4815463260d527fefb98a",
+    "source_sha256": "a0aedc6aa791b581e783d71042752e7c1bfc74cdba02468915b002ea5b21be66",
     "sheet_sha256": "1cd7d46caed2990eb6664c793f24c78b33d1e64fc471565f51845250fc5b9454"
   },
   "review_rounds": 1,
@@ -44,7 +44,7 @@
     "file": "export/boulder_chalk_a.glb",
     "bytes": 1006664,
     "sha256": "4dccd619bd99b470322cbfd7f27bd5f78798ffac54ab7115bd484116a08d69de",
-    "source_sha256": "059fcbdd46efc0f7fa92b0e597e724ef349478b864d4815463260d527fefb98a",
+    "source_sha256": "a0aedc6aa791b581e783d71042752e7c1bfc74cdba02468915b002ea5b21be66",
     "sheet_sha256": "1cd7d46caed2990eb6664c793f24c78b33d1e64fc471565f51845250fc5b9454",
     "lod_triangles": [
       30000,

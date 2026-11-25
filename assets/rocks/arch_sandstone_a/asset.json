@@ -31,7 +31,7 @@
     },
     "notes": "Freigabe: sehr starke grosse Bogensilhouette mit modellierten Schichtbaenken, senkrechten Bruechen und passendem riesigem Massstab. Das feine Sandsteinmaterial ist in Nahsicht recht gleichmaessig und koernig, wird aber durch die grosse Schicht- und Bruchhierarchie getragen; keine Loecher oder mechanischen Enden sichtbar.",
     "round": 1,
-    "source_sha256": "a14da135a06702016984776a460ddddab3f1aa84a4d8e738514e988fc0a1f0b3",
+    "source_sha256": "68b624f096b468aa522e3a0d7fc29ff5e4080e68cf35240128a5c03a66cf7bd6",
     "sheet_sha256": "7663880e1db46d2390accef28e89ab966f88ff3eb87600eaf54ef77d264223e8"
   },
   "review_rounds": 1,
@@ -44,7 +44,7 @@
     "file": "export/arch_sandstone_a.glb",
     "bytes": 4702432,
     "sha256": "d73c3d12b81e7c966cf19b8da3008dd09134ee18d93a38fa647a816653d7d45a",
-    "source_sha256": "a14da135a06702016984776a460ddddab3f1aa84a4d8e738514e988fc0a1f0b3",
+    "source_sha256": "68b624f096b468aa522e3a0d7fc29ff5e4080e68cf35240128a5c03a66cf7bd6",
     "sheet_sha256": "7663880e1db46d2390accef28e89ab966f88ff3eb87600eaf54ef77d264223e8",
     "lod_triangles": [
       28000,

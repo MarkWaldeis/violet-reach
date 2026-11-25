@@ -31,7 +31,7 @@
     },
     "notes": "Approved knapp: starke natuerliche Silhouette und volumetrische Bruchenden; nonblocking polish Bodenkontakt, sehr dunkle repetitive Rinde, duenne Splinter.",
     "round": 3,
-    "source_sha256": "7fab93e9358a946f97bc6b0e88ee4427a5d131a226de40ef3aac5ac0605cb1d5",
+    "source_sha256": "8ae00e062b142877e66bfd507bbe1d5c1bc66157d272de48113469284356950e",
     "sheet_sha256": "962816732d33b1e4898273ffec319809baf3b2711956f060760e5f26ebfba0c0"
   },
   "review_rounds": 3,
@@ -44,7 +44,7 @@
     "file": "export/log_fallen_a.glb",
     "bytes": 1807572,
     "sha256": "3f6b12fe46f13ebb28f047fd1ad6ef904637f26e79ae0e94f3403fd2b14a2ae4",
-    "source_sha256": "7fab93e9358a946f97bc6b0e88ee4427a5d131a226de40ef3aac5ac0605cb1d5",
+    "source_sha256": "8ae00e062b142877e66bfd507bbe1d5c1bc66157d272de48113469284356950e",
     "sheet_sha256": "962816732d33b1e4898273ffec319809baf3b2711956f060760e5f26ebfba0c0",
     "lod_triangles": [
       30000,

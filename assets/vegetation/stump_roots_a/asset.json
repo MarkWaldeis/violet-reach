@@ -31,7 +31,7 @@
     },
     "notes": "v3 knapp approved: fibrous radial crown and continuous roots fix the v2 blockers; residual thin splinters and slightly wide footprint are nonblocking.",
     "round": 4,
-    "source_sha256": "7b7f1cb30ffa6dd1ded3b41a45495f035a01d90e00b947a7e23f59c5dc207f9f",
+    "source_sha256": "8118f4b77473db0f010d7c447bea6ea6e94a0b92faaea9123e5afa3f3bf832cb",
     "sheet_sha256": "4ab784141946e90c3d8cecb4d963c38a5505da4e39f7193b9d80ab7d6710f263"
   },
   "review_rounds": 4,
@@ -44,7 +44,7 @@
     "file": "export/stump_roots_a.glb",
     "bytes": 1643252,
     "sha256": "8567b983ce6ca5356fe63b5c721683f7449dddf8de0abf26cbe56c3f8682e9d4",
-    "source_sha256": "7b7f1cb30ffa6dd1ded3b41a45495f035a01d90e00b947a7e23f59c5dc207f9f",
+    "source_sha256": "8118f4b77473db0f010d7c447bea6ea6e94a0b92faaea9123e5afa3f3bf832cb",
     "sheet_sha256": "4ab784141946e90c3d8cecb4d963c38a5505da4e39f7193b9d80ab7d6710f263",
     "lod_triangles": [
       30000,

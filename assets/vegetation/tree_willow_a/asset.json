@@ -32,7 +32,7 @@
     },
     "notes": "Approved narrowly. Weeping habit reads from every turn and the former rectangular curtains are broken into varied ragged hanging pieces. Nonblocking polish: a few flat or square-ended strips, stiff upright blades and dark smooth branch sections remain.",
     "round": 5,
-    "source_sha256": "dc7f98ff95377309ba3789b221cad3d16c38174e045260b28ca9c1d23bef4a1e",
+    "source_sha256": "dfe1c0bbbdb63bc691eac46c7bbad2cece7f18285cc471e6f211a346bca2ecfe",
     "sheet_sha256": "4669d252b6e648b6b9b111902c9d01f5b3902d46dd1557bb5aef1c5fe49f97d9"
   },
   "review_rounds": 5,
@@ -45,7 +45,7 @@
     "file": "export/tree_willow_a.glb",
     "bytes": 8373144,
     "sha256": "04c98ac260cdf24c6ac66da531374feac16b2bb8c12717e3dc205ce647838ae5",
-    "source_sha256": "dc7f98ff95377309ba3789b221cad3d16c38174e045260b28ca9c1d23bef4a1e",
+    "source_sha256": "dfe1c0bbbdb63bc691eac46c7bbad2cece7f18285cc471e6f211a346bca2ecfe",
     "sheet_sha256": "4669d252b6e648b6b9b111902c9d01f5b3902d46dd1557bb5aef1c5fe49f97d9",
     "lod_triangles": [
       2596,

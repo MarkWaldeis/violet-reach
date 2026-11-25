@@ -31,7 +31,7 @@
     },
     "notes": "Freigabe: unregelmaessiger Geroellhaufen mit guter Groessenstaffelung der Brocken, mattem Kreidematerial und plausibler 1,8-m-Relation. Der sichtbare Innenkern ist in closeup_base etwas glatt, wirkt aber als solide Auffuellung und nicht als schwarzes Loch; als Polish grob zusetzen.",
     "round": 1,
-    "source_sha256": "7905b1a4b581dbaf06db8c6b7e3bc49d9b56d1b9e39acbba2082ff2dd9a5d694",
+    "source_sha256": "e200af625cfc6cf25f4e749bc4448038301777409280ac06a499d7c04d34002e",
     "sheet_sha256": "95d26c061669dfbd7f88ee3cee7104db88c8eedae67921b603069ba1cfcd93f8"
   },
   "review_rounds": 1,
@@ -44,7 +44,7 @@
     "file": "export/scree_pile_a.glb",
     "bytes": 1588900,
     "sha256": "6940fa2f66e5b1adb13c5fad32017522a1de649652a429f2d1d221c47f800267",
-    "source_sha256": "7905b1a4b581dbaf06db8c6b7e3bc49d9b56d1b9e39acbba2082ff2dd9a5d694",
+    "source_sha256": "e200af625cfc6cf25f4e749bc4448038301777409280ac06a499d7c04d34002e",
     "sheet_sha256": "95d26c061669dfbd7f88ee3cee7104db88c8eedae67921b603069ba1cfcd93f8",
     "lod_triangles": [
       30000,

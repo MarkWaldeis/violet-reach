@@ -31,7 +31,7 @@
     },
     "notes": "Freigabe: geschichtete Ufersteine wirken massiv und wasserglaettet, Breite und Hoehe passen zur Figur. Dunkle Fugen und die Schattenfuge in closeup_base lesen sich als tiefer Ueberstand, nicht als Loch. Polish: Nass- und Trockenkontrast in Rauheit und Farbe koennte noch deutlicher sein.",
     "round": 1,
-    "source_sha256": "2fad2e60858d97325ec04cd04d026234f142418d4c5bdb7268e81cb578b6464d",
+    "source_sha256": "ffb76a73e82828f013dff0d6f27d44eef5bb4d1175f5ac4945931aecb3b05352",
     "sheet_sha256": "b74e7cae37e1863b39d3e95610760e1b1bb7f90c571e667fa43bb8d25e6f1bec"
   },
   "review_rounds": 1,
@@ -44,7 +44,7 @@
     "file": "export/shore_rocks_wet_a.glb",
     "bytes": 1394668,
     "sha256": "3bf2065d1974d6464f1a4d68f5d16aa3b0d55be71b1d2751e9a892790a0057b5",
-    "source_sha256": "2fad2e60858d97325ec04cd04d026234f142418d4c5bdb7268e81cb578b6464d",
+    "source_sha256": "ffb76a73e82828f013dff0d6f27d44eef5bb4d1175f5ac4945931aecb3b05352",
     "sheet_sha256": "b74e7cae37e1863b39d3e95610760e1b1bb7f90c571e667fa43bb8d25e6f1bec",
     "lod_triangles": [
       30000,

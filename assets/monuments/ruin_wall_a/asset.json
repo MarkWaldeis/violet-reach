@@ -31,7 +31,7 @@
     },
     "notes": "Monumentales Kalkstein-Ruinenmodul (6,23 x 1,11 x 4,59 m) mit klarer Abtreppung und ausmodellierten Quaderfugen. Bruchkrone, angeschlagene Kanten und poroese Kalksteinstruktur ueberzeugen in Nahaufnahme und Clay-Render.",
     "round": 1,
-    "source_sha256": "88501c09fd8ff6615768622b50736393b677b9942369755f5f3c17b0a6a517eb",
+    "source_sha256": "0ee117cc24fbd2d1d46209de6d364cc9221385f799042c5ee4f40af08ad45fc4",
     "sheet_sha256": "e70ffab6c2c74f2b33f0d03ac1b6604e3f35a4ddb911c52234ca41ec793b1ab8"
   },
   "review_rounds": 1,
@@ -44,7 +44,7 @@
     "file": "export/ruin_wall_a.glb",
     "bytes": 5086340,
     "sha256": "9208896f94a51fa1e8cc30e67f4f2c0d15e76a46052623b48d2ef88807aa6085",
-    "source_sha256": "88501c09fd8ff6615768622b50736393b677b9942369755f5f3c17b0a6a517eb",
+    "source_sha256": "0ee117cc24fbd2d1d46209de6d364cc9221385f799042c5ee4f40af08ad45fc4",
     "sheet_sha256": "e70ffab6c2c74f2b33f0d03ac1b6604e3f35a4ddb911c52234ca41ec793b1ab8",
     "lod_triangles": [
       20000,

@@ -33,7 +33,7 @@
     },
     "notes": "Freigegeben: Dichter, glaubwürdiger Unterwuchs mit unregelmäßiger Silhouette und guter Füllung aus allen Rotationen. Die Tochterkarten sitzen deutlich dichter, die früheren freien Stachelgerüste sind überwiegend eingebunden, und die Blattmaterialien lesen sich auch im Closeup strukturiert. Restrisiko nicht blockierend: einzelne planare Karten und wenige sehr gerade dunkle Stiele bleiben erkennbar; die Unterseite ist dunkel. Für den Export geeignet.",
     "round": 3,
-    "source_sha256": "41e9dffff3d827d50f1ef44d56ef088831ebddc0cee4ca5129c51daa4526b552",
+    "source_sha256": "4489329e467bf79b502ff46d9553d1e8ff5bf8be30859398443349d9922f1aa3",
     "sheet_sha256": "318e83f112e88aa8ea8fc00427513274662bc8cdd31ddd7dc8a201183ed6cf2a"
   },
   "review_rounds": 3,
@@ -46,7 +46,7 @@
     "file": "export/bush_lush_a.glb",
     "bytes": 4816648,
     "sha256": "e8f3825990592110880910ab0750aac2ef535bcecce2051607f9c59fce985f37",
-    "source_sha256": "41e9dffff3d827d50f1ef44d56ef088831ebddc0cee4ca5129c51daa4526b552",
+    "source_sha256": "4489329e467bf79b502ff46d9553d1e8ff5bf8be30859398443349d9922f1aa3",
     "sheet_sha256": "318e83f112e88aa8ea8fc00427513274662bc8cdd31ddd7dc8a201183ed6cf2a",
     "lod_triangles": [
       1688,

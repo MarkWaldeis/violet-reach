@@ -32,7 +32,7 @@
     },
     "notes": "Approved. Most coherent crown of the set, good scale and leafy closeup; no continuous pot rim or sawn/bulbous terminal pattern. Nonblocking polish: dark right-side fork/short stub and claw-like root points remain visible in closeups.",
     "round": 5,
-    "source_sha256": "505ba443ea70e1e92ad25258542e353225a60737c3a1aadd960a7f2a37cce45c",
+    "source_sha256": "6f8752ac43e891de08cc8ada842e57eaf85ef56e434a091ce2dd6ead226134da",
     "sheet_sha256": "d10d4985a8ba2ffab92a7190019259efa5a40fb7cdd468f8b80b2ae927c2ac10"
   },
   "review_rounds": 5,
@@ -45,7 +45,7 @@
     "file": "export/tree_beech_a.glb",
     "bytes": 7934524,
     "sha256": "2847f0d7dc7b999288d5de40fdcdca84f96aba29947122fe32e79a58e083b887",
-    "source_sha256": "505ba443ea70e1e92ad25258542e353225a60737c3a1aadd960a7f2a37cce45c",
+    "source_sha256": "6f8752ac43e891de08cc8ada842e57eaf85ef56e434a091ce2dd6ead226134da",
     "sheet_sha256": "d10d4985a8ba2ffab92a7190019259efa5a40fb7cdd468f8b80b2ae927c2ac10",
     "lod_triangles": [
       2700,

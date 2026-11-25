@@ -31,7 +31,7 @@
     },
     "notes": "Approved knapp: klare Schirmakazie, organische Gabelungen und saubere Bodenintegration; nonblocking polish nur weichere Astenden und laengsgerichtetere Rinde.",
     "round": 3,
-    "source_sha256": "d845145cfe3ae16cbbc67af1bf1d1e1adc7b5b6fef7e293f79960da997faefe2",
+    "source_sha256": "70e9a08d32afa51aab463456d41155e6e4bfde9c8e4c6b6873295589f0763534",
     "sheet_sha256": "a7d3deb85529361d5e518819f0744c259438936e11c0c8c4791c229a82b307fc"
   },
   "review_rounds": 3,
@@ -44,7 +44,7 @@
     "file": "export/trunk_acacia_b.glb",
     "bytes": 5298432,
     "sha256": "d3ee43b2cc00fa33580ac760f4fad6cfa89dc9c230745096183c8ad29605c465",
-    "source_sha256": "d845145cfe3ae16cbbc67af1bf1d1e1adc7b5b6fef7e293f79960da997faefe2",
+    "source_sha256": "70e9a08d32afa51aab463456d41155e6e4bfde9c8e4c6b6873295589f0763534",
     "sheet_sha256": "a7d3deb85529361d5e518819f0744c259438936e11c0c8c4791c229a82b307fc",
     "lod_triangles": [
       30000,
