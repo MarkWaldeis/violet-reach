@@ -93,6 +93,7 @@ export class GrassSystem {
   #freeSlots: CellSlot[] = [];
   #nearTriangles: number;
   #farTriangles: number;
+  #material: ReturnType<typeof grassMaterial>;
   stats = {
     cells: 0, instances: 0, visibleInstances: 0, triangles: 0,
     skipDensity: 0, skipHeight: 0, placed: 0, builds: 0, updates: 0, wanted: 0,
@@ -131,6 +132,7 @@ export class GrassSystem {
     };
     this.#nearTriangles = clumpTriangles({ ...clump, curved: true });
     this.#farTriangles = clumpTriangles({ ...clump, curved: false });
+    this.#material = grassMaterial(undefined, { fadeStart: this.#opts.viewDistance * 0.72, fadeEnd: this.#opts.viewDistance });
     this.#scatterTarget = Math.round(cellSize * cellSize * this.#opts.density);
     this.#scatterCapacity = cellScatterCapacity(this.#scatterTarget);
     // A different seed family than the positional hashes avoids correlating the prefix order
@@ -421,11 +423,12 @@ export class GrassSystem {
     // objects into the TSL node graph. BufferAttributeNode hashes object identity, which would give
     // every pooled slot its own shader/pipeline cache key; geometry attributes keep the same step
     // mode while allowing identical grass programs to be shared across slots.
-    const cellMaterial = grassMaterial(undefined, { fadeStart: this.#opts.viewDistance * 0.72, fadeEnd: this.#opts.viewDistance });
     // Constructing with count 0 avoids InstancedMesh's otherwise mandatory identity-matrix
-    // initialisation pass; the fixed-capacity matrix attribute below is the one really used.
-    const mesh = new InstancedMesh(nearGeometry, cellMaterial, 0);
-    mesh.instanceMatrix = new InstancedBufferAttribute(new Float32Array(capacity * 16), 16);
+    // initialisation pass. The shader never consumes instanceMatrix, but three.js expects the
+    // attribute object to exist on InstancedMesh; keep only a one-instance dummy rather than
+    // allocating/uploading a dead full-capacity matrix buffer for every pooled slot.
+    const mesh = new InstancedMesh(nearGeometry, this.#material, 0);
+    mesh.instanceMatrix = new InstancedBufferAttribute(new Float32Array(16), 16);
     mesh.count = 0;
     mesh.castShadow = false;
     mesh.receiveShadow = true;
