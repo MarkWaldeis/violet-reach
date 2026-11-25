@@ -19,10 +19,19 @@ const hooks = registerHooks({
   },
 });
 const { buildBladeClump, clumpTriangles } = await import("../src/grass-clump.ts");
-const { GrassMacroSampler, cellScatterPositions, hash2 } = await import("../src/grass-macro.ts");
+const { GrassMacroSampler, cellScatterCapacity, cellScatterOrder, cellScatterPositionAt, cellScatterPositions, hash2 } = await import("../src/grass-macro.ts");
 const { grassMaterial, grassPaletteProbe } = await import("../src/grass-material.ts");
 const { GrassSystem } = await import("../src/grass-system.ts");
 hooks.deregister();
+
+function uniformGrassSampler() {
+  const w = 8, h = 8;
+  const data = new Uint8ClampedArray(w * h * 4);
+  for (let i = 0; i < w * h; i++) { data[i * 4] = 255; data[i * 4 + 1] = 200; data[i * 4 + 3] = 255; }
+  const cd = new Uint8ClampedArray(w * h * 4);
+  for (let i = 0; i < w * h; i++) { cd[i * 4] = 100; cd[i * 4 + 1] = 120; cd[i * 4 + 2] = 60; cd[i * 4 + 3] = 255; }
+  return GrassMacroSampler.fromImageData(new ImageData(data, w, h), new ImageData(cd, w, h), { minX: -4096, minZ: -4096, size: 8192 });
+}
 
 test("clump geometry: tapered blades with wind channels, budget triangle count", () => {
   const g = buildBladeClump({ blades: 6 });
@@ -49,6 +58,10 @@ test("clump geometry: tapered blades with wind channels, budget triangle count",
   for (let i = 0; i < pos.count; i++) { yMin = Math.min(yMin, pos.getY(i)); yMax = Math.max(yMax, pos.getY(i)); }
   assert.ok(yMin >= 0, `keine negativen Höhen: ${yMin}`);
   assert.ok(yMax > 0.3 && yMax < 1.2, `plausible Büschelhöhe: ${yMax}`);
+  const far = buildBladeClump({ blades: 6, curved: false });
+  assert.equal(clumpTriangles({ blades: 6, curved: false }), 6, "Fern-LOD: ein Dreieck pro Halm");
+  assert.equal(far.getIndex()!.count / 3, 6);
+  assert.equal(far.getAttribute("position").count, 18, "Wurzelpaar + Spitze je Halm");
 });
 
 test("macro sampler: bilinear density channels, out-of-bounds zero", () => {
@@ -72,6 +85,8 @@ test("macro sampler: bilinear density channels, out-of-bounds zero", () => {
   assert.ok(Math.abs(c.tintR - 120 / 255) < 0.02, `tint passt: ${c.tintR}`);
   const outside = s.sample(-50, 50);
   assert.equal(outside.density, 0, "außerhalb: kein Gras");
+  assert.equal(s.densityCellMax(0, 0, 100, 100), 1, "Zell-Maximum erkennt volle Dichte");
+  assert.equal(s.densityCellMax(-80, 0, -20, 50), 0, "Zell-Maximum außerhalb ist null");
   // gradient: left half zero, right half one → middle samples interpolate
   const grad = mk(4, 1, (x) => [x < 2 ? 0 : 255, 0, 0, 255]);
   const s2 = GrassMacroSampler.fromImageData(grad, color, { minX: 0, minZ: 0, size: 4 });
@@ -90,6 +105,21 @@ test("cell scatter: deterministic, jittered inside cell, reproducible count", ()
   const other = cellScatterPositions(4, 7, 16, 100, 7);
   assert.notDeepEqual(a[0], other[0], "benachbarte Zellen unterscheiden sich");
   assert.ok(hash2(1, 2) !== hash2(1, 2, 1), "seed wirkt");
+
+  const total = cellScatterCapacity(100);
+  assert.equal(total, a.length, "Kapazität ist die n²-Rastergröße");
+  for (let i = 0; i < total; i++) assert.deepEqual(cellScatterPositionAt(3, 7, 16, 100, 7, i), a[i], `indexierter Kandidat ${i}`);
+  const order = cellScatterOrder(total, 113.17);
+  assert.equal(order.length, total);
+  assert.equal(new Set(order).size, total, "Permutation ohne Duplikate");
+  // Distance LOD renders count prefixes: the first half must already cover all quadrants instead
+  // of filling the cell row-by-row. Bounds are deliberately loose; exact counts are seed-dependent.
+  const half = Math.floor(total / 2), quadrants = [0, 0, 0, 0], n = Math.sqrt(total);
+  for (let i = 0; i < half; i++) {
+    const idx = order[i], gx = idx % n, gz = Math.floor(idx / n);
+    quadrants[(gx >= n / 2 ? 1 : 0) + (gz >= n / 2 ? 2 : 0)]++;
+  }
+  for (const q of quadrants) assert.ok(q >= total * 0.08, `Präfix räumlich gestreut: ${quadrants.join("/")}`);
 });
 
 test("grass material constructs nodes without renderer", () => {
@@ -124,4 +154,51 @@ test("grass system streams cells around the camera and culls far ones", () => {
   const meshes = sys.group.children.length;
   for (let i = 0; i < 400; i++) sys.update(900, 1500);
   assert.ok(sys.group.children.length <= meshes + 40, "Zellzahl bleibt gebunden (Ring-Streaming)");
+});
+
+test("grass system build budget slices dense cell construction across frames", () => {
+  const sys = new GrassSystem(uniformGrassSampler(), () => 10, { cellSize: 16, viewDistance: 20, density: 5.5, buildBudgetMs: 0 });
+  sys.update(400, 1500);
+  assert.equal(sys.stats.building, 1, "Zelle ist nach der ersten Zeitscheibe noch im Bau");
+  assert.equal(sys.group.children.length, 0, "kein synchroner Komplettbau im ersten Frame");
+  for (let i = 0; i < 220 && sys.stats.builds === 0; i++) sys.update(400, 1500);
+  assert.ok(sys.stats.builds > 0, "inkrementeller Bau wird später fertig");
+  assert.ok(sys.stats.cells > 0);
+  sys.dispose();
+});
+
+test("grass density importance scan keeps the mean placement rate in sparse cells", () => {
+  const w = 4, h = 4, densityByte = 128;
+  const data = new Uint8ClampedArray(w * h * 4);
+  const cd = new Uint8ClampedArray(w * h * 4);
+  for (let i = 0; i < w * h; i++) {
+    data[i * 4] = densityByte; data[i * 4 + 1] = 200; data[i * 4 + 3] = 255;
+    cd[i * 4] = 100; cd[i * 4 + 1] = 120; cd[i * 4 + 2] = 60; cd[i * 4 + 3] = 255;
+  }
+  const sampler = GrassMacroSampler.fromImageData(new ImageData(data, w, h), new ImageData(cd, w, h), { minX: -4096, minZ: -4096, size: 8192 });
+  const target = 100;
+  const sys = new GrassSystem(sampler, () => 10, { cellSize: 16, viewDistance: 0, density: target / 256, buildBudgetMs: 20 });
+  sys.update(8, 8);
+  assert.equal(sys.stats.pending, 0);
+  const expected = Math.ceil(cellScatterCapacity(target) * (densityByte / 255));
+  assert.equal(sys.stats.instances, expected, "halb dichte Makrozelle scannt nur den statistisch nötigen Kandidatenanteil");
+  assert.equal(sys.stats.skipDensity, 0, "innerhalb des Maximums ist die skalierte Akzeptanz exakt kompensiert");
+  sys.dispose();
+});
+
+test("grass distance LOD uses uniform count prefixes, far geometry and bounded reusable slots", () => {
+  const sys = new GrassSystem(uniformGrassSampler(), () => 10, { cellSize: 16, viewDistance: 40, density: 2, buildBudgetMs: 8, maxBuildPerFrame: 8 });
+  for (let i = 0; i < 120; i++) sys.update(400, 1500);
+  assert.equal(sys.stats.pending, 0, "Ring vollständig gebaut");
+  assert.ok(sys.stats.instances > 500, `Vollzählige Instanzen: ${sys.stats.instances}`);
+  assert.ok(sys.stats.visibleInstances < sys.stats.instances, `Fernzellen reduziert: ${sys.stats.visibleInstances}/${sys.stats.instances}`);
+  const meshes = sys.group.children as unknown as Array<{ count: number; geometry: { getAttribute(name: string): { count: number } } }>;
+  const vertexCounts = new Set(meshes.map((m) => m.geometry.getAttribute("position").count));
+  assert.ok(vertexCounts.has(30), "Nahzellen nutzen gekrümmte 5-Vertexpaare/18-Dreiecks-Büschel");
+  assert.ok(vertexCounts.has(18), "Fernzellen nutzen vereinfachte 3-Vertexpaare/6-Dreiecks-Büschel");
+  assert.ok(sys.stats.triangles < sys.stats.instances * 18, "Dreiecksschätzung berücksichtigt LOD");
+  const slots = sys.stats.slots;
+  for (let i = 0; i < 120; i++) sys.update(900, 1500);
+  assert.ok(sys.stats.slots <= slots + 2, `Render-Slots werden wieder verwendet: ${slots} → ${sys.stats.slots}`);
+  sys.dispose();
 });

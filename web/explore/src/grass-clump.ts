@@ -19,6 +19,8 @@ export interface ClumpOptions {
   /** backward arc of blades, 0 = straight, 1 = strong */
   arc?: number;
   seed?: number;
+  /** true: 3 triangles/blade with a curved mid row; false: 1 straight triangle/blade for distance LODs */
+  curved?: boolean;
 }
 
 function hash(n: number): number {
@@ -33,6 +35,7 @@ export function buildBladeClump(options: ClumpOptions = {}): BufferGeometry {
   const spread = options.spread ?? 0.42;
   const arc = options.arc ?? 0.55;
   const seed = options.seed ?? 1;
+  const curved = options.curved ?? true;
 
   const positions: number[] = [];
   const uvs: number[] = [];
@@ -59,11 +62,12 @@ export function buildBladeClump(options: ClumpOptions = {}): BufferGeometry {
     const flex = 0.65 + h2 * 0.55;
 
     // rows: root (h=0), mid (h=0.55), tip (h=1). The arc pushes upper rows outward.
-    const rows = [
-      { h: 0, halfW: bladeWidth * 0.5, out: 0 },
-      { h: 0.55, halfW: bladeWidth * 0.34, out: bladeHeight * lean * 0.45 },
-      { h: 1, halfW: 0, out: bladeHeight * lean * (0.45 + arc * 0.55) },
-    ];
+    // Distance LODs skip the mid row: the tip keeps the same endpoint, but the blade becomes
+    // one straight triangle (the curvature is sub-pixel at the distances where this is used).
+    const root = { h: 0, halfW: bladeWidth * 0.5, out: 0 };
+    const mid = { h: 0.55, halfW: bladeWidth * 0.34, out: bladeHeight * lean * 0.45 };
+    const tip = { h: 1, halfW: 0, out: bladeHeight * lean * (0.45 + arc * 0.55) };
+    const rows = curved ? [root, mid, tip] : [root, tip];
     const baseIndex = positions.length / 3;
     for (const row of rows) {
       const y = bladeHeight * rise * row.h - (row.h === 1 ? bladeHeight * arc * 0.10 : 0);
@@ -77,13 +81,17 @@ export function buildBladeClump(options: ClumpOptions = {}): BufferGeometry {
         colors.push(h1, flex, 0, 1);
       }
     }
-    // triangles: root->mid quad (2), mid->tip fan (1)
-    // rows are indexed: root+0,root+1, mid+2,mid+3, tip+4
-    indices.push(
-      baseIndex + 0, baseIndex + 2, baseIndex + 1,
-      baseIndex + 1, baseIndex + 2, baseIndex + 3,
-      baseIndex + 2, baseIndex + 4, baseIndex + 3,
-    );
+    // curved: root->mid quad (2), mid->tip fan (1); simple: one tapered root->tip triangle.
+    // curved rows are indexed root+0,root+1, mid+2,mid+3, tip+4; simple rows root+0,root+1, tip+2.
+    if (curved) {
+      indices.push(
+        baseIndex + 0, baseIndex + 2, baseIndex + 1,
+        baseIndex + 1, baseIndex + 2, baseIndex + 3,
+        baseIndex + 2, baseIndex + 4, baseIndex + 3,
+      );
+    } else {
+      indices.push(baseIndex + 0, baseIndex + 2, baseIndex + 1);
+    }
   }
 
   const geometry = new BufferGeometry();
@@ -97,5 +105,5 @@ export function buildBladeClump(options: ClumpOptions = {}): BufferGeometry {
 
 /** Count triangles of a clump built with the given options (for budget tests). */
 export function clumpTriangles(options: ClumpOptions = {}): number {
-  return (options.blades ?? 6) * 3;
+  return (options.blades ?? 6) * ((options.curved ?? true) ? 3 : 1);
 }

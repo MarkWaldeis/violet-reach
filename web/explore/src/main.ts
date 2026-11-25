@@ -240,7 +240,7 @@ async function main() {
         geometries: info.memory.geometries, textures: info.memory.textures,
         textureBytes: textures.bytes(), textureBytesThree: info.memory.texturesSize, textureSizes: textures.summary(),
         camera: { x: p.x, y: p.y, z: p.z, yaw: nav.yaw, pitch: nav.pitch, agl: ground === undefined ? null : p.y - ground, fov: camera.fov, mode: nav.mode },
-        terrain: terrainStatus(), assets: assets ? { ...assets.stats } : null, frozen: worldTimeFrozen(),
+        terrain: terrainStatus(), assets: assets ? { ...assets.stats } : null, grass: grass ? { ...grass.stats } : null, frozen: worldTimeFrozen(),
       };
     },
     setCamera(x, y, z, yaw, pitch, options = {}) {
