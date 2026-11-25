@@ -81,20 +81,22 @@ try {
     const records = await page.evaluate(({ keys, seconds, interpolate }) => new Promise((resolve, reject) => {
       const at = new Function(`return (${interpolate})`)();
       const out = [];
-      let t0;
+      let t0, pose;
       window.__vr.drive((now, last) => {
         try {
           if (t0 === undefined) t0 = now;
-          else if (last) out.push(last); // record of the frame just finished (rendered with the previous pose)
+          else if (last) out.push({ ...last, x: pose?.x, z: pose?.z, agl: pose?.agl }); // frame just finished, rendered with the previous pose
           const t = (now - t0) / 1000;
           if (t > seconds) { window.__vr.drive(null); resolve(out); return; }
           const p = at(keys, t);
+          pose = p;
           window.__vr.setCamera(p.x, p.agl, p.z, p.yaw, p.pitch, { agl: true });
         } catch (error) { window.__vr.drive(null); reject(error); }
       });
     }), { keys: route.keys, seconds: route.seconds, interpolate: interpolateKeys.toString() });
     const after = await page.evaluate(() => window.__vr.stats());
     const result = summarise(route, records, Math.max(stats.textureBytes, after.textureBytes));
+    result.records = records;
     result.textureBytesThree = after.textureBytesThree;
     result.textures = after.textures;
     result.textureSizes = after.textureSizes;
