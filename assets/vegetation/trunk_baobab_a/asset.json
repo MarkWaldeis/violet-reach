@@ -2,11 +2,11 @@
   "id": "trunk_baobab_a",
   "category": "vegetation",
   "title": "Flaschenbaum Stamm A (Baobab)",
-  "description": "Massiver, bauchiger Flaschenbaum-Stamm ohne Laub (~12,0 m hoch, ~7,1 × 6,9 m Astausladung) mit ausgeprägten Wurzelwülsten, Längsfalten und 6 kräftigen Primärästen, elefantenhautartig gefurchter graubrauner Rinde (bark #41321D / #574D46, Rauheit ≥ 0,70, Metall 0,0) und 50 cm Eingrabe-Rand.",
+  "description": "Massiver, bauchiger Flaschenbaum-Stamm ohne Laub (kanonisch ca. 9,0 × 8,5 × 12,1 m: breiteste horizontale Kronenachse × Kronentiefe × Höhe) mit ausgeprägten Wurzelwülsten, weichen unregelmäßigen Elephant-skin-Längsfalten und volumetrisch radialen Primärästen, elefantenhautartig gefurchter graubrauner Rinde (bark #41321D / #574D46, Rauheit ≥ 0,70, Metall 0,0) und 50 cm Eingrabe-Rand.",
   "target_size_m": [
-    7.2,
-    7.0,
-    12.0
+    9.0,
+    8.5,
+    12.1
   ],
   "lod_triangles": [
     30000,
@@ -17,22 +17,40 @@
   "meshy_class": "B",
   "material_class": "bark",
   "texture_format": "ktx2",
-  "status": "modeling",
+  "status": "exported",
   "builder": "blender-batch1",
   "review": {
-    "reviewer": "independent-60d323da",
+    "reviewer": "independent-1eccc40e",
     "scores": {
-      "silhouette": 5,
-      "form_detail": 6,
-      "material": 6,
-      "scale": 5,
-      "style": 7,
+      "silhouette": 9,
+      "form_detail": 8,
+      "material": 8,
+      "scale": 9,
+      "style": 8,
       "defects": 8
     },
-    "notes": "v3 rejected: crown is massively planar (x/y about 2.6), proportion brief missed, claw/whip-like branch endings and crackled non-elephant bark remain.",
-    "round": 4,
-    "source_sha256": "5135f91ae30ee01a4acc2079580d6578c4c78a6eac8625b7439fc929258018d1",
-    "sheet_sha256": "7257fc6883463c56591d797ca1f4cfd44fc9a9b8141c13cb26835341c0219eaf"
+    "notes": "v4 approved narrowly: volumetric radial crown and massive trunk coherent; repaired surface reads as elephant-hide baobab bark rather than reptile/mud crackle. Nonblocking: some branch tips remain knobbly/antler-like and microdetail is soft.",
+    "round": 5,
+    "source_sha256": "e184bd76304dd699b91ae3474e8572390992148c812abec7b57ed87af4fc4bca",
+    "sheet_sha256": "bd648e65f92276bf67278d9266bc826c8a4e257ec50105626e5222c14a9a209e"
   },
-  "review_rounds": 4
+  "review_rounds": 5,
+  "size_m": [
+    9.025,
+    8.479,
+    12.125
+  ],
+  "export": {
+    "file": "export/trunk_baobab_a.glb",
+    "bytes": 4800400,
+    "sha256": "bdb3830a087dbbb944248f49d9eea3f3d08f1530b773ca3dd9d03f97c74abddb",
+    "source_sha256": "e184bd76304dd699b91ae3474e8572390992148c812abec7b57ed87af4fc4bca",
+    "sheet_sha256": "bd648e65f92276bf67278d9266bc826c8a4e257ec50105626e5222c14a9a209e",
+    "lod_triangles": [
+      30000,
+      9000,
+      2500
+    ],
+    "texture_size": 2048
+  }
 }
