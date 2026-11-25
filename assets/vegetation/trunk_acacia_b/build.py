@@ -1,106 +1,51 @@
 """Mehrstämmige Schirmakazie Stamm B (trunk_acacia_b) — Meshy Klasse B.
 
-Bereitet das Meshy-Rohmodell (trunk_acacia_b/model/B-v1/model.glb) deterministisch
-mit tools/blender/vrmeshy.py auf: Schließt kleine Smart-Topology-Randlöcher wasserdicht,
-skaliert auf 6,8 m Höhe (Astausladung ~9,0 m, yaw +20,8°), gleicht die Rindenfarbe ohne
-Delight Richtung bark (#41321D, strength 0,40) an, klemmt Rauheit ≥ 0,70 / Metall 0,0,
-extrudiert einen 40 cm tiefen Eingrabe-Rand am Wurzelfuß (Schnittkante bündig auf z = 0)
-und richtet alle Normalen aus.
+Gate-Reparatur: offene bzw. schwarze Rohrenden der vielen abgeschnittenen Äste
+werden zuerst erkannt, dann die Schalenpinholes UV-kohärent geschlossen und an
+den Astspitzen unregelmäßig zugespitzte Bruchkappen ergänzt. Der gemeinsame
+Wurzelfuß bekommt einen etwas breiteren organischen Übergang; die ansonsten
+überzeugende Schirmakazien-Silhouette und Skalierung bleiben unverändert.
 """
 import os
 
-import bmesh
-from mathutils import Vector
 import vrmeshy
+import vrmeshfix
 
 ASSET_DIR = os.path.dirname(os.path.abspath(__file__))
-
-
-def _close_pinholes(objs):
-    """Seal small smart-topology boundary loops with a manifold triangle fan and interpolated UVs."""
-    for o in objs:
-        bm = bmesh.new()
-        bm.from_mesh(o.data)
-        bmesh.ops.remove_doubles(bm, verts=list(bm.verts), dist=1e-4)
-        uv_layer = bm.loops.layers.uv.active
-        vert_uv = {}
-        if uv_layer is not None:
-            for f in bm.faces:
-                for l in f.loops:
-                    vert_uv.setdefault(l.vert, l[uv_layer].uv.copy())
-        for _ in range(128):
-            b_edges = [e for e in bm.edges if e.is_boundary]
-            if not b_edges:
-                break
-            start_e = b_edges[0]
-            loop_verts = [start_e.verts[0], start_e.verts[1]]
-            used_edges = {start_e}
-            cur = loop_verts[-1]
-            closed = False
-            while True:
-                next_e = [e for e in cur.link_edges if e.is_boundary and e not in used_edges]
-                if not next_e:
-                    break
-                e = next_e[0]
-                used_edges.add(e)
-                nxt = e.other_vert(cur)
-                if nxt in loop_verts:
-                    cycle = loop_verts[loop_verts.index(nxt):]
-                    if len(cycle) >= 3:
-                        cv = bm.verts.new(sum((v.co for v in cycle), Vector()) / len(cycle))
-                        vert_uv[cv] = sum((vert_uv.get(v, Vector((0.5, 0.5))) for v in cycle), Vector((0.0, 0.0))) / len(cycle)
-                        for i in range(len(cycle)):
-                            try:
-                                nf = bm.faces.new((cycle[i], cycle[(i + 1) % len(cycle)], cv))
-                                if uv_layer is not None:
-                                    for l in nf.loops:
-                                        l[uv_layer].uv = vert_uv[l.vert]
-                            except ValueError:
-                                pass
-                        closed = True
-                    break
-                loop_verts.append(nxt)
-                cur = nxt
-            if not closed:
-                break
-        bm.to_mesh(o.data)
-        o.data.update()
-        bm.free()
-
-
-def _bury_skirt_below_ground(objs, depth):
-    """Place the burial_skirt cut seam at z = 0 so the vertical skirt stays underground."""
-    for o in objs:
-        bm = bmesh.new()
-        bm.from_mesh(o.data)
-        body = [v for v in bm.verts if v.co.z > -depth + 1e-3]
-        if body:
-            z0 = min(v.co.z for v in body)
-            for v in body:
-                v.co.z -= z0
-        uv_layer = bm.loops.layers.uv.active
-        if uv_layer is not None:
-            center = Vector((0.5, 0.5))
-            for f in bm.faces:
-                if any(v.co.z <= -depth + 1e-3 for v in f.verts) and any(v.co.z > -depth + 1e-3 for v in f.verts):
-                    for loop in f.loops:
-                        if loop.vert.co.z <= -depth + 1e-3:
-                            uv = loop[uv_layer].uv
-                            loop[uv_layer].uv = uv + (center - uv) * 0.04
-        bm.to_mesh(o.data)
-        o.data.update()
-        bm.free()
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(ASSET_DIR)))
+BARK_SRC = os.path.join(ROOT, "art", "textures", "src", "bark__acg_Bark012.jpg")
 
 
 def build():
     objs = vrmeshy.load_raw(ASSET_DIR)
     vrmeshy.drop_loose(objs, min_fraction=0.02)
-    _close_pinholes(objs)
-    vrmeshy.normalize(objs, height=6.8, yaw_deg=20.8)
-    vrmeshy.grade_basecolor(objs, "#41321D", strength=0.40)
+    vrmeshy.normalize(objs, height=6.80, yaw_deg=20.8)
+    main = objs[0]
+
+    # Detect tube mouths before the pinholes are closed.  Clustering prevents
+    # several small defects in one end cap from becoming duplicate cones.
+    caps, _ = vrmeshfix.make_jagged_tip_caps(
+        main, zmin_frac=0.72, min_radius=0.024, max_radius=0.20,
+        length_mul=1.80, segments=9, cluster_radius=0.46,
+        ratio_min=0.28, name="acacia_tip")
+    vrmeshfix.fill_boundary_loops([main])
+    if caps:
+        main = vrmeshfix.join_into(main, caps)
+    objs = [main]
+
+    # Broaden only the lowest trunk/root transition; the umbrella geometry is
+    # otherwise already correct and should not be re-sculpted.
+    vrmeshfix.flare_base(main, height=0.72, strength=0.13)
+
+    # Material was close to passing.  Keep the original bark colour structure,
+    # only remove the cloth-like sharpness and add a faint natural grain.
+    vrmeshfix.soften_basecolor_weave(objs, radius=1, keep=0.62)
+    vrmeshfix.harmonize_basecolor(objs, "#5B3E25", hue_keep=0.44, sat_mul=1.05, val_shift=0.025)
+    vrmeshfix.tint_basecolor(objs, (1.13, 0.96, 0.81))
+    vrmeshfix.overlay_detail_luminance(objs, BARK_SRC, strength=0.11, repeat=1)
+    vrmeshfix.set_normal_strength(objs, 0.55)
     vrmeshy.clamp_material(objs, roughness_min=0.70, metallic=0.0)
     vrmeshy.burial_skirt(objs, depth=0.40)
-    _bury_skirt_below_ground(objs, depth=0.40)
-    vrmeshy.drop_loose(objs, min_fraction=0.02)
+    vrmeshfix.bury_skirt_below_ground(objs, depth=0.40)
     vrmeshy.fix_normals(objs)
     vrmeshy.link_source(objs)

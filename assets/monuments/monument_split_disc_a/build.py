@@ -1,18 +1,21 @@
 """Gespaltenes Inselmonument A (monument_split_disc_a) — Meshy Klasse A-multiview.
 
-Bereitet das wasserdichte Multiview-Rohmodell (monument_split_disc_a/model/A-v1/model.glb)
-deterministisch mit tools/blender/vrmeshy.py auf: Auf Zielhöhe 40,0 m (yaw -2,0°)
-normalisieren, Farbton Richtung stone_weathered (#DCCDB1, 0,40) angleichen,
-Rauheit ≥ 0,55 / Metall 0,0 klemmen, 1,5 m Eingrabe-Rand unter z = 0 extrudieren
-und Normalen richten.
+Gate-Reparatur: die starke Fernsilhouette bleibt unverändert. Das regelmäßige
+Web-/Crosshatch-Muster wird in Albedo und Normalmap deutlich gedämpft und durch
+zurückhaltende weiße Steinkörnung ersetzt. Im Übergang Podest/Scheibe glättet
+ein enger, radial begrenzter Laplacian-Bandpass die zerknitterte Interpenetration,
+ohne die harte zentrale Spaltung oder die großen Steinplatten neu zu formen.
 """
 import os
 
 import bmesh
 from mathutils import Vector
 import vrmeshy
+import vrmeshfix
 
 ASSET_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(ASSET_DIR)))
+STONE_SRC = os.path.join(ROOT, "art", "textures", "src", "stone_white__acg_Rock042S.jpg")
 
 
 def _bury_skirt_below_ground(objs, depth):
@@ -43,8 +46,29 @@ def build():
     objs = vrmeshy.load_raw(ASSET_DIR)
     vrmeshy.drop_loose(objs, min_fraction=0.002)
     vrmeshy.normalize(objs, height=40.0, yaw_deg=-2.0)
-    vrmeshy.grade_basecolor(objs, "#DCCDB1", strength=0.40)
-    vrmeshy.clamp_material(objs, roughness_min=0.55, metallic=0.0)
+    main = objs[0]
+
+    # The crumpled interpenetration is concentrated just above the plinth.
+    # Smooth only that band near the central axis; preserve the monumental
+    # split, outer silhouette and large panel breaks.
+    # One gentle global pass removes the high-frequency geometric fabric
+    # embossing baked into the dense multiview sculpt.  A stronger local pass
+    # then cleans the crumpled plinth/disc intersection.
+    vrmeshfix.laplacian_smooth_region([main], zmin_frac=0.0, zmax_frac=1.0,
+                                      iterations=1, factor=0.22)
+    vrmeshfix.laplacian_smooth_region([main], zmin_frac=0.045, zmax_frac=0.16,
+                                      radius_xy=9.0, iterations=2, factor=0.34)
+    objs = [main]
+
+    # Strongly suppress the fabric-like periodic weave while preserving broad
+    # stains, masonry breaks and panel value differences.  The fine stone source
+    # is project-authored/tileable and only contributes luminance variation.
+    vrmeshfix.soften_basecolor_weave(objs, radius=3, keep=0.12)
+    vrmeshfix.harmonize_basecolor(objs, "#DCCDB1", hue_keep=0.48, sat_mul=0.74, val_shift=0.015)
+    vrmeshfix.tint_basecolor(objs, (1.06, 1.00, 0.90))
+    vrmeshfix.overlay_detail_luminance(objs, STONE_SRC, strength=0.22, repeat=1)
+    vrmeshfix.set_normal_strength(objs, 0.06)
+    vrmeshy.clamp_material(objs, roughness_min=0.60, metallic=0.0)
     vrmeshy.burial_skirt(objs, depth=1.5)
     _bury_skirt_below_ground(objs, depth=1.5)
     vrmeshy.fix_normals(objs)

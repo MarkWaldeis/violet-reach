@@ -1,106 +1,45 @@
 """Kalkstein-Felsplatte A (rock_slab_a) — Meshy Klasse B.
 
-Bereitet das Meshy-Rohmodell (rock_slab_a/model/B-v1/model.glb) deterministisch
-mit tools/blender/vrmeshy.py auf: Smart-Topology-Randlöcher schließen, auf
-4,0 × 4,0 × 0,8 m normalisieren, Farbton Richtung canyon_chalk (#BCB296, 0,45)
-angleichen, Rauheit ≥ 0,60 / Metall 0,0 klemmen, 35 cm Eingrabe-Rand unter z = 0
-extrudieren und Normalen richten.
+Gate-Reparatur: die vielen schwarzen Dreieckslöcher an Oberfläche und Kanten
+werden mit kohärenten UVs trianguliert statt mit ins Leere greifenden Fans;
+anschließend mildert ein sehr schwacher Laplacian-Filter die spitzen Mesh-Zacken.
+Die an sich gute Schichtung, hexagonale Silhouette und Kalkstein-Färbung bleiben
+erhalten, wobei Crosshatch-Relief und schwarze Lochschatten reduziert werden.
 """
 import os
 
-import bmesh
-from mathutils import Vector
 import vrmeshy
+import vrmeshfix
 
 ASSET_DIR = os.path.dirname(os.path.abspath(__file__))
-
-
-def _close_pinholes(objs):
-    """Seal small smart-topology boundary loops with a manifold triangle fan and interpolated UVs."""
-    for o in objs:
-        bm = bmesh.new()
-        bm.from_mesh(o.data)
-        bmesh.ops.remove_doubles(bm, verts=list(bm.verts), dist=1e-4)
-        uv_layer = bm.loops.layers.uv.active
-        vert_uv = {}
-        if uv_layer is not None:
-            for f in bm.faces:
-                for l in f.loops:
-                    vert_uv.setdefault(l.vert, l[uv_layer].uv.copy())
-        for _ in range(128):
-            b_edges = [e for e in bm.edges if e.is_boundary]
-            if not b_edges:
-                break
-            start_e = b_edges[0]
-            loop_verts = [start_e.verts[0], start_e.verts[1]]
-            used_edges = {start_e}
-            cur = loop_verts[-1]
-            closed = False
-            while True:
-                next_e = [e for e in cur.link_edges if e.is_boundary and e not in used_edges]
-                if not next_e:
-                    break
-                e = next_e[0]
-                used_edges.add(e)
-                nxt = e.other_vert(cur)
-                if nxt in loop_verts:
-                    cycle = loop_verts[loop_verts.index(nxt):]
-                    if len(cycle) >= 3:
-                        cv = bm.verts.new(sum((v.co for v in cycle), Vector()) / len(cycle))
-                        vert_uv[cv] = (
-                            sum((vert_uv.get(v, Vector((0.5, 0.5))) for v in cycle), Vector((0.0, 0.0)))
-                            / len(cycle)
-                        )
-                        for i in range(len(cycle)):
-                            try:
-                                nf = bm.faces.new((cycle[i], cycle[(i + 1) % len(cycle)], cv))
-                                if uv_layer is not None:
-                                    for l in nf.loops:
-                                        l[uv_layer].uv = vert_uv[l.vert]
-                            except ValueError:
-                                pass
-                        closed = True
-                    break
-                loop_verts.append(nxt)
-                cur = nxt
-            if not closed:
-                break
-        bm.to_mesh(o.data)
-        o.data.update()
-        bm.free()
-
-
-def _bury_skirt_below_ground(objs, depth):
-    """Place the burial_skirt cut seam at z = 0 so the vertical skirt stays underground."""
-    for o in objs:
-        bm = bmesh.new()
-        bm.from_mesh(o.data)
-        body = [v for v in bm.verts if v.co.z > -depth + 1e-3]
-        if body:
-            z0 = min(v.co.z for v in body)
-            for v in body:
-                v.co.z -= z0
-        uv_layer = bm.loops.layers.uv.active
-        if uv_layer is not None:
-            center = Vector((0.5, 0.5))
-            for f in bm.faces:
-                if any(v.co.z <= -depth + 1e-3 for v in f.verts) and any(v.co.z > -depth + 1e-3 for v in f.verts):
-                    for loop in f.loops:
-                        if loop.vert.co.z <= -depth + 1e-3:
-                            uv = loop[uv_layer].uv
-                            loop[uv_layer].uv = uv + (center - uv) * 0.04
-        bm.to_mesh(o.data)
-        o.data.update()
-        bm.free()
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(ASSET_DIR)))
+ROCK_SRC = os.path.join(ROOT, "art", "textures", "src", "rock_chalk__acg_Rock018.jpg")
 
 
 def build():
     objs = vrmeshy.load_raw(ASSET_DIR)
-    _close_pinholes(objs)
+    vrmeshy.drop_loose(objs, min_fraction=0.02)
     vrmeshy.normalize(objs, size_m=(4.0, 4.0, 0.8), yaw_deg=0.0)
-    vrmeshy.grade_basecolor(objs, "#BCB296", strength=0.45)
-    vrmeshy.clamp_material(objs, roughness_min=0.60, metallic=0.0)
+    main = objs[0]
+
+    # Most boundary loops are thin planar slots.  triangle_fill in vrmeshfix
+    # closes the majority without crossing UV islands; the remaining deep layer
+    # interpenetrations are visually masked rather than destructively remeshed,
+    # preserving the class-B Meshy UVs.
+    vrmeshfix.fill_boundary_loops([main])
+    vrmeshfix.laplacian_smooth_region([main], zmin_frac=0.0, zmax_frac=1.0,
+                                      iterations=1, factor=0.13)
+    objs = [main]
+
+    # Keep the good layered albedo, but reduce cloth-like fine crosshatch and
+    # the harsh normal relief that made filled holes read as black triangles.
+    vrmeshfix.soften_basecolor_weave(objs, radius=2, keep=0.45)
+    vrmeshfix.harmonize_basecolor(objs, "#BCB296", hue_keep=0.55, sat_mul=0.78, val_shift=0.0)
+    vrmeshfix.tint_basecolor(objs, (1.07, 1.00, 0.89))
+    vrmeshfix.overlay_detail_luminance(objs, ROCK_SRC, strength=0.15, repeat=1)
+    vrmeshfix.set_normal_strength(objs, 0.38)
+    vrmeshy.clamp_material(objs, roughness_min=0.62, metallic=0.0)
     vrmeshy.burial_skirt(objs, depth=0.35)
-    _bury_skirt_below_ground(objs, depth=0.35)
+    vrmeshfix.bury_skirt_below_ground(objs, depth=0.35)
     vrmeshy.fix_normals(objs)
     vrmeshy.link_source(objs)

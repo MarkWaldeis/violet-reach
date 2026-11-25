@@ -17,22 +17,8 @@
   "meshy_class": "B",
   "material_class": "rock_chalk",
   "texture_format": "ktx2",
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "blender-batch2",
-  "review": {
-    "reviewer": "devin-gate-rev-a",
-    "scores": {
-      "silhouette": 8,
-      "form_detail": 7,
-      "material": 6,
-      "scale": 6,
-      "style": 7,
-      "defects": 6
-    },
-    "notes": "Laenge und sichtbare Hoehe passen etwa, aber die Tiefe liegt bei ca. 0.96 m statt 1.4 m Zielmass; Nahflaeche wirkt wie verputzter Beton mit gleichmaessigem Kreuzschliff, die Schichtfugen sind sehr gleichfoermige schwarze Saume und die Unterschicht wie eine separate Sockelplatte; auffaellige blaue Sprenkel und ein grosser orangefarbener Fleck sind keine glaubwuerdige Kreideverwitterung.",
-    "round": 1,
-    "source_sha256": "6fc978d39ee0780636badc09a59c5f2aaac082d4006dbc1b0ccbd6be555b6f79",
-    "sheet_sha256": "c3205814f98a71fb427dc40338df7e84defa0b43eb9a5b9d1c188e39e2acbd7c"
-  },
+  "review": null,
   "review_rounds": 1
 }

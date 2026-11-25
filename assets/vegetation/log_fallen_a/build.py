@@ -1,72 +1,21 @@
 """Umgestürzter Baumstamm A (log_fallen_a) — Meshy Klasse B.
 
-Bereitet das Meshy-Rohmodell (log_fallen_a/model/B-v1/model.glb) deterministisch
-mit tools/blender/vrmeshy.py auf: Schließt kleine Smart-Topology-Randlöcher wasserdicht,
-richtet die Längsachse auf +X aus (yaw -1,6°), skaliert auf 5,0 m Länge mit dezenter
-1,15x X-Streckung (H ~1,71 m, flache Auflagefläche auf z = 0 bleibt ohne Eingrabe-Rand
-erhalten), gleicht die Rindenfarbe ohne Delight Richtung bark (#41321D, strength 0,25)
-an, klemmt Rauheit ≥ 0,75 / Metall 0,0 und richtet alle Normalen aus.
+Gate-Reparatur: UV-kohärente Dreiecksfüllung der Smart-Topology-Löcher (keine
+schwarzen UV-Leerstellen mehr), zwei versetzte, reliefartige Splintholzkerne in
+den hohlen Bruchenden, wärmere/höllere Rindenfärbung und eine reduzierte,
+weniger repetitive Normalenstruktur. Geometrie und Texturen bleiben
+deterministisch aus dem gepinnten Meshy-Rohmodell ableitbar.
 """
 import os
 
 import bpy
-import bmesh
-from mathutils import Matrix, Vector
+from mathutils import Matrix
 import vrmeshy
+import vrmeshfix
 
 ASSET_DIR = os.path.dirname(os.path.abspath(__file__))
-
-
-def _close_pinholes(objs):
-    """Seal small smart-topology boundary loops with a manifold triangle fan and interpolated UVs."""
-    for o in objs:
-        bm = bmesh.new()
-        bm.from_mesh(o.data)
-        bmesh.ops.remove_doubles(bm, verts=list(bm.verts), dist=1e-4)
-        uv_layer = bm.loops.layers.uv.active
-        vert_uv = {}
-        if uv_layer is not None:
-            for f in bm.faces:
-                for l in f.loops:
-                    vert_uv.setdefault(l.vert, l[uv_layer].uv.copy())
-        for _ in range(128):
-            b_edges = [e for e in bm.edges if e.is_boundary]
-            if not b_edges:
-                break
-            start_e = b_edges[0]
-            loop_verts = [start_e.verts[0], start_e.verts[1]]
-            used_edges = {start_e}
-            cur = loop_verts[-1]
-            closed = False
-            while True:
-                next_e = [e for e in cur.link_edges if e.is_boundary and e not in used_edges]
-                if not next_e:
-                    break
-                e = next_e[0]
-                used_edges.add(e)
-                nxt = e.other_vert(cur)
-                if nxt in loop_verts:
-                    cycle = loop_verts[loop_verts.index(nxt):]
-                    if len(cycle) >= 3:
-                        cv = bm.verts.new(sum((v.co for v in cycle), Vector()) / len(cycle))
-                        vert_uv[cv] = sum((vert_uv.get(v, Vector((0.5, 0.5))) for v in cycle), Vector((0.0, 0.0))) / len(cycle)
-                        for i in range(len(cycle)):
-                            try:
-                                nf = bm.faces.new((cycle[i], cycle[(i + 1) % len(cycle)], cv))
-                                if uv_layer is not None:
-                                    for l in nf.loops:
-                                        l[uv_layer].uv = vert_uv[l.vert]
-                            except ValueError:
-                                pass
-                        closed = True
-                    break
-                loop_verts.append(nxt)
-                cur = nxt
-            if not closed:
-                break
-        bm.to_mesh(o.data)
-        o.data.update()
-        bm.free()
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(ASSET_DIR)))
+BARK_SRC = os.path.join(ROOT, "art", "textures", "src", "bark__acg_Bark012.jpg")
 
 
 def _stretch_x(objs, factor):
@@ -83,10 +32,37 @@ def _stretch_x(objs, factor):
 def build():
     objs = vrmeshy.load_raw(ASSET_DIR)
     vrmeshy.drop_loose(objs, min_fraction=0.02)
-    _close_pinholes(objs)
     vrmeshy.normalize(objs, height=1.715, yaw_deg=-1.6)
     _stretch_x(objs, 1.15)
-    vrmeshy.grade_basecolor(objs, "#41321D", strength=0.25)
+    main = objs[0]
+
+    # Close the many small shell pinholes with coherent UVs before adding the
+    # larger end plugs.  The old fan caps sampled unrelated UV islands and were
+    # the source of several pitch-black triangular facets.
+    vrmeshfix.fill_boundary_loops([main])
+
+    # The raw log is a thin shell at both broken ends.  Recessed, uneven plugs
+    # sit behind the jagged rims, so the silhouette stays broken while the end
+    # no longer reads as a bottomless paper shell.
+    plugs = [
+        vrmeshfix.make_cavity_plug(main, axis=0, sign=+1, inset=0.00,
+                                   radial_scale=1.10, segments=36,
+                                   slice_frac=0.13, name="endcore_pos", relief=0.030, circular=True),
+        vrmeshfix.make_cavity_plug(main, axis=0, sign=-1, inset=0.00,
+                                   radial_scale=1.06, segments=36,
+                                   slice_frac=0.13, name="endcore_neg", relief=0.026, circular=True),
+    ]
+    main = vrmeshfix.join_into(main, [p for p in plugs if p is not None])
+    objs = [main]
+
+    # Warm the blue-black bark, keep large wood variation, and replace part of
+    # the mechanically repetitive Meshy microrelief with the project's bark grain.
+    vrmeshfix.soften_basecolor_weave(objs, radius=1, keep=0.58)
+    vrmeshfix.harmonize_basecolor(objs, "#6A4426", hue_keep=0.30, sat_mul=1.18, val_shift=0.035)
+    vrmeshfix.tint_basecolor(objs, (1.16, 0.96, 0.78))
+    vrmeshfix.adjust_basecolor_levels(objs, gain=1.05, gamma=0.90)
+    vrmeshfix.overlay_detail_luminance(objs, BARK_SRC, strength=0.14, repeat=1)
+    vrmeshfix.set_normal_strength(objs, 0.48)
     vrmeshy.clamp_material(objs, roughness_min=0.75, metallic=0.0)
     vrmeshy.fix_normals(objs)
     vrmeshy.link_source(objs)

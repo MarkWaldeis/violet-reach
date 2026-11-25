@@ -17,22 +17,8 @@
   "meshy_class": "B",
   "material_class": "bark",
   "texture_format": "ktx2",
-  "status": "modeling",
+  "status": "blender_review",
   "builder": "blender-batch1",
-  "review": {
-    "reviewer": "devin-gate-rev-a",
-    "scores": {
-      "silhouette": 8,
-      "form_detail": 7,
-      "material": 7,
-      "scale": 10,
-      "style": 8,
-      "defects": 6
-    },
-    "notes": "Bruchende wirkt wie eine papierduenne hohle Schale mit schwarzem Loch und mechanisch gleichfoermigen Zacken; Rinde sehr dunkel/blaeulich und stellenweise repetitiv, Kernholz flach; Silhouette und Masstab sind gut, LOD0 liegt leicht ueber 30k.",
-    "round": 1,
-    "source_sha256": "d120467b32dff58c3438595cd0a4a45c59dbbddddfad35c7a5165cc4fdee129b",
-    "sheet_sha256": "5774dfae743d76a080923dad728bd1d681d6d4d901ad25f575e2e95ee1606578"
-  },
+  "review": null,
   "review_rounds": 1
 }

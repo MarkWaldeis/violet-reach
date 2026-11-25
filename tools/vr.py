@@ -84,6 +84,8 @@ def source_hash(asset_dir):
             imports.add(node.module.split(".")[-1])
     if "vrmeshy" in imports:
         inputs.append(os.path.join(BLENDER_TOOLS, "vrmeshy.py"))
+    if "vrmeshfix" in imports:
+        inputs.append(os.path.join(BLENDER_TOOLS, "vrmeshfix.py"))
     if "vrmat" in imports or "vrcolumn" in imports:
         inputs += [os.path.join(BLENDER_TOOLS, "vrmat.py"), os.path.join(ROOT, "art", "palette.json")]
     if "vrcolumn" in imports:
