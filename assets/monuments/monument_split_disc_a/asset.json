@@ -17,8 +17,23 @@
   "meshy_class": "A",
   "material_class": "stone_white",
   "texture_format": "ktx2",
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "blender-batch2",
-  "review": null,
-  "review_rounds": 1
+  "review": {
+    "reviewer": "devin-gate-rev-e",
+    "scores": {
+      "silhouette": 9,
+      "form_detail": 6,
+      "material": 4,
+      "scale": 8,
+      "style": 6,
+      "defects": 4
+    },
+    "verdict": "rejected",
+    "notes": "Abgelehnt: Die ikonische Fernsilhouette bleibt stark, aber die Monolithflaechen sind weiterhin von rechteckigen Paneel-/Rest-Webmustern ueberzogen und der Bruchkern zeigt ein dichtes Stoff-/Mesh-Crosshatch statt mineralischem Bruch. Der Anschluss an die Plattform ist weiterhin schmal, zerknittert und wabenartig. Zusaetzlich liegt die Quelle bei ca. 306k Dreiecken gegenueber einem 32k-LOD0-Ziel; das ist Symptom der verrauschten Meshy-Geometrie und keine saubere Monumentbasis. Fuer ein monolithisches Steinmonument ist eine Meshy-Regenerierung noetig.",
+    "round": 2,
+    "source_sha256": "1cf5bd1280a61b3827dfbfc3f15ebc80bccc29fe293fa53037c5b005e9b318e1",
+    "sheet_sha256": "9f38bd8fc0358be6d0f880e32a37f023ad604b5698813babb27c0c8806968220"
+  },
+  "review_rounds": 2
 }

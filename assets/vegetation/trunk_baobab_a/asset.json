@@ -17,8 +17,23 @@
   "meshy_class": "B",
   "material_class": "bark",
   "texture_format": "ktx2",
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "blender-batch1",
-  "review": null,
-  "review_rounds": 1
+  "review": {
+    "reviewer": "devin-gate-rev-e",
+    "scores": {
+      "silhouette": 9,
+      "form_detail": 6,
+      "material": 4,
+      "scale": 10,
+      "style": 6,
+      "defects": 5
+    },
+    "verdict": "rejected",
+    "notes": "Abgelehnt: Die Baobab-Gesamtform, Wurzelwulste und der Massstab sind weiterhin ueberzeugend. Das Closeup wird jedoch von einem regelmaessigen quadratischen Quilt-/Crosshatch-Muster dominiert; der Stamm wirkt wie gepolstertes Leder oder glatter Ton, nicht wie elefantenhautartige Rinde. Die Primaeraste enden ausserdem als stumpfe Rohre mit sichtbaren Kappen. Trotz guter Fernwirkung ist die Material- und Nahsichtqualitaet klar unter dem Gate.",
+    "round": 2,
+    "source_sha256": "f30c175dc86a36ae63ed1b88da3c7006f93c7780c3798daf2800af8037a145f2",
+    "sheet_sha256": "9aabebe269af84ccd69462aa4698a33637288f4bd8a09b279700073efcc6f32c"
+  },
+  "review_rounds": 2
 }

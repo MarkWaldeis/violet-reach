@@ -17,8 +17,23 @@
   "meshy_class": "B",
   "material_class": "rock_chalk",
   "texture_format": "ktx2",
-  "status": "blender_review",
+  "status": "approved",
   "builder": "blender-batch2",
-  "review": null,
-  "review_rounds": 1
+  "review": {
+    "reviewer": "devin-gate-rev-e",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 8,
+      "scale": 9,
+      "style": 8,
+      "defects": 8
+    },
+    "verdict": "approved",
+    "notes": "Knapp freigegeben: niedrige keilfoermige Kreideform mit plausibler 1,8-m-Relation, guter abgebrochener Kante und Schichtfuge in closeup_base sowie matter, nicht metallischer Kreidefaerbung. Die Oberseite bleibt relativ glatt und ein warmer Fleck bzw. feines Kreuzschliff-Relief ist in der Nahsicht noch erkennbar; beides liest sich jetzt aber eher als dezente Eisen-/Verwitterungszeichnung und Sedimentstruktur, nicht als Mesh-Fehler. Der glatte untere Saum ist der vorgesehene Eingrabe-Rand. Neben den freigegebenen Kreidefelsen besteht das Asset; verbleibende Schaerfe der Oberflaeche waere reines Polish, kein Gate-Blocker.",
+    "round": 2,
+    "source_sha256": "b4e32d789137f3138923e1c5d10056483d85db9d89e7653845f1f739bc679837",
+    "sheet_sha256": "eff7405b4dc1baf658742f078fa81fef9b83c24282e327c694253bdedbec1840"
+  },
+  "review_rounds": 2
 }

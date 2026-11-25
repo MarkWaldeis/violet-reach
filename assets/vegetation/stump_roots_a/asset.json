@@ -17,8 +17,23 @@
   "meshy_class": "B",
   "material_class": "bark",
   "texture_format": "ktx2",
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "blender-batch1",
-  "review": null,
-  "review_rounds": 1
+  "review": {
+    "reviewer": "devin-gate-rev-e",
+    "scores": {
+      "silhouette": 9,
+      "form_detail": 6,
+      "material": 5,
+      "scale": 8,
+      "style": 6,
+      "defects": 4
+    },
+    "verdict": "rejected",
+    "notes": "Abgelehnt: Die Wurzel-Silhouette und der Massstab sind stark, aber die Nahsicht ist weiterhin keine glaubwuerdige Rinde: ein ornamentales, gehaemmertes Meshy-Relief, zahlreiche ueberlappende papierduenne Scherben und grosse planare Dreiecksplatten an der Krone. Die dunklen Kluftreste sind kleiner als zuvor, doch die Oberflaeche liest sich als geformter Ton/Metall statt als faseriger Holzbruch und haelt den Vergleich mit den freigegebenen Felsen nicht aus.",
+    "round": 2,
+    "source_sha256": "6c9c9bc4ec55fced7bcfa36719f1dc3003fa0389a8cee3a9ea3349377dd2276d",
+    "sheet_sha256": "9303727e3270ee2334d84b906dba152d18c87671e42fb04311d511b9a4cc4801"
+  },
+  "review_rounds": 2
 }

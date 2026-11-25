@@ -17,8 +17,23 @@
   "meshy_class": "B",
   "material_class": "bark",
   "texture_format": "ktx2",
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "blender-batch1",
-  "review": null,
-  "review_rounds": 1
+  "review": {
+    "reviewer": "devin-gate-rev-e",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 5,
+      "material": 6,
+      "scale": 10,
+      "style": 6,
+      "defects": 4
+    },
+    "verdict": "rejected",
+    "notes": "Abgelehnt: Schirmakazien-Silhouette und Massstab passen, die Reparatur der Astenden ist aber deutlich als automatische Kappenloesung lesbar: viele Enden bleiben abgeschnittene Rohre oder facettierte, steinartige Pfropfen, und zentrale Aste schneiden sich weiterhin hart. Die Rinde besteht in der Nahsicht aus gleichfoermigen Wellenlinien. Gegenueber der freigegebenen Akazie wirkt das Geruest wie ein billiges Draht-/Rohrmodell und braucht eine organische Neuerzeugung.",
+    "round": 2,
+    "source_sha256": "77e56324d8dc4ea10fe8ddd701fdb2ae6a19cd9c16558e206402c6c9cd0aeb46",
+    "sheet_sha256": "b77a41e46951474394e17a0fb888693fafb67cc636e2d77772beb32459581e24"
+  },
+  "review_rounds": 2
 }
