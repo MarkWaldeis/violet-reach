@@ -143,7 +143,7 @@
       "y_offset": -1.611606
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17001,
         "count": 1,
@@ -194,7 +194,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -203,7 +203,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17002,
         "count": 1,
@@ -254,7 +254,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -263,7 +263,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17003,
         "count": 1,
@@ -314,7 +314,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -323,7 +323,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17004,
         "count": 1,
@@ -374,7 +374,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -383,7 +383,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17005,
         "count": 1,
@@ -434,7 +434,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -443,7 +443,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17006,
         "count": 1,
@@ -494,7 +494,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -503,7 +503,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17007,
         "count": 1,
@@ -554,7 +554,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -563,7 +563,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17008,
         "count": 1,
@@ -614,7 +614,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -623,7 +623,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17009,
         "count": 1,
@@ -674,7 +674,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -683,7 +683,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 17010,
         "count": 1,
@@ -734,8 +734,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -743,7 +743,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17011,
         "count": 1,
@@ -794,7 +794,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -803,7 +803,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17012,
         "count": 1,
@@ -854,7 +854,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -863,7 +863,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17013,
         "count": 1,
@@ -914,8 +914,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -923,7 +923,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17014,
         "count": 1,
@@ -974,7 +974,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -2243,7 +2243,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17036,
         "count": 1,
@@ -2294,7 +2294,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -2303,7 +2303,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17037,
         "count": 1,
@@ -2354,7 +2354,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -2363,7 +2363,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17038,
         "count": 1,
@@ -2414,7 +2414,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -2423,7 +2423,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17039,
         "count": 1,
@@ -2474,7 +2474,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -2483,7 +2483,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17040,
         "count": 1,
@@ -2534,7 +2534,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -2543,7 +2543,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17041,
         "count": 1,
@@ -2594,7 +2594,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -2603,7 +2603,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17042,
         "count": 1,
@@ -2654,7 +2654,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -2663,7 +2663,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17043,
         "count": 1,
@@ -2714,7 +2714,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -2723,7 +2723,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17044,
         "count": 1,
@@ -2774,7 +2774,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -2783,7 +2783,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17045,
         "count": 1,
@@ -2834,8 +2834,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -2843,7 +2843,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17046,
         "count": 1,
@@ -2894,7 +2894,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -2903,7 +2903,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17047,
         "count": 1,
@@ -2954,7 +2954,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -2963,7 +2963,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17048,
         "count": 1,
@@ -3014,7 +3014,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -3023,7 +3023,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17049,
         "count": 1,
@@ -3074,7 +3074,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -3083,7 +3083,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17050,
         "count": 1,
@@ -3134,7 +3134,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -3143,7 +3143,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17051,
         "count": 1,
@@ -3194,7 +3194,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -3203,7 +3203,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17052,
         "count": 1,
@@ -3254,8 +3254,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -3263,7 +3263,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17053,
         "count": 1,
@@ -3314,7 +3314,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -4943,7 +4943,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17081,
         "count": 1,
@@ -4994,8 +4994,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -5003,7 +5003,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17082,
         "count": 1,
@@ -5054,7 +5054,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -5063,7 +5063,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17083,
         "count": 1,
@@ -5114,7 +5114,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -5123,7 +5123,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17084,
         "count": 1,
@@ -5174,7 +5174,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -5183,7 +5183,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17085,
         "count": 1,
@@ -5234,7 +5234,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -5243,7 +5243,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17087,
         "count": 1,
@@ -5294,7 +5294,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -5303,7 +5303,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17088,
         "count": 1,
@@ -5354,7 +5354,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -5363,7 +5363,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17089,
         "count": 1,
@@ -5414,7 +5414,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -5423,7 +5423,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17091,
         "count": 1,
@@ -5474,7 +5474,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -5483,7 +5483,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17092,
         "count": 1,
@@ -5534,7 +5534,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -5543,7 +5543,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17093,
         "count": 1,
@@ -5594,7 +5594,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -5603,7 +5603,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17094,
         "count": 1,
@@ -5654,7 +5654,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -5663,7 +5663,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17095,
         "count": 1,
@@ -5714,8 +5714,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -5723,7 +5723,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17096,
         "count": 1,
@@ -5774,7 +5774,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -7163,7 +7163,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17121,
         "count": 1,
@@ -7214,7 +7214,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -7223,7 +7223,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17122,
         "count": 1,
@@ -7274,7 +7274,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -7283,7 +7283,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17123,
         "count": 1,
@@ -7334,7 +7334,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -7343,7 +7343,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17124,
         "count": 1,
@@ -7394,7 +7394,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -7403,7 +7403,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17125,
         "count": 1,
@@ -7454,7 +7454,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -7463,7 +7463,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17126,
         "count": 1,
@@ -7514,7 +7514,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -7523,7 +7523,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17127,
         "count": 1,
@@ -7574,7 +7574,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -7583,7 +7583,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17128,
         "count": 1,
@@ -7634,8 +7634,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -7643,7 +7643,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17129,
         "count": 1,
@@ -7694,7 +7694,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -7703,7 +7703,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17130,
         "count": 1,
@@ -7754,7 +7754,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -7763,7 +7763,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17131,
         "count": 1,
@@ -7814,7 +7814,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -7823,7 +7823,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17132,
         "count": 1,
@@ -7874,7 +7874,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -7883,7 +7883,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17133,
         "count": 1,
@@ -7934,7 +7934,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -7943,7 +7943,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17134,
         "count": 1,
@@ -7994,7 +7994,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -8003,7 +8003,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17135,
         "count": 1,
@@ -8054,7 +8054,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -8063,7 +8063,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17136,
         "count": 1,
@@ -8114,7 +8114,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -8123,7 +8123,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17137,
         "count": 1,
@@ -8174,7 +8174,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -8183,7 +8183,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17138,
         "count": 1,
@@ -8234,7 +8234,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -8243,7 +8243,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17139,
         "count": 1,
@@ -8294,7 +8294,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -8303,7 +8303,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17140,
         "count": 1,
@@ -8354,8 +8354,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -10163,7 +10163,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17171,
         "count": 1,
@@ -10214,7 +10214,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -10223,7 +10223,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17172,
         "count": 1,
@@ -10274,7 +10274,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -10283,7 +10283,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17173,
         "count": 1,
@@ -10334,7 +10334,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -10343,7 +10343,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17174,
         "count": 1,
@@ -10394,7 +10394,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -10403,7 +10403,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17175,
         "count": 1,
@@ -10454,7 +10454,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -10463,7 +10463,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17176,
         "count": 1,
@@ -10514,7 +10514,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -10523,7 +10523,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17177,
         "count": 1,
@@ -10574,7 +10574,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -10583,7 +10583,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17178,
         "count": 1,
@@ -10634,7 +10634,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -10643,7 +10643,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17179,
         "count": 1,
@@ -10694,7 +10694,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -10703,7 +10703,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17180,
         "count": 1,
@@ -10754,7 +10754,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -10763,7 +10763,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17181,
         "count": 1,
@@ -10814,7 +10814,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -10823,7 +10823,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17182,
         "count": 1,
@@ -10874,8 +10874,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -10883,7 +10883,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17183,
         "count": 1,
@@ -10934,7 +10934,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -10943,7 +10943,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17184,
         "count": 1,
@@ -10994,7 +10994,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -11003,7 +11003,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17185,
         "count": 1,
@@ -11054,7 +11054,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -11063,7 +11063,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17186,
         "count": 1,
@@ -11114,8 +11114,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -11123,7 +11123,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17187,
         "count": 1,
@@ -11174,7 +11174,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -12743,7 +12743,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17214,
         "count": 1,
@@ -12794,7 +12794,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -12803,7 +12803,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17215,
         "count": 1,
@@ -12854,7 +12854,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -12863,7 +12863,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17216,
         "count": 1,
@@ -12914,7 +12914,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -12923,7 +12923,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17217,
         "count": 1,
@@ -12974,7 +12974,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -12983,7 +12983,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17218,
         "count": 1,
@@ -13034,7 +13034,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -13043,7 +13043,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17219,
         "count": 1,
@@ -13094,7 +13094,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -13103,7 +13103,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17220,
         "count": 1,
@@ -13154,7 +13154,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -13163,7 +13163,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17221,
         "count": 1,
@@ -13214,7 +13214,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -13223,7 +13223,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17222,
         "count": 1,
@@ -13274,7 +13274,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -13283,7 +13283,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17223,
         "count": 1,
@@ -13334,7 +13334,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -13343,7 +13343,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17224,
         "count": 1,
@@ -13394,8 +13394,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -13403,7 +13403,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17225,
         "count": 1,
@@ -13454,7 +13454,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -13463,7 +13463,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17226,
         "count": 1,
@@ -13514,8 +13514,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -13523,7 +13523,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17227,
         "count": 1,
@@ -13574,7 +13574,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -13583,7 +13583,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17228,
         "count": 1,
@@ -13634,7 +13634,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -13643,7 +13643,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17229,
         "count": 1,
@@ -13694,7 +13694,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -13703,7 +13703,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17230,
         "count": 1,
@@ -13754,7 +13754,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -13763,7 +13763,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17231,
         "count": 1,
@@ -13814,7 +13814,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -15443,7 +15443,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17259,
         "count": 1,
@@ -15494,7 +15494,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -15503,7 +15503,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17260,
         "count": 1,
@@ -15554,7 +15554,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -15563,7 +15563,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17261,
         "count": 1,
@@ -15614,7 +15614,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -15623,7 +15623,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17262,
         "count": 1,
@@ -15674,7 +15674,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -15683,7 +15683,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17263,
         "count": 1,
@@ -15734,7 +15734,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -15743,7 +15743,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17264,
         "count": 1,
@@ -15794,7 +15794,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -15803,7 +15803,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17265,
         "count": 1,
@@ -15854,7 +15854,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -15863,7 +15863,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17266,
         "count": 1,
@@ -15914,8 +15914,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -15923,7 +15923,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17267,
         "count": 1,
@@ -15974,7 +15974,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -15983,7 +15983,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17268,
         "count": 1,
@@ -16034,7 +16034,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -16043,7 +16043,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17269,
         "count": 1,
@@ -16094,8 +16094,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -16103,7 +16103,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17270,
         "count": 1,
@@ -16154,7 +16154,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -16163,7 +16163,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17271,
         "count": 1,
@@ -16214,7 +16214,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -16223,7 +16223,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17272,
         "count": 1,
@@ -16274,7 +16274,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -16283,7 +16283,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17273,
         "count": 1,
@@ -16334,7 +16334,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -16343,7 +16343,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17274,
         "count": 1,
@@ -16394,7 +16394,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -16403,7 +16403,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17275,
         "count": 1,
@@ -16454,7 +16454,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -16463,7 +16463,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17276,
         "count": 1,
@@ -16514,7 +16514,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -16523,7 +16523,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17277,
         "count": 1,
@@ -16574,7 +16574,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -16583,7 +16583,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17278,
         "count": 1,
@@ -16634,7 +16634,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -18443,7 +18443,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 17309,
         "count": 1,
@@ -18494,8 +18494,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -18503,7 +18503,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 17310,
         "count": 1,
@@ -18554,8 +18554,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -18563,7 +18563,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17311,
         "count": 1,
@@ -18614,7 +18614,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -18623,7 +18623,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 17312,
         "count": 1,
@@ -18674,8 +18674,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -18683,7 +18683,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 17313,
         "count": 1,
@@ -18734,8 +18734,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -18743,7 +18743,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 17314,
         "count": 1,
@@ -18794,8 +18794,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -18803,7 +18803,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17315,
         "count": 1,
@@ -18854,7 +18854,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -18863,7 +18863,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 17316,
         "count": 1,
@@ -18914,8 +18914,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -18923,7 +18923,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17317,
         "count": 1,
@@ -18974,7 +18974,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -18983,7 +18983,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17318,
         "count": 1,
@@ -19034,7 +19034,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -19043,7 +19043,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17319,
         "count": 1,
@@ -19094,7 +19094,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -19103,7 +19103,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 17320,
         "count": 1,
@@ -19154,8 +19154,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -19163,7 +19163,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17321,
         "count": 1,
@@ -19214,7 +19214,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -19223,7 +19223,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17322,
         "count": 1,
@@ -19274,7 +19274,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -19283,7 +19283,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17323,
         "count": 1,
@@ -19334,8 +19334,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -19343,7 +19343,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17324,
         "count": 1,
@@ -19394,8 +19394,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -20843,7 +20843,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 17349,
         "count": 1,
@@ -20894,8 +20894,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -20903,7 +20903,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 17350,
         "count": 1,
@@ -20954,8 +20954,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -20963,7 +20963,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17351,
         "count": 1,
@@ -21014,8 +21014,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -21023,7 +21023,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17352,
         "count": 1,
@@ -21074,7 +21074,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -21083,7 +21083,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17353,
         "count": 1,
@@ -21134,7 +21134,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -21143,7 +21143,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17354,
         "count": 1,
@@ -21194,7 +21194,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -21203,7 +21203,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17355,
         "count": 1,
@@ -21254,7 +21254,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -21263,7 +21263,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 17356,
         "count": 1,
@@ -21314,8 +21314,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -21323,7 +21323,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 17357,
         "count": 1,
@@ -21374,8 +21374,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -21383,7 +21383,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 17358,
         "count": 1,
@@ -21434,8 +21434,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -21443,7 +21443,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 17359,
         "count": 1,
@@ -21494,8 +21494,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -21503,7 +21503,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17360,
         "count": 1,
@@ -21554,7 +21554,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -21563,7 +21563,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 17361,
         "count": 1,
@@ -21614,8 +21614,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -21623,7 +21623,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17362,
         "count": 1,
@@ -21674,8 +21674,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -22943,7 +22943,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17384,
         "count": 1,
@@ -22994,7 +22994,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -23003,7 +23003,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17385,
         "count": 1,
@@ -23054,7 +23054,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -23063,7 +23063,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17386,
         "count": 1,
@@ -23114,7 +23114,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -23123,7 +23123,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17387,
         "count": 1,
@@ -23174,7 +23174,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -23183,7 +23183,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17388,
         "count": 1,
@@ -23234,7 +23234,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -23243,7 +23243,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17389,
         "count": 1,
@@ -23294,7 +23294,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -23303,7 +23303,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17390,
         "count": 1,
@@ -23354,7 +23354,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -23363,7 +23363,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17391,
         "count": 1,
@@ -23414,7 +23414,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -23423,7 +23423,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17392,
         "count": 1,
@@ -23474,7 +23474,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -23483,7 +23483,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17393,
         "count": 1,
@@ -23534,8 +23534,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -23543,7 +23543,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17394,
         "count": 1,
@@ -23594,7 +23594,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -23603,7 +23603,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17395,
         "count": 1,
@@ -23654,8 +23654,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -23663,7 +23663,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17396,
         "count": 1,
@@ -23714,7 +23714,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -23723,7 +23723,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17397,
         "count": 1,
@@ -23774,7 +23774,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -23783,7 +23783,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17398,
         "count": 1,
@@ -23834,7 +23834,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -25223,7 +25223,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17422,
         "count": 1,
@@ -25274,7 +25274,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -25283,7 +25283,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17423,
         "count": 1,
@@ -25334,7 +25334,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -25343,7 +25343,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17424,
         "count": 1,
@@ -25394,8 +25394,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -25403,7 +25403,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17425,
         "count": 1,
@@ -25454,7 +25454,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -25463,7 +25463,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17426,
         "count": 1,
@@ -25514,7 +25514,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -25523,7 +25523,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17427,
         "count": 1,
@@ -25574,7 +25574,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -25583,7 +25583,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17428,
         "count": 1,
@@ -25634,7 +25634,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -25643,7 +25643,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17429,
         "count": 1,
@@ -25694,7 +25694,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -25703,7 +25703,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17431,
         "count": 1,
@@ -25754,7 +25754,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -25763,7 +25763,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17432,
         "count": 1,
@@ -25814,7 +25814,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -25823,7 +25823,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17434,
         "count": 1,
@@ -25874,7 +25874,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -25883,7 +25883,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17437,
         "count": 1,
@@ -25934,8 +25934,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -25943,7 +25943,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17438,
         "count": 1,
@@ -25994,7 +25994,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -26003,7 +26003,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17439,
         "count": 1,
@@ -26054,7 +26054,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -26063,7 +26063,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17440,
         "count": 1,
@@ -26114,7 +26114,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -27503,7 +27503,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17472,
         "count": 1,
@@ -27554,7 +27554,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -27563,7 +27563,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17473,
         "count": 1,
@@ -27614,7 +27614,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -27623,7 +27623,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17474,
         "count": 1,
@@ -27674,7 +27674,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -27683,7 +27683,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17475,
         "count": 1,
@@ -27734,7 +27734,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -27743,7 +27743,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17476,
         "count": 1,
@@ -27794,7 +27794,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -27803,7 +27803,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17477,
         "count": 1,
@@ -27854,7 +27854,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -27863,7 +27863,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17478,
         "count": 1,
@@ -27914,7 +27914,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -27923,7 +27923,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17479,
         "count": 1,
@@ -27974,7 +27974,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -27983,7 +27983,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17480,
         "count": 1,
@@ -28034,7 +28034,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -28043,7 +28043,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17481,
         "count": 1,
@@ -28094,7 +28094,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -28103,7 +28103,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17482,
         "count": 1,
@@ -28154,7 +28154,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -28163,7 +28163,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17483,
         "count": 1,
@@ -28214,7 +28214,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -28223,7 +28223,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17484,
         "count": 1,
@@ -28274,8 +28274,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -28283,7 +28283,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17485,
         "count": 1,
@@ -28334,7 +28334,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -28343,7 +28343,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17486,
         "count": 1,
@@ -28394,8 +28394,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -28403,7 +28403,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17487,
         "count": 1,
@@ -28454,7 +28454,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -28463,7 +28463,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17488,
         "count": 1,
@@ -28514,7 +28514,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -28523,7 +28523,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17489,
         "count": 1,
@@ -28574,7 +28574,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -28583,7 +28583,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17490,
         "count": 1,
@@ -28634,7 +28634,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -28643,7 +28643,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17491,
         "count": 1,
@@ -28694,7 +28694,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -30503,7 +30503,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17522,
         "count": 1,
@@ -30554,7 +30554,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -30563,7 +30563,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17523,
         "count": 1,
@@ -30614,7 +30614,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -30623,7 +30623,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17524,
         "count": 1,
@@ -30674,7 +30674,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -30683,7 +30683,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 17525,
         "count": 1,
@@ -30734,8 +30734,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -30743,7 +30743,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17526,
         "count": 1,
@@ -30794,7 +30794,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -30803,7 +30803,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17527,
         "count": 1,
@@ -30854,7 +30854,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -30863,7 +30863,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 17528,
         "count": 1,
@@ -30914,8 +30914,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -30923,7 +30923,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 17529,
         "count": 1,
@@ -30974,8 +30974,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -30983,7 +30983,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17530,
         "count": 1,
@@ -31034,7 +31034,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -31043,7 +31043,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17531,
         "count": 1,
@@ -31094,8 +31094,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -31103,7 +31103,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17532,
         "count": 1,
@@ -31154,7 +31154,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -31163,7 +31163,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 17533,
         "count": 1,
@@ -31214,7 +31214,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -32303,7 +32303,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 17561,
         "count": 1,
@@ -32354,8 +32354,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -32783,7 +32783,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17578,
         "count": 1,
@@ -32834,8 +32834,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.18
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -32843,7 +32843,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17579,
         "count": 1,
@@ -32894,8 +32894,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.18
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -32903,7 +32903,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17580,
         "count": 1,
@@ -32954,8 +32954,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.18
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -32963,7 +32963,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 17581,
         "count": 1,
@@ -33014,8 +33014,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.18
+          0.95,
+          1.25
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -33023,7 +33023,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17582,
         "count": 1,
@@ -33074,8 +33074,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.18
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -33083,7 +33083,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 17583,
         "count": 1,
@@ -33134,8 +33134,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.82,
-          1.18
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -34079,7 +34079,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24001,
         "count": 1,
@@ -34130,8 +34130,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -34139,7 +34139,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24002,
         "count": 1,
@@ -34190,8 +34190,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -34199,7 +34199,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24003,
         "count": 1,
@@ -34250,7 +34250,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -34259,7 +34259,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24004,
         "count": 1,
@@ -34310,8 +34310,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -34319,7 +34319,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24005,
         "count": 1,
@@ -34370,8 +34370,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -34379,7 +34379,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24006,
         "count": 1,
@@ -34430,7 +34430,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -34439,7 +34439,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24007,
         "count": 1,
@@ -34490,7 +34490,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -34499,7 +34499,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24008,
         "count": 1,
@@ -34550,8 +34550,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -34559,7 +34559,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24009,
         "count": 1,
@@ -34610,8 +34610,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -34619,7 +34619,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24010,
         "count": 1,
@@ -34670,7 +34670,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -34679,7 +34679,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 24011,
         "count": 1,
@@ -34730,8 +34730,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -34739,7 +34739,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24012,
         "count": 1,
@@ -34790,7 +34790,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -36239,7 +36239,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24040,
         "count": 1,
@@ -36290,8 +36290,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -36299,7 +36299,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24041,
         "count": 1,
@@ -36350,7 +36350,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -36359,7 +36359,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24042,
         "count": 1,
@@ -36410,8 +36410,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -36419,7 +36419,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24043,
         "count": 1,
@@ -36470,7 +36470,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -36479,7 +36479,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24044,
         "count": 1,
@@ -36530,8 +36530,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -36539,7 +36539,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24045,
         "count": 1,
@@ -36590,7 +36590,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -36599,7 +36599,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24046,
         "count": 1,
@@ -36650,8 +36650,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -36659,7 +36659,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24047,
         "count": 1,
@@ -36710,8 +36710,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -36719,7 +36719,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24048,
         "count": 1,
@@ -36770,7 +36770,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -36779,7 +36779,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24049,
         "count": 1,
@@ -36830,7 +36830,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -36839,7 +36839,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 24050,
         "count": 1,
@@ -36890,8 +36890,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -36899,7 +36899,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24051,
         "count": 1,
@@ -36950,8 +36950,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -36959,7 +36959,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24052,
         "count": 1,
@@ -37010,7 +37010,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -37019,7 +37019,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24053,
         "count": 1,
@@ -37070,8 +37070,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -37079,7 +37079,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24054,
         "count": 1,
@@ -37130,7 +37130,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -37139,7 +37139,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 24055,
         "count": 1,
@@ -37190,8 +37190,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -37199,7 +37199,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24056,
         "count": 1,
@@ -37250,7 +37250,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -37259,7 +37259,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24057,
         "count": 1,
@@ -37310,7 +37310,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -39479,7 +39479,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24095,
         "count": 1,
@@ -39530,8 +39530,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -39539,7 +39539,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24096,
         "count": 1,
@@ -39590,7 +39590,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -39599,7 +39599,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24097,
         "count": 1,
@@ -39650,7 +39650,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -39659,7 +39659,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24098,
         "count": 1,
@@ -39710,7 +39710,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -39719,7 +39719,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24099,
         "count": 1,
@@ -39770,7 +39770,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -39779,7 +39779,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24100,
         "count": 1,
@@ -39830,8 +39830,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -39839,7 +39839,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 24101,
         "count": 1,
@@ -39890,8 +39890,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -39899,7 +39899,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24102,
         "count": 1,
@@ -39950,7 +39950,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -39959,7 +39959,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24103,
         "count": 1,
@@ -40010,7 +40010,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -40019,7 +40019,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24104,
         "count": 1,
@@ -40070,8 +40070,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -40079,7 +40079,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 24105,
         "count": 1,
@@ -40130,8 +40130,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -40139,7 +40139,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24106,
         "count": 1,
@@ -40190,8 +40190,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -40199,7 +40199,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24107,
         "count": 1,
@@ -40250,8 +40250,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -40259,7 +40259,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24108,
         "count": 1,
@@ -40310,7 +40310,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -40319,7 +40319,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24109,
         "count": 1,
@@ -40370,7 +40370,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -40379,7 +40379,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24110,
         "count": 1,
@@ -40430,8 +40430,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -42419,7 +42419,7 @@
       }
     },
     {
-      "asset": "tree_willow_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24145,
         "count": 1,
@@ -42470,8 +42470,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.9,
-          1.15
+          0.95,
+          1.25
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -42479,7 +42479,7 @@
       }
     },
     {
-      "asset": "tree_willow_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24146,
         "count": 1,
@@ -42530,8 +42530,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.9,
-          1.15
+          0.95,
+          1.25
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -42719,7 +42719,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24150,
         "count": 1,
@@ -42770,7 +42770,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -42779,7 +42779,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24151,
         "count": 1,
@@ -42830,7 +42830,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -42839,7 +42839,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24152,
         "count": 1,
@@ -42890,7 +42890,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -42899,7 +42899,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24153,
         "count": 1,
@@ -42950,7 +42950,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -43019,7 +43019,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24155,
         "count": 1,
@@ -43070,7 +43070,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -43079,7 +43079,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24156,
         "count": 1,
@@ -43130,7 +43130,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -43251,7 +43251,7 @@
         "max_height_above_water": 240,
         "scale": [
           0.95,
-          1.1
+          1.25
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -43259,7 +43259,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24159,
         "count": 1,
@@ -43310,7 +43310,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -45239,7 +45239,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24193,
         "count": 1,
@@ -45290,7 +45290,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -45299,7 +45299,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24194,
         "count": 1,
@@ -45350,7 +45350,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -45359,7 +45359,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24195,
         "count": 1,
@@ -45410,7 +45410,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -45419,7 +45419,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24196,
         "count": 1,
@@ -45470,8 +45470,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -45479,7 +45479,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24197,
         "count": 1,
@@ -45530,7 +45530,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -45539,7 +45539,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24198,
         "count": 1,
@@ -45590,7 +45590,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -45599,7 +45599,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24199,
         "count": 1,
@@ -45650,8 +45650,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -45659,7 +45659,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24200,
         "count": 1,
@@ -45710,7 +45710,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -45719,7 +45719,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24201,
         "count": 1,
@@ -45770,7 +45770,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -45779,7 +45779,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24202,
         "count": 1,
@@ -45830,8 +45830,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -45839,7 +45839,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24203,
         "count": 1,
@@ -45890,7 +45890,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -45899,7 +45899,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24204,
         "count": 1,
@@ -45950,7 +45950,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -45959,7 +45959,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24205,
         "count": 1,
@@ -46010,7 +46010,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -46019,7 +46019,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24206,
         "count": 1,
@@ -46070,8 +46070,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -46079,7 +46079,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24207,
         "count": 1,
@@ -46130,8 +46130,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -46139,7 +46139,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24208,
         "count": 1,
@@ -46190,8 +46190,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -46199,7 +46199,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24209,
         "count": 1,
@@ -46250,7 +46250,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -46259,7 +46259,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 24210,
         "count": 1,
@@ -46310,8 +46310,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -48479,7 +48479,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24248,
         "count": 1,
@@ -48530,8 +48530,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -48539,7 +48539,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24249,
         "count": 1,
@@ -48590,8 +48590,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -48599,7 +48599,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24250,
         "count": 1,
@@ -48650,8 +48650,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -48659,7 +48659,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24251,
         "count": 1,
@@ -48710,7 +48710,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -48719,7 +48719,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24252,
         "count": 1,
@@ -48770,8 +48770,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -48779,7 +48779,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24253,
         "count": 1,
@@ -48830,7 +48830,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -48839,7 +48839,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24254,
         "count": 1,
@@ -48890,7 +48890,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -48899,7 +48899,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 24255,
         "count": 1,
@@ -48950,8 +48950,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -48959,7 +48959,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24256,
         "count": 1,
@@ -49010,8 +49010,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -49019,7 +49019,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24257,
         "count": 1,
@@ -49070,8 +49070,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -49079,7 +49079,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24258,
         "count": 1,
@@ -49130,7 +49130,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -49139,7 +49139,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24259,
         "count": 1,
@@ -49190,7 +49190,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -49199,7 +49199,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24260,
         "count": 1,
@@ -49250,7 +49250,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -49259,7 +49259,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 24261,
         "count": 1,
@@ -49310,8 +49310,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -50999,7 +50999,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24291,
         "count": 1,
@@ -51050,7 +51050,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -51059,7 +51059,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24292,
         "count": 1,
@@ -51110,7 +51110,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -51119,7 +51119,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24293,
         "count": 1,
@@ -51170,7 +51170,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -51179,7 +51179,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24294,
         "count": 1,
@@ -51230,7 +51230,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -51239,7 +51239,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24295,
         "count": 1,
@@ -51290,7 +51290,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -51299,7 +51299,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24296,
         "count": 1,
@@ -51350,7 +51350,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -51359,7 +51359,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24297,
         "count": 1,
@@ -51410,7 +51410,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -51419,7 +51419,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 24298,
         "count": 1,
@@ -51470,8 +51470,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -51479,7 +51479,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24299,
         "count": 1,
@@ -51530,7 +51530,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -51539,7 +51539,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24300,
         "count": 1,
@@ -51590,7 +51590,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -51599,7 +51599,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24301,
         "count": 1,
@@ -51650,7 +51650,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -51659,7 +51659,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 24302,
         "count": 1,
@@ -51710,8 +51710,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -51719,7 +51719,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 24303,
         "count": 1,
@@ -51770,8 +51770,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -51779,7 +51779,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24304,
         "count": 1,
@@ -51830,7 +51830,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -51839,7 +51839,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24305,
         "count": 1,
@@ -51890,7 +51890,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -51899,7 +51899,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24306,
         "count": 1,
@@ -51950,7 +51950,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -53879,7 +53879,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24340,
         "count": 1,
@@ -53930,7 +53930,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -53939,7 +53939,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24341,
         "count": 1,
@@ -53990,7 +53990,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -53999,7 +53999,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24342,
         "count": 1,
@@ -54050,8 +54050,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -54059,7 +54059,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24343,
         "count": 1,
@@ -54110,7 +54110,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -54119,7 +54119,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24344,
         "count": 1,
@@ -54170,7 +54170,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -54179,7 +54179,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24345,
         "count": 1,
@@ -54230,7 +54230,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -54239,7 +54239,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24346,
         "count": 1,
@@ -54290,7 +54290,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -54299,7 +54299,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24347,
         "count": 1,
@@ -54350,7 +54350,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -54359,7 +54359,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24348,
         "count": 1,
@@ -54410,8 +54410,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -54419,7 +54419,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24349,
         "count": 1,
@@ -54470,7 +54470,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -54479,7 +54479,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24350,
         "count": 1,
@@ -54530,8 +54530,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -54539,7 +54539,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 24351,
         "count": 1,
@@ -54590,8 +54590,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -54599,7 +54599,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24352,
         "count": 1,
@@ -54650,7 +54650,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -54659,7 +54659,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24353,
         "count": 1,
@@ -54710,7 +54710,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -56399,7 +56399,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24383,
         "count": 1,
@@ -56450,7 +56450,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -56459,7 +56459,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24384,
         "count": 1,
@@ -56510,7 +56510,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -56519,7 +56519,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24385,
         "count": 1,
@@ -56570,7 +56570,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -56579,7 +56579,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24386,
         "count": 1,
@@ -56630,7 +56630,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -56639,7 +56639,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24387,
         "count": 1,
@@ -56690,7 +56690,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -56699,7 +56699,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 24388,
         "count": 1,
@@ -56750,8 +56750,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -56759,7 +56759,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24389,
         "count": 1,
@@ -56810,7 +56810,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -56819,7 +56819,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24390,
         "count": 1,
@@ -56870,7 +56870,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -56879,7 +56879,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24391,
         "count": 1,
@@ -56930,7 +56930,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -56939,7 +56939,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_ancient_a",
       "scatter": {
         "seed": 24392,
         "count": 1,
@@ -56990,8 +56990,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          1.0,
+          1.1
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -56999,7 +56999,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_willow_a",
       "scatter": {
         "seed": 24393,
         "count": 1,
@@ -57050,8 +57050,8 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
-          1.25
+          0.9,
+          1.15
         ],
         "align_to_slope": true,
         "surface": "land",
@@ -57059,7 +57059,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24394,
         "count": 1,
@@ -57110,7 +57110,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -57119,7 +57119,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24395,
         "count": 1,
@@ -57170,7 +57170,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -57179,7 +57179,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_a",
+      "asset": "tree_beech_a",
       "scatter": {
         "seed": 24396,
         "count": 1,
@@ -57230,7 +57230,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -57239,7 +57239,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_b",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24397,
         "count": 1,
@@ -57290,7 +57290,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,
@@ -57299,7 +57299,7 @@
       }
     },
     {
-      "asset": "tree_broadleaf_c",
+      "asset": "tree_oak_a",
       "scatter": {
         "seed": 24398,
         "count": 1,
@@ -57350,7 +57350,7 @@
         "min_height_above_water": 8,
         "max_height_above_water": 240,
         "scale": [
-          0.85,
+          0.95,
           1.25
         ],
         "align_to_slope": true,

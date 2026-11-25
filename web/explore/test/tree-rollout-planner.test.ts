@@ -194,7 +194,7 @@ test("current world regression: 360 positions, fixed pilot remap, distributed wi
   const repo = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
   const report = buildDryRunReport(repo);
   assert.equal(report.positionCount, 360);
-  assert.deepEqual(report.sourceCounts, { total: 360, broadleaf: 351, pilotFantasy: 9, other: 0 });
+  assert.deepEqual(report.sourceCounts, { total: 360, broadleaf: 0, pilotFantasy: 360, other: 0 });
   assert.equal(new Set(Object.keys(report.seedSpecies)).size, 360);
   assert.equal(report.seedSpecies["24144"], "oak");
   assert.equal(report.seedSpecies["24148"], "oak");
@@ -214,6 +214,7 @@ test("current world regression: 360 positions, fixed pilot remap, distributed wi
   assert.equal(report.ancient.shortfall, 10);
   assert.ok(report.ancient.minPairSpacing >= 30);
   assert.deepEqual(report.counts, { oak: 150, beech: 112, ancient: 44, willow: 54 });
+  assert.ok(report.changes.every((entry) => !entry.assetChanged && !entry.scaleChanged), "applied rollout must already match the deterministic assignment");
   assert.ok(!report.warnings.some((warning) => warning.includes("oak/beech counts differ")));
   for (const cluster of Object.values(report.clusters)) {
     if (cluster.oak + cluster.beech >= 2) assert.ok(cluster.oak > 0 && cluster.beech > 0, `monospecific oak/beech grove: ${JSON.stringify(cluster)}`);
