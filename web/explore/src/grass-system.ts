@@ -415,7 +415,11 @@ export class GrassSystem {
     const tint = new InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
     const nearGeometry = this.#instanceGeometry(this.#base.near, aInfo, aShade);
     const farGeometry = this.#instanceGeometry(this.#base.far, aInfo, aShade);
-    const cellMaterial = grassMaterial({ aInfo, aShade }, { fadeStart: this.#opts.viewDistance * 0.72, fadeEnd: this.#opts.viewDistance });
+    // Resolve aInfo/aShade by geometry attribute name rather than baking the per-slot attribute
+    // objects into the TSL node graph. BufferAttributeNode hashes object identity, which would give
+    // every pooled slot its own shader/pipeline cache key; geometry attributes keep the same step
+    // mode while allowing identical grass programs to be shared across slots.
+    const cellMaterial = grassMaterial(undefined, { fadeStart: this.#opts.viewDistance * 0.72, fadeEnd: this.#opts.viewDistance });
     // Constructing with count 0 avoids InstancedMesh's otherwise mandatory identity-matrix
     // initialisation pass; the fixed-capacity matrix attribute below is the one really used.
     const mesh = new InstancedMesh(nearGeometry, cellMaterial, 0);
