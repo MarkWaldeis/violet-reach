@@ -299,6 +299,7 @@ async function main() {
       now, frameMs, cpuMs: performance.now() - cpuStart, triangles: renderer.info.render.triangles, drawCalls: renderer.info.render.drawCalls,
       terrainMs: grassStart - terrainStart, grassMs: grassDone - grassStart, assetsMs: renderStart - assetsStart, renderMs: renderDone - renderStart,
       grassCells: grass?.stats.cells ?? 0, grassPending: grass?.stats.pendingVisible ?? 0, grassBuilding: grass?.stats.building ?? 0, grassSlots: grass?.stats.slots ?? 0,
+      grassTriangles: grass?.stats.triangles ?? 0, grassVisibleInstances: grass?.stats.visibleInstances ?? 0,
     };
     history.push(record);
     if (waiting.length) {
