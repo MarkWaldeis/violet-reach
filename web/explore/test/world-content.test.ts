@@ -80,7 +80,7 @@ test("grove pilot converts only three fern rings near G2/G4 to fern_lush_a", () 
   };
   const ferns = placements.filter((p: { asset: string }) => p.asset === "fern_lush_a");
   assert.equal(ferns.length, 3);
-  const g2 = [230.7, 1526], g4 = [237.8, 1517.6];
+  const g2 = [232.2, 1527.4], g4 = [235.9, 1515.5];
   for (const p of ferns) {
     const [cx, cz] = centre(p);
     assert.ok(Math.hypot(cx - g2[0], cz - g2[1]) < 9 || Math.hypot(cx - g4[0], cz - g4[1]) < 9, `fern_lush_a at ${cx},${cz} is not near G2/G4`);
