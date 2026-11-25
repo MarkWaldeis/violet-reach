@@ -12,7 +12,7 @@
 //   · distant cells switch the shared clump vertex data from curved 18-triangle clumps to
 //     straight 6-triangle clumps while keeping the exact same instances and material inputs
 import {
-  BufferGeometry, DynamicDrawUsage, Group, InstancedBufferAttribute, InstancedMesh,
+  BufferGeometry, Group, InstancedBufferAttribute, InstancedMesh,
 } from "three/webgpu";
 import { buildBladeClump, clumpTriangles } from "./grass-clump.ts";
 import { grassMaterial } from "./grass-material.ts";
@@ -410,9 +410,6 @@ export class GrassSystem {
     const aInfo = new InstancedBufferAttribute(new Float32Array(capacity * 4), 4);
     const aShade = new InstancedBufferAttribute(new Float32Array(capacity * 4), 4);
     const tint = new InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
-    aInfo.setUsage(DynamicDrawUsage);
-    aShade.setUsage(DynamicDrawUsage);
-    tint.setUsage(DynamicDrawUsage);
     const nearGeometry = this.#instanceGeometry(this.#base.near, aInfo, aShade);
     const farGeometry = this.#instanceGeometry(this.#base.far, aInfo, aShade);
     const cellMaterial = grassMaterial({ aInfo, aShade }, { fadeStart: this.#opts.viewDistance * 0.72, fadeEnd: this.#opts.viewDistance });
@@ -420,7 +417,6 @@ export class GrassSystem {
     // initialisation pass; the fixed-capacity matrix attribute below is the one really used.
     const mesh = new InstancedMesh(nearGeometry, cellMaterial, 0);
     mesh.instanceMatrix = new InstancedBufferAttribute(new Float32Array(capacity * 16), 16);
-    mesh.instanceMatrix.setUsage(DynamicDrawUsage);
     mesh.instanceColor = tint;
     mesh.count = 0;
     mesh.castShadow = false;

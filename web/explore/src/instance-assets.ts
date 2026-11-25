@@ -1,5 +1,5 @@
 import {
-  Box3, Color, DynamicDrawUsage, Frustum, Group, InstancedMesh, Matrix4, Mesh,
+  Box3, Color, Frustum, Group, InstancedMesh, Matrix4, Mesh,
   PerspectiveCamera, Sphere, Vector3, type BufferGeometry, type Material, type WebGPURenderer,
 } from "three/webgpu";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -85,9 +85,7 @@ export class InstanceAssets {
               const mesh = new InstancedMesh(geometry, mat, instances.length);
               mesh.name = `${id}_LOD${level}`;
               mesh.count = 0;
-              mesh.instanceMatrix.setUsage(DynamicDrawUsage);
               mesh.setColorAt(0, new Color(1, 1, 1));
-              mesh.instanceColor!.setUsage(DynamicDrawUsage);
               // CPU chunk culling is based on the viewer camera, never the shadow camera.
               mesh.frustumCulled = false;
               mesh.castShadow = mesh.receiveShadow = index < settings.shadowLODs;
@@ -146,8 +144,15 @@ export class InstanceAssets {
         for (const part of parts) {
           part.mesh.count = written[lod];
           part.mesh.visible = written[lod] > 0;
-          if (written[lod]) part.mesh.instanceMatrix.needsUpdate = true;
-          if (written[lod]) part.mesh.instanceColor!.needsUpdate = true;
+          if (written[lod]) {
+            const matrix = part.mesh.instanceMatrix, tint = part.mesh.instanceColor!;
+            matrix.clearUpdateRanges();
+            matrix.addUpdateRange(0, written[lod] * matrix.itemSize);
+            matrix.needsUpdate = true;
+            tint.clearUpdateRanges();
+            tint.addUpdateRange(0, written[lod] * tint.itemSize);
+            tint.needsUpdate = true;
+          }
         }
       });
     }
