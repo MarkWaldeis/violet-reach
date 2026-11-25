@@ -46,16 +46,22 @@ CARD_CONFIG = dict(width_scale=.56, length_scale=.64, cup=.11, twist_deg=46, arc
                    tilt=True, tilt_threshold=.38, tilt_min_deg=21, tilt_max_deg=41,
                    upward_bias=.68, radial_sway=0.0, scale_jitter=.16, seed=GEOMETRY_SEED,
                    scatter_deg=32, scatter_offset=.13)
-BARK_TAPER_CONFIG = dict(max_faces=48, min_faces=32, taper_start=.70, end_radius=.022,
-                         length_scale=.68, bend=.085, seed=GEOMETRY_SEED)
+# Runde 6: deutlich staerkere Verkuerzung (.42 statt .68), frueher einsetzende
+# Verjuengung und mehr Biegung, damit die nackten Speerspitzen als kurze beblaetterte
+# Zweigenden in die Krone eingegliedert werden statt als schwarze Stacheln herauszuragen.
+BARK_TAPER_CONFIG = dict(max_faces=48, min_faces=32, taper_start=.60, end_radius=.022,
+                         length_scale=.42, bend=.12, seed=GEOMETRY_SEED)
 FILL_CONFIG = dict(attach_high=False, fraction=1.0, second_fraction=1.0, third_fraction=.85,
                    width_range=(.66, .92), length_range=(.70, .95),
                    yaw_deg=56, pitch_deg=42, roll_deg=30,
                    normal_offset=.160, tangent_offset=.27,
                    inward_fraction=.34, inward_pull=.60, z_jitter=.26, seed=GEOMETRY_SEED)
+# Runde 6: nahezu runder Querschnitt (oval .92), schmaeler aber deutlich dicker,
+# frueheres und tieferes Abtauchen — die Wurzeln bleiben im sichtbaren Bereich dicke
+# runde Schlaengelwurzeln und verschwinden unter der Erde, bevor sie spitz werden.
 ROOT_CONFIG = dict(count=10, trunk_radius=.68, base_z=.55,
-                   length_range=(1.05, 1.88), radius_range=(.20, .31),
-                   bury_range=(.080, .180), sides=8, rings=7, oval=.52)
+                   length_range=(1.05, 1.88), radius_range=(.15, .22),
+                   bury_range=(.12, .24), sides=10, rings=9, oval=.94)
 BRANCH_COLLARS = (
     dict(angle_deg=15, z=2.35, length=1.25, radius=.33, up=.28, surface_radius=.68),
     dict(angle_deg=120, z=2.55, length=1.30, radius=.34, up=.24, surface_radius=.68),
@@ -1153,17 +1159,51 @@ def _append_surface_roots(bm, centre, *, count, trunk_radius, base_z, length_ran
         p2 = centre + radial * (trunk_radius + length * .48) + tangent * bend + Vector((0, 0, .008 + .022 * h3))
         p3 = centre + radial * (trunk_radius + length) + tangent * bend2 + Vector((0, 0, -bury))
         pts = [_bezier_point(p0, p1, p2, p3, j / max(rings - 1, 1)) for j in range(rings)]
-        ground_t = .64 + .13 * h1
+        # Runde 6c: die wurzel LAUFT AUF dem boden statt in ihm.  der erste wurf liess
+        # die mittellinie flach durch z=0 gleiten — nur eine schmale kalotte lugte ueber
+        # die erde und las als flacher dreiecks-spiess (probe: sichtbare spitzen waren
+        # roehren-scheitel, nicht die template-finnen).  jetzt: mittellinie steigt vom
+        # stamm auf ruhehoehe (radius*.55 — mehr als die haelfte der roehre liegt frei),
+        # laeuft fast eben als runde schlaengelwurzel und STUERZT erst im letzten
+        # viertel steil unter die erde, wobei sie auch dort noch dick ist.
+        descend_t = .40
+        # eintauchen auf mehr ringe verteilt (frueher beginnend), damit der bogen unter
+        # die erde weich rund statt als abgeknicktes bretter-ende liest (draft6)
+        plunge_t = .62 + .06 * h4
+        # radien zuerst — die ruhehoehe haengt vom lokalen radius ab
+        radii = []
+        for j in range(rings):
+            t = j / max(rings - 1, 1)
+            if t < plunge_t:
+                q = t / max(plunge_t, 1e-6)
+                taper = 1.0 - .26 * q
+            else:
+                q = (t - plunge_t) / max(1.0 - plunge_t, 1e-6)
+                taper = .74 * ((1.0 - q) ** .62) + .08
+            rr = .018 + (root_radius - .018) * taper
+            rr *= 1.0 + .10 * math.sin(j * 2.13 + h2 * 5.1) + .05 * math.sin(j * 3.7 + h4 * 3.0)
+            radii.append(max(rr, .012))
         for j, pt in enumerate(pts):
             t = j / max(rings - 1, 1)
-            if t < ground_t:
-                q = t / ground_t
-                pt.z = start_z * ((1.0 - q) ** 1.32)
+            # ruhehoehe bei 85% des radius: die roehre liegt fast voll auf dem boden
+            # auf (nur die flache unterseite versinkt) — bei 55% zeigte sich nur eine
+            # flache kalotte und die wurzel las als brettesque platte (draft5)
+            z_rest = radii[j] * .85 + .012
+            if t < descend_t:
+                q = t / descend_t
+                pt.z = z_rest + (start_z - z_rest) * ((1.0 - q) ** 1.35)
+                # wellen des freiliegenden wurzelkoerpers, am stamm ausklingend
+                pt.z += math.sin(q * math.pi * (1.35 + .55 * h3) + h5 * 4.2) * .030 * math.sin(math.pi * q)
+            elif t < plunge_t:
+                q = (t - descend_t) / max(plunge_t - descend_t, 1e-6)
+                # fast ebenes, leicht welliges aufliegen auf der erde
+                pt.z = z_rest * (1.0 - .25 * q)
+                pt.z += math.sin(t * math.pi * (2.1 + .7 * h3) + h5 * 4.2) * .022 * math.sin(math.pi * q)
             else:
-                q = (t - ground_t) / max(1.0 - ground_t, 1e-6)
-                pt.z = -bury * (q ** .72)
-        radii = [.018 + (root_radius - .018) * ((1.0 - j / max(rings - 1, 1)) ** .78)
-                 for j in range(rings)]
+                q = (t - plunge_t) / max(1.0 - plunge_t, 1e-6)
+                # steiler einsturz: am ende ist die mittellinie tiefer als -radius,
+                # die roehre ist komplett verschwunden, bevor sie duenn wird
+                pt.z = z_rest * .75 - (bury + root_radius * 1.1) * (q ** .72)
         made.extend(_append_curved_tube(bm, pts, radii, sides=sides, seed=seed + 600 + ri * 19,
                                         material_index=0, oval=(1.0, oval), irregular=.065))
     return {"roots": count, "faces": len(made)}
@@ -1207,7 +1247,10 @@ def _smooth_lower_trunk_flare(mesh, *, trunk_radius, seed=0):
     ids=sorted({v for p in mesh.polygons if p.material_index==0 for v in p.vertices})
     for vi in ids:
         co=mesh.vertices[vi].co
-        if not (.025<co.z<1.18): continue
+        # Runde 6: auch die bodennahen finnenkanten (z bis -.02) und etwas hoeher (1.35)
+        # erfassen — in R5 blieben die unteren plattenkanten unveraendert als dreieckige
+        # flossen stehen, weil verts unter z=.025 komplett ausgenommen waren.
+        if not (-.02<co.z<1.35): continue
         dx,dy=co.x-centre.x,co.y-centre.y; r=math.hypot(dx,dy)
         if r<.10: continue
         t=co.z/1.18
@@ -1215,7 +1258,10 @@ def _smooth_lower_trunk_flare(mesh, *, trunk_radius, seed=0):
         a=math.atan2(dy,dx)
         target*=1.0+.030*math.sin(5*a+co.z*2.1+phase)+.018*math.sin(9*a-co.z*3.0)
         if r>target:
-            newr=target+(r-target)*.24
+            # staerkeres einziehen (10% statt 24% restweite): die dreieckigen template-
+            # finnen werden zu vertikalen wurzelrippen am stamm statt flacher platten;
+            # die horizontale wurzelstruktur uebernehmen die separaten rundwurzeln.
+            newr=target+(r-target)*.10
         elif r<target*.76:
             newr=r+(target*.76-r)*.34
         else:
@@ -1224,6 +1270,61 @@ def _smooth_lower_trunk_flare(mesh, *, trunk_radius, seed=0):
         co.x=centre.x+dx*scale; co.y=centre.y+dy*scale; changed+=1
     if changed: mesh.update()
     return {"vertices":changed}
+
+
+def _dive_flare_teeth(mesh, *, trunk_radius, seed=0):
+    """Sink the outer skirt of the collapsed template flare progressively underground.
+
+    The triangular template teeth are vertical webs at the trunk that flatten into
+    horizontal plates exactly where they meet the soil.  Sliding their lower outer
+    vertices below grade turns them into buttress ridges that dive into the ground
+    instead of flat fins lying on it.  Runs before any procedural geometry is appended,
+    so every bark vertex here is original template scaffold; the dive is depth-limited
+    and can never reach the pinned z_min = -0.65 burial socket.
+    """
+    centre = _estimate_trunk_center(mesh)
+    dive_start = trunk_radius * 1.02
+    ids = sorted({v for p in mesh.polygons if p.material_index == 0 for v in p.vertices})
+    changed = 0
+    for vi in ids:
+        co = mesh.vertices[vi].co
+        # enger hoehenkorridor: unter z=.45 existieren nach dem flare-collapse nur
+        # finnen-/schuerzenreste (aeste laufen erst ab z~1+ aus dem stamm); ein erster
+        # wurf mit z<1.0 zog den grossen tiefen seitenast unter die erde (z_min-bruch).
+        if not (-.05 < co.z < .45):
+            continue
+        dx, dy = co.x - centre.x, co.y - centre.y
+        r = math.hypot(dx, dy)
+        # kein oberer radius-schluss mehr: die sichtbaren finnen-spitzen reichen bis
+        # r~1.4 und blieben durch die alte r<1.0-sperre komplett unbehandelt (woodshot
+        # d4).  der harte versenkungs-deckel unten macht den z_min-sockel trotzdem
+        # unerreichbar, und tief liegende schuerzenreste unterhalb z=-.05 sind ohnehin
+        # unsichtbar und duerfen mit eingezogen werden.
+        if r <= dive_start:
+            continue
+        # Runde 6b: die finnen sind flache dreiecks-platten — reines versenken liess
+        # ihre spitzen als scharfe holz-spiesse ueber dem boden (woodshot-base).  jetzt
+        # wird der radiale ueberstand zusaetzlich auf 38% eingezogen: die platte wird
+        # zum niedrigen runden knoechel direkt am stamm, waehrend das abtauchen die
+        # restspitze unter die erde zieht.  die eigentliche wurzelwirkung liegt auf den
+        # separaten rund-roehrenwurzeln.
+        excess = r - dive_start
+        zfade = max(0.0, 1.0 - co.z / .45)
+        # einzug wie versenkung zum fenster oberrand ausblenden — sonst entstuende bei
+        # z=.45 eine sichtbare knickkante um den stamm
+        shrink = 1.0 - .62 * zfade
+        newr = dive_start + excess * shrink
+        scale = newr / r
+        co.x = centre.x + dx * scale
+        co.y = centre.y + dy * scale
+        # staerkstes abtauchen an der bodennahen unterkante, auslaufend ab z=.45;
+        # hart gedeckelt, damit die versenkung niemals den eingegrabenen sockel erreicht
+        sink = min(excess * 1.5 * (.35 + .65 * zfade), .34)
+        co.z -= sink
+        changed += 1
+    if changed:
+        mesh.update()
+    return {"vertices": changed}
 
 
 def _leaf_atlas_rect(h, *, willow=False):
@@ -1323,9 +1424,19 @@ def _append_terminal_growth(bm, cap_data, shoot_data, *, seed=0, willow=False):
             made["leaf_cards"] += len(faces) // 4
 
     for si, data in enumerate(shoot_data or ()):
-        tip = data["base"] + data["axis"] * data["length"]
+        axis = data["axis"]
+        length = data["length"]
         h = _hash01(data["ci"], si, 443)
-        leaf_tuft(tip, data["axis"], seed + 700 + si, 1 + (1 if h > .42 else 0), scale=.88 + .20 * h)
+        tip = data["base"] + axis * length
+        # Runde 6: Laub entlang des ganzen verkuerzten Triebs statt nur an der Spitze —
+        # der einst nackte schwarze Speer liest sich als durchgehend beblaettertes
+        # Zweigende; die Karten werden nach innen kleiner und guenstiger.
+        leaf_tuft(tip, axis, seed + 700 + si, 2 + (1 if h > .55 else 0), scale=.95 + .18 * h)
+        if length > .30:
+            mid = data["base"] + axis * (length * (.56 + .10 * h))
+            leaf_tuft(mid, axis, seed + 720 + si, 1 + (1 if h > .42 else 0), scale=.68 + .14 * h)
+            inner = data["base"] + axis * (length * (.24 + .08 * h))
+            leaf_tuft(inner, axis, seed + 740 + si, 1, scale=.50 + .14 * h)
         made["terminal_shoots"] += 1
 
     for ci, data in enumerate(cap_data or ()):
@@ -1369,6 +1480,19 @@ def _append_terminal_growth(bm, cap_data, shoot_data, *, seed=0, willow=False):
             made["twigs"] += 1
             leaf_tuft(pts[-1], direction, seed + 1000 + ci * 17 + k, 2 if h2 > .30 else 1,
                       scale=.92 + .18 * h3)
+        # Runde 6: zusaetzliche blattpolster entlang des nackten endasts hinter der
+        # spitze — der lange dunkle speer des geruests liest sich so als beblaettertes
+        # zweigende. kleinere, guenstigere karten weiter innen; leicht seitlich versetzt,
+        # damit sie nicht exakt auf der astachse schwimmen.
+        shaft_len = max(.55, min(1.15, radius * 4.2))
+        for frac, sc, cnt in ((.30, .74, 2), (.62, .60, 1), (.88, .48, 1)):
+            h5 = _hash01(data["ci"], int(frac * 100), 471, seed)
+            h6 = _hash01(data["ci"], int(frac * 100), 479, seed)
+            back = tip - axis * (shaft_len * frac)
+            lateral_off = (e1 * (h5 - .5) + e2 * (h6 - .5)) * max(radius * 1.1, .06)
+            pos = back + lateral_off + zup * ((h5 - .35) * .05)
+            leaf_tuft(pos, axis, seed + 1100 + ci * 13 + int(frac * 100),
+                      cnt + (1 if h6 > .62 else 0), scale=sc + .10 * h5)
     return made
 
 
@@ -1807,6 +1931,56 @@ def _shrink_fern_crown(mesh, *, z0=.018, height_scale=.24, radial_pull=.68):
     return {"vertices": changed}
 
 
+def _gnarly_bark_relief(mesh, *, seed=0):
+    """Break the smooth-plastic cylinder read of the thick scaffold limbs with continuous
+    multi-frequency surface noise displaced along the smooth bark normals.
+
+    The displacement field is continuous in 3D space, so no seam can open and the UVs stay
+    valid.  Amplitude is scaled per connected-component class: thick scaffold limbs gain
+    visible gnarl, medium roots/collars get soft undulation, thin twigs only wobble so
+    their cross-sections are never crumpled.  Runs after all bark construction and before
+    the smooth-normal pass so the relief is shaded correctly.
+    """
+    comps = _material_components(mesh, 0)
+    acc = [Vector((0, 0, 0)) for _ in mesh.vertices]
+    for p in mesh.polygons:
+        if p.material_index != 0:
+            continue
+        n = p.normal * p.area
+        for v in p.vertices:
+            acc[v] += n
+    ph1 = _hash01(seed, 601) * 2.0 * math.pi
+    ph2 = _hash01(seed, 607) * 2.0 * math.pi
+    changed = 0
+    for comp in comps:
+        npolys = len(comp["polys"])
+        if npolys > 500:
+            amp_low, amp_mid = .030, .012
+        elif npolys >= 45:
+            amp_low, amp_mid = .016, .006
+        else:
+            amp_low, amp_mid = .007, .0
+        for vi in comp["verts"]:
+            co = mesh.vertices[vi].co
+            # z < -0.3 is the pinned burial socket: leave it untouched.
+            if co.z < -.30:
+                continue
+            n = acc[vi]
+            if n.length < 1e-6:
+                continue
+            n = n.normalized()
+            low = (math.sin(co.x * 5.1 + ph1) * math.sin(co.y * 4.63 + ph1 * 1.7)
+                   * math.sin(co.z * 5.37 + ph1 * 2.3))
+            mid = (math.sin(co.x * 15.3 + ph2 + co.z * 5.9) * math.sin(co.y * 14.1 + ph2 * 1.31 - co.z * 4.7)
+                   * math.sin(co.z * 16.7 + ph2 * 2.07))
+            d = amp_low * low + amp_mid * mid
+            mesh.vertices[vi].co = Vector((co.x + n.x * d, co.y + n.y * d, co.z + n.z * d))
+            changed += 1
+    if changed:
+        mesh.update()
+    return {"vertices": changed}
+
+
 def _smooth_bark_normals(mesh):
     """Use area-weighted smooth split normals on wood while leaving foliage loops untouched."""
     old = [x.vector.copy() for x in mesh.corner_normals]
@@ -1849,6 +2023,41 @@ def _lift_foliage_albedo(mat, *, gamma, floor):
         out = np.concatenate([rgb, px[..., 3:]], -1)
         img.pixels.foreach_set(out.astype(np.float32).ravel())
         lifted.append(img.name)
+    return lifted
+
+
+def _lift_bark_albedo(mat, *, boost, floor, suffix):
+    """Multiplicative linear-space bark lift plus a small additive floor.
+
+    A constant gain preserves every contrast ratio of the authored bark texture, so the
+    grain reads clearer rather than flatter — unlike another gamma pass, which compresses
+    exactly the shadow contrast the reviewer asked to keep.  The floor only keeps true
+    black crevices off zero in deep shade.
+
+    The result must be baked into a NEW packed image via vrmeshy._replace_image: editing
+    ``img.pixels`` of an already packed image in place never reaches the saved .blend,
+    because the file keeps the original packed PNG bytes.
+    """
+    lifted = []
+    made = {}
+    for node in _basecolor_texture_nodes(mat):
+        img = node.image
+        if img in made:
+            continue
+        px = vrmeshy._image_pixels(img)
+        # Runde 6: weiche saettigungskurve statt reinem linear-gain — der erste wurf
+        # (v*boost+floor, hart geclippt) trieb die hellen flechten-/lichtstellen der
+        # rinde in reines weiss, der stamm las bleich.  1-exp(-v) behaelt den gain in
+        # den schatten (kontrastverhaeltnisse annaehernd proportional), komprimiert
+        # aber lichter weich gegen weiss statt sie abzuschneiden.
+        v = px[..., :3] * boost + floor
+        rgb = 1.0 - np.exp(-v)
+        out = np.concatenate([rgb, px[..., 3:]], -1)
+        made[img] = vrmeshy._replace_image(img, out, suffix)
+        lifted.append(made[img].name)
+    for node in mat.node_tree.nodes:
+        if node.type == "TEX_IMAGE" and node.image in made:
+            node.image = made[node.image]
     return lifted
 
 
@@ -1895,11 +2104,13 @@ def _apply_asset_geometry(obj):
         willow_ragged = _raggedize_willow_cards(mesh, seed=GEOMETRY_SEED)
     tips = _taper_small_bark_tips(mesh, **BARK_TAPER_CONFIG)
     lower_flare = _smooth_lower_trunk_flare(mesh, trunk_radius=ROOT_CONFIG.get("trunk_radius", .5), seed=GEOMETRY_SEED)
+    teeth_dive = _dive_flare_teeth(mesh, trunk_radius=ROOT_CONFIG.get("trunk_radius", .5), seed=GEOMETRY_SEED)
     fluting = _flute_trunk_bark(mesh, trunk_radius=ROOT_CONFIG.get("trunk_radius", .5),
                                 height=3.4, seed=GEOMETRY_SEED)
     bark_geometry = _add_procedural_bark_geometry(
         mesh, seed=GEOMETRY_SEED, root=ROOT_CONFIG, collars=BRANCH_COLLARS,
         shoot_collars=SHOOT_COLLAR_CONFIG, tip_caps=TIP_CAP_CONFIG)
+    gnarl = _gnarly_bark_relief(mesh, seed=GEOMETRY_SEED)
     bark_normals = _smooth_bark_normals(mesh)
     normals = 0
     if ASSET_KIND == "tree":
@@ -1910,8 +2121,9 @@ def _apply_asset_geometry(obj):
     elif ASSET_KIND == "bush":
         normals = _recalc_foliage_normals(mesh, geom_weight=.66, up_weight=.50, radial_weight=.56)
     return {"cards": cards, "card_split": split, "cluster_fill": fill,
-            "willow_ragged": willow_ragged, "tapered_tips": tips, "lower_trunk_flare": lower_flare, "trunk_fluting": fluting,
-            "procedural_bark": bark_geometry, "bark_normals": bark_normals,
+            "willow_ragged": willow_ragged, "tapered_tips": tips, "lower_trunk_flare": lower_flare,
+            "flare_teeth_dive": teeth_dive, "trunk_fluting": fluting,
+            "procedural_bark": bark_geometry, "gnarl_relief": gnarl, "bark_normals": bark_normals,
             "foliage_normals": normals}
 
 
@@ -1981,7 +2193,9 @@ def _configure_materials(obj, template_info):
     lifted = _lift_foliage_albedo(foliage, gamma=FOLIAGE_GAMMA, floor=FOLIAGE_LIFT_FLOOR)
     if lifted:
         graded["foliage_lifted"] = lifted
-    bark_lifted = _lift_foliage_albedo(bark, gamma=.74, floor=.032)
+    # Runde 6: kontrasttreue multiplikative Aufhellung der Rinde statt Gamma — die
+    # Rindentextur bleibt im Schatten lesbar, ohne dass die Binnenkonstraste flach werden.
+    bark_lifted = _lift_bark_albedo(bark, boost=2.0, floor=.012, suffix="_vr_r6lift")
     if bark_lifted:
         graded["bark_lifted"] = bark_lifted
     _wire_foliage_translucency(foliage, FOLIAGE_TRANSLUCENCY)
