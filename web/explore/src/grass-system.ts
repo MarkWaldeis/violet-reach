@@ -116,7 +116,10 @@ export class GrassSystem {
       // Thinning inside that same envelope avoids a visible sparse band at mid distance.
       distanceDensityStart: options.distanceDensityStart ?? viewDistance * 0.72,
       distanceDensityEnd: options.distanceDensityEnd ?? viewDistance,
-      geometryLodDistance: options.geometryLodDistance ?? viewDistance * 0.44,
+      // Curvature is sub-pixel well before the old 0.44× fade envelope; switching to the
+      // straight clump at about a quarter of the view distance removes a large share of
+      // vertex/triangle load without changing the close-range silhouette.
+      geometryLodDistance: options.geometryLodDistance ?? viewDistance * 0.25,
     };
     const clump = { blades: 6, height: 0.58, width: 0.055, spread: 0.42, arc: 0.55, seed: 3 };
     this.#base = {
