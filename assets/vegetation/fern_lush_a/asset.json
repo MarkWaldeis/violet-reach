@@ -18,8 +18,22 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-builder-trees",
-  "review": null,
-  "review_rounds": 1
+  "review": {
+    "reviewer": "devin-gate-rev-c",
+    "scores": {
+      "silhouette": 7,
+      "form_detail": 7,
+      "material": 8,
+      "scale": 9,
+      "style": 7,
+      "defects": 7
+    },
+    "notes": "Abgelehnt: Die kahlen Drahtspitzen sind wirksam reduziert und die Staffelung ist besser, aber das Asset bleibt eine sehr regelmaessige flache Rosette. Im Closeup stehen alle Wedel aus einem schwarzbraunen zylindrischen Topf- oder Blockkern, mehrere Wedel sind breite ebene Alpha-Baender und schneiden sich hart. Fuer ueppigen Unterwuchs braucht es mehrere versetzte Wedelherzen, bogenfoermigere schmalere Wedel und einen bodennahen Wurzel- oder Erdaustritt statt sichtbarer Topfform.",
+    "round": 2,
+    "source_sha256": "221f722cc87b56922ad8c691b1d6585b0d651cc9861390c192cb3aef0478e2f4",
+    "sheet_sha256": "c1df3ab4c762b2e46fab8ee0cd99353ad9540cf3750d0388da0dedcc2676ce15"
+  },
+  "review_rounds": 2
 }

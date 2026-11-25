@@ -18,8 +18,22 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-builder-trees",
-  "review": null,
-  "review_rounds": 1
+  "review": {
+    "reviewer": "devin-gate-rev-c",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 6,
+      "material": 7,
+      "scale": 9,
+      "style": 8,
+      "defects": 5
+    },
+    "notes": "Abgelehnt: Die Krone ist geschlossener und heller, zerfaellt aber weiterhin in getrennte Laubkarten- beziehungsweise Pompom-Cluster mit viel nacktem Geruest. closeup_base zeigt unveraendert spitze dreieckige Wurzelzaehne, schwarze Fugen und abgeschnittene Astzylinder; grosse flache Blattbahnen bleiben sichtbar. Schwarzfix allein reicht nicht: Stammfuss, Zweiganschluss und voluminoeses Blattinnenleben nachbauen.",
+    "round": 2,
+    "source_sha256": "a20d0e7dac18fb37594f9742bbd233db686b165537b8e79dc9fe3b3d23781db7",
+    "sheet_sha256": "fc413187acd5a2fc1eec1ebeb24bf30f7fc145826fc399582cf30ff76e29ffd9"
+  },
+  "review_rounds": 2
 }

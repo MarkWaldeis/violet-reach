@@ -18,8 +18,22 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-builder-trees",
-  "review": null,
-  "review_rounds": 1
+  "review": {
+    "reviewer": "devin-gate-rev-c",
+    "scores": {
+      "silhouette": 9,
+      "form_detail": 7,
+      "material": 7,
+      "scale": 9,
+      "style": 8,
+      "defects": 6
+    },
+    "notes": "Abgelehnt: Schwarzanteil und Kartenverdrillung sind deutlich besser, aber die Krone besteht in Nahsicht weiterhin aus grossen gekreuzten Alpha-Blaettern und regalartigen Ebenen mit sichtbaren geraden Kartenkanten. Stammfuss und Hauptaeste sind weiterhin hart zackig/trianguliert; closeup_base zeigt spitze Wurzelzaehne und kantige Astabknuecke. Der Emissionsfloor wirkt in Schattenpartien flach. Fuer eine Freigabe Kroneninnenvolumen mit kleineren, dichteren Blattclustern aufbauen sowie Stamm-, Wurzel- und Astanschluesse neu modellieren.",
+    "round": 2,
+    "source_sha256": "5011b2d410023a0cac89c588444ebc1817c23edf02b096907a8cc442625c4b22",
+    "sheet_sha256": "3789752158cb50ffd77790d94f5f5e4501e9b358bcfbed3c10e5d24e6625f443"
+  },
+  "review_rounds": 2
 }

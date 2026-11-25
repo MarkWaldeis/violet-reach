@@ -18,8 +18,22 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-builder-trees",
-  "review": null,
-  "review_rounds": 1
+  "review": {
+    "reviewer": "devin-gate-rev-c",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 7,
+      "material": 8,
+      "scale": 9,
+      "style": 8,
+      "defects": 6
+    },
+    "notes": "Abgelehnt: Deutlich verbessert und aus der Distanz fast brauchbar: dichte olivfarbene Masse, wenig Restschwarz, die langen Stacheln sind gekuerzt oder zugespitzt. In Nahsicht bleiben jedoch grosse flache Blattkarten, harte gerade Stielsegmente und mehrere frei endende duenne Staebe sichtbar; das Blattwerk wirkt als gekreuzte Karten statt als verzweigter Strauch. Fuer die Freigabe Stiele organisch bis in die Blattachsen ueberfuehren und kleinere, dichtere Blattcluster ergaenzen.",
+    "round": 2,
+    "source_sha256": "f96c35e06d6a448a3df4994f054233925673a67de5acac86e93201a563b7e289",
+    "sheet_sha256": "72c6dac3896f83b2451b8ce2170588e3f266fff962217316853acae753688dde"
+  },
+  "review_rounds": 2
 }
