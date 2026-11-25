@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { decodeTile, parseManifest, sampleTile, tileKey, worldTile } from "../src/heightfield.ts";
-import { planTreeRollout, sampleTreeRolloutPositions } from "../src/tree-rollout-planner.ts";
+import { planTreeRollout, sampleTreeRolloutPositions, withSightAxisFlags } from "../src/tree-rollout-planner.ts";
 
 export function createOfflineTerrain(runtimeDir) {
   const manifest = parseManifest(JSON.parse(readFileSync(resolve(runtimeDir, "manifest.json"), "utf8")));
@@ -39,19 +39,45 @@ export function loadRolloutWorld(repoRoot) {
   const placementsDocument = readJson("world/placements.json");
   const hydrology = readJson("world/hydrology.json");
   const slice = readJson("world/slice.json");
+  const bookmarks = readJson("world/bookmarks.json");
   const terrain = createOfflineTerrain(resolve(repoRoot, "world/terrain/runtime"));
-  return { placementsDocument, hydrology, slice, terrain };
+  return { placementsDocument, hydrology, slice, bookmarks, terrain };
+}
+
+// Practical central-view approximation: key ground bookmarks whose focus is the
+// monument/lake vista, not the grove-interior closeups G2/G4 or the aerial views.
+const SIGHT_AXIS_BOOKMARKS = new Map([
+  ["G1", 220],
+  ["G3", 320],
+  ["G5", 140],
+  ["G6", 40],
+]);
+const SIGHT_AXIS_WIDTH = 10;
+
+export function bookmarkSightAxes(bookmarksDocument) {
+  return (bookmarksDocument.bookmarks ?? [])
+    .filter((bookmark) => SIGHT_AXIS_BOOKMARKS.has(bookmark.id))
+    .map((bookmark) => ({
+      id: bookmark.id,
+      x: bookmark.x,
+      z: bookmark.z,
+      yaw: bookmark.yaw,
+      length: SIGHT_AXIS_BOOKMARKS.get(bookmark.id),
+      width: SIGHT_AXIS_WIDTH,
+    }));
 }
 
 export function buildDryRunReport(repoRoot, options = {}) {
-  const { placementsDocument, hydrology, slice, terrain } = loadRolloutWorld(repoRoot);
-  const positions = sampleTreeRolloutPositions(
+  const { placementsDocument, hydrology, slice, bookmarks, terrain } = loadRolloutWorld(repoRoot);
+  const sightAxes = bookmarkSightAxes(bookmarks);
+  const sampledPositions = sampleTreeRolloutPositions(
     placementsDocument.placements,
     hydrology,
     terrain.fullHeightAt,
     slice.paths ?? [],
     slice.bounds,
   );
+  const positions = withSightAxisFlags(sampledPositions, sightAxes);
   const report = planTreeRollout(positions, options.planner ?? {});
   return {
     ...report,
@@ -62,6 +88,7 @@ export function buildDryRunReport(repoRoot, options = {}) {
       terrain: "world/terrain/runtime/*.r16",
       terrainTilesLoaded: terrain.loadedTileCount(),
       expandedTreePositions: positions.length,
+      sightAxes: sightAxes.map((axis) => ({ id: axis.id, length: axis.length, width: axis.width })),
     },
   };
 }

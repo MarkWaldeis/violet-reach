@@ -75,6 +75,32 @@ const distance2d = (a: { x: number; z: number }, b: { x: number; z: number }) =>
 const compareNumbers = (a: number, b: number) => a < b ? -1 : a > b ? 1 : 0;
 const compareStrings = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
 
+export interface SightAxis {
+  id: string;
+  x: number;
+  z: number;
+  yaw: number;
+  length: number;
+  width: number;
+}
+
+/** Horizontal distance to a finite forward view ray using the navigation yaw convention. */
+export function sightAxisDistance(axis: SightAxis, x: number, z: number) {
+  const forwardX = -Math.sin(axis.yaw), forwardZ = -Math.cos(axis.yaw);
+  const dx = x - axis.x, dz = z - axis.z;
+  const along = clamp(dx * forwardX + dz * forwardZ, 0, axis.length);
+  return { distance: Math.hypot(dx - along * forwardX, dz - along * forwardZ), along };
+}
+
+/** Adds deterministic central-view-axis flags without mutating the input samples. */
+export function withSightAxisFlags<T extends { x: number; z: number; nearCentralAxis?: boolean }>(positions: readonly T[], axes: readonly SightAxis[]): T[] {
+  return positions.map((position) => {
+    if (position.nearCentralAxis) return position;
+    const hit = axes.some((axis) => sightAxisDistance(axis, position.x, position.z).distance <= axis.width);
+    return hit ? { ...position, nearCentralAxis: true } as T : position;
+  });
+}
+
 export interface DetailedWaterSample {
   distance: number;
   height: number;

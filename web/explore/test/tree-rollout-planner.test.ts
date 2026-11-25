@@ -6,7 +6,9 @@ import { waterSample, type Hydrology } from "../src/hydrology.ts";
 import {
   createDetailedWaterSampler,
   planTreeRollout,
+  sightAxisDistance,
   TREE_SCALE_RANGES,
+  withSightAxisFlags,
   type TreeRolloutPositionInput,
   type TreeSpecies,
 } from "../src/tree-rollout-planner.ts";
@@ -57,6 +59,15 @@ test("detailed water sampling exactly matches the runtime waterSample numerics a
     }
   }
   assert.equal(createDetailedWaterSampler({ lakes: [], rivers: [] })(0, 0).corridorId, "none");
+});
+
+test("bookmark-style sight rays use the navigation yaw convention and mark only axial positions", () => {
+  const axis = { id: "G-test", x: 100, z: 100, yaw: 0, length: 50, width: 8 };
+  assert.equal(sightAxisDistance(axis, 100, 80).distance, 0);
+  assert.equal(sightAxisDistance(axis, 108, 80).distance, 8);
+  assert.equal(sightAxisDistance(axis, 100, 40).along, 50);
+  const marked = withSightAxisFlags([{ x: 100, z: 80 }, { x: 120, z: 80 }, { x: 120, z: 80, nearCentralAxis: true }], [axis]);
+  assert.deepEqual(marked.map((entry) => !!entry.nearCentralAxis), [true, false, true]);
 });
 
 test("planner output is byte-deterministic for the same input", () => {
