@@ -18,6 +18,10 @@ export interface ClumpOptions {
   spread?: number;
   /** backward arc of blades, 0 = straight, 1 = strong */
   arc?: number;
+  /** maximum signed root displacement along the blade yaw in metres */
+  rootRadius?: number;
+  /** half width of the curved mid row as a fraction of blade width (0.5 = no taper yet) */
+  midWidth?: number;
   seed?: number;
   /** true: 3 triangles/blade with a curved mid row; false: 1 straight triangle/blade for distance LODs */
   curved?: boolean;
@@ -31,9 +35,11 @@ function hash(n: number): number {
 export function buildBladeClump(options: ClumpOptions = {}): BufferGeometry {
   const blades = options.blades ?? 6;
   const height = options.height ?? 0.55;
-  const width = options.width ?? 0.055;
-  const spread = options.spread ?? 0.42;
-  const arc = options.arc ?? 0.55;
+  const width = options.width ?? 0.045;
+  const spread = options.spread ?? 0.50;
+  const arc = options.arc ?? 0.68;
+  const rootRadius = options.rootRadius ?? 0.105;
+  const midWidth = options.midWidth ?? 0.42;
   const seed = options.seed ?? 1;
   const curved = options.curved ?? true;
 
@@ -46,11 +52,14 @@ export function buildBladeClump(options: ClumpOptions = {}): BufferGeometry {
     const h1 = hash(seed * 31.7 + b * 7.13);
     const h2 = hash(seed * 11.3 + b * 3.77);
     const h3 = hash(seed * 5.5 + b * 13.31);
+    // Root displacement uses its own hash family: reusing h2 correlated root placement with
+    // tilt/flexibility, which made the narrow fan read as one stiff sword-like blade bundle.
+    const hRoot = hash(seed * 17.9 + b * 5.83);
     const yaw = (b / blades) * Math.PI * 2 + h1 * 1.9;
     const tilt = spread * (0.35 + h2 * 0.9);
     const bladeHeight = height * (0.62 + h3 * 0.55);
     const bladeWidth = width * (0.8 + h1 * 0.5);
-    const radius = (h2 - 0.5) * 0.09;
+    const radius = (hRoot - 0.5) * 2 * rootRadius;
     const cx = Math.cos(yaw) * radius;
     const cz = Math.sin(yaw) * radius;
     // blade local frame: direction it leans toward
@@ -65,7 +74,7 @@ export function buildBladeClump(options: ClumpOptions = {}): BufferGeometry {
     // Distance LODs skip the mid row: the tip keeps the same endpoint, but the blade becomes
     // one straight triangle (the curvature is sub-pixel at the distances where this is used).
     const root = { h: 0, halfW: bladeWidth * 0.5, out: 0 };
-    const mid = { h: 0.55, halfW: bladeWidth * 0.34, out: bladeHeight * lean * 0.45 };
+    const mid = { h: 0.55, halfW: bladeWidth * midWidth, out: bladeHeight * lean * 0.45 };
     const tip = { h: 1, halfW: 0, out: bladeHeight * lean * (0.45 + arc * 0.55) };
     const rows = curved ? [root, mid, tip] : [root, tip];
     const baseIndex = positions.length / 3;

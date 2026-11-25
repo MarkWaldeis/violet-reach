@@ -28,6 +28,26 @@ import {
 /** Instances per partial attribute upload. 512 instances ≈ 24 KiB across the three vec4 streams. */
 const INSTANCE_UPLOAD_CHUNK = 512;
 
+/**
+ * Production clump silhouette. The widened ±10.5 cm root scatter, stronger fan/arc and
+ * narrower blades break up sword-like close-range bundles without adding vertices.
+ */
+export const GRASS_CLUMP_SHAPE = {
+  blades: 6,
+  height: 0.58,
+  width: 0.045,
+  spread: 0.50,
+  arc: 0.68,
+  rootRadius: 0.105,
+  midWidth: 0.42,
+  seed: 3,
+} as const;
+
+/** Far clumps keep only a slight geometric width compensation; most distance fill comes from density. */
+export const GRASS_FAR_WIDTH_FACTOR = 1.10;
+/** Uniform far-prefix fraction at the end of the distance-density ramp. */
+export const GRASS_DISTANCE_DENSITY_FACTOR = 0.64;
+
 export interface GrassSystemOptions {
   /** metres; streaming/scatter sector edge length (default: 32) */
   sectorSize?: number;
@@ -111,6 +131,22 @@ export function grassSectorSlotUpperBound(viewDistance: number, sectorSize = 32)
   return Math.ceil(Math.PI * (expandedRadius / sectorSize) ** 2) + 8;
 }
 
+/** Visible uniform-prefix count for the distance-density ramp (pure helper, also used by tests). */
+export function grassDistanceVisibleCount(count: number, distance: number, start: number, end: number, densityFactor: number): number {
+  if (count <= 1) return count;
+  const rampEnd = Math.max(start + 0.001, end);
+  const factor = Math.min(1, Math.max(0, densityFactor));
+  if (distance <= start) return count;
+  // At fadeEnd the shader scales blades to exactly zero; drawing a retained far prefix beyond
+  // that radius is pure vertex cost with no possible pixel output.
+  if (distance >= rampEnd) return 0;
+  const farCount = Math.max(1, Math.round(count * factor));
+  const t = Math.min(1, Math.max(0, (distance - start) / (rampEnd - start)));
+  const smooth = t * t * (3 - 2 * t);
+  const fraction = 1 - (1 - factor) * smooth;
+  return Math.max(farCount, Math.min(count, Math.round(count * fraction)));
+}
+
 export class GrassSystem {
   readonly group = new Group();
   #sectors = new Map<string, Sector>();
@@ -149,7 +185,7 @@ export class GrassSystem {
       density: options.density ?? 5.5,
       maxBuildPerFrame: options.maxBuildPerFrame ?? 2,
       buildBudgetMs: options.buildBudgetMs ?? 1.5,
-      distanceDensityFactor: options.distanceDensityFactor ?? 0.5,
+      distanceDensityFactor: options.distanceDensityFactor ?? GRASS_DISTANCE_DENSITY_FACTOR,
       // Keep full density everywhere before the material's existing fade/width compensation.
       // Thinning inside that same envelope avoids a visible sparse band at mid distance.
       distanceDensityStart: options.distanceDensityStart ?? viewDistance * 0.72,
@@ -161,13 +197,13 @@ export class GrassSystem {
       geometryLodHysteresis: options.geometryLodHysteresis ?? Math.max(2, sectorSize * 0.125),
       preallocateSlots: Math.max(0, Math.floor(options.preallocateSlots ?? 0)),
     };
-    const clump = { blades: 6, height: 0.58, width: 0.055, spread: 0.42, arc: 0.55, seed: 3 };
+    const clump = GRASS_CLUMP_SHAPE;
     this.#base = {
       near: buildBladeClump({ ...clump, curved: true }),
-      // Dropping the curved mid row removes ~19% of a blade's silhouette area. The straight
-      // distance clump is therefore 24% wider, which keeps its coverage/brightness visually
-      // anchored to the near clump without adding a single triangle.
-      far: buildBladeClump({ ...clump, width: clump.width * 1.24, curved: false }),
+      // Dropping the curved mid row removes silhouette area, but the old 24% width compensation
+      // produced repetitive distant blade fins. Far geometry therefore stays close to the near
+      // width; the higher retained instance fraction fills the carpet with varied thin blades instead.
+      far: buildBladeClump({ ...clump, width: clump.width * GRASS_FAR_WIDTH_FACTOR, curved: false }),
     };
     this.#nearTriangles = clumpTriangles({ ...clump, curved: true });
     this.#farTriangles = clumpTriangles({ ...clump, curved: false });
@@ -533,19 +569,13 @@ export class GrassSystem {
   }
 
   #visibleCount(count: number, distance: number): number {
-    if (count <= 1) return count;
-    const start = this.#opts.distanceDensityStart;
-    const end = Math.max(start + 0.001, this.#opts.distanceDensityEnd);
-    const factor = Math.min(1, Math.max(0, this.#opts.distanceDensityFactor));
-    if (distance <= start) return count;
-    // At fadeEnd the shader scales blades to exactly zero; drawing a retained far prefix beyond
-    // that radius is pure vertex cost with no possible pixel output.
-    if (distance >= end) return 0;
-    const farCount = Math.max(1, Math.round(count * factor));
-    const t = Math.min(1, Math.max(0, (distance - start) / (end - start)));
-    const smooth = t * t * (3 - 2 * t);
-    const fraction = 1 - (1 - factor) * smooth;
-    return Math.max(farCount, Math.min(count, Math.round(count * fraction)));
+    return grassDistanceVisibleCount(
+      count,
+      distance,
+      this.#opts.distanceDensityStart,
+      this.#opts.distanceDensityEnd,
+      this.#opts.distanceDensityFactor,
+    );
   }
 
   #sectorCenterDistance(sector: Sector, px: number, pz: number) {

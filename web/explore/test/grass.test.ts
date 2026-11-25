@@ -20,8 +20,24 @@ const hooks = registerHooks({
 });
 const { buildBladeClump, clumpTriangles } = await import("../src/grass-clump.ts");
 const { GrassMacroSampler, cellScatterCapacity, cellScatterOrder, cellScatterPositionAt, cellScatterPositions, hash2 } = await import("../src/grass-macro.ts");
-const { grassMaterial, grassPaletteProbe } = await import("../src/grass-material.ts");
-const { GrassSystem, grassSectorSlotUpperBound } = await import("../src/grass-system.ts");
+const {
+  grassMaterial,
+  grassPaletteProbe,
+  GRASS_ACROSS_SHADE_BASE,
+  GRASS_ACROSS_SHADE_STRENGTH,
+  GRASS_COLOR_INSTANCE_MIX,
+  GRASS_ROOT_SHADE,
+  GRASS_WIDTH_BOOST_FAR,
+  GRASS_WIDTH_BOOST_NEAR,
+} = await import("../src/grass-material.ts");
+const {
+  GrassSystem,
+  grassDistanceVisibleCount,
+  grassSectorSlotUpperBound,
+  GRASS_CLUMP_SHAPE,
+  GRASS_DISTANCE_DENSITY_FACTOR,
+  GRASS_FAR_WIDTH_FACTOR,
+} = await import("../src/grass-system.ts");
 hooks.deregister();
 
 function uniformGrassSampler(densityByte = 255) {
@@ -43,6 +59,67 @@ function pumpGrass(sys, x: number, z: number, py?: number, maxFrames = 120) {
     }
   }
   throw new Error(`grass streaming did not finish within ${maxFrames} frames`);
+}
+
+function vertexDistance(pos, a: number, b: number) {
+  return Math.hypot(pos.getX(a) - pos.getX(b), pos.getY(a) - pos.getY(b), pos.getZ(a) - pos.getZ(b));
+}
+
+/** Full root/mid widths per blade; curved rows use stride 5, straight distance rows stride 3. */
+function clumpRowWidths(geometry, curved = true, blades = 6) {
+  const pos = geometry.getAttribute("position");
+  const stride = curved ? 5 : 3;
+  const rows: Array<{ root: number; mid: number | null }> = [];
+  for (let b = 0; b < blades; b++) {
+    const base = b * stride;
+    rows.push({
+      root: vertexDistance(pos, base, base + 1),
+      mid: curved ? vertexDistance(pos, base + 2, base + 3) : null,
+    });
+  }
+  return rows;
+}
+
+/** Radius of each blade root centre around the clump origin (the width pair cancels in the mean). */
+function clumpRootCentreRadii(geometry, curved = true, blades = 6) {
+  const pos = geometry.getAttribute("position");
+  const stride = curved ? 5 : 3;
+  const radii: number[] = [];
+  for (let b = 0; b < blades; b++) {
+    const base = b * stride;
+    const x = (pos.getX(base) + pos.getX(base + 1)) * 0.5;
+    const z = (pos.getZ(base) + pos.getZ(base + 1)) * 0.5;
+    radii.push(Math.hypot(x, z));
+  }
+  return radii;
+}
+
+/** Signed root displacement along the blade's lean direction, recovered from the generated vertices. */
+function clumpSignedRootDisplacements(geometry, blades = 6) {
+  const pos = geometry.getAttribute("position");
+  const out: number[] = [];
+  for (let b = 0; b < blades; b++) {
+    const base = b * 5;
+    const cx = (pos.getX(base) + pos.getX(base + 1)) * 0.5;
+    const cz = (pos.getZ(base) + pos.getZ(base + 1)) * 0.5;
+    const lx = pos.getX(base + 4) - cx;
+    const lz = pos.getZ(base + 4) - cz;
+    const len = Math.hypot(lx, lz);
+    out.push((cx * lx + cz * lz) / len);
+  }
+  return out;
+}
+
+function pearson(xs: number[], ys: number[]) {
+  const mx = xs.reduce((sum, x) => sum + x, 0) / xs.length;
+  const my = ys.reduce((sum, y) => sum + y, 0) / ys.length;
+  let num = 0, dx = 0, dy = 0;
+  for (let i = 0; i < xs.length; i++) {
+    num += (xs[i] - mx) * (ys[i] - my);
+    dx += (xs[i] - mx) ** 2;
+    dy += (ys[i] - my) ** 2;
+  }
+  return num / Math.sqrt(dx * dy);
 }
 
 test("clump geometry: tapered blades with wind channels, budget triangle count", () => {
@@ -70,10 +147,75 @@ test("clump geometry: tapered blades with wind channels, budget triangle count",
   for (let i = 0; i < pos.count; i++) { yMin = Math.min(yMin, pos.getY(i)); yMax = Math.max(yMax, pos.getY(i)); }
   assert.ok(yMin >= 0, `keine negativen Höhen: ${yMin}`);
   assert.ok(yMax > 0.3 && yMax < 1.2, `plausible Büschelhöhe: ${yMax}`);
+
+  // Phase-4.2 silhouette defaults: narrower blades, stronger fan/arc, wider independent root scatter
+  // and a less triangular mid row — all without increasing the 18-triangle near budget.
+  const explicitTuned = buildBladeClump({ width: 0.045, spread: 0.50, arc: 0.68, rootRadius: 0.105, midWidth: 0.42 });
+  assert.deepEqual(Array.from(pos.array), Array.from(explicitTuned.getAttribute("position").array), "Defaults entsprechend der abgestimmten Silhouette");
+  const radii = clumpRootCentreRadii(g);
+  assert.ok(Math.max(...radii) > 0.09, `Wurzeln streuen über den alten ±4.5-cm-Kern hinaus: ${radii.map((r) => r.toFixed(3)).join("/")}`);
+  assert.ok(Math.max(...radii) <= 0.105 + 1e-6, `Wurzelradius bleibt bei maximal ±10.5 cm: ${Math.max(...radii)}`);
+  const signedRoots = clumpSignedRootDisplacements(g);
+  assert.ok(Math.min(...signedRoots) < 0 && Math.max(...signedRoots) > 0, "Wurzelversatz nutzt beide Seiten der Büschelmitte");
+
+  // Statistical guard for the independent hRoot family: flexibility still comes from h2. Over 32
+  // deterministic seeds the signed root displacement must not move in lockstep with that channel.
+  const flexes: number[] = [], independentRoots: number[] = [];
+  for (let seed = 1; seed <= 32; seed++) {
+    const sample = buildBladeClump({ seed });
+    const colors = sample.getAttribute("color");
+    const roots = clumpSignedRootDisplacements(sample);
+    for (let blade = 0; blade < 6; blade++) {
+      flexes.push(colors.getY(blade * 5));
+      independentRoots.push(roots[blade]);
+    }
+    sample.dispose();
+  }
+  const rootFlexCorrelation = pearson(flexes, independentRoots);
+  assert.ok(Math.abs(rootFlexCorrelation) < 0.08, `Wurzelhash unabhängig von Flex/Neigung (Korrelation ${rootFlexCorrelation.toFixed(4)})`);
+
+  const rowWidths = clumpRowWidths(g);
+  for (const [blade, widths] of rowWidths.entries()) {
+    assert.ok(Math.abs(widths.mid! / widths.root - 0.84) < 1e-5, `Blatt ${blade}: Mitte behält 84% der Wurzelbreite statt extrem zuzuspitzen`);
+  }
   const far = buildBladeClump({ blades: 6, curved: false });
   assert.equal(clumpTriangles({ blades: 6, curved: false }), 6, "Fern-LOD: ein Dreieck pro Halm");
   assert.equal(far.getIndex()!.count / 3, 6);
   assert.equal(far.getAttribute("position").count, 18, "Wurzelpaar + Spitze je Halm");
+});
+
+test("production grass shape and far compensation use the tuned parameters", () => {
+  assert.deepEqual(GRASS_CLUMP_SHAPE, {
+    blades: 6,
+    height: 0.58,
+    width: 0.045,
+    spread: 0.50,
+    arc: 0.68,
+    rootRadius: 0.105,
+    midWidth: 0.42,
+    seed: 3,
+  }, "Produktions-Büschel: schmalere Halme, breitere Wurzelstreuung, mehr Bogen/Fächer");
+  assert.equal(GRASS_FAR_WIDTH_FACTOR, 1.10, "Ferngeometrie nur noch leicht verbreitert");
+  assert.equal(GRASS_DISTANCE_DENSITY_FACTOR, 0.64, "mehr instanzvarierte dünne Halme statt breiter Fernzinnen");
+
+  // The constructor must actually use these constants for its shared near geometry.
+  const sys = new GrassSystem(uniformGrassSampler(), () => 10, { viewDistance: 0, density: 1, buildBudgetMs: 0 });
+  sys.update(8, 8);
+  const mesh = sys.group.children[0] as unknown as { geometry: { getAttribute(name: string): { array: ArrayLike<number>; count: number } } };
+  const expectedNear = buildBladeClump({ ...GRASS_CLUMP_SHAPE, curved: true });
+  assert.equal(mesh.geometry.getAttribute("position").count, 30, "nahe Produktionsgeometrie bleibt ein 18-Dreiecks-Büschel");
+  assert.deepEqual(
+    Array.from(mesh.geometry.getAttribute("position").array),
+    Array.from(expectedNear.getAttribute("position").array),
+    "GrassSystem verwendet exakt die abgestimmte Produktions-Büschelgeometrie",
+  );
+  expectedNear.dispose();
+  sys.dispose();
+
+  assert.equal(grassDistanceVisibleCount(1000, 20, 20, 40, GRASS_DISTANCE_DENSITY_FACTOR), 1000, "volle Dichte vor der Rampe");
+  assert.equal(grassDistanceVisibleCount(1000, 30, 20, 40, GRASS_DISTANCE_DENSITY_FACTOR), 820, "gleichmäßige smoothstep-Verdünnung in der Rampe");
+  assert.equal(grassDistanceVisibleCount(1000, 39.999, 20, 40, GRASS_DISTANCE_DENSITY_FACTOR), 640, "64% Präfix am Fernende");
+  assert.equal(grassDistanceVisibleCount(1000, 40, 20, 40, GRASS_DISTANCE_DENSITY_FACTOR), 0, "hinter fadeEnd bleibt der Nullschnitt unverändert");
 });
 
 test("macro sampler: bilinear density channels, out-of-bounds zero", () => {
@@ -161,6 +303,28 @@ test("grass material constructs nodes without renderer", () => {
   m.dispose();
   const probe = grassPaletteProbe();
   assert.ok(probe.lushTip.g > probe.lushTip.r, "saftiges Grün bleibt grün-dominant");
+});
+
+test("grass material tuning softens fins and decorrelates colour variation per instance", () => {
+  assert.equal(GRASS_WIDTH_BOOST_NEAR, 1.22, "nahe Width-Basis unverändert");
+  assert.equal(GRASS_WIDTH_BOOST_FAR, 1.32, "Fern-Width-Boost deutlich unter den alten 1.45");
+  assert.equal(GRASS_ROOT_SHADE, 0.40, "Wurzeln moderat heller als die alten 0.34");
+  assert.equal(GRASS_ACROSS_SHADE_STRENGTH, 0.14, "Quer-Shading-Amplitude reduziert");
+  assert.equal(GRASS_ACROSS_SHADE_BASE, 0.90, "Kantenhelligkeit hält die mittlere Helligkeit stabil");
+  const acrossEdge = GRASS_ACROSS_SHADE_BASE;
+  const acrossCenter = GRASS_ACROSS_SHADE_BASE + GRASS_ACROSS_SHADE_STRENGTH;
+  assert.equal((acrossEdge + acrossCenter) / 2, 0.97, "Center/Edge-Mittel bleibt beim alten 0.97 statt das Bild global abzudunkeln");
+  assert.equal(GRASS_COLOR_INSTANCE_MIX, 0.45, "fast ausgewogene Mischung aus Halm- und Instanzhash");
+
+  const probe = grassPaletteProbe();
+  const referenceRootG = 0.144 * 1.38 * GRASS_ROOT_SHADE;
+  assert.ok(Math.abs(probe.root.g - referenceRootG) < 1e-6, "Palette-Probe spiegelt den angehobenen Root-Shade");
+
+  // The TSL graph itself is GPU-side; this source invariant guards the important wiring that the
+  // repeated static blade hash is mixed with aInfo.w instead of colouring every instance identically.
+  const source = readFileSync(new URL("../src/grass-material.ts", import.meta.url), "utf8");
+  assert.ok(source.includes("mix(bladeHash, aInfo.w, float(GRASS_COLOR_INSTANCE_MIX))"), "Farbvariation nutzt bladeHash und aInfo.w gemeinsam");
+  assert.ok(source.includes("float(GRASS_WIDTH_BOOST_FAR)"), "Width-Boost-Maximum ist an die Testkonstante gebunden");
 });
 
 test("grass system uses 32 m sectors: ~28 streaming slots at 72 m and 5625-instance capacity", () => {
@@ -328,6 +492,9 @@ test("grass sector geometry LOD is conservative, hysteretic and shares instance 
   const farGeometry = sectorMesh()!.geometry;
   assert.notEqual(farGeometry, nearGeometry);
   assert.equal(farGeometry.getAttribute("position").count, 18, "eindeutig ferner Sektor nutzt 6-Dreiecks-Büschel");
+  const meanRootWidth = (geometry, curved: boolean) => clumpRowWidths(geometry, curved).reduce((sum, row) => sum + row.root, 0) / 6;
+  const farNearWidthRatio = meanRootWidth(farGeometry, false) / meanRootWidth(nearGeometry, true);
+  assert.ok(Math.abs(farNearWidthRatio - GRASS_FAR_WIDTH_FACTOR) < 1e-5, `Fernbreite nur ${GRASS_FAR_WIDTH_FACTOR}× statt alter 1.24×: ${farNearWidthRatio}`);
   assert.equal(farGeometry.getAttribute("aInfo"), nearGeometry.getAttribute("aInfo"), "near/far teilen aInfo");
   assert.equal(farGeometry.getAttribute("aShade"), nearGeometry.getAttribute("aShade"), "near/far teilen aShade");
   assert.equal(farGeometry.getAttribute("aTint"), nearGeometry.getAttribute("aTint"), "near/far teilen aTint");

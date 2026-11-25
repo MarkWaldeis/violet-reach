@@ -38,7 +38,15 @@ const STRAW_K = [1.12, 1.02, 0.45] as const;
 /** tip warming: red rises relative to green, blue stays compressed (sun-lit yellow-green tips). */
 const TIP_WARM = [1.48, 1.30, 0.82] as const;
 /** root brightness fraction of mid brightness. */
-const ROOT_SHADE = 0.34;
+export const GRASS_ROOT_SHADE = 0.40;
+/** distance width compensation range; kept low so distant grass stays blade-like instead of fin-like. */
+export const GRASS_WIDTH_BOOST_NEAR = 1.22;
+export const GRASS_WIDTH_BOOST_FAR = 1.32;
+/** across-blade centre/edge contrast (base is the edge brightness). */
+export const GRASS_ACROSS_SHADE_STRENGTH = 0.14;
+export const GRASS_ACROSS_SHADE_BASE = 0.90;
+/** 0 = purely per-blade static hash, 1 = purely per-instance hash for colour variation. */
+export const GRASS_COLOR_INSTANCE_MIX = 0.45;
 /** representative linear-light meadow macro tint (srgb ~#686a43), for documentation/probe. */
 const REFERENCE_TINT = [0.134, 0.144, 0.054] as const;
 
@@ -69,7 +77,7 @@ export function grassMaterial(instanceData?: GrassInstanceData, options: GrassMa
   // Per-instance yaw is derived deterministically from the instance hash (statistically
   // identical to a CPU-side random yaw, and the matrix rotation never reaches the shader).
   const distFade = smoothstep(fadeStart, fadeEnd, camDist).oneMinus();
-  const widthBoost = mix(float(1.22), float(1.45), smoothstep(14, 72, camDist)).mul(aShade.w);
+  const widthBoost = mix(float(GRASS_WIDTH_BOOST_NEAR), float(GRASS_WIDTH_BOOST_FAR), smoothstep(14, 72, camDist)).mul(aShade.w);
   const lx = positionGeometry.x.mul(widthBoost).mul(distFade);
   const ly = positionGeometry.y.mul(aShade.z).mul(distFade);
   const lz = positionGeometry.z.mul(widthBoost).mul(distFade);
@@ -111,16 +119,20 @@ export function grassMaterial(instanceData?: GrassInstanceData, options: GrassMa
   // two-segment brightness gradient: shaded roots, vivid mid, sun-lit yellow-green tips
   // (red rises relative to green toward the tip, blue stays compressed — fresh straw-lit tips
   // instead of washed-out pale ones)
-  const rootToMid = mix(float(ROOT_SHADE), float(1.0), smoothstep(0.0, 0.45, hclamped));
+  const rootToMid = mix(float(GRASS_ROOT_SHADE), float(1.0), smoothstep(0.0, 0.45, hclamped));
   const tipWarm = mix(vec3(1, 1, 1), vec3(...TIP_WARM), smoothstep(0.42, 1.0, hclamped));
 
-  // across-blade shading: edges clearly darker, centre catches the light (plasticity)
+  // across-blade shading: edges darker, centre catches the light (plasticity). The amplitude is
+  // deliberately modest; strong centre stripes made narrow blades read as hard metallic fins.
   const across = tslAbs(uv.x.sub(0.5)).mul(2);
-  const acrossShade = across.oneMinus().mul(0.18).add(0.88);
+  const acrossShade = across.oneMinus().mul(GRASS_ACROSS_SHADE_STRENGTH).add(GRASS_ACROSS_SHADE_BASE);
 
-  // per-blade variation: brightness + a subtle dry-golden lean on some blades (meadow variance)
-  const hashVar = mix(float(0.86), float(1.14), bladeHash);
-  const hueVarK = mix(hueK, strawK, bladeHash.mul(0.16));
+  // Per-blade variation mixed with the per-instance hash. Pure bladeHash repeats the exact same
+  // brightness/hue pattern on every clump because all instances share this vertex data; aInfo.w
+  // decorrelates neighbouring instances while preserving blade-to-blade variance inside a clump.
+  const colourHash = mix(bladeHash, aInfo.w, float(GRASS_COLOR_INSTANCE_MIX));
+  const hashVar = mix(float(0.86), float(1.14), colourHash);
+  const hueVarK = mix(hueK, strawK, colourHash.mul(0.16));
 
   // per-instance variation + canopy shadow
   const alb = hueVarK.mul(rootToMid).mul(tipWarm).mul(acrossShade)
@@ -162,7 +174,7 @@ export function grassPaletteProbe() {
       REFERENCE_TINT[2] * k[2] * warm[2] * brightness,
     );
   return {
-    root: scale(LUSH_K, ROOT_SHADE),
+    root: scale(LUSH_K, GRASS_ROOT_SHADE),
     lushTip: scale(LUSH_K, 1.0, TIP_WARM),
     dryTip: scale(STRAW_K, 1.0, TIP_WARM),
   };
