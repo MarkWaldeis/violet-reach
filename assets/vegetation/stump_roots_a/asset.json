@@ -20,20 +20,19 @@
   "status": "modeling",
   "builder": "blender-batch1",
   "review": {
-    "reviewer": "devin-gate-rev-e",
+    "reviewer": "independent-6add6f41",
     "scores": {
-      "silhouette": 9,
+      "silhouette": 8,
       "form_detail": 6,
-      "material": 5,
-      "scale": 8,
-      "style": 6,
-      "defects": 4
+      "material": 8,
+      "scale": 9,
+      "style": 7,
+      "defects": 7
     },
-    "verdict": "rejected",
-    "notes": "Abgelehnt: Die Wurzel-Silhouette und der Massstab sind stark, aber die Nahsicht ist weiterhin keine glaubwuerdige Rinde: ein ornamentales, gehaemmertes Meshy-Relief, zahlreiche ueberlappende papierduenne Scherben und grosse planare Dreiecksplatten an der Krone. Die dunklen Kluftreste sind kleiner als zuvor, doch die Oberflaeche liest sich als geformter Ton/Metall statt als faseriger Holzbruch und haelt den Vergleich mit den freigegebenen Felsen nicht aus.",
-    "round": 2,
-    "source_sha256": "6c9c9bc4ec55fced7bcfa36719f1dc3003fa0389a8cee3a9ea3349377dd2276d",
-    "sheet_sha256": "9303727e3270ee2334d84b906dba152d18c87671e42fb04311d511b9a4cc4801"
+    "notes": "Rejected: ornamentale senkrechte Kronenplatten/glatte scoop-Flaechen statt faseriger Fraktur, flache finnenartige Wurzeln, schwarze Basis-/Pinhole-Regionen; Grundform erneut generieren.",
+    "round": 3,
+    "source_sha256": "85303f33a30aabdc7211f341c25bd3f6fd40a42fba7968638749236f63d70315",
+    "sheet_sha256": "ea3607d06ade557b5b8096c729270f8cd7b850800caec07c04854a4a139db384"
   },
-  "review_rounds": 2
+  "review_rounds": 3
 }

@@ -17,23 +17,22 @@
   "meshy_class": "B",
   "material_class": "bark",
   "texture_format": "ktx2",
-  "status": "modeling",
+  "status": "approved",
   "builder": "blender-batch1",
   "review": {
-    "reviewer": "devin-gate-rev-e",
+    "reviewer": "independent-6add6f41",
     "scores": {
-      "silhouette": 8,
-      "form_detail": 6,
-      "material": 7,
-      "scale": 10,
-      "style": 7,
-      "defects": 5
+      "silhouette": 9,
+      "form_detail": 8,
+      "material": 8,
+      "scale": 8,
+      "style": 8,
+      "defects": 8
     },
-    "verdict": "rejected",
-    "notes": "Abgelehnt: Silhouette, Massstab und die laengs gefurchte Rinde sind deutlich besser, aber das Bruchende bleibt ein Blocker. Der Endkern ist im Wire als radialer Faecher und im Render als flache, regelmaessige Saege-/Kuchenflaeche erkennbar; dahinter bleibt eine grosse fast schwarze Vertiefung, und die Bruchkante wirkt weiterhin papierduenn. Neben den freigegebenen Felsen faellt besonders diese kuenstliche Endflaeche auf. Es braucht echte volumetrische Splitter- und Endkorngeometrie statt einer flachen Plug-Kappe.",
-    "round": 2,
-    "source_sha256": "3430908b3b4e502f2301142e5a1717c7451d4fe10363468e4095a0f1a962604a",
-    "sheet_sha256": "0631dca4f00f8b3cc5a44e0471315895a8091638ac9efb2f8ab7dacac54916b9"
+    "notes": "Approved knapp: starke natuerliche Silhouette und volumetrische Bruchenden; nonblocking polish Bodenkontakt, sehr dunkle repetitive Rinde, duenne Splinter.",
+    "round": 3,
+    "source_sha256": "7fab93e9358a946f97bc6b0e88ee4427a5d131a226de40ef3aac5ac0605cb1d5",
+    "sheet_sha256": "962816732d33b1e4898273ffec319809baf3b2711956f060760e5f26ebfba0c0"
   },
-  "review_rounds": 2
+  "review_rounds": 3
 }
