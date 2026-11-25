@@ -7,7 +7,7 @@ import { worldFiles } from "../scripts/world-content.mjs";
 import { pathMask } from "../src/hydrology.ts";
 import type { Slice } from "../src/slice.ts";
 
-const vegetation = ["tree_broadleaf_a", "tree_broadleaf_b", "tree_broadleaf_c", "shrub_round_a", "grass_tuft_a", "fern_cluster_a", "reed_cluster_a"];
+const vegetation = ["tree_broadleaf_a", "tree_broadleaf_b", "tree_broadleaf_c", "shrub_round_a", "fern_cluster_a", "reed_cluster_a"];
 const monuments = ["gate_white_a", "column_white_a", "stair_terrace_a"];
 const pilot = ["boulder_chalk_a", "ruin_wall_a", "trunk_acacia_a"];
 const rocks = ["arch_sandstone_a", "scree_pile_a", "shore_rocks_wet_a"];
