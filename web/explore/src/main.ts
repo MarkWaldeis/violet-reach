@@ -17,7 +17,7 @@ import { FLY_CLEARANCE } from "./navigation.ts";
 import { adapterInfo, FrameHistory, FrameStability, STABLE_FRAMES, trackTextures, type FrameRecord, type VRProbe } from "./qa-probe.ts";
 import { freezeWorldTime, worldTimeFrozen } from "./world-time.ts";
 import { GrassMacroSampler } from "./grass-macro.ts";
-import { GrassSystem } from "./grass-system.ts";
+import { GrassSystem, grassSectorSlotUpperBound } from "./grass-system.ts";
 
 const stage = document.querySelector<HTMLElement>("#stage")!;
 const status = document.querySelector<HTMLElement>("#status")!;
@@ -105,7 +105,7 @@ async function main() {
       ultra: { viewDistance: 128, density: 6.5 },
     };
     const gq = grassQuality[quality.name] ?? grassQuality.high;
-    grass = new GrassSystem(sampler, (x, z) => terrain.fullHeightAt(x, z) ?? terrain.heightAt(x, z), gq, (minX, minZ, maxX, maxZ) => terrain.maxHeightInRect(minX, minZ, maxX, maxZ));
+    grass = new GrassSystem(sampler, (x, z) => terrain.fullHeightAt(x, z) ?? terrain.heightAt(x, z), { ...gq, preallocateSlots: grassSectorSlotUpperBound(gq.viewDistance) }, (minX, minZ, maxX, maxZ) => terrain.maxHeightInRect(minX, minZ, maxX, maxZ));
     scene.add(grass.group);
   }
   const nav = new Navigation(camera, terrain.manifest, (x, z) => terrain.heightAt(x, z));

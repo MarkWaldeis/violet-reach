@@ -51,6 +51,8 @@ export interface GrassSystemOptions {
   geometryLodDistance?: number;
   /** metres of dead zone around geometryLodDistance; defaults to sectorSize/8 (4 m at 32 m) */
   geometryLodHysteresis?: number;
+  /** persistent render slots allocated up front so scene warm-up can upload their buffers before streaming */
+  preallocateSlots?: number;
 }
 
 type ResolvedGrassSystemOptions = Required<Omit<GrassSystemOptions, "cellSize">>;
@@ -93,6 +95,20 @@ interface SectorSlot {
   aShade: InstancedBufferAttribute;
   tint: InstancedBufferAttribute;
   free: boolean;
+  /** preallocated slots stay hidden in the scene graph so renderer warm-up can initialise their GPU buffers */
+  persistent: boolean;
+}
+
+
+/** Conservative upper bound for simultaneously streamed grass sectors, including lattice-alignment slack.
+ * Preallocating this many slots costs only a few MiB of fixed instance buffers and prevents first-use
+ * allocation spikes when the circular streaming working set grows mid-route.
+ */
+export function grassSectorSlotUpperBound(viewDistance: number, sectorSize = 32): number {
+  if (!(viewDistance > 0) || !(sectorSize > 0)) return 1;
+  const exitRadius = viewDistance + Math.max(2, sectorSize * 0.125);
+  const expandedRadius = exitRadius + sectorSize * Math.SQRT1_2;
+  return Math.ceil(Math.PI * (expandedRadius / sectorSize) ** 2) + 8;
 }
 
 export class GrassSystem {
@@ -143,6 +159,7 @@ export class GrassSystem {
       // vertex/triangle load without changing the close-range silhouette.
       geometryLodDistance: options.geometryLodDistance ?? viewDistance * 0.25,
       geometryLodHysteresis: options.geometryLodHysteresis ?? Math.max(2, sectorSize * 0.125),
+      preallocateSlots: Math.max(0, Math.floor(options.preallocateSlots ?? 0)),
     };
     const clump = { blades: 6, height: 0.58, width: 0.055, spread: 0.42, arc: 0.55, seed: 3 };
     this.#base = {
@@ -160,6 +177,12 @@ export class GrassSystem {
     // A different seed family than the positional hashes avoids correlating the prefix order
     // with acceptance/yaw hashes. One shared permutation is enough: all sectors use the same grid.
     this.#scatterOrder = cellScatterOrder(this.#scatterCapacity, 113.17);
+    for (let i = 0; i < this.#opts.preallocateSlots; i++) {
+      const slot = this.#createSlot(true);
+      slot.mesh.visible = false;
+      this.group.add(slot.mesh);
+      this.#freeSlots.push(slot);
+    }
   }
 
   update(px: number, pz: number, py?: number) {
@@ -539,7 +562,7 @@ export class GrassSystem {
   }
 
   #acquireSlot(): SectorSlot {
-    const slot = this.#freeSlots.pop() ?? this.#createSlot();
+    const slot = this.#freeSlots.pop() ?? this.#createSlot(false);
     slot.free = false;
     return slot;
   }
@@ -556,14 +579,21 @@ export class GrassSystem {
 
   #releaseSlot(slot: SectorSlot) {
     if (slot.free) return;
-    if (slot.mesh.parent === this.group) this.group.remove(slot.mesh);
+    if (slot.persistent) {
+      // Persistent slots remain in the graph while invisible. That is deliberate: warmScene can
+      // force them visible once at startup and initialise their fixed-capacity GPU buffers, so a
+      // later streaming peak does not pay first-use allocation/pipeline costs mid-route.
+      slot.mesh.visible = false;
+    } else if (slot.mesh.parent === this.group) {
+      this.group.remove(slot.mesh);
+    }
     slot.mesh.count = 0;
     slot.mesh.frustumCulled = true;
     slot.free = true;
     this.#freeSlots.push(slot);
   }
 
-  #createSlot(): SectorSlot {
+  #createSlot(persistent = false): SectorSlot {
     const capacity = this.#scatterCapacity;
     const aInfo = new InstancedBufferAttribute(new Float32Array(capacity * 4), 4);
     const aShade = new InstancedBufferAttribute(new Float32Array(capacity * 4), 4);
@@ -585,7 +615,7 @@ export class GrassSystem {
     mesh.receiveShadow = true;
     mesh.frustumCulled = true;
     mesh.name = "grass_sector_slot";
-    const slot: SectorSlot = { nearGeometry, farGeometry, mesh, aInfo, aShade, tint, free: true };
+    const slot: SectorSlot = { nearGeometry, farGeometry, mesh, aInfo, aShade, tint, free: true, persistent };
     this.#slots.push(slot);
     return slot;
   }

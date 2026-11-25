@@ -21,7 +21,7 @@ const hooks = registerHooks({
 const { buildBladeClump, clumpTriangles } = await import("../src/grass-clump.ts");
 const { GrassMacroSampler, cellScatterCapacity, cellScatterOrder, cellScatterPositionAt, cellScatterPositions, hash2 } = await import("../src/grass-macro.ts");
 const { grassMaterial, grassPaletteProbe } = await import("../src/grass-material.ts");
-const { GrassSystem } = await import("../src/grass-system.ts");
+const { GrassSystem, grassSectorSlotUpperBound } = await import("../src/grass-system.ts");
 hooks.deregister();
 
 function uniformGrassSampler(densityByte = 255) {
@@ -370,8 +370,33 @@ test("macro no-grass sectors complete empty without allocating a render slot", (
   sys.dispose();
 });
 
+
+test("preallocated grass slots stay hidden in the scene as warm-up targets and prevent pool growth", () => {
+  const preallocated = grassSectorSlotUpperBound(20, 32);
+  assert.ok(preallocated >= 10, `konservative Obergrenze für den kleinen Testring: ${preallocated}`);
+  const sys = new GrassSystem(uniformGrassSampler(), () => 10, {
+    sectorSize: 32, viewDistance: 20, density: 0.01, buildBudgetMs: 8, maxBuildPerFrame: 8, preallocateSlots: preallocated,
+  });
+  assert.equal(sys.group.children.length, preallocated, "vorab allokierte Slots sind bereits Warm-up-Kandidaten im Szenengraph");
+  for (const child of sys.group.children as unknown as Array<{ name: string; visible: boolean; count: number }>) {
+    assert.equal(child.name, "grass_sector_slot");
+    assert.equal(child.visible, false, "freie Slots kosten im Normalrender keinen Render-Object-Pass");
+    assert.equal(child.count, 0);
+  }
+
+  pumpGrass(sys, 400, 1500, undefined, 40);
+  assert.equal(sys.stats.slots, preallocated, "der Streaming-Ring wächst nicht über die vorab erwärmten Slots hinaus");
+  assert.equal(sys.group.children.length, preallocated, "persistent slots werden beim Streaming nicht erneut hinzugefügt");
+  assert.ok(sys.stats.cells > 0, "Testring wurde trotzdem gebaut");
+  pumpGrass(sys, 900, 1500, undefined, 60);
+  assert.equal(sys.stats.slots, preallocated, "auch spätere Ringverschiebungen erzeugen keine neuen first-use GPU-Slots");
+  assert.equal(sys.group.children.length, preallocated, "freigegebene persistente Slots bleiben versteckt im Warm-up-Pool");
+  sys.dispose();
+});
+
 test("main keeps nograss mode and optional grass update wiring intact", () => {
   const main = readFileSync(new URL("../src/main.ts", import.meta.url), "utf8");
   assert.ok(main.includes('!params.has("nograss")'), "?nograss verhindert weiterhin die GrassSystem-Erzeugung");
   assert.ok(main.includes("grass?.update("), "bestehendes Gras bleibt optional/flight-suspension-fähig");
+  assert.ok(main.includes("preallocateSlots: grassSectorSlotUpperBound"), "Produktionsgras allokiert seine Streaming-Slots vor dem Warm-up");
 });
