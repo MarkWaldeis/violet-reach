@@ -233,12 +233,12 @@ export class GrassSystem {
     }
 
     // A sector rectangle can only intersect the circle when its index lies inside the circle's
-    // index-space x/z extents. floor() is conservative at exact boundaries and merely scans a
-    // few never-matching edge candidates, so no padding fudge factor is needed here.
-    const minSX = Math.floor((px - exitDistance) / sectorSize);
-    const maxSX = Math.floor((px + exitDistance) / sectorSize);
-    const minSZ = Math.floor((pz - exitDistance) / sectorSize);
-    const maxSZ = Math.floor((pz + exitDistance) / sectorSize);
+    // index-space x/z extents. One index of padding keeps exact grid-line contacts conservative;
+    // those few extra candidates are rejected by the exact rectangle distance below.
+    const minSX = Math.floor((px - exitDistance) / sectorSize) - 1;
+    const maxSX = Math.floor((px + exitDistance) / sectorSize) + 1;
+    const minSZ = Math.floor((pz - exitDistance) / sectorSize) - 1;
+    const maxSZ = Math.floor((pz + exitDistance) / sectorSize) + 1;
     for (let sz = minSZ; sz <= maxSZ; sz++) {
       for (let sx = minSX; sx <= maxSX; sx++) {
         const k = `${sx},${sz}`;
@@ -252,7 +252,7 @@ export class GrassSystem {
 
   /** Process the nearest incomplete sectors, but never more than buildBudgetMs in one frame. */
   #buildBudgeted(px: number, pz: number, py?: number) {
-    const { sectorSize, maxBuildPerFrame, buildBudgetMs } = this.#opts;
+    const { maxBuildPerFrame, buildBudgetMs } = this.#opts;
     // Readiness (`pendingVisible`) remains strict: the 2 m streaming prefetch is allowed to build
     // early, but QA never has to wait for grass that is still outside the actual fade radius.
     let pendingVisible = 0;
@@ -264,17 +264,30 @@ export class GrassSystem {
     }
     this.stats.pendingVisible = pendingVisible;
     if (!pending.length) return;
-    pending.sort((a, b) =>
-      Number(!!b.build) - Number(!!a.build) ||
-      Math.hypot((a.sx + 0.5) * sectorSize - px, (a.sz + 0.5) * sectorSize - pz) -
-      Math.hypot((b.sx + 0.5) * sectorSize - px, (b.sz + 0.5) * sectorSize - pz)
-    );
     const deadline = performance.now() + Math.max(0, buildBudgetMs);
+    const processed = new Set<Sector>();
     let completed = 0;
-    for (const sector of pending) {
-      if (completed >= maxBuildPerFrame) break;
+    // Pick active/nearest candidates by a tiny linear selection pass instead of sorting the working
+    // set every frame. maxBuildPerFrame is normally two and the sector working set is only ~28, so
+    // this is both cheaper than a sort and keeps per-frame CPU work flat/simple.
+    while (completed < maxBuildPerFrame) {
       if (completed > 0 && performance.now() >= deadline) break;
-      if (!this.#buildSlice(sector, deadline)) break; // budget exhausted inside the active sector
+      let best: Sector | undefined;
+      let bestActive = false;
+      let bestDistance = Infinity;
+      for (const sector of pending) {
+        if (processed.has(sector)) continue;
+        const active = !!sector.build;
+        const distance = this.#sectorCenterDistance(sector, px, pz);
+        if ((active && !bestActive) || (active === bestActive && distance < bestDistance)) {
+          best = sector;
+          bestActive = active;
+          bestDistance = distance;
+        }
+      }
+      if (!best) break;
+      processed.add(best);
+      if (!this.#buildSlice(best, deadline)) break; // budget exhausted inside the active sector
       completed++;
     }
   }
@@ -405,6 +418,7 @@ export class GrassSystem {
   }
 
   #finishBuild(sector: Sector, job: SectorBuild) {
+    this.#flushCompletedUploadChunks(job);
     this.#pushInstanceUpdate(job, job.placed - job.uploadCursor);
     sector.build = undefined;
     this.stats.builds++;
@@ -482,15 +496,17 @@ export class GrassSystem {
   }
 
   #sectorPotentiallyVisible(sector: Sector, px: number, pz: number, py?: number, rangeMargin = 0) {
+    const horizontal = this.#sectorSurfaceDistance(sector, px, pz);
+    const range = this.#opts.viewDistance + rangeMargin;
+    if (horizontal > range) return false;
     if (py === undefined || !this.#maxHeightInRect) return true;
     if (sector.maxY === undefined) {
       const x0 = sector.sx * this.#opts.sectorSize, z0 = sector.sz * this.#opts.sectorSize;
       sector.maxY = this.#maxHeightInRect(x0, z0, x0 + this.#opts.sectorSize, z0 + this.#opts.sectorSize) ?? null;
     }
     if (sector.maxY === null) return true;
-    const horizontal = this.#sectorSurfaceDistance(sector, px, pz);
     const vertical = Math.max(0, py - (sector.maxY + 1.5));
-    return Math.hypot(horizontal, vertical) <= this.#opts.viewDistance + rangeMargin;
+    return Math.hypot(horizontal, vertical) <= range;
   }
 
   #visibleCount(count: number, distance: number): number {

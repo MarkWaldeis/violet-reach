@@ -195,6 +195,22 @@ test("grass system streams sectors around the camera and reuses bounded slots", 
   sys.dispose();
 });
 
+test("grass sector streaming follows rectangle distance with a small exit hysteresis", () => {
+  const sys = new GrassSystem(uniformGrassSampler(), () => 10, {
+    sectorSize: 32, viewDistance: 20, density: 0.01, buildBudgetMs: 8, maxBuildPerFrame: 8,
+  });
+  const hasEastSector = () => sys.group.children.some((m) => (m as { name?: string }).name === "grass_sector_1_0");
+  pumpGrass(sys, 0, 16, undefined, 40);
+  assert.equal(hasEastSector(), false, "Ostsektor ist vor der 22-m-Eintrittskante noch nicht gestreamt");
+  pumpGrass(sys, 10.5, 16, undefined, 40);
+  assert.equal(hasEastSector(), true, "Sektorfläche innerhalb viewDistance+Prefetch wird gestreamt");
+  pumpGrass(sys, 9.5, 16, undefined, 40);
+  assert.equal(hasEastSector(), true, "innerhalb der Austritts-Hysterese bleibt der Sektor erhalten");
+  pumpGrass(sys, 7.5, 16, undefined, 40);
+  assert.equal(hasEastSector(), false, "jenseits der Austritts-Hysterese wird der Sektor freigegeben");
+  sys.dispose();
+});
+
 test("grass sector build is frame-sliced and uploads a contiguous prefix in bounded chunks", () => {
   const options = { sectorSize: 32, viewDistance: 0, density: 1, buildBudgetMs: 0, distanceDensityStart: 1000, distanceDensityEnd: 1001 };
   const sys = new GrassSystem(uniformGrassSampler(), () => 10, options);
@@ -283,6 +299,13 @@ test("grass distance LOD uses uniform count prefixes, sector far geometry and bo
   const slots = sys.stats.slots;
   pumpGrass(sys, 900, 1500, undefined, 120);
   assert.ok(sys.stats.slots <= slots + 2, `Render-Slots werden wieder verwendet: ${slots} → ${sys.stats.slots}`);
+  for (const mesh of sys.group.children as unknown as Array<{ geometry: { getAttribute(name: string): { count: number; itemSize: number; updateRanges: Array<{ count: number }> } } }>) {
+    for (const name of ["aInfo", "aShade", "aTint"]) {
+      const attr = mesh.geometry.getAttribute(name);
+      assert.ok(attr.updateRanges.every((r) => r.count <= 512 * attr.itemSize), `${name}: auch Slot-Reuse bleibt in Upload-Chunks`);
+      assert.ok(attr.updateRanges.every((r) => r.count < attr.count * attr.itemSize), `${name}: kein Full-Buffer-Upload bei Slot-Reuse`);
+    }
+  }
   sys.dispose();
 });
 
@@ -299,6 +322,8 @@ test("grass sector geometry LOD is conservative, hysteretic and shares instance 
   const nearGeometry = sectorMesh()!.geometry;
   assert.equal(nearGeometry.getAttribute("position").count, 30, "Kamera im Sektor: konservativ nahe Geometrie");
 
+  for (let i = 0; i < 3; i++) sys.update(39, 16); // 7 m: Hysterese-Totzone, near bleibt stabil
+  assert.equal(sectorMesh()!.geometry, nearGeometry, "Hysterese verhindert Flackern Richtung far");
   for (let i = 0; i < 3; i++) sys.update(45, 16); // 13 m von der Sektorfläche: jenseits 8+4 m
   const farGeometry = sectorMesh()!.geometry;
   assert.notEqual(farGeometry, nearGeometry);
