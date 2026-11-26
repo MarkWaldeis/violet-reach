@@ -18,23 +18,9 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "exported",
+  "status": "blender_review",
   "builder": "devin-builder-trees",
-  "review": {
-    "reviewer": "devin-gate-rev-r5",
-    "scores": {
-      "silhouette": 8,
-      "form_detail": 8,
-      "material": 8,
-      "scale": 9,
-      "style": 8,
-      "defects": 8
-    },
-    "notes": "Approved narrowly. R4 collar/pot rim is gone: the base reads as separate horizontal roots, the crown is broad and open, and branch tips are mostly tapered into foliage. Nonblocking polish: soften the sharpest root points and reduce isolated planar cards/dark shoots at the outer crown.",
-    "round": 5,
-    "source_sha256": "d1a37c4b7c2b8166d5ede19cbac9bd3a90d3934e377e04c935cc9d0705dde989",
-    "sheet_sha256": "b56985aa877a36ba7cda60427a6a5d0bbeeef7f4d796f67eeabad160b1f984b9"
-  },
+  "review": null,
   "review_rounds": 5,
   "size_m": [
     10.466,

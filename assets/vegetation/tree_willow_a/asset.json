@@ -18,24 +18,24 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "exported",
+  "status": "modeling",
   "builder": "devin-builder-trees",
   "review": {
-    "reviewer": "devin-gate-rev-r5",
+    "reviewer": "devin-gate-rev-r9-willow",
     "scores": {
-      "silhouette": 8,
-      "form_detail": 8,
-      "material": 8,
-      "scale": 9,
-      "style": 8,
-      "defects": 8
+      "silhouette": 7,
+      "form_detail": 5,
+      "material": 6,
+      "scale": 8,
+      "style": 7,
+      "defects": 4
     },
-    "notes": "Approved narrowly. Weeping habit reads from every turn and the former rectangular curtains are broken into varied ragged hanging pieces. Nonblocking polish: a few flat or square-ended strips, stiff upright blades and dark smooth branch sections remain.",
-    "round": 5,
-    "source_sha256": "dfe1c0bbbdb63bc691eac46c7bbad2cece7f18285cc471e6f211a346bca2ecfe",
-    "sheet_sha256": "4669d252b6e648b6b9b111902c9d01f5b3902d46dd1557bb5aef1c5fe49f97d9"
+    "notes": "Rejected: crown still reads as discrete constant-width hanging strips rather than merged willow cascades; angle-dependent sparse skeleton views; black wire-like connectors and abrupt foliage/wood transitions. Keep trunk/branch gesture and material direction; rework crown into overlapping tapered cascade groups and shorten exposed connector runs.",
+    "round": 6,
+    "source_sha256": "b3e2b09ce89026b251b52701d534b28388b3038c4de32f8b065c6d742e0fda00",
+    "sheet_sha256": "fd88d8841fec9b7bc2a246294cfc7f4515a80f8fd226192ea96e9732f7b9b277"
   },
-  "review_rounds": 5,
+  "review_rounds": 6,
   "size_m": [
     8.81,
     8.985,

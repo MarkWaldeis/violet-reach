@@ -22,6 +22,7 @@ import bpy
 import bmesh
 import numpy as np
 from mathutils import Matrix, Vector
+from mathutils.bvhtree import BVHTree
 
 import vrlib
 import vrmeshy
@@ -31,10 +32,10 @@ TEMPLATE = "V3_TPL_tree_meadow_willow"
 SLUG = "tree_meadow_willow"
 EXPECTED_Z_MIN = -0.65
 TARGET_SIZE_M = (9.0, 9.0, 8.0)  # ungefähr, oberirdische Höhe im Quelltemplate
-FOLIAGE_TARGET = "#4A5426"  # zwischen leaf_green #313C1D und grass_green #696F44
-FOLIAGE_STRENGTH = 0.60
-BARK_TARGET = "#41321D"
-BARK_STRENGTH = 0.36
+FOLIAGE_TARGET = "#696F44"
+FOLIAGE_STRENGTH = 0.80
+BARK_TARGET = "#4A3824"
+BARK_STRENGTH = 0.38
 ALPHA_CUTOFF = 0.34
 ROUGHNESS_MIN = 0.65
 ASSET_KIND = "tree"
@@ -55,9 +56,10 @@ FILL_CONFIG = dict(attach_high=True, fraction=1.0, second_fraction=.90, third_fr
                    yaw_deg=60, pitch_deg=8, roll_deg=24,
                    normal_offset=.10, tangent_offset=.20,
                    inward_fraction=.30, inward_pull=.38, z_jitter=.22, seed=GEOMETRY_SEED)
-ROOT_CONFIG = dict(count=8, trunk_radius=.43, base_z=.43,
-                   length_range=(.78, 1.38), radius_range=(.145, .225),
-                   bury_range=(.065, .145), sides=8, rings=7, oval=.48)
+ROOT_CONFIG = dict(count=7, trunk_radius=.43, base_z=.42,
+                   length_range=(1.14, 2.02), radius_range=(.105, .172),
+                   bury_range=(.20, .32), sides=5, rings=6, oval=.50,
+                   branch_fraction=.86)
 BRANCH_COLLARS = (
     dict(angle_deg=15, z=2.15, length=.95, radius=.23, up=.36, surface_radius=.43),
     dict(angle_deg=180, z=2.20, length=.95, radius=.23, up=.34, surface_radius=.43),
@@ -66,13 +68,27 @@ BRANCH_COLLARS = (
 SHOOT_COLLAR_CONFIG = None
 # Runde 4: zmin deutlich abgesenkt, damit auch seitliche/niedrigere stumpfe Enden
 # erfasst werden; der Sackgassen-Test verhindert Kappen mitten auf gesunden Aesten.
-TIP_CAP_CONFIG = dict(zmin=2.55, min_radius=.50, cluster_radius=.72, min_points=4,
-                      length_range=(.22, .40), inset=.09, seed=GEOMETRY_SEED,
-                      dead_end=.30, max_caps=20, length_radius_mul=2.1, min_cap_radius=.060)
+TIP_CAP_CONFIG = dict(zmin=2.30, min_radius=.42, cluster_radius=.68, min_points=4,
+                      length_range=(.20, .38), inset=.09, seed=GEOMETRY_SEED,
+                      dead_end=.30, max_caps=18, length_radius_mul=2.1, min_cap_radius=.055)
+# R9-Pilot: die hängende Krone wird nicht länger aus zerschnittenen grossen
+# Template-Karten zusammengesetzt.  Die Originalkarten liefern nur noch ein
+# positionsstabiles Silhouetten-/Richtungsfeld; die sichtbare Krone besteht aus
+# schmalen, mehrsegmentig gebogenen Einzelsprays auf feinen Astverlaengerungen.
+WILLOW_R9_CONFIG = dict(
+    branchlets_min=4, branchlets_max=5, branchlet_length=(.96, 2.24),
+    branchlet_radius=(.020, .040), branchlet_spread_deg=46,
+    ribbon_width=(.31, .54), ribbon_length=(.78, 2.08),
+    ribbon_rows=4, ribbons_per_branchlet=(4, 6),
+    direct_anchor_dist=.76, direct_anchor_fraction=.82,
+    crown_seed=GEOMETRY_SEED + 904,
+)
+BARK_DETAIL_CONFIG = dict(enabled=True, albedo_strength=.26, normal_strength=.44,
+                          roughness_strength=.38, normal_map_strength=.90)
 FOLIAGE_GAMMA = .66
 FOLIAGE_LIFT_FLOOR = .040
-FOLIAGE_TRANSLUCENCY = .115
-BARK_TRANSLUCENCY = .078
+FOLIAGE_TRANSLUCENCY = .22
+BARK_TRANSLUCENCY = .086
 
 
 def _sha256_file(path):
@@ -1130,45 +1146,122 @@ def _append_curved_tube(bm, points, radii, *, sides=6, seed=0, material_index=0,
 
 
 def _append_surface_roots(bm, centre, *, count, trunk_radius, base_z, length_range,
-                          radius_range, bury_range=(.07, .16), sides=7, rings=7,
-                          seed=0, oval=.70):
-    """Append separate tapering horizontal roots that dive below z=0 individually."""
+                          radius_range, bury_range=(.07, .16), sides=7, rings=8,
+                          seed=0, oval=.60, branch_fraction=.55):
+    """Append continuous asymmetric surface roots with branching, tapering dives.
+
+    R9 root standard: each primary starts inside the trunk flare (no exposed start
+    cap), snakes horizontally across the soil, thins progressively and disappears
+    below grade as an open buried end.  A deterministic subset forks into smaller
+    secondary roots.  The old even ring of blunt toe/post roots is deliberately not
+    used; all visible ends are small and already underground.
+    """
     made = []
+    branches = 0
     centre = Vector((centre.x, centre.y, 0.0))
+    gap_weights = [.78 + .48 * _hash01(ri, 5, seed) for ri in range(count)]
+    gap_total = sum(gap_weights)
+    angle = 2.0 * math.pi * _hash01(991, seed)
     for ri in range(count):
+        angle += 2.0 * math.pi * gap_weights[ri] / gap_total
         h1 = _hash01(ri, 11, seed)
         h2 = _hash01(ri, 17, seed)
         h3 = _hash01(ri, 23, seed)
         h4 = _hash01(ri, 29, seed)
         h5 = _hash01(ri, 37, seed)
-        angle = 2.0 * math.pi * (ri + (h1 - .5) * .82) / count + (h2 - .5) * .10
         radial = Vector((math.cos(angle), math.sin(angle), 0.0))
         tangent = Vector((-radial.y, radial.x, 0.0))
+        if h1 < .5:
+            tangent.negate()
         length = length_range[0] + (length_range[1] - length_range[0]) * h2
         root_radius = radius_range[0] + (radius_range[1] - radius_range[0]) * h3
         bury = bury_range[0] + (bury_range[1] - bury_range[0]) * h4
-        start_z = base_z * (.86 + .28 * h5)
-        bend = (h4 - .5) * length * .34
-        bend2 = bend * 1.35 + (h1 - .5) * length * .12
-        p0 = centre + radial * (trunk_radius * .30) + Vector((0, 0, start_z))
-        p1 = centre + radial * (trunk_radius * .90) + tangent * (bend * .12) + Vector((0, 0, start_z * .70))
-        p2 = centre + radial * (trunk_radius + length * .48) + tangent * bend + Vector((0, 0, .008 + .022 * h3))
-        p3 = centre + radial * (trunk_radius + length) + tangent * bend2 + Vector((0, 0, -bury))
-        pts = [_bezier_point(p0, p1, p2, p3, j / max(rings - 1, 1)) for j in range(rings)]
-        ground_t = .64 + .13 * h1
-        for j, pt in enumerate(pts):
+        start_z = base_z * (.84 + .30 * h5)
+        end_r = .026 + .014 * h1
+        plunge_t = .40 + .05 * h4
+        radii = []
+        for j in range(rings):
             t = j / max(rings - 1, 1)
-            if t < ground_t:
-                q = t / ground_t
-                pt.z = start_z * ((1.0 - q) ** 1.32)
+            if t < plunge_t:
+                q = t / max(plunge_t, 1e-6)
+                taper = root_radius * (1.0 - .55 * q)
             else:
-                q = (t - ground_t) / max(1.0 - ground_t, 1e-6)
-                pt.z = -bury * (q ** .72)
-        radii = [.018 + (root_radius - .018) * ((1.0 - j / max(rings - 1, 1)) ** .78)
-                 for j in range(rings)]
-        made.extend(_append_curved_tube(bm, pts, radii, sides=sides, seed=seed + 600 + ri * 19,
-                                        material_index=0, oval=(1.0, oval), irregular=.065))
-    return {"roots": count, "faces": len(made)}
+                q = (t - plunge_t) / max(1.0 - plunge_t, 1e-6)
+                taper = end_r + (root_radius * .45 - end_r) * ((1.0 - q) ** .88)
+            organic = 1.0 + .040 * math.sin(j * 2.13 + h2 * 5.1) + .022 * math.sin(j * 3.7 + h4 * 3.0)
+            radii.append(max(end_r * .82, taper * organic))
+
+        descend_t = .28 + .07 * h5
+        bend = (h4 - .5) * length * .70
+        pts = []
+        for j in range(rings):
+            t = j / max(rings - 1, 1)
+            # Start inside the flare and keep most motion horizontal; the vertical
+            # plunge is delayed until the root is already thin and snake-like.
+            rr_dist = trunk_radius * .28 + (trunk_radius * .72 + length) * t
+            snake = math.sin(t * math.pi * (1.25 + .55 * h2) + h5 * 4.2) * length * .040 * math.sin(math.pi * t)
+            lateral = bend * (t ** 1.28) + snake
+            pos = centre + radial * rr_dist + tangent * lateral
+            surface_z = radii[j] * max(oval, .52) * .66 + .004
+            if t < descend_t:
+                q = t / max(descend_t, 1e-6)
+                pos.z = surface_z + (start_z - surface_z) * ((1.0 - q) ** 1.30)
+                pos.z += math.sin(q * math.pi * (1.15 + .42 * h3) + h5 * 3.7) * .018 * math.sin(math.pi * q)
+            elif t < plunge_t:
+                q = (t - descend_t) / max(plunge_t - descend_t, 1e-6)
+                pos.z = surface_z * (1.0 - .16 * q)
+                pos.z += math.sin(t * math.pi * (1.8 + .55 * h3) + h5 * 4.2) * .009 * math.sin(math.pi * q)
+            else:
+                q = (t - plunge_t) / max(1.0 - plunge_t, 1e-6)
+                dive = bury + root_radius * (1.10 + .35 * h3)
+                pos.z = surface_z * (1.0 - .20 * q) - dive * (q ** .68)
+            pts.append(pos)
+        made.extend(_append_curved_tube(
+            bm, pts, radii, sides=sides, seed=seed + 600 + ri * 19,
+            material_index=0, oval=(1.0, oval), cap_start=False, cap_end=False,
+            irregular=.070))
+
+        if h5 < branch_fraction and length > .9:
+            branches += 1
+            j0 = min(rings - 3, 2 + (1 if h2 > .55 else 0))
+            b1 = _hash01(ri, 41, seed)
+            b2 = _hash01(ri, 43, seed)
+            b3 = _hash01(ri, 47, seed)
+            turn = (.62 + .48 * b1) * (1.0 if b2 > .5 else -1.0)
+            ca, sa = math.cos(turn), math.sin(turn)
+            bdir = radial * ca + tangent * sa
+            if bdir.length < 1e-6:
+                bdir = tangent.copy()
+            bdir.normalize()
+            bside = Vector((-bdir.y, bdir.x, 0.0))
+            blen = (.38 + .42 * b2) * min(length, 1.35)
+            brings = 4
+            bendb = (b3 - .5) * blen * .34
+            start = pts[j0] + radial * (radii[j0] * .10)
+            bradii = []
+            for j in range(brings):
+                t = j / (brings - 1)
+                br = .012 + (radii[j0] * (.48 + .10 * b1) - .012) * ((1.0 - t) ** .74)
+                bradii.append(max(.009, br))
+            bpts = []
+            for j in range(brings):
+                t = j / (brings - 1)
+                pos = start + bdir * (blen * t)
+                pos += bside * (bendb * (t ** 1.18) +
+                                math.sin(t * math.pi * (1.35 + .45 * b1) + b3 * 4.0) * blen * .030 * math.sin(math.pi * t))
+                surface_z = bradii[j] * max(oval, .52) * .62 + .003
+                if t < .52:
+                    q = t / .52
+                    pos.z = start.z * (1.0 - q) + surface_z * q + .010 * math.sin(math.pi * q)
+                else:
+                    q = (t - .52) / .48
+                    pos.z = surface_z * (1.0 - .18 * q) - (bury * .72 + bradii[0] * 1.4) * (q ** .70)
+                bpts.append(pos)
+            made.extend(_append_curved_tube(
+                bm, bpts, bradii, sides=4, seed=seed + 880 + ri * 23,
+                material_index=0, oval=(1.0, max(.52, oval * .90)), cap_start=False, cap_end=False,
+                irregular=.060))
+    return {"roots": count, "branch_roots": branches, "faces": len(made)}
 
 
 def _flute_trunk_bark(mesh, *, trunk_radius, height=3.2, seed=0):
@@ -1200,38 +1293,465 @@ def _flute_trunk_bark(mesh, *, trunk_radius, height=3.2, seed=0):
 
 
 def _smooth_lower_trunk_flare(mesh, *, trunk_radius, seed=0):
-    """Collapse blade-like template buttress plates into a broad continuous trunk flare.
+    """Collapse blade-like template buttress plates into a continuous trunk flare.
 
-    Separate surface roots provide the horizontal root structure; the underlying trunk
-    scaffold only needs a rounded, slightly uneven flare rather than triangular fins.
+    R9 keeps the stricter R8 collapse: readable horizontal structure must come from
+    the branching round surface roots, while residual scaffold fins contribute only
+    a low uneven collar rather than triangular blades.
     """
-    centre=_estimate_trunk_center(mesh); changed=0; phase=_hash01(seed,557)*2*math.pi
-    ids=sorted({v for p in mesh.polygons if p.material_index==0 for v in p.vertices})
+    centre = _estimate_trunk_center(mesh)
+    changed = 0
+    phase = _hash01(seed, 557) * 2.0 * math.pi
+    ids = sorted({v for p in mesh.polygons if p.material_index == 0 for v in p.vertices})
     for vi in ids:
-        co=mesh.vertices[vi].co
-        if not (.025<co.z<1.18): continue
-        dx,dy=co.x-centre.x,co.y-centre.y; r=math.hypot(dx,dy)
-        if r<.10: continue
-        t=co.z/1.18
-        target=trunk_radius*(1.18-.28*t)
-        a=math.atan2(dy,dx)
-        target*=1.0+.030*math.sin(5*a+co.z*2.1+phase)+.018*math.sin(9*a-co.z*3.0)
-        if r>target:
-            newr=target+(r-target)*.24
-        elif r<target*.76:
-            newr=r+(target*.76-r)*.34
+        co = mesh.vertices[vi].co
+        if not (-.10 < co.z < 1.35):
+            continue
+        dx, dy = co.x - centre.x, co.y - centre.y
+        r = math.hypot(dx, dy)
+        if r < .10:
+            continue
+        t = min(max(co.z / 1.35, 0.0), 1.0)
+        target = trunk_radius * (1.10 - .24 * t)
+        a = math.atan2(dy, dx)
+        target *= 1.0 + .026 * math.sin(5 * a + co.z * 2.1 + phase) + .015 * math.sin(9 * a - co.z * 3.0)
+        if r > target:
+            newr = target + (r - target) * .06
+        elif r < target * .78:
+            newr = r + (target * .78 - r) * .32
         else:
             continue
-        scale=newr/r
-        co.x=centre.x+dx*scale; co.y=centre.y+dy*scale; changed+=1
-    if changed: mesh.update()
-    return {"vertices":changed}
+        scale = newr / r
+        co.x = centre.x + dx * scale
+        co.y = centre.y + dy * scale
+        changed += 1
+    if changed:
+        mesh.update()
+    return {"vertices": changed}
+
+
+def _dive_flare_teeth(mesh, *, trunk_radius, seed=0):
+    """Round residual template root-plate knuckles down into the soil transition.
+
+    This is tightly depth-limited and runs before procedural roots are appended, so
+    it removes the pot-rim/fin read without touching the pinned deep burial socket.
+    """
+    centre = _estimate_trunk_center(mesh)
+    dive_start = trunk_radius * 1.00
+    ids = sorted({v for p in mesh.polygons if p.material_index == 0 for v in p.vertices})
+    changed = 0
+    for vi in ids:
+        co = mesh.vertices[vi].co
+        if not (-.10 < co.z < .42):
+            continue
+        dx, dy = co.x - centre.x, co.y - centre.y
+        r = math.hypot(dx, dy)
+        if r <= dive_start:
+            continue
+        excess = r - dive_start
+        zfade = max(0.0, 1.0 - co.z / .42)
+        shrink = 1.0 - .78 * zfade
+        newr = dive_start + excess * shrink
+        scale = newr / r
+        co.x = centre.x + dx * scale
+        co.y = centre.y + dy * scale
+        sink = min(excess * 1.15 * (.30 + .70 * zfade), .25)
+        co.z -= sink
+        changed += 1
+    if changed:
+        mesh.update()
+    return {"vertices": changed}
+
+
+def _capture_willow_anchor_clusters(mesh):
+    """Read the original template's paired willow cards as an anchor/silhouette field.
+
+    The source template uses two crossed cards at each of 78 hanging points.  Their
+    top UV edge is the botanical attachment, while their centroid is far down the
+    curtain.  R9 keeps only these positions and directions as a deterministic field;
+    the large flat source cards themselves are removed and replaced.
+    """
+    features = _leaf_card_features(mesh, material_index=1, attach_high=True)
+    clusters = []
+    for feat in features:
+        base = feat["base"].copy()
+        far = feat["far"].copy()
+        found = None
+        for cluster in clusters:
+            if (base - cluster["base"]).length < .30:
+                found = cluster
+                break
+        if found is None:
+            clusters.append({"bases": [base], "tips": [far], "base": base.copy(), "tip": far.copy()})
+        else:
+            found["bases"].append(base)
+            found["tips"].append(far)
+            n = len(found["bases"])
+            acc_b = Vector((0.0, 0.0, 0.0))
+            acc_t = Vector((0.0, 0.0, 0.0))
+            for b, t in zip(found["bases"], found["tips"]):
+                acc_b += b
+                acc_t += t
+            found["base"] = acc_b / n
+            found["tip"] = acc_t / n
+    out = []
+    for ci, cluster in enumerate(clusters):
+        base = cluster["base"].copy()
+        tip = cluster["tip"].copy()
+        length = (tip - base).length
+        radius = math.hypot(base.x, base.y)
+        out.append({
+            "ci": ci, "base": base, "tip": tip, "length": length,
+            "radius": radius, "angle": math.atan2(base.y, base.x),
+        })
+    out.sort(key=lambda c: (round(c["angle"], 4), round(c["base"].z, 4), round(c["radius"], 4)))
+    return out
+
+
+def _delete_foliage_material(mesh, *, material_index=1):
+    """Delete the original separated foliage-card vertices, preserving all wood."""
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+    foliage_verts = set()
+    wood_verts = set()
+    polys = 0
+    for face in bm.faces:
+        if face.material_index == material_index:
+            polys += 1
+            foliage_verts.update(face.verts)
+        else:
+            wood_verts.update(face.verts)
+    delete = [v for v in foliage_verts if v not in wood_verts]
+    if delete:
+        bmesh.ops.delete(bm, geom=delete, context="VERTS")
+    bm.to_mesh(mesh)
+    mesh.update()
+    bm.free()
+    return {"polygons": polys, "vertices": len(delete)}
+
+
+def _bark_bvh(mesh):
+    vertices = [v.co.copy() for v in mesh.vertices]
+    polygons = [list(p.vertices) for p in mesh.polygons if p.material_index == 0 and len(p.vertices) >= 3]
+    return BVHTree.FromPolygons(vertices, polygons) if polygons else None
+
+
+def _sample_polyline(points, values, t):
+    """Linearly sample co-located point/radius sequences at t in [0, 1]."""
+    if not points:
+        return Vector((0.0, 0.0, 0.0)), 0.0
+    if len(points) == 1:
+        return points[0].copy(), values[0] if values else 0.0
+    x = min(max(t, 0.0), 1.0) * (len(points) - 1)
+    i = min(int(math.floor(x)), len(points) - 2)
+    q = x - i
+    pos = points[i] * (1.0 - q) + points[i + 1] * q
+    val = values[i] * (1.0 - q) + values[i + 1] * q if values else 0.0
+    return pos.copy(), val
+
+
+def _append_willow_branchlet(bm, start, outward, *, length, radius, seed,
+                             rise, end_drop, sides=5, rings=5):
+    """Append one fine tapered curved willow branchlet and return its centreline."""
+    outward = Vector((outward.x, outward.y, 0.0))
+    if outward.length < 1e-6:
+        outward = Vector((1.0, 0.0, 0.0))
+    outward.normalize()
+    side = Vector((-outward.y, outward.x, 0.0))
+    h1 = _hash01(seed, 601)
+    h2 = _hash01(seed, 607)
+    bend = (h1 - .5) * length * .22
+    bend2 = (h2 - .5) * length * .10
+    pts = []
+    radii = []
+    end_r = .0065 + .0025 * h2
+    for j in range(rings):
+        t = j / (rings - 1)
+        pos = start + outward * (length * t)
+        pos += side * (bend * math.sin(math.pi * t * .82) + bend2 * math.sin(2.0 * math.pi * t) * t)
+        pos.z = start.z + rise * math.sin(math.pi * t) - end_drop * (t ** 1.62)
+        pts.append(pos)
+        radii.append(end_r + (radius - end_r) * ((1.0 - t) ** .78))
+    faces = _append_curved_tube(
+        bm, pts, radii, sides=sides, seed=seed, material_index=0,
+        oval=(1.0, .82), cap_start=False, cap_end=True, irregular=.055)
+    return {"points": pts, "radii": radii, "faces": len(faces), "end": pts[-1].copy()}
+
+
+def _append_willow_ribbon(bm, base, radial, tangent, *, width, length, seed,
+                          rows=5, uv_rect=(.008, .008, .492, .992),
+                          outward_bias=.16, lateral_bias=0.0, spin=0.0):
+    """Append one narrow curved/drooping willow ribbon spray.
+
+    Unlike the original single-quadrilateral curtain pieces this strip has several
+    length rows, so the centreline itself can slant, snake and droop.  Width is
+    tapered at both ends; alpha still comes from the original 2x1 willow spray
+    texture, but the geometric card is narrow enough to read as one branchlet spray
+    rather than as fur or a flat sheet.
+    """
+    if length < .25 or width < .04:
+        return []
+    radial = Vector((radial.x, radial.y, 0.0))
+    if radial.length < 1e-6:
+        radial = Vector((1.0, 0.0, 0.0))
+    radial.normalize()
+    tangent = Vector((tangent.x, tangent.y, 0.0))
+    if tangent.length < 1e-6:
+        tangent = Vector((-radial.y, radial.x, 0.0))
+    tangent.normalize()
+    h1 = _hash01(seed, 701)
+    h2 = _hash01(seed, 707)
+    h3 = _hash01(seed, 709)
+    h4 = _hash01(seed, 713)
+    h5 = _hash01(seed, 719)
+    out_amount = length * outward_bias
+    tan_amount = length * lateral_bias
+    phase = h3 * 2.0 * math.pi
+    centers = []
+    for j in range(rows):
+        t = j / (rows - 1)
+        ease = t ** .82
+        snake = math.sin(math.pi * t + phase) * math.sin(math.pi * t) * width * (.10 + .10 * h4)
+        pos = base + radial * (out_amount * ease) + tangent * (tan_amount * ease + snake)
+        # A very small mid-length lift keeps the strip elastic rather than perfectly
+        # ruled, while the endpoint order remains unequivocally downward-hanging.
+        pos.z = base.z - length * t + length * (.010 + .014 * h5) * math.sin(math.pi * t)
+        centers.append(pos)
+
+    tangents = []
+    for j in range(rows):
+        if j == 0:
+            tangent_vec = centers[1] - centers[0]
+        elif j == rows - 1:
+            tangent_vec = centers[-1] - centers[-2]
+        else:
+            tangent_vec = centers[j + 1] - centers[j - 1]
+        if tangent_vec.length < 1e-6:
+            tangent_vec = Vector((0.0, 0.0, -1.0))
+        tangents.append(tangent_vec.normalized())
+
+    uv_layer = bm.loops.layers.uv.active
+    lattice = {}
+    twist = math.radians((h1 - .5) * 58.0)
+    cup = width * (.075 + .045 * h2)
+    for j, center in enumerate(centers):
+        t = j / (rows - 1)
+        angle = spin + twist * (t - .5) + (h5 - .5) * .22
+        side = tangent * math.cos(angle) + radial * math.sin(angle)
+        tangent_vec = tangents[j]
+        side -= tangent_vec * side.dot(tangent_vec)
+        if side.length < 1e-6:
+            side = tangent.copy()
+        side.normalize()
+        normal = tangent_vec.cross(side)
+        if normal.length < 1e-6:
+            normal = Vector((0.0, 0.0, 1.0))
+        normal.normalize()
+        envelope = (.70 + .30 * math.sin(math.pi * (.08 + .84 * t))) * (1.0 - .10 * t)
+        halfwidth = width * .5 * envelope
+        for iu in range(2):
+            uc = iu * 2 - 1
+            # Edge-only ribbons halve canopy triangle cost.  Lengthwise rows,
+            # twist and snake still carry the curved-spray read; the removed
+            # centre column only contributed expensive camber.
+            camber = (h2 - .5) * width * .018 * uc
+            lattice[(iu, j)] = bm.verts.new(center + side * (uc * halfwidth) + normal * camber)
+
+    faces = []
+    umin, vmin, umax, vmax = uv_rect
+    in_u0 = .006 + .014 * h1
+    in_u1 = .006 + .014 * h2
+    umin += (umax - umin) * in_u0
+    umax -= (umax - umin) * in_u1
+    for j in range(rows - 1):
+        t0 = j / (rows - 1)
+        t1 = (j + 1) / (rows - 1)
+        for iu in range(1):
+            keys = ((iu, j), (iu + 1, j), (iu + 1, j + 1), (iu, j + 1))
+            face = bm.faces.new(tuple(lattice[k] for k in keys))
+            face.material_index = 1
+            face.smooth = True
+            uvs = []
+            for ku, kj in keys:
+                tt = kj / (rows - 1)
+                uu = umin + ku * (umax - umin)
+                vv = vmax - tt * (vmax - vmin)
+                uvs.append((uu, vv))
+            _write_face_uvs(face, uv_layer, uvs)
+            faces.append(face)
+    return faces
+
+
+def _append_willow_crown_r9(mesh, anchor_clusters, cap_data, *, seed, config):
+    """Rebuild the willow curtain as branch-bound narrow ribbon sprays.
+
+    The template's 78 hanging points were originally authored at upper-crown and
+    branch-tip positions.  R9 keeps that proven support field (and therefore the
+    approved wide, irregular silhouette) but replaces every large crossed card with
+    a small fan of narrow curved ribbons.  No extra wire-like connector lattice is
+    added: offsets are deliberately tight so the first spray in each fan sits on
+    the original branch tip and the companions read as side shoots in the same
+    spray cluster.  Varied lengths, widths, spin and lateral drift preserve the
+    transparent gaps expected in a weeping willow curtain.
+    """
+    support_bvh = _bark_bvh(mesh)
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+    zup = Vector((0.0, 0.0, 1.0))
+    ribbons = 0
+    ribbon_faces = 0
+    branchlets = 0
+    branchlet_faces = 0
+    support_distances = []
+    connector_lengths = []
+
+    def horizontal(v):
+        out = Vector((v.x, v.y, 0.0))
+        return out.normalized() if out.length > 1e-6 else Vector((1.0, 0.0, 0.0))
+
+    def make_ribbon(pos, radial, tangent, seedv, length_scale=1.0, width_scale=1.0):
+        nonlocal ribbons, ribbon_faces
+        h1 = _hash01(seedv, 727)
+        h2 = _hash01(seedv, 733)
+        h3 = _hash01(seedv, 739)
+        h4 = _hash01(seedv, 743)
+        maxlen = max(.52, pos.z - 1.04)
+        desired = config["ribbon_length"][0] + (config["ribbon_length"][1] - config["ribbon_length"][0]) * h1
+        desired *= length_scale * (.90 + .18 * h2)
+        # Nearly two-fifths of the sprays are intentionally short.  This breaks
+        # the uniform dreadlock rhythm while leaving enough long outer strands
+        # for the unmistakable willow curtain.
+        if h4 < .38:
+            desired *= .52 + .34 * h2
+        length = min(desired, maxlen)
+        if length < .50:
+            return 0
+        width = config["ribbon_width"][0] + (config["ribbon_width"][1] - config["ribbon_width"][0]) * h3
+        width *= width_scale * (.90 + .16 * h4)
+        outer = min(max((math.hypot(pos.x, pos.y) - 2.0) / 1.8, 0.0), 1.0)
+        rect = _leaf_atlas_rect(seedv, willow=True)
+        faces = _append_willow_ribbon(
+            bm, pos, radial, tangent, width=width, length=length, seed=seedv,
+            rows=config.get("ribbon_rows", 4), uv_rect=rect,
+            outward_bias=.13 + .17 * h2 + .050 * outer,
+            lateral_bias=(h3 - .5) * .34,
+            spin=h4 * 2.0 * math.pi + (h1 - .5) * .9)
+        ribbons += 1 if faces else 0
+        ribbon_faces += len(faces)
+        return len(faces)
+
+    caps = []
+    for ci, data in enumerate(cap_data or ()):
+        tip = data["tip"].copy()
+        radius_xy = math.hypot(tip.x, tip.y)
+        if tip.z >= 2.72 and radius_xy >= .62:
+            caps.append((ci, tip.z, radius_xy))
+
+    support_lookup = {}
+    connector_candidates = []
+    for ai, anchor in enumerate(anchor_clusters):
+        nearest = support_bvh.find_nearest(anchor["base"]) if support_bvh is not None else None
+        if nearest is not None and nearest[0] is not None:
+            sp = nearest[0].copy()
+            sn = nearest[1].copy() if nearest[1] is not None else zup.copy()
+            sd = (anchor["base"] - sp).length
+            support_lookup[ai] = (sp, sn, sd)
+            support_distances.append(sd)
+            if sd > .42:
+                outer0 = math.hypot(anchor["base"].x, anchor["base"].y)
+                # Prioritise large genuine gaps and structurally important outer/
+                # upper sprays instead of paying for every medium gap.
+                score = sd + .22 * outer0 + .035 * anchor["base"].z
+                connector_candidates.append((score, ai))
+    connector_candidates.sort(reverse=True)
+    max_connectors = 44
+    connector_selected = {ai for _score, ai in connector_candidates[:max_connectors]}
+
+    for ai, anchor in enumerate(anchor_clusters):
+        nearest = support_lookup.get(ai)
+        if nearest is not None:
+            support_point, support_normal, support_dist = nearest
+            # Most template hanging points are intentionally offset from the coarse
+            # scaffold.  Bridge that gap with a short tapered, arching side twig
+            # grown from the actual nearest bark surface rather than from a small
+            # set of limb caps.  Very close clusters need no extra wire-like wood.
+            if ai in connector_selected:
+                hc1 = _hash01(ai, 823, seed)
+                hc2 = _hash01(ai, 827, seed)
+                hc3 = _hash01(ai, 829, seed)
+                end = anchor["base"] + zup * .018
+                start = support_point - support_normal.normalized() * .026
+                delta = end - start
+                d = max(delta.length, 1e-5)
+                out = horizontal(delta)
+                side = Vector((-out.y, out.x, 0.0))
+                bend = (hc1 - .5) * d * .42
+                lift = d * (.14 + .09 * hc2)
+                p0 = start
+                p1 = start + out * (d * (.18 + .07 * hc2)) + zup * (d * .045) + side * (bend * .18)
+                p2 = end - out * (d * (.16 + .06 * hc3)) + zup * lift + side * (bend * .55)
+                p3 = end
+                pts = [_bezier_point(p0, p1, p2, p3, j / 3.0) for j in range(4)]
+                r0 = .015 + .006 * hc2 + .004 * min(d, 2.0)
+                r1 = .0055 + .0018 * hc3
+                radii = [r1 + (r0 - r1) * ((1.0 - j / 3.0) ** .72) for j in range(4)]
+                faces = _append_curved_tube(
+                    bm, pts, radii, sides=3, seed=seed + 9100 + ai * 17,
+                    material_index=0, oval=(1.0, .82), cap_start=False, cap_end=True,
+                    irregular=.045)
+                if faces:
+                    branchlets += 1
+                    branchlet_faces += len(faces)
+                    connector_lengths.append(d)
+        radial = horizontal(anchor["base"])
+        tangent = Vector((-radial.y, radial.x, 0.0))
+        outer = math.hypot(anchor["base"].x, anchor["base"].y)
+        count = 5
+        if outer > 3.15 and _hash01(ai, 799, seed) < .14:
+            count -= 1
+        for k in range(count):
+            hk1 = _hash01(ai, k, 809, seed)
+            hk2 = _hash01(ai, k, 811, seed)
+            hk3 = _hash01(ai, k, 821, seed)
+            pos = anchor["base"].copy()
+            if k:
+                # Side-shoot spread stays inside the original authored cluster;
+                # enough to avoid a single rope, not enough to detach from wood.
+                fan = (k - (count - 1) * .5) * (.095 + .060 * hk1)
+                pos += tangent * fan
+                pos += radial * ((hk2 - .44) * .115)
+                pos += zup * ((hk3 - .5) * .085 - .008 * k)
+            make_ribbon(pos, radial, tangent,
+                        seed + 7100 + ai * 31 + k * 7,
+                        length_scale=(.76 + .25 * hk1) * (1.0 + .08 * min(anchor["length"] / 2.4, 1.0)),
+                        width_scale=.92 + .12 * hk2)
+
+    bm.to_mesh(mesh)
+    mesh.update()
+    bm.free()
+    dist_arr = np.array(support_distances or [0.0], dtype=float)
+    len_arr = np.array(connector_lengths or [0.0], dtype=float)
+    return {"anchor_clusters": len(anchor_clusters), "branch_caps": len(caps),
+            "branchlets": branchlets, "branchlet_faces": branchlet_faces,
+            "connector_len_mean": round(float(len_arr.mean()), 3),
+            "connector_len_max": round(float(len_arr.max()), 3),
+            "ribbons": ribbons, "ribbon_faces": ribbon_faces,
+            "support_field": "template_branch_tip_anchors",
+            "support_dist_mean": round(float(dist_arr.mean()), 3),
+            "support_dist_p90": round(float(np.percentile(dist_arr, 90)), 3),
+            "support_dist_max": round(float(dist_arr.max()), 3),
+            "support_within_.5m": int((dist_arr <= .5).sum())}
 
 
 def _leaf_atlas_rect(h, *, willow=False):
     hu = _hash01(h, 401)
     hv = _hash01(h, 409)
     u0 = .008 if hu < .5 else .508
+    if willow:
+        # Willow foliage is a 2x1 atlas: two full-height hanging branchlet sprays.
+        # Older helper calls accidentally treated it as 2x2 and cropped away half
+        # of every spray; R9 ribbons depend on the complete stem-to-tip gradient.
+        return (u0, .008, u0 + .484, .992)
     v0 = .008 if hv < .5 else .508
     return (u0, v0, u0 + .484, v0 + .484)
 
@@ -1600,7 +2120,7 @@ def _add_procedural_bark_geometry(mesh, *, seed=0, root=None, collars=(), shoot_
     if root:
         root_args = {k: v for k, v in root.items()
                      if k in {"count", "trunk_radius", "base_z", "length_range", "radius_range",
-                              "bury_range", "sides", "rings", "oval"}}
+                              "bury_range", "sides", "rings", "oval", "branch_fraction"}}
         made["surface_roots"] = _append_surface_roots(bm, centre, seed=seed, **root_args)
     for ci, cfg in enumerate(collars or ()):
         angle = math.radians(cfg["angle_deg"])
@@ -1817,6 +2337,87 @@ def _shrink_fern_crown(mesh, *, z0=.018, height_scale=.24, radial_pull=.68):
     return {"vertices": changed}
 
 
+def _roughen_bark_surface(mesh, *, seed=0, trunk_radius=.5):
+    """Restrained deterministic bark-surface breakup without adding triangles.
+
+    This is a reduced version of the R8 experiment: low-frequency cylindrical grooves
+    on the lower trunk plus very small continuous breakup on limbs.  It exists only
+    to keep large wood triangles from reading as extruded plastic underneath the
+    texture detail; it must not crumple the scaffold or touch the burial socket.
+    """
+    comps = _material_components(mesh, 0)
+    if not comps:
+        return {"vertices": 0}
+    acc = [Vector((0, 0, 0)) for _ in mesh.vertices]
+    zmin0 = min((v.co.z for v in mesh.vertices), default=0.0)
+    for p in mesh.polygons:
+        if p.material_index != 0:
+            continue
+        n = p.normal * p.area
+        for v in p.vertices:
+            acc[v] += n
+    centre = _estimate_trunk_center(mesh)
+    phases = [_hash01(seed, key) * 2.0 * math.pi for key in (601, 607, 613, 617, 619)]
+    ph1, ph2, ph3, ph4, ph5 = phases
+    changed = trunk_changed = branch_changed = 0
+    trunk_amp = trunk_radius * .030
+    for comp in comps:
+        npolys = len(comp["polys"])
+        if npolys >= 500:
+            base_amp = .012
+        elif npolys >= 120:
+            base_amp = .0085
+        elif npolys >= 45:
+            base_amp = .006
+        else:
+            base_amp = .0025
+        for vi in comp["verts"]:
+            co = mesh.vertices[vi].co
+            z0 = co.z
+            if z0 < -.28 or z0 < zmin0 + .10:
+                continue
+            n = acc[vi]
+            if n.length < 1e-6:
+                continue
+            n = n.normalized()
+            x, y, z = co.x, co.y, co.z
+            dx, dy = x - centre.x, y - centre.y
+            r = math.hypot(dx, dy)
+            zfac = min(max((3.55 - z) / 3.35, 0.0), 1.0)
+            zfac = zfac * zfac * (3.0 - 2.0 * zfac)
+            rfac = min(max((trunk_radius * 2.05 - r) / max(trunk_radius * 1.25, 1e-5), 0.0), 1.0)
+            trunkmask = zfac * rfac
+            if r < trunk_radius * 1.12 and z < 2.6:
+                trunkmask = max(trunkmask, .72 * zfac)
+            ang = math.atan2(dy, dx)
+            warp = 1.35 * math.sin(z * 1.85 + ph1) + .48 * math.sin(z * 4.35 + ph2)
+            g1 = math.sin(11.0 * ang + warp + ph3)
+            g2 = math.sin(19.0 * ang - z * 1.22 + ph4)
+            groove = -(abs(g1) ** .62) + .24 * g2 + .18 * math.sin(7.0 * ang + z * 5.1 + ph5)
+            low = (math.sin(x * 3.9 + z * 2.1 + ph1) *
+                   math.sin(y * 4.4 - z * 1.7 + ph2) *
+                   math.sin((x + y) * 2.3 + z * 3.1 + ph3))
+            mid = (math.sin(x * 12.7 + y * 5.9 + z * 4.1 + ph4) *
+                   math.sin(y * 14.9 - z * 7.3 + ph5))
+            breakup = .58 * low + .42 * mid
+            disp = trunkmask * trunk_amp * groove
+            disp += base_amp * ((1.0 - trunkmask) * breakup + trunkmask * .30 * mid)
+            if abs(disp) < 1e-7:
+                continue
+            newco = co + n * disp
+            if newco.z < zmin0 + .006:
+                newco.z = zmin0 + .006
+            mesh.vertices[vi].co = newco
+            changed += 1
+            if trunkmask > .25:
+                trunk_changed += 1
+            else:
+                branch_changed += 1
+    if changed:
+        mesh.update()
+    return {"vertices": changed, "trunk_vertices": trunk_changed, "branch_vertices": branch_changed}
+
+
 def _smooth_bark_normals(mesh):
     """Use area-weighted smooth split normals on wood while leaving foliage loops untouched."""
     old = [x.vector.copy() for x in mesh.corner_normals]
@@ -1881,8 +2482,170 @@ def _wire_foliage_translucency(mat, strength):
     bsdf.inputs["Emission Strength"].default_value = strength
 
 
+def _load_detail_image(path, width, height, *, non_color=False):
+    img = bpy.data.images.load(path, check_existing=False)
+    if non_color:
+        img.colorspace_settings.name = "Non-Color"
+    img.scale(width, height)
+    px = vrmeshy._image_pixels(img).copy()
+    return img, px
+
+
+def _highpass_luminance(rgb):
+    lum = rgb @ np.array([.2126, .7152, .0722], dtype=np.float32)
+    h, w = lum.shape
+    fy = np.fft.fftfreq(h)[:, None]
+    fx = np.fft.rfftfreq(w)[None, :]
+    sigma = max(w, h) * .035
+    kernel = np.exp(-2.0 * (math.pi ** 2) * (sigma ** 2) * (fx ** 2 + fy ** 2)).astype(np.float32)
+    low = np.fft.irfft2(np.fft.rfft2(lum) * kernel, s=(h, w))
+    high = lum / np.maximum(low, 1e-4)
+    high = np.clip(high, .76, 1.28)
+    return high / max(float(np.mean(high)), 1e-5)
+
+
+def _apply_real_bark_detail(mat, *, albedo_strength=.34, normal_strength=.44,
+                            roughness_strength=.38, normal_map_strength=.90):
+    """Bake restrained real-bark high frequency into the existing texture images.
+
+    The prototype showed that real bark detail is the right direction, but its full
+    replacement strength was too graphic.  R9 uses the same local sources more
+    conservatively and writes them into the already-present 1024² bark albedo,
+    normal and ORM textures.  No additional material texture channels or UV systems
+    are introduced, so the texture count, palette grading and UV continuity survive.
+    """
+    root = os.path.abspath(os.path.join(ASSET_DIR, "..", "..", ".."))
+    albedo_path = os.path.join(root, "art", "textures", "src", "bark__acg_Bark012.jpg")
+    normal_path = os.path.join(root, "web", "explore", "public", "detail", "bark_normal.webp")
+    rough_path = os.path.join(root, "web", "explore", "public", "detail", "bark_rough.webp")
+    missing = [p for p in (albedo_path, normal_path, rough_path) if not os.path.isfile(p)]
+    if missing:
+        return {"applied": False, "missing": [os.path.basename(p) for p in missing]}
+    bsdf = _principled(mat)
+    base_nodes = _basecolor_texture_nodes(mat)
+    if bsdf is None or not base_nodes:
+        return {"applied": False, "reason": "missing base colour graph"}
+    result = {"applied": True, "albedo": None, "normal": None, "roughness": None,
+              "albedo_strength": albedo_strength, "normal_strength": normal_strength,
+              "roughness_strength": roughness_strength}
+    loaded = []
+    try:
+        base_img = base_nodes[0].image
+        w, h = base_img.size
+        detail, detail_px = _load_detail_image(albedo_path, w, h)
+        loaded.append(detail)
+        high = _highpass_luminance(detail_px[..., :3])
+        px = vrmeshy._image_pixels(base_img).copy()
+        mod = 1.0 + (high - 1.0) * albedo_strength
+        px[..., :3] = np.clip(px[..., :3] * mod[..., None], 0.0, 1.0)
+        base_img.pixels.foreach_set(px.astype(np.float32).ravel())
+        base_img.update()
+        if not base_img.packed_file:
+            base_img.pack()
+        result["albedo"] = base_img.name
+
+        normal_link = next((l for l in bsdf.inputs["Normal"].links if l.from_node.type == "NORMAL_MAP"), None)
+        if normal_link is not None:
+            nmap = normal_link.from_node
+            tex_link = next((l for l in nmap.inputs["Color"].links if l.from_node.type == "TEX_IMAGE"), None)
+            if tex_link is not None:
+                normal_img = tex_link.from_node.image
+                nw, nh = normal_img.size
+                detail_n, detail_npx = _load_detail_image(normal_path, nw, nh, non_color=True)
+                loaded.append(detail_n)
+                opx = vrmeshy._image_pixels(normal_img).copy()
+                base_vec = opx[..., :3] * 2.0 - 1.0
+                detail_vec = detail_npx[..., :3] * 2.0 - 1.0
+                s = normal_strength
+                vec = base_vec.copy()
+                vec[..., 0] = base_vec[..., 0] + detail_vec[..., 0] * s
+                vec[..., 1] = base_vec[..., 1] + detail_vec[..., 1] * s
+                vec[..., 2] = base_vec[..., 2] * (1.0 - .30 * s) + np.maximum(detail_vec[..., 2], 0.0) * (.30 * s)
+                lengths = np.maximum(np.linalg.norm(vec, axis=-1, keepdims=True), 1e-5)
+                opx[..., :3] = np.clip(vec / lengths * .5 + .5, 0.0, 1.0)
+                normal_img.pixels.foreach_set(opx.astype(np.float32).ravel())
+                normal_img.update()
+                if not normal_img.packed_file:
+                    normal_img.pack()
+                nmap.inputs["Strength"].default_value = normal_map_strength
+                result["normal"] = normal_img.name
+
+        rough_link = next((l for l in bsdf.inputs["Roughness"].links if l.from_node.type == "SEPARATE_COLOR"), None)
+        if rough_link is not None:
+            sep = rough_link.from_node
+            orm_link = next((l for l in sep.inputs["Color"].links if l.from_node.type == "TEX_IMAGE"), None)
+            if orm_link is not None:
+                orm_img = orm_link.from_node.image
+                ow, oh = orm_img.size
+                detail_r, detail_rpx = _load_detail_image(rough_path, ow, oh, non_color=True)
+                loaded.append(detail_r)
+                opx = vrmeshy._image_pixels(orm_img).copy()
+                high_r = _highpass_luminance(detail_rpx[..., :3])
+                mod = 1.0 + (high_r - 1.0) * roughness_strength
+                opx[..., 1] = np.clip(opx[..., 1] * mod, .68, .96)
+                orm_img.pixels.foreach_set(opx.astype(np.float32).ravel())
+                orm_img.update()
+                if not orm_img.packed_file:
+                    orm_img.pack()
+                result["roughness"] = orm_img.name
+    finally:
+        for img in loaded:
+            if img and img.name in bpy.data.images:
+                bpy.data.images.remove(img)
+    return result
+
+
+def _apply_willow_r9_geometry(mesh):
+    """R9 pilot geometry path for the willow only.
+
+    Baseline HEAD supplied the verified template/material pipeline; from R7/R8 we
+    keep only the stricter flare collapse, dead-end shrinking, restrained bark
+    breakup and the idea of explicit wood-to-canopy binding.  The rejected R8 card
+    shattering/loop-subdivision/foliage-pulling passes are deliberately absent.
+    """
+    anchor_clusters = _capture_willow_anchor_clusters(mesh)
+    removed_foliage = _delete_foliage_material(mesh, material_index=1)
+    tips = _taper_small_bark_tips(mesh, **BARK_TAPER_CONFIG)
+    lower_flare = _smooth_lower_trunk_flare(
+        mesh, trunk_radius=ROOT_CONFIG.get("trunk_radius", .5), seed=GEOMETRY_SEED)
+    teeth_dive = _dive_flare_teeth(
+        mesh, trunk_radius=ROOT_CONFIG.get("trunk_radius", .5), seed=GEOMETRY_SEED)
+    fluting = _flute_trunk_bark(
+        mesh, trunk_radius=ROOT_CONFIG.get("trunk_radius", .5), height=3.4,
+        seed=GEOMETRY_SEED)
+    cap_args = {k: v for k, v in TIP_CAP_CONFIG.items()
+                if k in {"zmin", "min_radius", "cluster_radius", "min_points", "seed",
+                         "dead_end", "max_caps", "min_cap_radius"}}
+    cap_data = _tip_cap_candidates(mesh, **cap_args)
+    blunt_terminal_mesh = _shrink_blunt_terminal_mesh(mesh, cap_data)
+    # Roots and collars are still shared with the approved production system, but
+    # generic terminal tufts are disabled: R9 branchlets/sprays perform that job.
+    bark_geometry = _add_procedural_bark_geometry(
+        mesh, seed=GEOMETRY_SEED, root=ROOT_CONFIG, collars=BRANCH_COLLARS,
+        shoot_collars=None, tip_caps=None)
+    bark_rough = _roughen_bark_surface(
+        mesh, seed=GEOMETRY_SEED, trunk_radius=ROOT_CONFIG.get("trunk_radius", .5))
+    crown = _append_willow_crown_r9(
+        mesh, anchor_clusters, cap_data, seed=WILLOW_R9_CONFIG.get("crown_seed", GEOMETRY_SEED),
+        config=WILLOW_R9_CONFIG)
+    bark_normals = _smooth_bark_normals(mesh)
+    foliage_normals = _recalc_foliage_normals(
+        mesh, geom_weight=.58, up_weight=.28, radial_weight=.84)
+    return {"willow_r9_anchors": len(anchor_clusters),
+            "removed_template_foliage": removed_foliage,
+            "tapered_tips": tips, "lower_trunk_flare": lower_flare,
+            "flare_teeth_dive": teeth_dive, "trunk_fluting": fluting,
+            "tip_cap_candidates": len(cap_data),
+            "blunt_terminal_mesh_manual": blunt_terminal_mesh,
+            "procedural_bark": bark_geometry, "bark_rough": bark_rough,
+            "willow_r9_crown": crown, "bark_normals": bark_normals,
+            "foliage_normals": foliage_normals}
+
+
 def _apply_asset_geometry(obj):
     mesh = obj.data
+    if "willow" in SLUG and ASSET_KIND == "tree":
+        return _apply_willow_r9_geometry(mesh)
     if ASSET_KIND == "fern":
         fronds = _reshape_fern_fronds(mesh, seed=GEOMETRY_SEED)
         uvs = _compress_fern_frond_uvs(mesh)
@@ -1994,6 +2757,9 @@ def _configure_materials(obj, template_info):
     bark_lifted = _lift_foliage_albedo(bark, gamma=.74, floor=.032)
     if bark_lifted:
         graded["bark_lifted"] = bark_lifted
+    if BARK_DETAIL_CONFIG.get("enabled"):
+        detail_args = {k: v for k, v in BARK_DETAIL_CONFIG.items() if k != "enabled"}
+        graded["bark_real_detail"] = _apply_real_bark_detail(bark, **detail_args)
     _wire_foliage_translucency(foliage, FOLIAGE_TRANSLUCENCY)
     # A much weaker floor on wood keeps shadowed twigs brown instead of colourless black.
     _wire_foliage_translucency(bark, BARK_TRANSLUCENCY)

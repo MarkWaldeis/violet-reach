@@ -22,6 +22,7 @@ import bpy
 import bmesh
 import numpy as np
 from mathutils import Matrix, Vector
+from mathutils.geometry import closest_point_on_tri
 
 import vrlib
 import vrmeshy
@@ -31,21 +32,23 @@ TEMPLATE = "V3_TPL_tree_meadow_beech"
 SLUG = "tree_meadow_beech"
 EXPECTED_Z_MIN = -0.65
 TARGET_SIZE_M = (11.0, 12.0, 11.0)  # ungefähr, oberirdische Höhe im Quelltemplate
-FOLIAGE_TARGET = "#4A5426"  # zwischen leaf_green #313C1D und grass_green #696F44
-FOLIAGE_STRENGTH = 0.60
+FOLIAGE_TARGET = "#696F44"  # grass_green, evidenzbasiert aus der R9-Materialprobe
+FOLIAGE_STRENGTH = 0.80
 BARK_TARGET = "#41321D"
 BARK_STRENGTH = 0.36
 ALPHA_CUTOFF = 0.34
 ROUGHNESS_MIN = 0.65
 ASSET_KIND = "tree"
 GEOMETRY_SEED = 9202
-# Runde 4: Karten-Viererteliung wie bei der Eiche, hier mit extra hoher
-# Innenfuellung gegen die als hohl beanstandete Buchenkrone.
-SPLIT_CONFIG = dict(enabled=True, seed=GEOMETRY_SEED)
-CARD_CONFIG = dict(width_scale=.58, length_scale=.66, cup=.10, twist_deg=42, arch=.05,
-                   tilt=True, tilt_threshold=.40, tilt_min_deg=19, tilt_max_deg=38,
-                   upward_bias=.72, radial_sway=0.0, scale_jitter=.15, seed=GEOMETRY_SEED,
-                   scatter_deg=30, scatter_offset=.12)
+# R9 subtractive-first: die authored 3x3-Laubsprays des Templates bleiben ganze
+# zusammenhaengende Komponenten.  Nur eine sehr milde, topologieerhaltende Krümmung
+# und ein selektiver 7–14°-Anti-Regal-Pitch auf bereits horizontalen Karten bleiben
+# aktiv; es gibt weder Splitting/Shattering noch Scatter- oder Fill-Re-Placement.
+SPLIT_CONFIG = dict(enabled=False, seed=GEOMETRY_SEED)
+CARD_CONFIG = dict(width_scale=1.0, length_scale=1.0, cup=.035, twist_deg=8, arch=.015,
+                   tilt=True, tilt_threshold=.42, tilt_min_deg=7, tilt_max_deg=14,
+                   upward_bias=.62, radial_sway=0.0, scale_jitter=0.0, seed=GEOMETRY_SEED,
+                   attach_high=False, scatter_deg=0.0, scatter_offset=0.0)
 BARK_TAPER_CONFIG = dict(max_faces=48, min_faces=32, taper_start=.72, end_radius=.025,
                          length_scale=.78, bend=.065, seed=GEOMETRY_SEED)
 FILL_CONFIG = dict(attach_high=False, fraction=1.0, second_fraction=.95, third_fraction=.60,
@@ -68,8 +71,8 @@ TIP_CAP_CONFIG = dict(zmin=2.65, min_radius=.85, cluster_radius=.70, min_points=
                       dead_end=.30, max_caps=20, length_radius_mul=2.1, min_cap_radius=.062)
 FOLIAGE_GAMMA = .80
 FOLIAGE_LIFT_FLOOR = .035
-FOLIAGE_TRANSLUCENCY = .110
-BARK_TRANSLUCENCY = .078
+FOLIAGE_TRANSLUCENCY = .220
+BARK_TRANSLUCENCY = .060
 
 
 def _sha256_file(path):
@@ -630,6 +633,102 @@ def _taper_small_bark_tips(
             changed += 1
     mesh.update()
     return {"pieces": pieces, "vertices": changed}
+
+
+def _taper_exposed_bark_tips(
+    mesh,
+    *,
+    max_faces=48,
+    min_faces=32,
+    min_tip_distance=.45,
+    zmin=3.5,
+    max_count=5,
+    taper_start=.72,
+    end_radius=.16,
+    length_scale=.55,
+):
+    """Subtractive, non-additive trim of only the most exposed loose shoot tubes.
+
+    The templates contain a small number of disconnected 44-face bark shoot tubes.
+    Most are already covered by nearby authored foliage.  This pass measures the free
+    end of each tube against the existing foliage vertices and only shortens/tapers the
+    few uncovered outliers; it creates no vertices, faces, caps, twigs or leaf mass and
+    leaves covered shoots untouched.
+    """
+    comps = _material_components(mesh, 0)
+    small = [c for c in comps if min_faces <= len(c["polys"]) <= max_faces]
+    small_ids = {id(c) for c in small}
+    large_verts = sorted({v for c in comps if id(c) not in small_ids for v in c["verts"]})
+    if not large_verts:
+        large_verts = sorted({v for c in comps for v in c["verts"]})
+    foliage_verts = sorted({v for p in mesh.polygons if p.material_index == 1 for v in p.vertices})
+    if not small or not large_verts or not foliage_verts:
+        return {"pieces": 0, "vertices": 0, "candidates": []}
+    ref = np.array([mesh.vertices[v].co[:] for v in large_verts], dtype=float)
+    foliage_tris = []
+    for poly in mesh.polygons:
+        if poly.material_index != 1:
+            continue
+        ids = list(poly.vertices)
+        for k in range(1, len(ids) - 1):
+            foliage_tris.append((
+                mesh.vertices[ids[0]].co.copy(),
+                mesh.vertices[ids[k]].co.copy(),
+                mesh.vertices[ids[k + 1]].co.copy(),
+            ))
+
+    def foliage_surface_distance(point):
+        best = 999.0
+        for a, b, c in foliage_tris:
+            close = closest_point_on_tri(point, a, b, c)
+            best = min(best, (close - point).length)
+        return best
+
+    candidates = []
+    for ci, comp in enumerate(small):
+        pts, centre, axis0, e0, e1, length0 = _component_pca(mesh, comp["verts"])
+        d0 = float(((ref - np.array(e0)) ** 2).sum(axis=1).min())
+        d1 = float(((ref - np.array(e1)) ** 2).sum(axis=1).min())
+        base, tip = (e0, e1) if d0 <= d1 else (e1, e0)
+        foliage_dist = foliage_surface_distance(tip)
+        if tip.z < zmin or foliage_dist < min_tip_distance:
+            continue
+        candidates.append({
+            "ci": ci, "comp": comp, "base": base, "tip": tip,
+            "length": length0, "foliage_dist": foliage_dist,
+        })
+    candidates.sort(key=lambda c: (-c["foliage_dist"], -c["tip"].z, c["ci"]))
+    selected = candidates[:max_count]
+    changed = 0
+    details = []
+    for item in selected:
+        comp = item["comp"]
+        base = item["base"]
+        tip = item["tip"]
+        axis = tip - base
+        length = max(axis.length, 1e-6)
+        axis = axis / length
+        for v in comp["verts"]:
+            original = mesh.vertices[v].co
+            tt = min(max((original - base).dot(axis), 0.0), length)
+            q = tt / length
+            projection = base + axis * tt
+            radial = original - projection
+            if q > taper_start:
+                s = (q - taper_start) / max(1.0 - taper_start, 1e-6)
+                s = s * s * (3.0 - 2.0 * s)
+                radial *= 1.0 + (end_radius - 1.0) * s
+            mesh.vertices[v].co = base + axis * (tt * length_scale) + radial
+            changed += 1
+        details.append({
+            "component": item["ci"],
+            "length": round(item["length"], 3),
+            "foliage_distance": round(item["foliage_dist"], 3),
+            "tip_z": round(item["tip"].z, 3),
+        })
+    if changed:
+        mesh.update()
+    return {"pieces": len(selected), "vertices": changed, "candidates": details}
 
 
 def _material_components(mesh, material_index):
@@ -1851,6 +1950,32 @@ def _lift_foliage_albedo(mat, *, gamma, floor):
     return lifted
 
 
+def _lift_bark_albedo(mat, *, boost, floor, suffix):
+    """Restrained multiplicative bark lift baked into a new packed image.
+
+    The soft ``1-exp(-v)`` curve keeps shadowed wood brown and preserves the authored
+    grain contrast without clipping bright lichen/detail texels into white plastic.
+    A new image is required because editing an already packed image in place is not
+    reliably encoded into the saved .blend.
+    """
+    lifted = []
+    made = {}
+    for node in _basecolor_texture_nodes(mat):
+        img = node.image
+        if img in made:
+            continue
+        px = vrmeshy._image_pixels(img)
+        v = px[..., :3] * boost + floor
+        rgb = 1.0 - np.exp(-v)
+        out = np.concatenate([rgb, px[..., 3:]], -1)
+        made[img] = vrmeshy._replace_image(img, out, suffix)
+        lifted.append(made[img].name)
+    for node in mat.node_tree.nodes:
+        if node.type == "TEX_IMAGE" and node.image in made:
+            node.image = made[node.image]
+    return lifted
+
+
 def _wire_foliage_translucency(mat, strength):
     """Very weak exportable emission lift, standing in for leaf translucency.
 
@@ -1871,47 +1996,37 @@ def _wire_foliage_translucency(mat, strength):
 
 
 def _apply_asset_geometry(obj):
+    """R9 subtractive-first geometry on the original template base.
+
+    Geometric work is limited to (a) the mild connected-card curl/pitch configured
+    above, which moves existing vertices within the authored multi-face leaf sprays,
+    and (b) a non-additive shorten/taper of the few measured bare shoot tips that are
+    not covered by existing foliage.  Neither operation creates faces, fragments,
+    copies or disconnected bark pieces.  Other bark work is shading-only split-normal
+    smoothing.  The additive R8 operations (card splitting, cluster fill,
+    shattering/re-anchoring, surface roots, collars, terminal growth, trunk fluting,
+    flare surgery and broad bark relief) are intentionally not run.
+    """
     mesh = obj.data
-    if ASSET_KIND == "fern":
-        fronds = _reshape_fern_fronds(mesh, seed=GEOMETRY_SEED)
-        uvs = _compress_fern_frond_uvs(mesh)
-        hearts = _scatter_fern_hearts(mesh, seed=GEOMETRY_SEED)
-        crown = _bury_fern_crown(mesh)
-        fill = _duplicate_foliage_clusters(mesh, **FILL_CONFIG)
-        soil = _add_fern_root_mound(mesh, hearts, seed=GEOMETRY_SEED)
-        bark_normals = _smooth_bark_normals(mesh)
-        foliage_normals = _recalc_foliage_normals(mesh, geom_weight=.72, up_weight=.38, radial_weight=.35)
-        return {"fern_fronds": fronds, "frond_uvs": uvs, "wedelherzen": hearts,
-                "root_crown": crown, "cluster_fill": fill, "soil_roots": soil,
-                "bark_normals": bark_normals, "foliage_normals": foliage_normals}
-    split = {"cards_split": 0, "pieces": 0}
-    if SPLIT_CONFIG.get("enabled"):
-        split = _split_foliage_cards(mesh, seed=SPLIT_CONFIG.get("seed", 0))
     cards = _reshape_foliage_cards(mesh, **CARD_CONFIG)
-    fill = _duplicate_foliage_clusters(mesh, **FILL_CONFIG)
-    willow_ragged = {"cards_ragged": 0}
-    if "willow" in SLUG:
-        willow_ragged = _raggedize_willow_cards(mesh, seed=GEOMETRY_SEED)
-    tips = _taper_small_bark_tips(mesh, **BARK_TAPER_CONFIG)
-    lower_flare = _smooth_lower_trunk_flare(mesh, trunk_radius=ROOT_CONFIG.get("trunk_radius", .5), seed=GEOMETRY_SEED)
-    fluting = _flute_trunk_bark(mesh, trunk_radius=ROOT_CONFIG.get("trunk_radius", .5),
-                                height=3.4, seed=GEOMETRY_SEED)
-    bark_geometry = _add_procedural_bark_geometry(
-        mesh, seed=GEOMETRY_SEED, root=ROOT_CONFIG, collars=BRANCH_COLLARS,
-        shoot_collars=SHOOT_COLLAR_CONFIG, tip_caps=TIP_CAP_CONFIG)
+    exposed_tip_trim = _taper_exposed_bark_tips(mesh)
     bark_normals = _smooth_bark_normals(mesh)
-    normals = 0
-    if ASSET_KIND == "tree":
-        if "willow" in SLUG:
-            normals = _recalc_foliage_normals(mesh, geom_weight=.60, up_weight=.30, radial_weight=.82)
-        else:
-            normals = _recalc_foliage_normals(mesh, geom_weight=.60, up_weight=.58, radial_weight=.68)
-    elif ASSET_KIND == "bush":
-        normals = _recalc_foliage_normals(mesh, geom_weight=.66, up_weight=.50, radial_weight=.56)
-    return {"cards": cards, "card_split": split, "cluster_fill": fill,
-            "willow_ragged": willow_ragged, "tapered_tips": tips, "lower_trunk_flare": lower_flare, "trunk_fluting": fluting,
-            "procedural_bark": bark_geometry, "bark_normals": bark_normals,
-            "foliage_normals": normals}
+    return {
+        "subtractive_original_base": True,
+        "cards": cards,
+        "card_split": {"disabled": True, "pieces": 0},
+        "cluster_fill": {"disabled": True, "copies": 0},
+        "leaf_shatter": {"disabled": True},
+        "canopy_anchor": {"disabled": True},
+        "tapered_tips": {"disabled": True},
+        "exposed_tip_trim": exposed_tip_trim,
+        "lower_trunk_flare": {"disabled": True},
+        "trunk_fluting": {"disabled": True},
+        "procedural_bark": {"disabled": True, "surface_roots": {"roots": 0}, "branch_collars": 0, "terminal_growth": 0},
+        "bark_relief": {"disabled": True},
+        "bark_normals": bark_normals,
+        "foliage_normals": "template_custom_preserved",
+    }
 
 
 def _occlusion_group():
@@ -1980,7 +2095,9 @@ def _configure_materials(obj, template_info):
     lifted = _lift_foliage_albedo(foliage, gamma=FOLIAGE_GAMMA, floor=FOLIAGE_LIFT_FLOOR)
     if lifted:
         graded["foliage_lifted"] = lifted
-    bark_lifted = _lift_foliage_albedo(bark, gamma=.74, floor=.032)
+    # R9: deutlich schwächerer, kontrasttreuer Rindenlift als die additive R8/R6-Linie.
+    # Ziel ist braun lesbares Schattenholz, nicht blass-orange oder plastisch wirkende Rinde.
+    bark_lifted = _lift_bark_albedo(bark, boost=1.30, floor=.007, suffix="_vr_r9lift")
     if bark_lifted:
         graded["bark_lifted"] = bark_lifted
     _wire_foliage_translucency(foliage, FOLIAGE_TRANSLUCENCY)
@@ -2013,6 +2130,12 @@ def _validate_source(obj, template_info):
     base_tris = int(template_info["tris"])
     if tris < base_tris:
         raise SystemExit(f"{TEMPLATE}: {tris} triangles, below verified template floor {base_tris}")
+    hard_max = int(math.ceil(base_tris * 1.15))
+    if tris > hard_max:
+        raise SystemExit(
+            f"{TEMPLATE}: {tris} triangles exceed the R9 subtractive hard maximum {hard_max} "
+            f"(template {base_tris} +15%)"
+        )
     if me.color_attributes.get(template_info["color_attribute"]) is None:
         raise SystemExit(f"{TEMPLATE}: color attribute {template_info['color_attribute']} is missing")
     if not getattr(me, "has_custom_normals", False) and me.attributes.get("custom_normal") is None:

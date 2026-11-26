@@ -22,6 +22,7 @@ import bpy
 import bmesh
 import numpy as np
 from mathutils import Matrix, Vector
+from mathutils.geometry import closest_point_on_tri
 
 import vrlib
 import vrmeshy
@@ -31,21 +32,33 @@ TEMPLATE = "V3_TPL_tree_meadow_ancient"
 SLUG = "tree_meadow_ancient"
 EXPECTED_Z_MIN = -0.65
 TARGET_SIZE_M = (12.0, 13.0, 11.0)  # ungefähr, oberirdische Höhe im Quelltemplate
-FOLIAGE_TARGET = "#4A5426"  # zwischen leaf_green #313C1D und grass_green #696F44
-FOLIAGE_STRENGTH = 0.60
+FOLIAGE_TARGET = "#696F44"  # grass_green, evidenzbasiert aus der R9-Materialprobe
+FOLIAGE_STRENGTH = 0.80
 BARK_TARGET = "#41321D"
 BARK_STRENGTH = 0.36
 ALPHA_CUTOFF = 0.34
 ROUGHNESS_MIN = 0.65
 ASSET_KIND = "tree"
 GEOMETRY_SEED = 9303
-# Runde 4: Karten-Viererteilung, sehr dichte Staffelung gegen die Regalflaechen,
-# Endkappen gegen die schwarzen Speerspitzen an freien Astenden.
-SPLIT_CONFIG = dict(enabled=True, seed=GEOMETRY_SEED)
-CARD_CONFIG = dict(width_scale=.56, length_scale=.64, cup=.11, twist_deg=46, arch=.05,
-                   tilt=True, tilt_threshold=.38, tilt_min_deg=21, tilt_max_deg=41,
-                   upward_bias=.68, radial_sway=0.0, scale_jitter=.16, seed=GEOMETRY_SEED,
-                   scatter_deg=32, scatter_offset=.13)
+# R9 subtractive-first: die authored 3x3-Laubsprays des Templates bleiben ganze
+# zusammenhaengende Komponenten.  Nur eine sehr milde, topologieerhaltende Krümmung
+# und ein selektiver 7–14°-Anti-Regal-Pitch auf bereits horizontalen Karten bleiben
+# aktiv; es gibt weder Splitting/Shattering noch Scatter- oder Fill-Re-Placement.
+SPLIT_CONFIG = dict(enabled=False, seed=GEOMETRY_SEED)
+CARD_CONFIG = dict(width_scale=1.0, length_scale=1.0, cup=.035, twist_deg=8, arch=.015,
+                   tilt=True, tilt_threshold=.42, tilt_min_deg=7, tilt_max_deg=14,
+                   upward_bias=.62, radial_sway=0.0, scale_jitter=0.0, seed=GEOMETRY_SEED,
+                   attach_high=False, scatter_deg=0.0, scatter_offset=0.0)
+# R9.2: only the largest near-horizontal authored sprays receive a stronger connected
+# pitch/fold.  This is deliberately selective; the global mild curl above remains the
+# baseline instead of a random scatter or another planar-card shatter pass.
+SHELF_FOLD_CONFIG = dict(max_cards=28, min_span=2.05, min_normal_z=.88,
+                         pitch_min_deg=26, pitch_max_deg=36, cup=.105, arch=.055,
+                         seed=GEOMETRY_SEED)
+# At most 34 extra whole 3x3 leaf cards (+14.5% versus 234 authored clusters, +272
+# triangles).  They are generated only at measured wood endpoints: two per badly exposed
+# loose shoot endpoint and a small number on verified exposed scaffold terminals.
+ENDPOINT_FILL_CONFIG = dict(max_cards=34, scaffold_cards=6, seed=GEOMETRY_SEED)
 # Runde 6: deutlich staerkere Verkuerzung (.42 statt .68), frueher einsetzende
 # Verjuengung und mehr Biegung, damit die nackten Speerspitzen als kurze beblaetterte
 # Zweigenden in die Krone eingegliedert werden statt als schwarze Stacheln herauszuragen.
@@ -75,8 +88,8 @@ TIP_CAP_CONFIG = dict(zmin=2.45, min_radius=1.05, cluster_radius=.78, min_points
                       dead_end=.30, max_caps=20, length_radius_mul=2.2, min_cap_radius=.065)
 FOLIAGE_GAMMA = .78
 FOLIAGE_LIFT_FLOOR = .035
-FOLIAGE_TRANSLUCENCY = .090
-BARK_TRANSLUCENCY = .078
+FOLIAGE_TRANSLUCENCY = .220
+BARK_TRANSLUCENCY = .088
 
 
 def _sha256_file(path):
@@ -528,6 +541,99 @@ def _reshape_foliage_cards(
             moved += 1
     mesh.update()
     return {"cards": len(comps), "vertices": moved, "tilted_cards": tilted}
+
+
+def _fold_worst_shelf_cards(
+    mesh,
+    *,
+    max_cards=28,
+    min_span=2.05,
+    min_normal_z=.88,
+    pitch_min_deg=20.0,
+    pitch_max_deg=31.0,
+    cup=.105,
+    arch=.055,
+    seed=0,
+):
+    """Selectively pitch/fold only the largest horizontal authored leaf sprays.
+
+    The 3x3 card lattice stays exactly connected: every vertex of a selected component
+    is transformed as part of the same spray, and no face is split, duplicated or
+    re-anchored.  The rigid pitch is strongest on the outer/radial direction (turning
+    shelf-like cards into drooping broadleaf sprays), while a modest width/length fold
+    removes the remaining billboard-flat read.
+    """
+    features = _leaf_card_features(mesh, material_index=1, attach_high=False)
+    candidates = []
+    for feat in features:
+        flat = abs(feat["nhat"].z)
+        if feat["span"] < min_span or flat < min_normal_z:
+            continue
+        candidates.append((feat["span"] * flat, feat))
+    candidates.sort(key=lambda item: (-item[0], item[1]["ci"]))
+    selected = [feat for score, feat in candidates[:max_cards]]
+    moved = 0
+    details = []
+    zup = Vector((0, 0, 1))
+    for rank, feat in enumerate(selected):
+        rows = feat["rows"]
+        center = feat["center"]
+        uhat = feat["uhat"].copy()
+        vhat = feat["vhat"].copy()
+        nhat = feat["nhat"].copy()
+        radial = Vector((center.x, center.y, 0.0))
+        if radial.length > 1e-5:
+            radial.normalize()
+            tangent = Vector((-radial.y, radial.x, 0.0))
+        else:
+            radial = Vector((1.0, 0.0, 0.0))
+            tangent = Vector((0.0, 1.0, 0.0))
+        # Rotate about the card's own width axis.  Unlike a tangential projection this
+        # remains exactly in the authored (already mildly curled) secant plane, so the
+        # measured 26–36° pitch really reaches the worst shelf cards.  Orient the axis
+        # only for deterministic sign selection; the sign itself is chosen by whether
+        # the outward length direction moves downward.
+        axis = uhat.copy()
+        if axis.dot(tangent) < 0.0:
+            axis = -axis
+        axis.normalize()
+        h1 = _hash01(feat["ci"], 601, seed)
+        h2 = _hash01(feat["ci"], 607, seed)
+        h3 = _hash01(feat["ci"], 613, seed)
+        h4 = _hash01(feat["ci"], 619, seed)
+        alpha = math.radians(pitch_min_deg + (pitch_max_deg - pitch_min_deg) * h1)
+        outward_len = vhat.copy() if vhat.dot(radial) >= 0.0 else -vhat
+        plus_z = (Matrix.Rotation(alpha, 4, axis) @ outward_len).z
+        minus_z = (Matrix.Rotation(-alpha, 4, axis) @ outward_len).z
+        sign = 1.0 if plus_z <= minus_z else -1.0
+        rotation = Matrix.Rotation(sign * alpha, 4, axis)
+        nrot = rotation @ nhat
+        pivot = feat["base"] * .35 + center * .65
+        fold_sign = 1.0 if h2 < .58 else -1.0
+        arch_sign = 1.0 if h3 < .52 else -1.0
+        this_cup = cup * (.78 + .44 * h2)
+        this_arch = arch * (.76 + .48 * h3)
+        droop = .030 + .045 * h4
+        for v, u, w, co in rows:
+            co2 = pivot + rotation @ (co - pivot)
+            fold = fold_sign * this_cup * math.sin(math.pi * u)
+            fold += arch_sign * this_arch * math.sin(math.pi * w)
+            co2 += nrot * fold
+            # A tiny world-down outer-edge droop keeps the rotated card botanical;
+            # the quadratic falloff leaves the stem end attached and continuous.
+            co2.z -= droop * max(0.0, w - .42) ** 2
+            mesh.vertices[v].co = co2
+            moved += 1
+        details.append({
+            "ci": feat["ci"], "span": round(feat["span"], 3),
+            "normal_z": round(feat["nhat"].z, 3),
+            "pitch_deg": round(math.degrees(alpha), 2),
+        })
+    if moved:
+        mesh.update()
+    return {"cards": len(selected), "vertices": moved, "selected": details}
+
+
 def _recalc_foliage_normals(mesh, *, geom_weight=.56, up_weight=.68, radial_weight=.72):
     """Re-author canopy split normals after card deformation, retaining soft volume shading."""
     old = [x.vector.copy() for x in mesh.corner_normals]
@@ -637,6 +743,147 @@ def _taper_small_bark_tips(
             changed += 1
     mesh.update()
     return {"pieces": pieces, "vertices": changed}
+
+
+def _taper_exposed_bark_tips(
+    mesh,
+    *,
+    max_faces=48,
+    min_faces=32,
+    min_tip_distance=.20,
+    zmin=4.55,
+    max_count=16,
+    taper_start=.38,
+    end_radius=.025,
+    length_scale=.27,
+):
+    """Subtractive, non-additive trim of only the most exposed loose shoot tubes.
+
+    The templates contain a small number of disconnected 44-face bark shoot tubes.
+    Most are already covered by nearby authored foliage.  This pass measures the free
+    end of each tube against the existing foliage vertices and only shortens/tapers the
+    few uncovered outliers; it creates no vertices, faces, caps, twigs or leaf mass and
+    leaves covered shoots untouched.
+    """
+    comps = _material_components(mesh, 0)
+    small = [c for c in comps if min_faces <= len(c["polys"]) <= max_faces]
+    small_ids = {id(c) for c in small}
+    large_verts = sorted({v for c in comps if id(c) not in small_ids for v in c["verts"]})
+    if not large_verts:
+        large_verts = sorted({v for c in comps for v in c["verts"]})
+    foliage_verts = sorted({v for p in mesh.polygons if p.material_index == 1 for v in p.vertices})
+    if not small or not large_verts or not foliage_verts:
+        return {"pieces": 0, "vertices": 0, "candidates": []}
+    ref = np.array([mesh.vertices[v].co[:] for v in large_verts], dtype=float)
+    foliage_tris = []
+    for poly in mesh.polygons:
+        if poly.material_index != 1:
+            continue
+        ids = list(poly.vertices)
+        for k in range(1, len(ids) - 1):
+            foliage_tris.append((
+                mesh.vertices[ids[0]].co.copy(),
+                mesh.vertices[ids[k]].co.copy(),
+                mesh.vertices[ids[k + 1]].co.copy(),
+            ))
+
+    def foliage_surface_distance(point):
+        best = 999.0
+        for a, b, c in foliage_tris:
+            close = closest_point_on_tri(point, a, b, c)
+            best = min(best, (close - point).length)
+        return best
+
+    candidates = []
+    for ci, comp in enumerate(small):
+        pts, centre, axis0, e0, e1, length0 = _component_pca(mesh, comp["verts"])
+        d0 = float(((ref - np.array(e0)) ** 2).sum(axis=1).min())
+        d1 = float(((ref - np.array(e1)) ** 2).sum(axis=1).min())
+        base, tip = (e0, e1) if d0 <= d1 else (e1, e0)
+        axis = tip - base
+        if axis.length < 1e-5:
+            continue
+        axis.normalize()
+        # A tip can be geometrically near one leaf triangle yet still read as a bare
+        # black needle through alpha holes.  Sample the whole outer half so sustained
+        # exposure, not one lucky contact, decides whether the tube is covered.
+        sample_ts = (.50, .62, .75, .88, 1.0)
+        sample_dists = [
+            foliage_surface_distance(base + axis * (length0 * t)) for t in sample_ts
+        ]
+        foliage_dist = sample_dists[-1]
+        mean_outer = sum(sample_dists) / len(sample_dists)
+        high_open_sky = tip.z >= 8.35 and mean_outer >= .075 and axis.z > .35
+        exposed = (mean_outer >= min_tip_distance * .55 or
+                   foliage_dist >= min_tip_distance or high_open_sky)
+        if tip.z < zmin or not exposed:
+            continue
+        rel = pts - np.array(base)
+        tt_all = rel @ np.array(axis)
+        perp = pts - (np.array(base) + tt_all[:, None] * np.array(axis))
+        radius = float(np.percentile(np.linalg.norm(perp, axis=1), 72))
+        radial_tip = math.hypot(tip.x, tip.y)
+        score = mean_outer * 1.45 + foliage_dist
+        score += max(0.0, tip.z - 5.2) * .035 + max(axis.z, 0.0) * .09 + radial_tip * .018
+        candidates.append({
+            "ci": ci, "comp": comp, "base": base, "tip": tip, "axis": axis.copy(),
+            "length": length0, "foliage_dist": foliage_dist, "mean_outer": mean_outer,
+            "radius": radius, "score": score,
+        })
+    candidates.sort(key=lambda c: (-c["score"], -c["tip"].z, c["ci"]))
+    selected = candidates[:max_count]
+    changed = 0
+    details = []
+    endpoints = []
+    for item in selected:
+        comp = item["comp"]
+        base = item["base"]
+        tip = item["tip"]
+        axis = item["axis"]
+        length = max((tip - base).length, 1e-6)
+        exposure01 = min(max((item["mean_outer"] - .10) / .32, 0.0), 1.0)
+        # R9.2: exposed sky needles collapse to short brown buds rather than metre-long
+        # black spikes.  Better covered tubes keep a little more length; uncovered high
+        # upright tubes receive the strongest subtraction.
+        this_length_scale = length_scale * (.78 + .22 * (1.0 - exposure01))
+        if tip.z > 8.5 and axis.z > .55:
+            this_length_scale *= .88
+        this_length_scale = max(.22, this_length_scale)
+        for v in comp["verts"]:
+            original = mesh.vertices[v].co
+            tt = min(max((original - base).dot(axis), 0.0), length)
+            q = tt / length
+            projection = base + axis * tt
+            radial = original - projection
+            if q > taper_start:
+                s = (q - taper_start) / max(1.0 - taper_start, 1e-6)
+                s = s * s * (3.0 - 2.0 * s)
+                radial *= 1.0 + (end_radius - 1.0) * s
+            mesh.vertices[v].co = base + axis * (tt * this_length_scale) + radial
+            changed += 1
+        final_tip = base + axis * (length * this_length_scale)
+        details.append({
+            "component": item["ci"],
+            "length": round(item["length"], 3),
+            "foliage_distance": round(item["foliage_dist"], 3),
+            "mean_outer_distance": round(item["mean_outer"], 3),
+            "tip_z": round(item["tip"].z, 3),
+            "length_scale": round(this_length_scale, 3),
+        })
+        endpoints.append({
+            "component": item["ci"],
+            "base": tuple(round(float(x), 4) for x in base),
+            "axis": tuple(round(float(x), 4) for x in axis),
+            "original_tip": tuple(round(float(x), 4) for x in tip),
+            "tip": tuple(round(float(x), 4) for x in final_tip),
+            "radius": round(item["radius"], 4),
+            "score": round(item["score"], 4),
+            "mean_outer_distance": round(item["mean_outer"], 4),
+        })
+    if changed:
+        mesh.update()
+    return {"pieces": len(selected), "vertices": changed, "candidates": details,
+            "endpoints": endpoints}
 
 
 def _material_components(mesh, material_index):
@@ -1496,6 +1743,385 @@ def _append_terminal_growth(bm, cap_data, shoot_data, *, seed=0, willow=False):
     return made
 
 
+def _foliage_distance_sampler(mesh):
+    """Exact closest-distance function against the current foliage triangle surfaces."""
+    foliage_tris = []
+    for poly in mesh.polygons:
+        if poly.material_index != 1:
+            continue
+        ids = list(poly.vertices)
+        for k in range(1, len(ids) - 1):
+            foliage_tris.append((
+                mesh.vertices[ids[0]].co.copy(),
+                mesh.vertices[ids[k]].co.copy(),
+                mesh.vertices[ids[k + 1]].co.copy(),
+            ))
+
+    def distance(point):
+        point = Vector(point)
+        best = 999.0
+        for a, b, c in foliage_tris:
+            close = closest_point_on_tri(point, a, b, c)
+            best = min(best, (close - point).length)
+        return best
+
+    return distance
+
+
+def _select_scaffold_fill_anchors(mesh, shoot_endpoints, *, max_count=6, seed=0):
+    """Choose a few verified exposed scaffold terminals for endpoint-attached leaf fill.
+
+    Unlike the rejected terminal-growth pass this adds no twigs and no free-floating
+    canopy cloud.  The cap detector is used only as a measurement of existing wood;
+    candidates are then filtered by radius, height, upward direction, foliage exposure
+    and separation from the loose shoot endpoints.  Thin 44-face shoot tubes are
+    deliberately excluded here because they are handled by the subtractive trim.
+    """
+    if max_count <= 0:
+        return []
+    distance = _foliage_distance_sampler(mesh)
+    shoot_tips = [Vector(e["tip"]) for e in shoot_endpoints or ()]
+    candidates = _tip_cap_candidates(
+        mesh, zmin=4.7, min_radius=.10, cluster_radius=.55, min_points=3,
+        seed=seed, dead_end=.24, max_caps=0, min_cap_radius=0.0,
+    )
+    rows = []
+    for cand in candidates:
+        tip = Vector(cand["tip"])
+        axis = Vector(cand["axis"])
+        if axis.length < 1e-5:
+            continue
+        axis.normalize()
+        radius = float(cand["radius"])
+        if not (.065 <= radius <= .29):
+            continue
+        if not (4.8 <= tip.z <= 9.6) or axis.z < .12:
+            continue
+        if any((tip - shoot_tip).length < .55 for shoot_tip in shoot_tips):
+            continue
+        fdist = distance(tip)
+        high_sky = tip.z >= 8.55
+        if fdist < .24 and not high_sky:
+            continue
+        radial_len = math.hypot(tip.x, tip.y)
+        score = min(fdist, 1.2) * 1.55
+        score += max(0.0, tip.z - 5.0) * .045 + max(axis.z, 0.0) * .10
+        score += max(0.0, 3.8 - radial_len) * .05
+        if high_sky:
+            score += .18
+        rows.append({
+            "tip": tip, "axis": axis, "radius": radius, "foliage_distance": fdist,
+            "score": score, "ci": cand["ci"],
+        })
+    rows.sort(key=lambda r: (-r["score"], -r["tip"].z, r["ci"]))
+
+    def far_enough(row, selected):
+        return all((row["tip"] - other["tip"]).length >= .72 for other in selected)
+
+    selected = []
+    # Reserve up to two slots for high scaffold terminals so interior holes cannot
+    # consume the whole budget before the sky-line spikes are considered.
+    for row in [r for r in rows if r["tip"].z >= 7.2]:
+        if len(selected) >= min(2, max_count):
+            break
+        if far_enough(row, selected):
+            selected.append(row)
+    for row in rows:
+        if len(selected) >= max_count:
+            break
+        if row in selected or not far_enough(row, selected):
+            continue
+        selected.append(row)
+    out = []
+    for row in selected:
+        out.append({
+            "component": row["ci"],
+            "tip": tuple(round(float(x), 4) for x in row["tip"]),
+            "axis": tuple(round(float(x), 4) for x in row["axis"]),
+            "radius": round(row["radius"], 4),
+            "foliage_distance": round(row["foliage_distance"], 4),
+            "score": round(row["score"], 4),
+        })
+    return out
+
+
+def _retract_scaffold_terminal_spikes(mesh, scaffold_anchors, *, max_items=4):
+    """Subtractive compression/taper of the worst connected scaffold terminal spikes.
+
+    The detector measurements describe existing endpoints; this pass creates no caps,
+    twigs, collars or extra bark.  It only moves vertices of the large connected wood
+    scaffold inside a narrow measured end capsule.  Axial compression is smooth and
+    ordering-preserving, so the branch end retreats toward the trunk instead of being
+    sliced open, while the terminal radius collapses enough that it no longer reads as
+    a black spear.  Interior/low endpoints are left for foliage cover rather than
+    risking deformation of healthy scaffold limbs.
+    """
+    anchors = [dict(a) for a in (scaffold_anchors or ())]
+    if not anchors:
+        return {"pieces": 0, "vertices": 0, "details": [], "anchors": anchors}
+    comps = _material_components(mesh, 0)
+    if not comps:
+        return {"pieces": 0, "vertices": 0, "details": [], "anchors": anchors}
+    large = max(comps, key=lambda c: len(c["polys"]))
+    large_ids = set(large["verts"])
+    ranked = []
+    for ai, anchor in enumerate(anchors):
+        tip = Vector(anchor["tip"])
+        axis = Vector(anchor["axis"])
+        if axis.length < 1e-5:
+            continue
+        axis.normalize()
+        radius = max(float(anchor.get("radius", .08)), .04)
+        # The visible offender class is upright/high terminal wood.  Low horizontal
+        # interior endpoints may be holes in the crown, but compressing them risks
+        # collapsing healthy scaffold limbs; they are covered with foliage instead.
+        if not (axis.z >= .42 or tip.z >= 7.2):
+            continue
+        priority = tip.z * .16 + axis.z + min(float(anchor.get("foliage_distance", 0.0)), 1.0)
+        ranked.append((priority, ai, tip, axis, radius))
+    ranked.sort(key=lambda item: (-item[0], -item[2].z, item[1]))
+    selected = ranked[:max_items]
+    changed_ids = set()
+    details = []
+    for priority, ai, tip, axis, radius in selected:
+        retreat = min(max(radius * 3.2, .30), .62)
+        influence = max(retreat * 2.15, radius * 5.0, .58)
+        radial_limit = max(radius * 1.18, .105)
+        affected = 0
+        for vi in sorted(large_ids):
+            if vi in changed_ids:
+                continue
+            co = mesh.vertices[vi].co
+            vec = co - tip
+            back = -vec.dot(axis)
+            if back < -radius * .35 or back > influence:
+                continue
+            axial = tip - axis * back
+            perp = co - axial
+            if perp.length > radial_limit:
+                continue
+            q = min(max(back / max(influence, 1e-6), 0.0), 1.0)
+            shape = (1.0 - q) ** 1.15
+            shift = retreat * shape
+            radial_scale = .34 + .66 * (q ** .78)
+            co[:] = axial + perp * radial_scale - axis * shift
+            changed_ids.add(vi)
+            affected += 1
+        if affected < 3:
+            continue
+        final_tip = tip - axis * retreat
+        anchors[ai]["original_tip"] = anchors[ai]["tip"]
+        anchors[ai]["tip"] = tuple(round(float(x), 4) for x in final_tip)
+        anchors[ai]["retracted"] = True
+        details.append({
+            "component": anchors[ai].get("component"),
+            "vertices": affected,
+            "retreat": round(retreat, 3),
+            "influence": round(influence, 3),
+            "tip_z": round(tip.z, 3),
+            "axis_z": round(axis.z, 3),
+        })
+    if changed_ids:
+        mesh.update()
+    return {"pieces": len(details), "vertices": len(changed_ids), "details": details,
+            "anchors": anchors}
+
+
+def _add_endpoint_foliage_clusters(mesh, shoot_endpoints, *, max_cards=34, scaffold_cards=6, seed=0,
+                                   scaffold_anchors=None):
+    """Add a tightly capped number of whole 3x3 leaf cards at real wood endpoints.
+
+    Every added card is the same multi-face connected lattice used by the authored
+    template cards (nine vertices/four quads/eight triangles, full UV sprite).  No card
+    is fragmented and none is scattered freely: its stem edge is inset into a measured
+    terminal wood end.  Two crossed cards are used at the worst loose-shoot endpoints;
+    a few single cards close measured interior scaffold terminal holes.  The default
+    maximum of 34 is 14.5% of the 234 authored clusters.
+    """
+    if max_cards <= 0:
+        return {"cards": 0, "faces": 0, "vertices": 0, "shoot_endpoint_cards": 0,
+                "scaffold_endpoint_cards": 0, "scaffold_anchors": []}
+    endpoints = []
+    for item in shoot_endpoints or ():
+        endpoints.append(dict(item))
+    endpoints.sort(key=lambda e: (-e.get("score", 0.0), -e.get("tip", (0, 0, 0))[2]))
+    if scaffold_anchors is None:
+        scaffold = _select_scaffold_fill_anchors(mesh, endpoints, max_count=scaffold_cards, seed=seed)
+    else:
+        scaffold = [dict(a) for a in scaffold_anchors[:scaffold_cards]]
+    remaining = max(0, max_cards - len(scaffold))
+    plan = []
+    for endpoint in endpoints:
+        if remaining <= 0:
+            break
+        # Two orientations at one endpoint are still attached whole clusters, not a
+        # duplicated cloud: they share the wood end and diverge as a small leaf spray.
+        for copy_no in range(2):
+            if remaining <= 0:
+                break
+            plan.append(("shoot", endpoint, copy_no))
+            remaining -= 1
+    for endpoint in scaffold:
+        plan.append(("scaffold", endpoint, 0))
+    if not plan:
+        return {"cards": 0, "faces": 0, "vertices": 0, "shoot_endpoint_cards": 0,
+                "scaffold_endpoint_cards": 0, "scaffold_anchors": scaffold}
+
+    before_vertices = len(mesh.vertices)
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+    zup = Vector((0, 0, 1))
+    cards = 0
+    faces_made = 0
+    shoot_cards = 0
+    scaffold_count = 0
+    for pi, (kind, endpoint, copy_no) in enumerate(plan):
+        tip = Vector(endpoint["tip"])
+        axis = Vector(endpoint["axis"])
+        if axis.length < 1e-5:
+            continue
+        axis.normalize()
+        radius = max(float(endpoint.get("radius", .035)), .02)
+        radial = Vector((tip.x, tip.y, 0.0))
+        if radial.length < .12:
+            radial = Vector((axis.x, axis.y, 0.0))
+        if radial.length < 1e-5:
+            radial = Vector((1.0, 0.0, 0.0))
+        radial.normalize()
+        e1, e2 = _orthogonal_frame(axis)
+        h1 = _hash01(pi, copy_no, 701, seed)
+        h2 = _hash01(pi, copy_no, 707, seed)
+        h3 = _hash01(pi, copy_no, 709, seed)
+        h4 = _hash01(pi, copy_no, 719, seed)
+        h5 = _hash01(pi, copy_no, 727, seed)
+        h6 = _hash01(pi, copy_no, 733, seed)
+        side = e1 * (1.0 if h2 < .5 else -1.0) + e2 * ((h3 - .5) * .75)
+        if side.length < 1e-5:
+            side = e1.copy()
+        side.normalize()
+        if kind == "scaffold":
+            # Interior scaffold holes are covered by a card reaching back over the
+            # bare terminal wood instead of expanding the outer silhouette.
+            direction = axis * .32 - radial * (.16 + .10 * h1) + zup * (.52 + .08 * h2)
+            direction += side * (.18 + .14 * h3)
+            width = 1.12 + .34 * h1
+            length = 1.25 + .34 * h2
+        elif copy_no == 0:
+            direction = axis * .46 + radial * (.24 + .10 * h1) + zup * (.50 + .10 * h2)
+            direction += side * ((h3 - .5) * .22)
+            width = 1.02 + .32 * h1
+            length = 1.14 + .34 * h2
+        else:
+            direction = axis * .24 - radial * (.24 + .10 * h1) + zup * (.48 + .10 * h2)
+            direction += side * (.30 + .16 * h3)
+            width = (1.02 + .32 * h1) * (.86 + .12 * h4)
+            length = (1.14 + .34 * h2) * (.90 + .12 * h5)
+        if direction.length < 1e-5:
+            direction = zup.copy()
+        direction.normalize()
+        if direction.z < .18:
+            direction = (direction + zup * (.18 - direction.z)).normalized()
+        if tip.z > 9.2:
+            length *= .88
+        inset = .022 + min(radius * .55, .045)
+        lateral_offset = side * ((h5 - .5) * min(radius * .45, .032))
+        base = tip - axis * inset + lateral_offset
+        rect = _leaf_atlas_rect(seed + pi * 17 + copy_no * 5)
+        faces = _append_leaf_card(
+            bm, base, direction, width=width, length=length,
+            seed=seed + pi * 31 + copy_no, uv_rect=rect, reverse_v=False,
+            cup=.040 + .025 * h4, twist_deg=24.0 + 10.0 * h5,
+            pinch=.20 + .08 * h6,
+        )
+        if not faces:
+            continue
+        cards += 1
+        faces_made += len(faces)
+        if kind == "scaffold":
+            scaffold_count += 1
+        else:
+            shoot_cards += 1
+    bm.to_mesh(mesh)
+    mesh.update()
+    bm.free()
+    return {
+        "cards": cards,
+        "faces": faces_made,
+        "vertices": len(mesh.vertices) - before_vertices,
+        "shoot_endpoint_cards": shoot_cards,
+        "scaffold_endpoint_cards": scaffold_count,
+        "max_cards": max_cards,
+        "authored_cluster_increase_pct": round(cards / 234.0 * 100.0, 2),
+        "scaffold_anchors": scaffold,
+    }
+
+
+def _set_new_blockcol_white(mesh, first_new_vertex):
+    """Keep the template blockcol contract intact for newly appended leaf vertices."""
+    attr = mesh.color_attributes.get("blockcol")
+    if attr is None or attr.domain != "POINT":
+        return 0
+    changed = 0
+    for vi in range(first_new_vertex, min(len(mesh.vertices), len(attr.data))):
+        attr.data[vi].color = (1.0, 1.0, 1.0, 1.0)
+        changed += 1
+    return changed
+
+
+def _restore_template_foliage_normals(mesh, template_normals, original_loop_count):
+    """Restore authored template split normals and author normals for appended cards.
+
+    Bmesh appending can leave new loops without meaningful custom normals.  Existing
+    loops are restored from the template cache unchanged; only loops belonging to the
+    newly appended foliage cards receive a smooth geometric/canopy normal blend.  This
+    avoids the mixed results of a blanket canopy-normal rewrite while keeping the new
+    geometry exportable and correctly shaded.
+    """
+    if not template_normals:
+        return {"template_loops": 0, "new_foliage_loops": 0}
+    acc = [Vector((0, 0, 0)) for _ in mesh.vertices]
+    for p in mesh.polygons:
+        if p.material_index != 1:
+            continue
+        n = p.normal * p.area
+        for v in p.vertices:
+            acc[v] += n
+    loop_poly = {}
+    for p in mesh.polygons:
+        for li in p.loop_indices:
+            loop_poly[li] = p
+    out = []
+    kept = 0
+    for li in range(len(mesh.loops)):
+        if li < original_loop_count and li < len(template_normals):
+            out.append(template_normals[li].copy())
+            kept += 1
+        else:
+            out.append(Vector((0, 0, 1)))
+    authored = 0
+    for li, loop in enumerate(mesh.loops):
+        if li < original_loop_count:
+            continue
+        p = loop_poly.get(li)
+        if p is None or p.material_index != 1:
+            continue
+        v = loop.vertex_index
+        geom = acc[v].normalized() if acc[v].length > 1e-6 else Vector((0, 0, 1))
+        co = mesh.vertices[v].co
+        radial = Vector((co.x, co.y, 0.0))
+        if radial.length > .15:
+            canopy = (radial.normalized() * .52 + Vector((0, 0, .78))).normalized()
+        else:
+            canopy = Vector((0, 0, 1))
+        if geom.dot(canopy) < 0.0:
+            geom = -geom
+        out[li] = (geom * .58 + canopy * .42).normalized()
+        authored += 1
+    mesh.normals_split_custom_set(out)
+    mesh.update()
+    return {"template_loops": kept, "new_foliage_loops": authored}
+
+
 def _raggedize_willow_cards(mesh, *, seed=0):
     """Skew/pinch willow cards and vary their UV windows without changing their droop."""
     uvlay = mesh.uv_layers.active
@@ -2081,50 +2707,61 @@ def _wire_foliage_translucency(mat, strength):
 
 
 def _apply_asset_geometry(obj):
+    """R9.2 subtractive-first geometry on the original template base.
+
+    The authored leaf sprays and wood scaffold remain the baseline.  Geometry work is
+    limited to connected-card curl plus a selective stronger fold of only the worst
+    horizontal shelf sprays, aggressive non-additive shortening of measured bare shoot
+    spikes, and a tightly capped number of whole endpoint-attached leaf cards.  No card
+    splitting/shattering, canopy re-anchoring, loose confetti, surface roots, collars,
+    terminal twig whorls, loop subdivision or broad displacement is run.
+    """
     mesh = obj.data
-    if ASSET_KIND == "fern":
-        fronds = _reshape_fern_fronds(mesh, seed=GEOMETRY_SEED)
-        uvs = _compress_fern_frond_uvs(mesh)
-        hearts = _scatter_fern_hearts(mesh, seed=GEOMETRY_SEED)
-        crown = _bury_fern_crown(mesh)
-        fill = _duplicate_foliage_clusters(mesh, **FILL_CONFIG)
-        soil = _add_fern_root_mound(mesh, hearts, seed=GEOMETRY_SEED)
-        bark_normals = _smooth_bark_normals(mesh)
-        foliage_normals = _recalc_foliage_normals(mesh, geom_weight=.72, up_weight=.38, radial_weight=.35)
-        return {"fern_fronds": fronds, "frond_uvs": uvs, "wedelherzen": hearts,
-                "root_crown": crown, "cluster_fill": fill, "soil_roots": soil,
-                "bark_normals": bark_normals, "foliage_normals": foliage_normals}
-    split = {"cards_split": 0, "pieces": 0}
-    if SPLIT_CONFIG.get("enabled"):
-        split = _split_foliage_cards(mesh, seed=SPLIT_CONFIG.get("seed", 0))
+    # Cache the template split normals before any bmesh append.  They are restored for
+    # all authored loops after the small endpoint-fill pass; only the new leaf loops
+    # receive newly authored canopy normals.
+    template_loop_normals = [x.vector.copy() for x in mesh.corner_normals]
+    template_loop_count = len(mesh.loops)
     cards = _reshape_foliage_cards(mesh, **CARD_CONFIG)
-    fill = _duplicate_foliage_clusters(mesh, **FILL_CONFIG)
-    willow_ragged = {"cards_ragged": 0}
-    if "willow" in SLUG:
-        willow_ragged = _raggedize_willow_cards(mesh, seed=GEOMETRY_SEED)
-    tips = _taper_small_bark_tips(mesh, **BARK_TAPER_CONFIG)
-    lower_flare = _smooth_lower_trunk_flare(mesh, trunk_radius=ROOT_CONFIG.get("trunk_radius", .5), seed=GEOMETRY_SEED)
-    teeth_dive = _dive_flare_teeth(mesh, trunk_radius=ROOT_CONFIG.get("trunk_radius", .5), seed=GEOMETRY_SEED)
-    fluting = _flute_trunk_bark(mesh, trunk_radius=ROOT_CONFIG.get("trunk_radius", .5),
-                                height=3.4, seed=GEOMETRY_SEED)
-    bark_geometry = _add_procedural_bark_geometry(
-        mesh, seed=GEOMETRY_SEED, root=ROOT_CONFIG, collars=BRANCH_COLLARS,
-        shoot_collars=SHOOT_COLLAR_CONFIG, tip_caps=TIP_CAP_CONFIG)
-    gnarl = _gnarly_bark_relief(mesh, seed=GEOMETRY_SEED)
+    shelf_fold = _fold_worst_shelf_cards(mesh, **SHELF_FOLD_CONFIG)
+    exposed_tip_trim = _taper_exposed_bark_tips(mesh)
+    scaffold_anchor_measurements = _select_scaffold_fill_anchors(
+        mesh, exposed_tip_trim.get("endpoints", []),
+        max_count=ENDPOINT_FILL_CONFIG.get("scaffold_cards", 6), seed=GEOMETRY_SEED,
+    )
+    scaffold_retract = _retract_scaffold_terminal_spikes(mesh, scaffold_anchor_measurements)
+    before_fill_vertices = len(mesh.vertices)
+    endpoint_fill = _add_endpoint_foliage_clusters(
+        mesh, exposed_tip_trim.get("endpoints", []),
+        scaffold_anchors=scaffold_retract.get("anchors", scaffold_anchor_measurements),
+        **ENDPOINT_FILL_CONFIG
+    )
+    blockcol_new = _set_new_blockcol_white(mesh, before_fill_vertices)
+    foliage_normals = _restore_template_foliage_normals(
+        mesh, template_loop_normals, template_loop_count
+    )
     bark_normals = _smooth_bark_normals(mesh)
-    normals = 0
-    if ASSET_KIND == "tree":
-        if "willow" in SLUG:
-            normals = _recalc_foliage_normals(mesh, geom_weight=.60, up_weight=.30, radial_weight=.82)
-        else:
-            normals = _recalc_foliage_normals(mesh, geom_weight=.60, up_weight=.58, radial_weight=.68)
-    elif ASSET_KIND == "bush":
-        normals = _recalc_foliage_normals(mesh, geom_weight=.66, up_weight=.50, radial_weight=.56)
-    return {"cards": cards, "card_split": split, "cluster_fill": fill,
-            "willow_ragged": willow_ragged, "tapered_tips": tips, "lower_trunk_flare": lower_flare,
-            "flare_teeth_dive": teeth_dive, "trunk_fluting": fluting,
-            "procedural_bark": bark_geometry, "gnarl_relief": gnarl, "bark_normals": bark_normals,
-            "foliage_normals": normals}
+    return {
+        "subtractive_original_base": True,
+        "cards": cards,
+        "shelf_fold": shelf_fold,
+        "card_split": {"disabled": True, "pieces": 0},
+        "cluster_fill": {"disabled": True, "copies": 0},
+        "leaf_shatter": {"disabled": True},
+        "canopy_anchor": {"disabled": True},
+        "tapered_tips": {"disabled": True},
+        "exposed_tip_trim": exposed_tip_trim,
+        "scaffold_terminal_retract": scaffold_retract,
+        "endpoint_fill": endpoint_fill,
+        "blockcol_new_vertices": blockcol_new,
+        "lower_trunk_flare": {"disabled": True},
+        "flare_teeth_dive": {"disabled": True},
+        "trunk_fluting": {"disabled": True},
+        "procedural_bark": {"disabled": True, "surface_roots": {"roots": 0}, "branch_collars": 0, "terminal_growth": 0},
+        "gnarl_relief": {"disabled": True},
+        "bark_normals": bark_normals,
+        "foliage_normals": foliage_normals,
+    }
 
 
 def _occlusion_group():
@@ -2193,9 +2830,9 @@ def _configure_materials(obj, template_info):
     lifted = _lift_foliage_albedo(foliage, gamma=FOLIAGE_GAMMA, floor=FOLIAGE_LIFT_FLOOR)
     if lifted:
         graded["foliage_lifted"] = lifted
-    # Runde 6: kontrasttreue multiplikative Aufhellung der Rinde statt Gamma — die
-    # Rindentextur bleibt im Schatten lesbar, ohne dass die Binnenkonstraste flach werden.
-    bark_lifted = _lift_bark_albedo(bark, boost=2.0, floor=.012, suffix="_vr_r6lift")
+    # R9: deutlich schwächerer, kontrasttreuer Rindenlift als die additive R8/R6-Linie.
+    # Ziel ist braun lesbares Schattenholz, nicht blass-orange oder plastisch wirkende Rinde.
+    bark_lifted = _lift_bark_albedo(bark, boost=1.36, floor=.009, suffix="_vr_r9lift")
     if bark_lifted:
         graded["bark_lifted"] = bark_lifted
     _wire_foliage_translucency(foliage, FOLIAGE_TRANSLUCENCY)
@@ -2228,6 +2865,12 @@ def _validate_source(obj, template_info):
     base_tris = int(template_info["tris"])
     if tris < base_tris:
         raise SystemExit(f"{TEMPLATE}: {tris} triangles, below verified template floor {base_tris}")
+    hard_max = int(math.ceil(base_tris * 1.15))
+    if tris > hard_max:
+        raise SystemExit(
+            f"{TEMPLATE}: {tris} triangles exceed the R9 subtractive hard maximum {hard_max} "
+            f"(template {base_tris} +15%)"
+        )
     if me.color_attributes.get(template_info["color_attribute"]) is None:
         raise SystemExit(f"{TEMPLATE}: color attribute {template_info['color_attribute']} is missing")
     if not getattr(me, "has_custom_normals", False) and me.attributes.get("custom_normal") is None:

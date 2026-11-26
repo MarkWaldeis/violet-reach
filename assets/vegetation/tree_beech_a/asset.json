@@ -18,23 +18,9 @@
   "meshy_class": "B",
   "material_class": "foliage",
   "texture_format": "ktx2",
-  "status": "exported",
+  "status": "blender_review",
   "builder": "devin-builder-trees",
-  "review": {
-    "reviewer": "devin-gate-rev-r5",
-    "scores": {
-      "silhouette": 9,
-      "form_detail": 8,
-      "material": 8,
-      "scale": 9,
-      "style": 8,
-      "defects": 8
-    },
-    "notes": "Approved. Most coherent crown of the set, good scale and leafy closeup; no continuous pot rim or sawn/bulbous terminal pattern. Nonblocking polish: dark right-side fork/short stub and claw-like root points remain visible in closeups.",
-    "round": 5,
-    "source_sha256": "6f8752ac43e891de08cc8ada842e57eaf85ef56e434a091ce2dd6ead226134da",
-    "sheet_sha256": "d10d4985a8ba2ffab92a7190019259efa5a40fb7cdd468f8b80b2ae927c2ac10"
-  },
+  "review": null,
   "review_rounds": 5,
   "size_m": [
     10.615,
