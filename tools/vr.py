@@ -59,7 +59,7 @@ def load(asset_dir):
 
 
 def save(asset_dir, meta):
-    with open(os.path.join(asset_dir, "asset.json"), "w", encoding="utf-8") as f:
+    with open(os.path.join(asset_dir, "asset.json"), "w", encoding="utf-8", newline="\n") as f:
         json.dump(meta, f, indent=2, ensure_ascii=False)
         f.write("\n")
 
@@ -101,7 +101,7 @@ def source_hash(asset_dir):
 def sheet_problems(asset_dir):
     sheet = os.path.join(asset_dir, "review", "sheet.jpg")
     try:
-        with open(os.path.join(asset_dir, "review", "sheet.json")) as f:
+        with open(os.path.join(asset_dir, "review", "sheet.json"), encoding="utf-8") as f:
             receipt = json.load(f)
         if receipt.get("source_sha256") != source_hash(asset_dir):
             return ["build.py or Blender build tools changed; render a new sheet"]
@@ -207,7 +207,7 @@ def cmd_new(a):
     save(d, {"id": a.id, "category": a.category, "title": a.id, "description": "",
              "target_size_m": [1, 1, 1], "lod_triangles": [12000, 4000, 1000], "texture_size": 2048,
              "status": "planned", "builder": None, "review": None})
-    with open(os.path.join(d, "build.py"), "w") as f:
+    with open(os.path.join(d, "build.py"), "w", encoding="utf-8", newline="\n") as f:
         f.write('"""Describe the object. Units are metres, origin at ground centre, Z up."""\n'
                 "import bpy\n\nimport vrlib\n\n\ndef build():\n"
                 "    # Create mesh objects and put each one in the SOURCE collection with vrlib.link_to_source(obj).\n"
@@ -241,10 +241,10 @@ def cmd_sheet(a):
     if source_hash(d) != digest:
         raise SystemExit("source changed during render; render again")
     receipt_path = os.path.join(d, "review", "sheet.json")
-    with open(receipt_path) as f:
+    with open(receipt_path, encoding="utf-8") as f:
         receipt = json.load(f)
     receipt.update(source_sha256=digest, sheet_sha256=sha256(os.path.join(d, "review", "sheet.jpg")))
-    with open(receipt_path, "w") as f:
+    with open(receipt_path, "w", encoding="utf-8", newline="\n") as f:
         json.dump(receipt, f, indent=2)
         f.write("\n")
     meta = load(d)
@@ -331,7 +331,7 @@ def cmd_export(a):
         os.replace(packed, out)
     if meta["status"] == "approved":
         meta["status"] = "exported"
-    with open(os.path.join(d, "review", "sheet.json")) as f:
+    with open(os.path.join(d, "review", "sheet.json"), encoding="utf-8") as f:
         meta["size_m"] = json.load(f)["size_m"]
     meta["export"] = {"file": f"export/{a.id}.glb", "bytes": os.path.getsize(out), "sha256": sha256(out),
                       "source_sha256": digest, "sheet_sha256": meta["review"]["sheet_sha256"],
@@ -518,7 +518,11 @@ def sync_web():
     for path in public.glob("*.glb"):
         if path.name not in {entry["file"] for entry in manifest}:
             path.unlink()
-    (public / "manifest.json").write_text(json.dumps({"assets": manifest}, indent=2, ensure_ascii=False) + "\n")
+    (public / "manifest.json").write_text(
+        json.dumps({"assets": manifest}, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
 
 
 def model_paths(root):
@@ -567,12 +571,12 @@ def cmd_check(_):
     for path in set(model_paths(ASSETS)) - canonical | (set(model_paths(Path(ROOT) / "web")) - set(published.values())):
         errors.append(f"{os.path.relpath(path, ROOT)}: not the export of an approved asset")
     try:
-        if json.loads((public / "manifest.json").read_text()) != {"assets": manifest}:
+        if json.loads((public / "manifest.json").read_text(encoding="utf-8")) != {"assets": manifest}:
             errors.append("public manifest does not match the approved exports")
     except (OSError, ValueError):
         errors.append("public manifest is missing or unreadable")
     if os.path.isfile(PLACEMENTS):
-        with open(PLACEMENTS) as f:
+        with open(PLACEMENTS, encoding="utf-8") as f:
             try:
                 document = json.load(f)
                 errors.extend(f"world/placements.json: {p}" for p in placement_problems(document))

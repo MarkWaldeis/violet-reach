@@ -152,7 +152,7 @@
     {
       "id": "scree_pile_a",
       "category": "rocks",
-      "title": "Kalkstein-Geröllhaufen A",
+      "title": "Kalkstein-GerÃ¶llhaufen A",
       "file": "scree_pile_a.glb",
       "size_m": [
         3.806,
@@ -228,7 +228,7 @@
     {
       "id": "grass_tuft_a",
       "category": "vegetation",
-      "title": "Grasbüschel A",
+      "title": "GrasbÃ¼schel A",
       "file": "grass_tuft_a.glb",
       "size_m": [
         0.579,
@@ -240,7 +240,7 @@
     {
       "id": "log_fallen_a",
       "category": "vegetation",
-      "title": "Umgestürzter Baumstamm A",
+      "title": "UmgestÃ¼rzter Baumstamm A",
       "file": "log_fallen_a.glb",
       "size_m": [
         4.807,
@@ -391,7 +391,7 @@
     {
       "id": "trunk_acacia_b",
       "category": "vegetation",
-      "title": "Schirmakazie Stamm B (mehrstämmig)",
+      "title": "Schirmakazie Stamm B (mehrstÃ¤mmig)",
       "file": "trunk_acacia_b.glb",
       "size_m": [
         8.961,

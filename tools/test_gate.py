@@ -59,7 +59,7 @@ def shipping_checks(root):
     web = base / "web" / "public" / "assets"
     placements = base / "world" / "placements.json"
     placements.parent.mkdir()
-    d, meta = make(base / "assets", status="exported")
+    d, meta = make(base / "assets", status="exported", title="Grasbüschel A — Geröll")
     canonical = vr.export_path(d)
     canonical.parent.mkdir()
     chunk = b'{"asset":{"version":"2.0"}} '
@@ -75,10 +75,18 @@ def shipping_checks(root):
         yield expect("approved export and matching manifest pass", check_output(), None)
 
         manifest = web / "manifest.json"
-        content = manifest.read_text()
-        manifest.write_text('{"assets":[{"id":"rogue","file":"rogue.glb"}]}')
+        raw_manifest = manifest.read_bytes()
+        utf8_ok = False
+        try:
+            utf8_ok = "Grasbüschel A — Geröll" in raw_manifest.decode("utf-8") and b"\r" not in raw_manifest
+        except UnicodeDecodeError:
+            utf8_ok = False
+        yield expect("public manifest is written and verified as UTF-8", [] if utf8_ok else ["not utf-8"], None)
+
+        content = manifest.read_text(encoding="utf-8")
+        manifest.write_text('{"assets":[{"id":"rogue","file":"rogue.glb"}]}', encoding="utf-8")
         yield expect("invented manifest entry is refused", check_output(), "public manifest")
-        manifest.write_text(content)
+        manifest.write_text(content, encoding="utf-8")
 
         runtime = web / "thing.glb"
         runtime.unlink()
