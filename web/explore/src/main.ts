@@ -101,7 +101,7 @@ async function main() {
     const grassQuality: Record<string, { viewDistance: number; density: number }> = {
       low: { viewDistance: 44, density: 2.6 },
       medium: { viewDistance: 68, density: 4.0 },
-      high: { viewDistance: 72, density: 5.5 },
+      high: { viewDistance: 96, density: 5.5 },
       ultra: { viewDistance: 128, density: 6.5 },
     };
     const gq = grassQuality[quality.name] ?? grassQuality.high;

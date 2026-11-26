@@ -7,10 +7,10 @@ import { worldFiles } from "../scripts/world-content.mjs";
 import { pathMask } from "../src/hydrology.ts";
 import type { Slice } from "../src/slice.ts";
 
-const vegetation = ["tree_oak_a", "tree_beech_a", "tree_ancient_a", "tree_willow_a", "shrub_round_a", "bush_lush_a", "fern_cluster_a", "fern_lush_a", "reed_cluster_a"];
+const vegetation = ["tree_oak_a", "tree_beech_a", "tree_ancient_a", "tree_willow_a", "bush_lush_a", "fern_cluster_a", "fern_lush_a", "reed_cluster_a", "log_fallen_a", "stump_roots_a"];
 const monuments = ["gate_white_a", "column_white_a", "stair_terrace_a"];
-const pilot = ["boulder_chalk_a", "ruin_wall_a", "trunk_acacia_a"];
-const rocks = ["arch_sandstone_a", "scree_pile_a", "shore_rocks_wet_a", "boulder_chalk_c"];
+const pilot = ["boulder_chalk_a", "ruin_wall_a", "trunk_acacia_a", "trunk_acacia_b", "trunk_baobab_a"];
+const rocks = ["arch_sandstone_a", "scree_pile_a", "shore_rocks_wet_a", "boulder_chalk_c", "rock_slab_a"];
 
 test("approved spire landmark is slightly buried and the energy core stays out", () => {
   const { placements } = JSON.parse(readFileSync(worldFiles().get("placements.json")!, "utf8"));

@@ -566,4 +566,6 @@ test("main keeps nograss mode and optional grass update wiring intact", () => {
   assert.ok(main.includes('!params.has("nograss")'), "?nograss verhindert weiterhin die GrassSystem-Erzeugung");
   assert.ok(main.includes("grass?.update("), "bestehendes Gras bleibt optional/flight-suspension-fähig");
   assert.ok(main.includes("preallocateSlots: grassSectorSlotUpperBound"), "Produktionsgras allokiert seine Streaming-Slots vor dem Warm-up");
+  const highMatch = main.match(/high:\s*\{\s*viewDistance:\s*(\d+)/);
+  assert.ok(highMatch && Number(highMatch[1]) >= 90, `high grass viewDistance must be >= 90 m, got ${highMatch?.[1]}`);
 });

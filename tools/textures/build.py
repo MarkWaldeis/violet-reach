@@ -32,12 +32,15 @@ def manifests():
             if not meta.exists():
                 continue
             m = json.loads(meta.read_text(encoding="utf-8"))
+            files = sorted(m["files"])
+            if kind == "ground":
+                files = [f for f in files if f.startswith("1k/")]
             items[t["name"]] = {"tile_m": t["tile_m"], "mean_srgb": m.get("mean"),
                                 "palette": t["palette"], "palette_srgb": m.get("palette_hex"),
                                 "delta_e": m.get("delta_e"), "roughness_mean": m.get("roughness_mean"),
-                                "files": sorted(m["files"])}
+                                "files": files}
         if kind == "ground":
-            doc = {"layout": "<1k|2k>/<name>_{albedo,normal,orh}.webp",
+            doc = {"layout": "1k/<name>_{albedo,normal,orh}.webp",
                    "albedo": "sRGB, RGB", "normal": "linear, RGB = n*0.5+0.5, Tangentenraum OpenGL (+Y oben)",
                    "orh": "linear, R=Verdeckung G=Rauheit B=Hoehe (0..1)"}
         else:

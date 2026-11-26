@@ -16,6 +16,7 @@ call npm install --no-audit --no-fund
 if errorlevel 1 goto npmfail
 echo Starte Violet Reach - dieses Fenster offen lassen!
 start "" cmd /c "timeout /t 6 >nul & start http://localhost:5199/"
+set VR_GATE_CACHE_MS=30000
 call npm run dev -- --port 5199 --strictPort
 goto end
 :npmfail

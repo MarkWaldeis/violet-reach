@@ -22,33 +22,6 @@
     "method": "Lake outline occupancy at 10 m cell centres (shore envelope); visible lake additionally requires nearest R16 height below water_y 180. Height extrema at all 2 m R16 samples; river centrelines clipped to bounds."
   },
   "asset_options": {
-    "tree_broadleaf_a": {
-      "maxDistance": 1600,
-      "lodScale": 0.11,
-      "lodRatio": 12,
-      "aerialLODScale": 2.0,
-      "maxLOD": 2,
-      "shadowLODs": 1,
-      "tintVariation": 0.09
-    },
-    "tree_broadleaf_b": {
-      "maxDistance": 1600,
-      "lodScale": 0.12,
-      "lodRatio": 12,
-      "aerialLODScale": 2.0,
-      "maxLOD": 2,
-      "shadowLODs": 1,
-      "tintVariation": 0.09
-    },
-    "tree_broadleaf_c": {
-      "maxDistance": 1600,
-      "lodScale": 0.14,
-      "lodRatio": 12,
-      "aerialLODScale": 2.5,
-      "maxLOD": 2,
-      "shadowLODs": 1,
-      "tintVariation": 0.09
-    },
     "tree_oak_a": {
       "maxDistance": 1600,
       "lodScale": 0.12,
@@ -85,6 +58,20 @@
       "shadowLODs": 1,
       "tintVariation": 0.09
     },
+    "trunk_acacia_b": {
+      "maxDistance": 1600,
+      "shadowLODs": 1,
+      "tintVariation": 0.08
+    },
+    "trunk_baobab_a": {
+      "maxDistance": 1600,
+      "shadowLODs": 1,
+      "tintVariation": 0.08
+    },
+    "rock_slab_a": {
+      "maxDistance": 600,
+      "shadowLODs": 1
+    },
     "fern_lush_a": {
       "maxDistance": 80,
       "lodScale": 0.21,
@@ -93,15 +80,11 @@
       "shadowLODs": 0,
       "tintVariation": 0.1
     },
-    "shrub_round_a": {
-      "maxDistance": 260,
-      "lodScale": 0.2,
-      "shadowLODs": 0,
-      "tintVariation": 0.12
-    },
     "bush_lush_a": {
       "maxDistance": 260,
       "lodScale": 0.2,
+      "lodRatio": 6,
+      "maxLOD": 3,
       "shadowLODs": 0,
       "tintVariation": 0.12
     },

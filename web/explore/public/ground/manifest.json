@@ -1,6 +1,6 @@
 {
  "doc": {
-  "layout": "<1k|2k>/<name>_{albedo,normal,orh}.webp",
+  "layout": "1k/<name>_{albedo,normal,orh}.webp",
   "albedo": "sRGB, RGB",
   "normal": "linear, RGB = n*0.5+0.5, Tangentenraum OpenGL (+Y oben)",
   "orh": "linear, R=Verdeckung G=Rauheit B=Hoehe (0..1)"
@@ -16,10 +16,7 @@
    "files": [
     "1k/grass_albedo.webp",
     "1k/grass_normal.webp",
-    "1k/grass_orh.webp",
-    "2k/grass_albedo.webp",
-    "2k/grass_normal.webp",
-    "2k/grass_orh.webp"
+    "1k/grass_orh.webp"
    ]
   },
   "grass_dry": {
@@ -32,10 +29,7 @@
    "files": [
     "1k/grass_dry_albedo.webp",
     "1k/grass_dry_normal.webp",
-    "1k/grass_dry_orh.webp",
-    "2k/grass_dry_albedo.webp",
-    "2k/grass_dry_normal.webp",
-    "2k/grass_dry_orh.webp"
+    "1k/grass_dry_orh.webp"
    ]
   },
   "soil": {
@@ -48,10 +42,7 @@
    "files": [
     "1k/soil_albedo.webp",
     "1k/soil_normal.webp",
-    "1k/soil_orh.webp",
-    "2k/soil_albedo.webp",
-    "2k/soil_normal.webp",
-    "2k/soil_orh.webp"
+    "1k/soil_orh.webp"
    ]
   },
   "sand": {
@@ -64,10 +55,7 @@
    "files": [
     "1k/sand_albedo.webp",
     "1k/sand_normal.webp",
-    "1k/sand_orh.webp",
-    "2k/sand_albedo.webp",
-    "2k/sand_normal.webp",
-    "2k/sand_orh.webp"
+    "1k/sand_orh.webp"
    ]
   },
   "sand_wet": {
@@ -80,10 +68,7 @@
    "files": [
     "1k/sand_wet_albedo.webp",
     "1k/sand_wet_normal.webp",
-    "1k/sand_wet_orh.webp",
-    "2k/sand_wet_albedo.webp",
-    "2k/sand_wet_normal.webp",
-    "2k/sand_wet_orh.webp"
+    "1k/sand_wet_orh.webp"
    ]
   },
   "gravel_path": {
@@ -96,10 +81,7 @@
    "files": [
     "1k/gravel_path_albedo.webp",
     "1k/gravel_path_normal.webp",
-    "1k/gravel_path_orh.webp",
-    "2k/gravel_path_albedo.webp",
-    "2k/gravel_path_normal.webp",
-    "2k/gravel_path_orh.webp"
+    "1k/gravel_path_orh.webp"
    ]
   },
   "chalk_rock": {
@@ -112,10 +94,7 @@
    "files": [
     "1k/chalk_rock_albedo.webp",
     "1k/chalk_rock_normal.webp",
-    "1k/chalk_rock_orh.webp",
-    "2k/chalk_rock_albedo.webp",
-    "2k/chalk_rock_normal.webp",
-    "2k/chalk_rock_orh.webp"
+    "1k/chalk_rock_orh.webp"
    ]
   },
   "strata_rock": {
@@ -128,10 +107,7 @@
    "files": [
     "1k/strata_rock_albedo.webp",
     "1k/strata_rock_normal.webp",
-    "1k/strata_rock_orh.webp",
-    "2k/strata_rock_albedo.webp",
-    "2k/strata_rock_normal.webp",
-    "2k/strata_rock_orh.webp"
+    "1k/strata_rock_orh.webp"
    ]
   },
   "moss": {
@@ -144,10 +120,7 @@
    "files": [
     "1k/moss_albedo.webp",
     "1k/moss_normal.webp",
-    "1k/moss_orh.webp",
-    "2k/moss_albedo.webp",
-    "2k/moss_normal.webp",
-    "2k/moss_orh.webp"
+    "1k/moss_orh.webp"
    ]
   }
  }
