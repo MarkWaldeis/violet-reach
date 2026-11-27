@@ -249,3 +249,9 @@ Median aus 3 unabhängigen Prüfern (`reviewer_a`, `reviewer_b`, `reviewer_c`; E
 - **Regression:** `phase6-macro-veg-regression1` (G3/G6) zeigt keine Nahwiesen- oder Bodenverschlechterung durch die neue `macro_grass`/Farb-Bake. G3 bleibt eine zusammenhängende saftige Wiese; G6 behält seinen trockeneren Ruinencharakter. Die dort sichtbaren plastischen Kristalle/Weißsteinflächen sind unverändert separate M1-Blocker.
 - **Verifikation:** Explorer-Suite **182/182**, TypeScript/Vite-Build und `python tools/vr.py check` (**38/38 Assets**) grün. Capture-Dreieckszahlen bleiben unverändert (`H1 1.633.923`, `H2 980.825`, `G3 2.609.069`, `G6 2.764.136` bei zwei High-Kaskaden).
 - **Noch offen:** H2 ist besser, aber noch kein finaler M1-Pass — die Fernwelt braucht vermutlich zusätzlich eine geometrische/impostor-artige Baumkronen-Silhouette oder eine deutlich glaubwürdigere Wald-/Wiesen-Makroästhetik. Separat entdeckt und noch nicht in diesem Patch behandelt: die channel-gepackten RGBA-WebP-Gewichtskarten müssen auf Alpha-/RGB-Verluste durch verlustbehaftete WebP-Kodierung geprüft und ggf. exakt/verlustfrei gespeichert werden.
+
+### G5-Framing-Korrektur
+
+- **Patch:** reine QA-Kamera-Korrektur in `world/bookmarks.json` von `(556,1536,yaw1.32)` zum nassen Uferpunkt `(550,1540,yaw1.10)`. Die erste östlichere Testpose `(580,1542)` verschlechterte die Überlappung; die geometrische Auswertung zeigte, dass der südlliche Uferpunkt bei gleicher Torentfernung ca. 41 m die Winkeltrennung Tor/Brücke auf fast 20° erhöht.
+- **Bildbefund:** `phase6-g5-framing-test2` erfüllt die Lesezeichenbeschreibung deutlich besser: Seefläche und Schilf links, Brücke frei lesbar in der Mitte, Tor rechts als großer begrenzender Rahmen statt zentraler Bildblockade. `phase6-g5-framing-test1` und das Vorherbild bleiben als verworfene Vergleichsaufnahmen dokumentiert.
+- **Verifikation:** gezielte QA-/Bookmark-Tests **10/10** grün; keine Welt- oder Asset-Geometrie verändert.

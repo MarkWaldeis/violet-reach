@@ -58,14 +58,14 @@
       "id": "G5",
       "label": "Am Strand der Nordbucht, Wasser, Tor und Brücke",
       "mode": "walk",
-      "x": 556,
-      "z": 1536,
+      "x": 550,
+      "z": 1540,
       "agl": 1.7,
-      "yaw": 1.32,
+      "yaw": 1.10,
       "pitch": 0.02,
       "fov": 57,
       "references": ["art/reference/ref_10_lake_shore.jpg", "art/reference/ref_11_floating_bodies.jpg"],
-      "focus": "Wasser, Sand, nasser Saum. Strand östlich des Tors, Blick nach WNW: links Seefläche, Mitte Brücke über die Weißfall-Mündung (80 m), rechts Tor (41 m)."
+      "focus": "Wasser, Sand, nasser Saum. Strand östlich/südlich des Tors am nassen Saum (550,1540), Blick nach WNW: links Seefläche, Mitte Brücke über die Weißfall-Mündung (79 m), rechts Tor (41 m) als Rahmen statt Bildblockade."
     },
     {
       "id": "G6",
