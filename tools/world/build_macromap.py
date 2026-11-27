@@ -60,6 +60,20 @@ def hex_to_lin(hex_str: str) -> np.ndarray:
     return srgb_to_lin(srgb)
 
 
+def save_rgba_webp(arr_01: np.ndarray, path: Path, quality: int = 92, exact_data: bool = False) -> int:
+    """Save an RGBA texture; use exact lossless mode for channel-packed data maps."""
+    u8 = np.clip(np.round(arr_01 * 255.0), 0, 255).astype(np.uint8)
+    im = Image.fromarray(u8, mode="RGBA")
+    if exact_data:
+        # Channel-packed data is not alpha-composited imagery: moss/strata weights are
+        # legitimately zero over most pixels, and lossy WebP treats that as transparency,
+        # discarding/severely quantising the meaningful RGB weight channels underneath.
+        im.save(path, "WEBP", lossless=True, exact=True, method=4)
+    else:
+        im.save(path, "WEBP", quality=quality, method=4)
+    return path.stat().st_size
+
+
 def value_noise(x: np.ndarray, z: np.ndarray, scale: float, salt: int = 0) -> np.ndarray:
     """Deterministic 2D value noise in [-1, 1] matching build_world.py."""
     xs = x / scale
@@ -980,17 +994,11 @@ def main(argv: list[str] | None = None) -> None:
     out_dir: Path = args.out
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    def save_rgba_webp(arr_01: np.ndarray, path: Path, quality: int = 92) -> int:
-        u8 = np.clip(np.round(arr_01 * 255.0), 0, 255).astype(np.uint8)
-        im = Image.fromarray(u8, mode="RGBA")
-        im.save(path, "WEBP", quality=quality, method=4)
-        return path.stat().st_size
-
     color_ao_4k = np.concatenate([macro_srgb_4k, combined_ao_4k[..., None]], axis=-1)
     sz_color_ao = save_rgba_webp(color_ao_4k, out_dir / "macro_color_ao.webp", quality=92)
-    sz_weights_a = save_rgba_webp(weights_a_2k, out_dir / "macro_weights_a.webp", quality=90)
-    sz_weights_b = save_rgba_webp(weights_b_2k, out_dir / "macro_weights_b.webp", quality=90)
-    sz_grass = save_rgba_webp(grass_2k, out_dir / "macro_grass.webp", quality=90)
+    sz_weights_a = save_rgba_webp(weights_a_2k, out_dir / "macro_weights_a.webp", exact_data=True)
+    sz_weights_b = save_rgba_webp(weights_b_2k, out_dir / "macro_weights_b.webp", exact_data=True)
+    sz_grass = save_rgba_webp(grass_2k, out_dir / "macro_grass.webp", exact_data=True)
 
     # Compute summary stats for verification
     slice_bounds = slice_data.get("bounds", {"minX": -100, "minZ": 1100, "maxX": 900, "maxZ": 2100})
