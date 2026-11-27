@@ -12,7 +12,7 @@ import { selectWater, type Hydrology } from "./hydrology.ts";
 import { surfaceData } from "./surface-data.ts";
 import { waitForWaterTextures, waterSurface } from "./water.ts";
 import { warmScene } from "./scene-warmup.ts";
-import { parseQAParams } from "./qa-params.ts";
+import { parseQAParams, qaFlag } from "./qa-params.ts";
 import { FLY_CLEARANCE } from "./navigation.ts";
 import { adapterInfo, FrameHistory, FrameStability, STABLE_FRAMES, trackTextures, type FrameRecord, type VRProbe } from "./qa-probe.ts";
 import { freezeWorldTime, worldTimeFrozen } from "./world-time.ts";
@@ -84,6 +84,21 @@ async function main() {
   const reflTerrainMaterial = terrainReflectionMaterial();
   const terrain = await TerrainStream.open(new URL(manifest, location.href), groundMaterial);
   scene.add(terrain.group);
+  const reflectionStats = { passes: 0, triangles: 0, drawCalls: 0 };
+  let reflectionSample: { triangles: number; drawCalls: number } | null = null;
+  const observeReflectionPass = (active: boolean) => {
+    terrain.setReflectionMaterial(active ? reflTerrainMaterial : null);
+    if (active) {
+      reflectionSample = { triangles: renderer.info.render.triangles, drawCalls: renderer.info.render.drawCalls };
+      return;
+    }
+    if (reflectionSample) {
+      reflectionStats.passes++;
+      reflectionStats.triangles += Math.max(0, renderer.info.render.triangles - reflectionSample.triangles);
+      reflectionStats.drawCalls += Math.max(0, renderer.info.render.drawCalls - reflectionSample.drawCalls);
+      reflectionSample = null;
+    }
+  };
   if (slice) {
     status.textContent = "Ausschnitt und freigegebene Objekte werden geladen …";
     terrain.manifest.spawn = slice.spawn[params.has("walk") ? "walk" : "fly"];
@@ -92,7 +107,7 @@ async function main() {
     status.textContent = "Gewässer und Ufermaterialien werden geladen …";
     const surface = await surfaceData(region, slice, terrain);
     groundMaterial.copy(terrainMaterial(surface));
-    scene.add(waterSurface(region, surface, (active) => terrain.setReflectionMaterial(active ? reflTerrainMaterial : null)));
+    scene.add(waterSurface(region, surface, observeReflectionPass, !qaFlag(params.get("noreflection"))));
   }
   const landmarkEffects = slice && effectConfig && hasLandmarkEffects(effectConfig)
     ? createLandmarkEffects(effectConfig, {
@@ -250,7 +265,8 @@ async function main() {
         geometries: info.memory.geometries, textures: info.memory.textures,
         textureBytes: textures.bytes(), textureBytesThree: info.memory.texturesSize, textureSizes: textures.summary(),
         camera: { x: p.x, y: p.y, z: p.z, yaw: nav.yaw, pitch: nav.pitch, agl: ground === undefined ? null : p.y - ground, fov: camera.fov, mode: nav.mode },
-        terrain: terrainStatus(), assets: assets ? { ...assets.stats } : null, grass: grass ? { ...grass.stats } : null, frozen: worldTimeFrozen(),
+        terrain: terrainStatus(), assets: assets ? { ...assets.stats } : null, grass: grass ? { ...grass.stats } : null,
+        reflection: { ...reflectionStats }, frozen: worldTimeFrozen(),
       };
     },
     setCamera(x, y, z, yaw, pitch, options = {}) {
@@ -297,6 +313,10 @@ async function main() {
     const assetsStart = performance.now();
     assets?.update(camera, stage.clientHeight, now, fullHeight === undefined ? 0 : Math.max(0, position.y - fullHeight));
     const renderStart = performance.now();
+    reflectionStats.passes = 0;
+    reflectionStats.triangles = 0;
+    reflectionStats.drawCalls = 0;
+    reflectionSample = null;
     post.render();
     const renderDone = performance.now();
     frames++;

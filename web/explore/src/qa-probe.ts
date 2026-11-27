@@ -39,6 +39,8 @@ export interface VRStats {
   camera: CameraPose & { agl: number | null; fov: number; mode: string };
   terrain: TerrainStatus;
   assets: { assets: number; total: number; lods: number[]; visibleChunks: number; chunks: number } | null;
+  grass: Record<string, number> | null;
+  reflection: { passes: number; triangles: number; drawCalls: number };
   frozen: boolean;
 }
 export interface VRProbe {

@@ -44,6 +44,8 @@ export interface DetailClassTuning {
   readonly roughness: number;
   readonly macroTileM: number;
   readonly noiseTileM: number;
+  /** metres; large-scale albedo variation can outlive the normal-detail octave on huge monuments. */
+  readonly noiseFadeEndM: number;
 }
 
 function freezeTuning(tuning: DetailClassTuning): DetailClassTuning {
@@ -58,6 +60,7 @@ const DEFAULT_DETAIL_TUNING = freezeTuning({
   roughness: 0.030,
   macroTileM: 3.5,
   noiseTileM: 8.0,
+  noiseFadeEndM: 130,
 });
 
 export const DETAIL_CLASS_TUNING: Readonly<Record<string, DetailClassTuning>> = Object.freeze({
@@ -71,6 +74,7 @@ export const DETAIL_CLASS_TUNING: Readonly<Record<string, DetailClassTuning>> = 
     roughness: 0.050,
     macroTileM: 5.0,
     noiseTileM: 12.0,
+    noiseFadeEndM: 260,
   }),
   sandstone: freezeTuning({
     microNormal: 0.32,
@@ -80,16 +84,18 @@ export const DETAIL_CLASS_TUNING: Readonly<Record<string, DetailClassTuning>> = 
     roughness: 0.045,
     macroTileM: 4.5,
     noiseTileM: 10.0,
+    noiseFadeEndM: 220,
   }),
   // Smooth monuments need visible pores/cracks, but not the heavy relief of natural cliff rock.
   stone_white: freezeTuning({
-    microNormal: 0.34,
-    macroNormal: 0.12,
-    albedoMicro: 0.032,
-    albedoNoise: 0.024,
-    roughness: 0.040,
+    microNormal: 0.40,
+    macroNormal: 0.18,
+    albedoMicro: 0.040,
+    albedoNoise: 0.028,
+    roughness: 0.052,
     macroTileM: 2.8,
     noiseTileM: 7.0,
+    noiseFadeEndM: 520,
   }),
   // Crystal remains comparatively smooth and only receives a faint luminance breakup.
   crystal: freezeTuning({
@@ -100,6 +106,7 @@ export const DETAIL_CLASS_TUNING: Readonly<Record<string, DetailClassTuning>> = 
     roughness: 0.022,
     macroTileM: 2.0,
     noiseTileM: 6.0,
+    noiseFadeEndM: 300,
   }),
   // Organic classes stay deliberately restrained: no procedural color patches and no coarse octave.
   bark: freezeTuning({
@@ -110,6 +117,7 @@ export const DETAIL_CLASS_TUNING: Readonly<Record<string, DetailClassTuning>> = 
     roughness: 0.030,
     macroTileM: 2.4,
     noiseTileM: 6.0,
+    noiseFadeEndM: 90,
   }),
   foliage: freezeTuning({
     microNormal: 0.07,
@@ -119,6 +127,7 @@ export const DETAIL_CLASS_TUNING: Readonly<Record<string, DetailClassTuning>> = 
     roughness: 0.014,
     macroTileM: 1.0,
     noiseTileM: 1.0,
+    noiseFadeEndM: 60,
   }),
 });
 
@@ -298,6 +307,7 @@ export function applyAssetDetailMap(material: Material, assetId: string): Materi
   const microTangentDelta = microDeltaWorld.sub(nW.mul(microDeltaWorld.dot(nW)));
   const microTangentDetail = microTangentDelta.mul(tuning.microNormal);
   let macroTangentDetail = microTangentDelta.mul(0);
+  let roughMacroSignal = float(0) as unknown as Node<"float">;
 
   // Reuse the same detail-normal texture at a much larger world scale for mineral surfaces.
   // The low-frequency octave survives mipmap filtering and breaks up 2..15 m walls without
@@ -321,6 +331,13 @@ export function applyAssetDetailMap(material: Material, assetId: string): Materi
       .add(vec3(mZ.x, mZ.y, 0).mul(weight.z));
     const macroTangentDelta = macroDeltaWorld.sub(nW.mul(macroDeltaWorld.dot(nW)));
     macroTangentDetail = macroTangentDelta.mul(tuning.macroNormal);
+
+    if (cls === "stone_white") {
+      const roughMacroTri = texture(detail.roughTex, uvMacroX).r.mul(weight.x)
+        .add(texture(detail.roughTex, uvMacroY).r.mul(weight.y))
+        .add(texture(detail.roughTex, uvMacroZ).r.mul(weight.z));
+      roughMacroSignal = roughMacroTri.sub(detail.roughCenter).div(0.055).clamp(-1, 1);
+    }
   }
 
   // Large mineral assets are still the close focus well beyond the old 22 m micro-detail range.
@@ -331,6 +348,7 @@ export function applyAssetDetailMap(material: Material, assetId: string): Materi
   const microFade = smoothstep(3, microFadeEnd, detailDistance).oneMinus();
   const macroFadeEnd = Math.max(34, tuning.macroTileM * 28);
   const macroFade = smoothstep(8, macroFadeEnd, detailDistance).oneMinus();
+  const noiseFade = smoothstep(8, tuning.noiseFadeEndM, detailDistance).oneMinus();
   const tangentDelta = microTangentDetail.mul(microFade).add(macroTangentDetail.mul(macroFade));
   const deltaView = cameraViewMatrix.mul(vec4(tangentDelta, 0)).xyz;
   const existingNormalNode = material instanceof MeshStandardNodeMaterial ? material.normalNode : null;
@@ -345,15 +363,31 @@ export function applyAssetDetailMap(material: Material, assetId: string): Materi
   const roughSignal = roughTri.sub(detail.roughCenter).div(0.035).clamp(-1, 1);
   const existingRoughnessNode = material instanceof MeshStandardNodeMaterial ? material.roughnessNode : null;
   const baseRoughness = (existingRoughnessNode ?? materialRoughness) as unknown as Node<"float">;
-  nodeMat.roughnessNode = baseRoughness.add(roughSignal.mul(microFade.mul(tuning.roughness))).clamp(0.08, 1.0);
+  const roughDetail = roughSignal.mul(microFade).add(roughMacroSignal.mul(macroFade).mul(0.55));
+  nodeMat.roughnessNode = baseRoughness.add(roughDetail.mul(tuning.roughness)).clamp(0.08, 1.0);
 
   // Hue-neutral close-detail luminance from the roughness texture, plus volumetric world noise for
   // large non-repeating patches on mineral surfaces. Alpha is carried through explicitly so cutout
   // foliage and GLB map alpha behave exactly as in the unpatched material.
-  let luminanceDetail = roughSignal.mul(tuning.albedoMicro).mul(microFade);
+  let luminanceDetail = roughSignal.mul(tuning.albedoMicro).mul(microFade)
+    .add(roughMacroSignal.mul(tuning.albedoMicro).mul(0.85).mul(macroFade));
   if (tuning.albedoNoise > 0) {
     const noisePos = p.mul(float(1 / tuning.noiseTileM)).add(vec3(17.13, 41.7, 9.31));
-    luminanceDetail = luminanceDetail.add(mx_noise_float(noisePos).mul(tuning.albedoNoise).mul(macroFade));
+    luminanceDetail = luminanceDetail.add(mx_noise_float(noisePos).mul(tuning.albedoNoise).mul(noiseFade));
+  }
+  if (cls === "stone_white") {
+    // Weathered pale monuments are defined more by long vertical runoff than by isotropic dirt.
+    // The anisotropic world-space noise keeps 2–4 m wide streaks coherent over tens of metres and
+    // wallness suppresses the term on horizontal footings, where it would read as generic grime.
+    const wallness = smoothstep(0.35, 0.80, abs(nW.y).oneMinus());
+    const streakPos = vec3(
+      p.x.mul(1 / 2.6),
+      p.y.mul(1 / 24.0),
+      p.z.mul(1 / 2.6),
+    ).add(vec3(31.7, 4.1, 17.9));
+    const streakNoise = mx_noise_float(streakPos);
+    const streaks = smoothstep(0.24, 0.68, streakNoise).mul(wallness);
+    luminanceDetail = luminanceDetail.sub(streaks.mul(0.045).mul(noiseFade));
   }
   const albedoScale = float(1).add(luminanceDetail).clamp(0.90, 1.10);
   const existingColorNode = material instanceof MeshStandardNodeMaterial ? material.colorNode : null;

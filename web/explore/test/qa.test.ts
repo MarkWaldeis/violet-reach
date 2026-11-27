@@ -21,7 +21,7 @@ test("without QA parameters the runtime keeps its previous behaviour", () => {
   assert.equal(p.hud, true);
   assert.equal(p.freeze, false);
   assert.equal(p.quality.name, "high");
-  assert.deepEqual(QUALITY.high, { name: "high", pixelRatio: 1.5, shadows: true, shadowMapSize: 2048, shadowCascades: 4, assetDistanceScale: 1 });
+  assert.deepEqual(QUALITY.high, { name: "high", pixelRatio: 1.5, shadows: true, shadowMapSize: 2048, shadowCascades: 2, assetDistanceScale: 1 });
   assert.deepEqual(assetRenderOptions(2, { distanceScale: QUALITY.high.assetDistanceScale }), assetRenderOptions(2));
 });
 
@@ -39,6 +39,21 @@ test("cam, agl, fov, hud, freeze and quality parse and validate", () => {
   for (const bad of ["1,2,3,4", "1,2,3,4,5,6", "1,,3,4,5", "a,2,3,4,5", "1,2,3,4,2"]) assert.throws(() => parseCamera(bad), /cam:/);
   for (const fov of ["0", "9", "121", "abc"]) assert.throws(() => params(`fov=${fov}`), /fov/);
   assert.throws(() => params("quality=extreme"), /quality/);
+});
+
+
+test("QA quality overrides can reduce shadow cascades without changing the base quality table", () => {
+  const base = params("quality=high").quality;
+  assert.equal(base.shadowCascades, 2);
+  const reduced = params("quality=high&cascades=1").quality;
+  assert.equal(reduced.name, "high");
+  assert.equal(reduced.shadowCascades, 1);
+  assert.equal(reduced.shadows, true);
+  assert.equal(QUALITY.high.shadowCascades, 2);
+  assert.equal(params("quality=high&cascades=0").quality.shadows, false);
+  assert.equal(params("quality=high&shadows=0").quality.shadows, false);
+  assert.equal(params("quality=high&shadows=0&cascades=3").quality.shadowCascades, 3);
+  for (const value of ["-1", "5", "1.5", "abc"]) assert.throws(() => params(`cascades=${value}`), /cascades/);
 });
 
 test("yaw/pitch convention matches Navigation: yaw 0 looks north (−Z), positive yaw turns west, positive pitch up", () => {

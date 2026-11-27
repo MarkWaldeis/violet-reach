@@ -1,5 +1,5 @@
 // One command for all comparison images (GRAFIK_PLAN.md 6, step 2):
-//   node tools/qa/capture.mjs [--run <name>] [--only G1,F2] [--quality high] [--seq] [--webgl] [--timeout <s>]
+//   node tools/qa/capture.mjs [--run <name>] [--only G1,F2] [--quality high] [--extra "cascades=2&noreflection=1"] [--seq] [--webgl] [--timeout <s>]
 // Output: C:\Users\<you>\devin-screenshots\violet-reach\<run>\ — <id>.png, <id>_compare.jpg, metrics.json, index.json,
 // with --seq also seq_<id>/NNN.png + <id>.mp4 for the walk/fly frame sequences.
 import { spawnSync } from "node:child_process";
@@ -10,7 +10,7 @@ import {
   timestamp, validateBackend, waitReady,
 } from "./lib.mjs";
 
-const args = parseArgs(process.argv.slice(2), { run: "value", only: "value", quality: "value", tonemapping: "value", exposure: "value", seq: "flag", webgl: "flag", timeout: "value" });
+const args = parseArgs(process.argv.slice(2), { run: "value", only: "value", quality: "value", tonemapping: "value", exposure: "value", extra: "value", seq: "flag", webgl: "flag", timeout: "value" });
 const quality = args.quality ?? "high";
 const run = args.run ?? timestamp();
 const timeout = Number(args.timeout ?? 180) * 1000;
@@ -21,8 +21,9 @@ if (only) for (const id of only) if (!doc.bookmarks.some((b) => b.id === id)) { 
 const dir = runDir(run);
 const index = { run, created: new Date().toISOString(), quality, tonemapping: args.tonemapping ?? null, exposure: args.exposure ?? null, webgl: !!args.webgl, valid: null, backend: null, adapter: null, bookmarks: [], sequences: [], errors: [] };
 const writeIndex = () => writeFileSync(join(dir, "index.json"), JSON.stringify(index, null, 2) + "\n");
-const query = (pose, fov) => ({ hud: 0, freeze: 1, cam: camParam(pose), agl: 1, fov, quality, tonemapping: args.tonemapping, exposure: args.exposure, webgl: args.webgl ? 1 : undefined });
-const pick = (s) => ({ quality: s.quality, frozen: s.frozen, triangles: s.triangles, drawCalls: s.drawCalls, textureBytes: s.textureBytes, terrain: s.terrain, assets: s.assets, camera: s.camera });
+const extraQuery = args.extra ? Object.fromEntries(new URLSearchParams(args.extra)) : {};
+const query = (pose, fov) => ({ ...extraQuery, hud: 0, freeze: 1, cam: camParam(pose), agl: 1, fov, quality, tonemapping: args.tonemapping, exposure: args.exposure, webgl: args.webgl ? 1 : undefined });
+const pick = (s) => ({ quality: s.quality, frozen: s.frozen, triangles: s.triangles, drawCalls: s.drawCalls, textureBytes: s.textureBytes, terrain: s.terrain, assets: s.assets, grass: s.grass, reflection: s.reflection, camera: s.camera });
 
 console.log(`Lauf ${run} → ${dir}`);
 const server = await ensureServer();

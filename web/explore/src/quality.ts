@@ -20,7 +20,7 @@ export const REFLECTION_LAYER = 1;
 export const QUALITY: Readonly<Record<QualityName, Readonly<QualityLevel>>> = {
   low: { name: "low", pixelRatio: 1, shadows: false, shadowMapSize: 1024, shadowCascades: 0, assetDistanceScale: 0.5 },
   medium: { name: "medium", pixelRatio: 1, shadows: true, shadowMapSize: 1024, shadowCascades: 2, assetDistanceScale: 0.75 },
-  high: { name: "high", pixelRatio: 1.5, shadows: true, shadowMapSize: 2048, shadowCascades: 4, assetDistanceScale: 1 },
+  high: { name: "high", pixelRatio: 1.5, shadows: true, shadowMapSize: 2048, shadowCascades: 2, assetDistanceScale: 1 },
   ultra: { name: "ultra", pixelRatio: 2, shadows: true, shadowMapSize: 4096, shadowCascades: 4, assetDistanceScale: 1.25 },
 };
 

@@ -202,6 +202,8 @@ test("per-class detail tuning stays bounded, subtle on organic materials and str
     assert.ok(tuning.roughness > 0 && tuning.roughness <= 0.055, `${cls} roughness stays matte/bounded`);
     assert.ok(tuning.macroTileM >= 1 && tuning.macroTileM <= 6, `${cls} macro scale is a coarse world scale`);
     assert.ok(tuning.noiseTileM >= 1 && tuning.noiseTileM <= 15, `${cls} noise scale is bounded`);
+    assert.ok(tuning.noiseFadeEndM >= tuning.macroTileM * 28 || tuning.albedoNoise === 0, `${cls} large albedo noise outlives the coarse normal octave`);
+    assert.ok(tuning.noiseFadeEndM <= 600, `${cls} noise fade remains bounded`);
     assert.ok(Object.isFrozen(tuning), `${cls} tuning is immutable`);
   }
 

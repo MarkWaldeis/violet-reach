@@ -30,7 +30,8 @@ try {
     return { id, v: numbers, agl: parts.length === 5 };
   });
   const [first] = parsed;
-  const { page } = await openApp(context, { hud: 0, freeze: 1, agl: 1, cam: first.v.join(","), fov: opts.fov ?? 57, quality: opts.quality ?? "high", qaPlacement: opts.qaPlacement }, { label: first.id });
+  const passthrough = Object.fromEntries(Object.entries(opts).filter(([key]) => !["run", "quality", "fov", "qaPlacement"].includes(key)));
+  const { page } = await openApp(context, { ...passthrough, hud: 0, freeze: 1, agl: 1, cam: first.v.join(","), fov: opts.fov ?? 57, quality: opts.quality ?? "high", qaPlacement: opts.qaPlacement }, { label: first.id });
   const check = validateBackend(await page.evaluate(() => window.__vr.stats()), false);
   console.log(check.valid ? check.label : `UNGÜLTIG: ${check.reason}`);
   for (const { id, v, agl } of parsed) {
@@ -42,7 +43,7 @@ try {
       .filter(([asset]) => asset.startsWith("tree_"))
       .map(([asset, v]) => `${asset}:${v.lods.join("/")} r${v.reflections}`)
       .join(" ");
-    console.log(`${id}: ${join(dir, `${id}.png`)} agl=${s.camera.agl?.toFixed(2)} y=${s.camera.y.toFixed(1)} tris=${s.triangles} draws=${s.drawCalls}${treeLods ? ` trees=${treeLods}` : ""}`);
+    console.log(`${id}: ${join(dir, `${id}.png`)} agl=${s.camera.agl?.toFixed(2)} y=${s.camera.y.toFixed(1)} tris=${s.triangles} draws=${s.drawCalls} grassTris=${s.grass?.triangles ?? 0} reflTris=${s.reflection?.triangles ?? 0}${treeLods ? ` trees=${treeLods}` : ""}`);
   }
 } catch (error) {
   console.error(error.message ?? error);

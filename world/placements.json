@@ -120,7 +120,7 @@
       "pitch": 0.10471975511965978,
       "roll": -0.08726646259971647,
       "scale": 1,
-      "y_offset": -1.654605
+      "y_offset": -1.1
     },
     {
       "asset": "column_white_a",
@@ -130,7 +130,7 @@
       "pitch": -0.10471975511965978,
       "roll": 0.08726646259971647,
       "scale": 0.88,
-      "y_offset": -1.002782
+      "y_offset": -0.66
     },
     {
       "asset": "column_white_a",
@@ -140,7 +140,7 @@
       "pitch": 0.08726646259971647,
       "roll": 0.10471975511965978,
       "scale": 0.97,
-      "y_offset": -1.611606
+      "y_offset": -1.08
     },
     {
       "asset": "tree_oak_a",
@@ -74350,7 +74350,7 @@
       "z": 1830.0,
       "yaw": -1.85,
       "scale": 1.0,
-      "y_offset": -5.8
+      "y_offset": -1.6
     },
     {
       "asset": "cliff_chalk_corner_a",

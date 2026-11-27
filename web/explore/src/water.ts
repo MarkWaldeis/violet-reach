@@ -546,11 +546,11 @@ export function waterMaterial(surface: SurfaceData, reflection?: ReturnType<type
   return material;
 }
 
-export function waterSurface(region: WaterRegion, surface: SurfaceData, onReflectionPass?: (active: boolean) => void) {
+export function waterSurface(region: WaterRegion, surface: SurfaceData, onReflectionPass?: (active: boolean) => void, reflectionEnabled = true) {
   const group = new Group();
   const lakeY = (region.lakes[0]?.water_y ?? 180) + 0.03;
   let reflection: ReturnType<typeof reflector> | undefined;
-  if (typeof window !== "undefined") {
+  if (typeof window !== "undefined" && reflectionEnabled) {
     reflection = reflector(WATER_REFLECTION_PASS);
     reflection.target.position.set(900, lakeY, 1900);
     reflection.target.rotation.x = -Math.PI / 2;

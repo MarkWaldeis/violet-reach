@@ -16,7 +16,7 @@ export interface QAParams {
 
 export const DEFAULT_FOV = 57;
 export const PITCH_LIMIT = 1.42;
-const flag = (value: string | null) => value !== null && !["0", "false", "no", "off"].includes(value.trim().toLowerCase());
+export const qaFlag = (value: string | null) => value !== null && !["0", "false", "no", "off"].includes(value.trim().toLowerCase());
 
 export function parseCamera(value: string): CameraPose {
   const parts = value.split(",").map((s) => s.trim());
@@ -33,13 +33,21 @@ export function parseQAParams(params: URLSearchParams): QAParams {
   const cam = params.has("cam") ? parseCamera(params.get("cam")!) : undefined;
   const fov = params.has("fov") ? Number(params.get("fov")) : DEFAULT_FOV;
   if (!Number.isFinite(fov) || fov < 10 || fov > 120) throw new Error("fov: 10–120 Grad erwartet");
+  const baseQuality = qualityLevel(params.get("quality"));
+  let quality = baseQuality;
+  if (params.has("cascades") || params.has("shadows")) {
+    const cascades = params.has("cascades") ? Number(params.get("cascades")) : baseQuality.shadowCascades;
+    if (!Number.isInteger(cascades) || cascades < 0 || cascades > 4) throw new Error("cascades: ganze Zahl 0–4 erwartet");
+    const shadows = (params.has("shadows") ? qaFlag(params.get("shadows")) : baseQuality.shadows) && cascades > 0;
+    quality = Object.freeze({ ...baseQuality, shadowCascades: cascades, shadows });
+  }
   return {
     cam,
-    agl: flag(params.get("agl")),
+    agl: qaFlag(params.get("agl")),
     fov,
-    hud: params.get("hud") === null || flag(params.get("hud")),
-    quality: qualityLevel(params.get("quality")),
-    freeze: flag(params.get("freeze")),
+    hud: params.get("hud") === null || qaFlag(params.get("hud")),
+    quality,
+    freeze: qaFlag(params.get("freeze")),
   };
 }
 
