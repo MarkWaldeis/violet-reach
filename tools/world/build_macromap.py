@@ -97,6 +97,28 @@ def value_noise(x: np.ndarray, z: np.ndarray, scale: float, salt: int = 0) -> np
     return (val * 2.0 - 1.0).astype(np.float32)
 
 
+def forest_macro_density(
+    x: np.ndarray, z_runtime: np.ndarray, slope_deg: np.ndarray, above_water: np.ndarray
+) -> np.ndarray:
+    """Procedural large-scale forest density in runtime X/Z coordinates.
+
+    This is the shared 400 m/salt-62 + 65 m/salt-63 distribution used by the
+    macro canopy bake.  The noise itself is evaluated in Blender-style ground
+    coordinates (``y_blender = -z_runtime``), then faded by the same slope and
+    height-above-water envelopes as the macro map.
+    """
+    y_b = -z_runtime
+    forest = smoothstep(
+        0.0,
+        1.0,
+        (value_noise(x, y_b, 400.0, 62) + 0.12) * 3.0
+        + value_noise(x, y_b, 65.0, 63) * 0.65,
+    )
+    forest = forest * (1.0 - smoothstep(18.0, 31.0, slope_deg))
+    forest = forest * smoothstep(2.5, 10.0, above_water)
+    return forest.astype(np.float32)
+
+
 def box_blur_2d(arr: np.ndarray, radius: int, passes: int = 2) -> np.ndarray:
     """Fast separable mirror-padded box blur in pure NumPy."""
     if radius <= 0:
@@ -430,17 +452,9 @@ def compute_canopy_shadow(
 
     # Also add world-wide procedural forest canopy shadow outside the 1x1 km hand-dressed slice
     # (matching build_world.py's forest distribution so distant 8x8 km woods have macro canopy shadows)
-    y_b_2k = -z_grid_2k
     slope_2k = downsample_2x(slope_deg_4k)
     above_2k = downsample_2x(above_water_4k)
-    forest_macro = smoothstep(
-        0.0,
-        1.0,
-        (value_noise(x_grid_2k, y_b_2k, 400.0, 62) + 0.12) * 3.0
-        + value_noise(x_grid_2k, y_b_2k, 65.0, 63) * 0.65,
-    )
-    forest_macro *= 1.0 - smoothstep(18.0, 31.0, slope_2k)
-    forest_macro *= smoothstep(2.5, 10.0, above_2k)
+    forest_macro = forest_macro_density(x_grid_2k, z_grid_2k, slope_2k, above_2k)
 
     # Crown-scale structure belongs in the 4k target map, not in a bilinearly blurred 2k field.
     # Broadcast the 1D axes instead of materialising two full meshgrids; the resulting noise is
