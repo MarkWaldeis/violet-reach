@@ -17,9 +17,23 @@
   "material_class": "rock_chalk",
   "material_class_notes": "Dominant geschichtetes Kalkgestein; Sandstein, nasse Uferzone und sparsame Gras-/Mooskappe sind sekundäre, lokal begrenzte Materialfarben innerhalb desselben Felsassets.",
   "texture_format": "ktx2",
-  "status": "blender_review",
+  "status": "exported",
   "builder": "devin-island-shoal-builder",
-  "review": null,
+  "review": {
+    "reviewer": "devin-orchestrator-review",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 8,
+      "scale": 9,
+      "style": 8,
+      "defects": 8
+    },
+    "notes": "Approved for integration: the shoal reads as a massive stepped chalk/sandstone lake island with a suitably flat central monument pad, closed grounded mass, embedded angular rocks, subtle wet band and restrained volumetric vegetation. The horizontal terraces are somewhat regular in isolation, but the lower courses will be partly water-hidden and the silhouette stays natural enough at the intended lake viewing distances.",
+    "round": 1,
+    "source_sha256": "28f04433b33b1f1b6e840038481f7d1a544cebad4a6c430551fe3b5aed14859b",
+    "sheet_sha256": "c6d75ce65fc9e6e2e8340cc81e8214132d2f83d79c895419b0f9d342b5a89fbe"
+  },
   "references": [
     "assets/shore/island_shoal_a/concept_prompt.txt",
     "assets/shore/island_shoal_a/concept_grok_error.txt",
@@ -34,5 +48,24 @@
     "assets/rocks/shore_rocks_wet_a/review/sheet.jpg",
     "assets/rocks/cliff_chalk_wall_a/review/sheet.jpg",
     "assets/monuments/monument_split_disc_a/review/sheet.jpg"
-  ]
+  ],
+  "review_rounds": 1,
+  "size_m": [
+    34.0,
+    27.0,
+    5.5
+  ],
+  "export": {
+    "file": "export/island_shoal_a.glb",
+    "bytes": 3676088,
+    "sha256": "5120a5dbc12ef82f0914588f6221f8f79864b656bdd62b3ce6ba084709619a76",
+    "source_sha256": "28f04433b33b1f1b6e840038481f7d1a544cebad4a6c430551fe3b5aed14859b",
+    "sheet_sha256": "c6d75ce65fc9e6e2e8340cc81e8214132d2f83d79c895419b0f9d342b5a89fbe",
+    "lod_triangles": [
+      12000,
+      4000,
+      1200
+    ],
+    "texture_size": 2048
+  }
 }

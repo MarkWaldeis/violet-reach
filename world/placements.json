@@ -74329,12 +74329,20 @@
       "y_offset": -0.35
     },
     {
-      "asset": "monument_split_disc_a",
+      "asset": "island_shoal_a",
       "x": 680.0,
       "z": 1561.0,
       "yaw": 0.79,
+      "scale": 1.5,
+      "y_offset": -2.7
+    },
+    {
+      "asset": "monument_split_disc_a",
+      "x": 680.0,
+      "z": 1561.0,
+      "yaw": 0.05,
       "scale": 1.25,
-      "y_offset": -1.6
+      "y_offset": 4.6
     },
     {
       "asset": "monument_rib_crown_a",

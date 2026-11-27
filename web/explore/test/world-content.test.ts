@@ -355,9 +355,9 @@ test("world content includes real terrain and only registered placed assets", ()
   const files = worldFiles();
   assert.equal([...files.keys()].filter((p) => p.endsWith(".r16")).length, 256);
   for (const key of ["terrain/manifest.json", "slice.json", "hydrology.json", "placements.json", "assets/crystal_cluster_b.glb", "assets/crystal_spire_a.glb", "assets/bridge_arch_a.glb", "assets/lake_shore_a.glb", ...[...vegetation, ...monuments, ...pilot, ...rocks, ...sky].map((asset) => `assets/${asset}.glb`)]) assert.ok(files.has(key));
-  assert.equal([...files.keys()].filter((p) => p.endsWith(".glb")).length, 4 + vegetation.length + monuments.length + pilot.length + rocks.length + sky.length);
+  assert.equal([...files.keys()].filter((p) => p.endsWith(".glb")).length, 5 + vegetation.length + monuments.length + pilot.length + rocks.length + sky.length);
 });
-for (const asset of ["bridge_arch_a", "lake_shore_a", "crystal_spire_a", ...vegetation, ...monuments, ...pilot, ...rocks, ...sky]) test(`${asset} export contains the LODs declared in asset.json`, () => {
+for (const asset of ["bridge_arch_a", "lake_shore_a", "island_shoal_a", "crystal_spire_a", ...vegetation, ...monuments, ...pilot, ...rocks, ...sky]) test(`${asset} export contains the LODs declared in asset.json`, () => {
   const glbPath = worldFiles().get(`assets/${asset}.glb`)!;
   const glb = readFileSync(glbPath);
   assert.equal(glb.toString("ascii", 0, 4), "glTF");

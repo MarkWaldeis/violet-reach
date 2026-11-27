@@ -248,6 +248,19 @@
       "material_class": "rock_chalk"
     },
     {
+      "id": "island_shoal_a",
+      "category": "shore",
+      "title": "Flachwasser-Insel Scholle A",
+      "file": "island_shoal_a.glb",
+      "size_m": [
+        34.0,
+        27.0,
+        5.5
+      ],
+      "bytes": 3676088,
+      "material_class": "rock_chalk"
+    },
+    {
       "id": "lake_shore_a",
       "category": "shore",
       "title": "Shinglewake Shore",

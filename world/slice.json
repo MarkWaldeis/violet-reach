@@ -519,6 +519,10 @@
     "scree_pile_a": {
       "maxDistance": 520,
       "shadowLODs": 1
+    },
+    "island_shoal_a": {
+      "maxDistance": 1400,
+      "shadowLODs": 1
     }
   },
   "effects": {
