@@ -59,8 +59,8 @@ export const WATER_REFLECTION_PASS = Object.freeze({
  * Conservative screen-space reflection-distortion tuning. The UV scales are deliberately
  * smaller than the legacy vec2(0.18, 0.30) multiplier; the additional normal/distance/view
  * attenuation below is what keeps distant aerial reflections coherent instead of striped.
- * Near-field effective Y coefficients are 0.21 Ã— 0.42 â‰ˆ 0.088 for a calm open lake and
- * at most 0.21 Ã— 0.78 â‰ˆ 0.164 in shallow/rough water (legacy: unfiltered 0.30).
+ * Near-field effective Y coefficients are 0.21 × 0.42 ≈ 0.088 for a calm open lake and
+ * at most 0.21 × 0.78 ≈ 0.164 in shallow/rough water (legacy: unfiltered 0.30).
  */
 export const WATER_REFLECTION_DISTORTION = Object.freeze({
   uvScaleX: 0.13,
@@ -306,9 +306,9 @@ export function waterMaterial(surface: SurfaceData, reflection?: ReturnType<type
 
   // Analytic derivatives of 5 incommensurate non-orthogonal phase-bent swells (13.9 m, 23.7 m, 39.1 m, 64.3 m, 113.7 m)
   // Zero periodic waffle/grid at any angle or altitude; breaks up glassy/oily reflections with ~12 ALU ops total
-  const medSwellFade = smoothstep(60, 240, dist).oneMinus();
-  const midSwellFade = smoothstep(220, 520, dist).oneMinus();
-  const farSwellFade = smoothstep(160, 420, dist).oneMinus();
+  const medSwellFade = smoothstep(40, 160, dist).oneMinus();
+  const midSwellFade = smoothstep(140, 340, dist).oneMinus();
+  const farSwellFade = smoothstep(80, 220, dist).oneMinus();
   const ph0 = p.x.mul(0.3411).add(p.z.mul(0.2966)).add(windMed.mul(3.6)).sub(windLarge.mul(2.1)).sub(time.mul(0.68));
   const ph1 = p.x.mul(0.2506).add(p.z.mul(0.0863)).add(windMed.mul(2.9)).sub(time.mul(0.52));
   const ph2 = p.x.mul(0.0628).add(p.z.mul(0.1479)).add(windLarge.mul(3.4)).add(time.mul(0.38));
@@ -317,15 +317,25 @@ export function waterMaterial(surface: SurfaceData, reflection?: ReturnType<type
   const cS0 = cos(ph0).mul(medSwellFade.mul(0.024));
   const cS1 = cos(ph1).mul(midSwellFade.mul(0.025));
   const cS2 = cos(ph2).mul(midSwellFade.mul(0.023));
-  const cS3 = cos(ph3).mul(farSwellFade.mul(0.014));
-  const cS4 = cos(ph4).mul(farSwellFade.mul(0.013));
+  const cS3 = cos(ph3).mul(farSwellFade.mul(0.009));
+  const cS4 = cos(ph4).mul(farSwellFade.mul(0.008));
   const nBroad = vec2(
     cS0.mul(0.7547).add(cS1.mul(0.9455)).add(cS2.mul(0.3907)).add(cS3.mul(-0.5150)).add(cS4.mul(-0.9563)),
     cS0.mul(0.6561).add(cS1.mul(0.3256)).add(cS2.mul(0.9205)).add(cS3.mul(0.8572)).add(cS4.mul(0.2924)),
   ).mul(mix(float(0.60), float(1.45), breeze))
-    .mul(smoothstep(0.30, 0.78, windLarge.mul(0.55).add(windMed.mul(0.45))).mul(0.65).add(0.35));
+    .mul(smoothstep(0.34, 0.84, windLarge.mul(0.55).add(windMed.mul(0.45))).mul(0.85).add(0.15));
 
-  const normalXZ = nClose.add(nWaveXZ).add(nBroad);
+  // Aerial water still needs imperfect reflections after all tiled textures and coherent swells fade.
+  // A finite-difference normal from the already domain-warped large wind-noise field gives broad,
+  // non-repeating wind-patch distortion instead of reintroducing straight periodic wave bands.
+  const windGradEps = 0.045;
+  const windLargeX = mx_noise_float(windUvLarge.add(vec2(windGradEps, 0))).mul(0.5).add(0.5);
+  const windLargeZ = mx_noise_float(windUvLarge.add(vec2(0, windGradEps))).mul(0.5).add(0.5);
+  const windNoiseGrad = vec2(windLargeX.sub(windLarge), windLargeZ.sub(windLarge)).div(windGradEps);
+  const farNoiseNormalFade = smoothstep(55, 170, dist);
+  const nWindPatch = windNoiseGrad.mul(farNoiseNormalFade.mul(mix(float(0.020), float(0.060), breeze)));
+
+  const normalXZ = nClose.add(nWaveXZ).add(nBroad).add(nWindPatch);
   const normal = vec3(normalXZ.x, 1, normalXZ.y).normalize();
   material.normalNode = transformNormalToView(normal);
 

@@ -64,10 +64,10 @@ export const DETAIL_CLASS_TUNING: Readonly<Record<string, DetailClassTuning>> = 
   // Chalk and sandstone need the strongest treatment: their assets span several meters and
   // otherwise read as large, soft color blotches even at walking distance.
   rock_chalk: freezeTuning({
-    microNormal: 0.36,
-    macroNormal: 0.17,
-    albedoMicro: 0.035,
-    albedoNoise: 0.050,
+    microNormal: 0.52,
+    macroNormal: 0.27,
+    albedoMicro: 0.040,
+    albedoNoise: 0.072,
     roughness: 0.050,
     macroTileM: 5.0,
     noiseTileM: 12.0,
@@ -93,10 +93,10 @@ export const DETAIL_CLASS_TUNING: Readonly<Record<string, DetailClassTuning>> = 
   }),
   // Crystal remains comparatively smooth and only receives a faint luminance breakup.
   crystal: freezeTuning({
-    microNormal: 0.16,
-    macroNormal: 0.05,
-    albedoMicro: 0.012,
-    albedoNoise: 0.015,
+    microNormal: 0.20,
+    macroNormal: 0.10,
+    albedoMicro: 0.022,
+    albedoNoise: 0.034,
     roughness: 0.022,
     macroTileM: 2.0,
     noiseTileM: 6.0,
@@ -296,7 +296,8 @@ export function applyAssetDetailMap(material: Material, assetId: string): Materi
     .add(vec3(nY.x, 0, nY.y).mul(weight.y))
     .add(vec3(nZ.x, nZ.y, 0).mul(weight.z));
   const microTangentDelta = microDeltaWorld.sub(nW.mul(microDeltaWorld.dot(nW)));
-  let tangentDelta = microTangentDelta.mul(tuning.microNormal);
+  const microTangentDetail = microTangentDelta.mul(tuning.microNormal);
+  let macroTangentDetail = microTangentDelta.mul(0);
 
   // Reuse the same detail-normal texture at a much larger world scale for mineral surfaces.
   // The low-frequency octave survives mipmap filtering and breaks up 2..15 m walls without
@@ -319,11 +320,19 @@ export function applyAssetDetailMap(material: Material, assetId: string): Materi
       .add(vec3(mY.x, 0, mY.y).mul(weight.y))
       .add(vec3(mZ.x, mZ.y, 0).mul(weight.z));
     const macroTangentDelta = macroDeltaWorld.sub(nW.mul(macroDeltaWorld.dot(nW)));
-    tangentDelta = tangentDelta.add(macroTangentDelta.mul(tuning.macroNormal));
+    macroTangentDetail = macroTangentDelta.mul(tuning.macroNormal);
   }
 
-  const fade = smoothstep(3, 22, p.sub(cameraPosition).length()).oneMinus();
-  const deltaView = cameraViewMatrix.mul(vec4(tangentDelta, 0)).xyz.mul(fade);
+  // Large mineral assets are still the close focus well beyond the old 22 m micro-detail range.
+  // Keep fine pores local, but let the coarse octave carry rock/stone/crystal structure into the
+  // 60..140 m walking/flying band where cliff walls and monuments otherwise flatten into plastic.
+  const detailDistance = p.sub(cameraPosition).length();
+  const microFadeEnd = tuning.microNormal >= 0.28 ? 54 : 28;
+  const microFade = smoothstep(3, microFadeEnd, detailDistance).oneMinus();
+  const macroFadeEnd = Math.max(34, tuning.macroTileM * 28);
+  const macroFade = smoothstep(8, macroFadeEnd, detailDistance).oneMinus();
+  const tangentDelta = microTangentDetail.mul(microFade).add(macroTangentDetail.mul(macroFade));
+  const deltaView = cameraViewMatrix.mul(vec4(tangentDelta, 0)).xyz;
   const existingNormalNode = material instanceof MeshStandardNodeMaterial ? material.normalNode : null;
   const baseNormalView = (existingNormalNode ?? (material.normalMap || material.bumpMap ? materialNormal : normalViewGeometry)) as unknown as Node<"vec3">;
   nodeMat.normalNode = baseNormalView.add(deltaView).normalize();
@@ -336,17 +345,17 @@ export function applyAssetDetailMap(material: Material, assetId: string): Materi
   const roughSignal = roughTri.sub(detail.roughCenter).div(0.035).clamp(-1, 1);
   const existingRoughnessNode = material instanceof MeshStandardNodeMaterial ? material.roughnessNode : null;
   const baseRoughness = (existingRoughnessNode ?? materialRoughness) as unknown as Node<"float">;
-  nodeMat.roughnessNode = baseRoughness.add(roughSignal.mul(fade.mul(tuning.roughness))).clamp(0.08, 1.0);
+  nodeMat.roughnessNode = baseRoughness.add(roughSignal.mul(microFade.mul(tuning.roughness))).clamp(0.08, 1.0);
 
   // Hue-neutral close-detail luminance from the roughness texture, plus volumetric world noise for
   // large non-repeating patches on mineral surfaces. Alpha is carried through explicitly so cutout
   // foliage and GLB map alpha behave exactly as in the unpatched material.
-  let luminanceDetail = roughSignal.mul(tuning.albedoMicro);
+  let luminanceDetail = roughSignal.mul(tuning.albedoMicro).mul(microFade);
   if (tuning.albedoNoise > 0) {
     const noisePos = p.mul(float(1 / tuning.noiseTileM)).add(vec3(17.13, 41.7, 9.31));
-    luminanceDetail = luminanceDetail.add(mx_noise_float(noisePos).mul(tuning.albedoNoise));
+    luminanceDetail = luminanceDetail.add(mx_noise_float(noisePos).mul(tuning.albedoNoise).mul(macroFade));
   }
-  const albedoScale = float(1).add(luminanceDetail.mul(fade)).clamp(0.90, 1.10);
+  const albedoScale = float(1).add(luminanceDetail).clamp(0.90, 1.10);
   const existingColorNode = material instanceof MeshStandardNodeMaterial ? material.colorNode : null;
   const baseDiffuse = vec4((existingColorNode ?? materialColor) as unknown as Node<"vec4">);
   nodeMat.colorNode = vec4(baseDiffuse.rgb.mul(albedoScale), baseDiffuse.a);

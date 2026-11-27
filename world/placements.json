@@ -74354,35 +74354,35 @@
     },
     {
       "asset": "cliff_chalk_corner_a",
-      "x": 688.0,
+      "x": 680.0,
       "z": 1170.0,
       "yaw": -1.57,
       "scale": 1.0,
-      "y_offset": -8.8
+      "y_offset": -11.7
     },
     {
       "asset": "cliff_chalk_wall_a",
-      "x": 682.0,
+      "x": 674.0,
       "z": 1205.0,
+      "yaw": -1.57,
+      "scale": 1.0,
+      "y_offset": -12.7
+    },
+    {
+      "asset": "cliff_chalk_wall_b",
+      "x": 674.0,
+      "z": 1244.0,
       "yaw": -1.57,
       "scale": 1.0,
       "y_offset": -5.5
     },
     {
-      "asset": "cliff_chalk_wall_b",
-      "x": 682.0,
-      "z": 1244.0,
-      "yaw": -1.57,
-      "scale": 1.0,
-      "y_offset": -1.2
-    },
-    {
       "asset": "rock_pillar_chalk_a",
-      "x": 688.0,
+      "x": 680.0,
       "z": 1278.0,
       "yaw": -1.57,
       "scale": 1.0,
-      "y_offset": -1.0
+      "y_offset": -3.65
     },
     {
       "asset": "skyship_pod_a",

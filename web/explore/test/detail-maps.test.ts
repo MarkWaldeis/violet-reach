@@ -195,10 +195,10 @@ test("per-class detail tuning stays bounded, subtle on organic materials and str
     const tuning = DETAIL_CLASS_TUNING[cls];
     assert.ok(tuning, `${cls} has explicit tuning`);
     for (const value of Object.values(tuning)) assert.ok(Number.isFinite(value), `${cls} tuning is finite`);
-    assert.ok(tuning.microNormal > 0 && tuning.microNormal <= 0.36, `${cls} micro normal remains physical`);
-    assert.ok(tuning.macroNormal >= 0 && tuning.macroNormal <= 0.18, `${cls} macro normal remains subtle`);
+    assert.ok(tuning.microNormal > 0 && tuning.microNormal <= 0.56, `${cls} micro normal remains physical`);
+    assert.ok(tuning.macroNormal >= 0 && tuning.macroNormal <= 0.30, `${cls} macro normal remains bounded`);
     assert.ok(tuning.albedoMicro >= 0 && tuning.albedoMicro <= 0.04, `${cls} micro albedo stays subtle`);
-    assert.ok(tuning.albedoNoise >= 0 && tuning.albedoNoise <= 0.055, `${cls} noise albedo stays subtle`);
+    assert.ok(tuning.albedoNoise >= 0 && tuning.albedoNoise <= 0.080, `${cls} noise albedo stays bounded`);
     assert.ok(tuning.roughness > 0 && tuning.roughness <= 0.055, `${cls} roughness stays matte/bounded`);
     assert.ok(tuning.macroTileM >= 1 && tuning.macroTileM <= 6, `${cls} macro scale is a coarse world scale`);
     assert.ok(tuning.noiseTileM >= 1 && tuning.noiseTileM <= 15, `${cls} noise scale is bounded`);

@@ -791,13 +791,32 @@ export function terrainMaterial(surface?: SurfaceData) {
 
   const alpineFarFade = smoothstep(380, 1400, dist).mul(smoothstep(260, 420, p.y));
   const nearAlbedo = mix(planarAlbedo, cliffAlbedo, cliffMask);
-  const farAlpine = mix(nearAlbedo, macroColorAo.rgb, float(0.18));
+
+  // Broad distant vegetation mottling. The playable slice has authored tree instances, but the
+  // surrounding 8-km terrain visible from H1/H2 does not; there the planar texture mips otherwise
+  // collapse into an empty green sheet. Reuse the already warped organic macro fields (no extra
+  // noise octave) and keep the effect below the alpine rock line, off cliffs and out of close range.
+  const vegetationCover = bw0.add(bw1).add(bw6).clamp(0, 1);
+  const canopySignal = macro55.mul(0.62).add(macro18.mul(0.38));
+  const canopyPatch = smoothstep(0.50, 0.82, canopySignal);
+  const canopyDistance = smoothstep(150, 420, dist);
+  const canopyAltitude = smoothstep(255, 340, p.y).oneMinus();
+  const canopyMask = canopyPatch
+    .mul(canopyDistance)
+    .mul(canopyAltitude)
+    .mul(cliffMask.oneMinus())
+    .mul(vegetationCover)
+    .mul(0.48);
+  const canopyAlbedo = nearAlbedo.mul(vec3(0.72, 0.85, 0.60));
+  const landscapeAlbedo = mix(nearAlbedo, canopyAlbedo, canopyMask);
+
+  const farAlpine = mix(landscapeAlbedo, macroColorAo.rgb, float(0.18));
   const combinedOrh = mix(planarOrh, cliffOrh, cliffMask);
   const softOrhAo = mix(float(0.66), float(1.0), combinedOrh.r);
   const microAO = mix(float(1), mix(softOrhAo, combinedOrh.r, cliffMask), microAoFade);
   const macroAO = mix(float(0.76), float(1.14), macroColorAo.a);
   const meadowLift = float(1.0).add(bw0.mul(0.06).add(bw1.mul(0.10)).mul(cliffMask.oneMinus()));
-  const finalColor = mix(nearAlbedo, farAlpine, alpineFarFade).mul(microAO).mul(macroAO).mul(shoreDampMul).mul(meadowLift);
+  const finalColor = mix(landscapeAlbedo, farAlpine, alpineFarFade).mul(microAO).mul(macroAO).mul(shoreDampMul).mul(meadowLift);
 
   const dryRough = mix(planarOrh.g.max(0.91), cliffOrh.g.max(0.95), cliffMask);
   const wetGlossRough = mix(dryRough, float(0.42), bw4.mul(cliffMask.oneMinus()));
