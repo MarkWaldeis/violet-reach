@@ -221,3 +221,8 @@ Median aus 3 unabhängigen Prüfern (`reviewer_a`, `reviewer_b`, `reviewer_c`; E
 - **Patch:** gleiche Dreieckskosten, aber niedrigere/stärker gebogene Halme, größere Wurzelstreuung und weniger prozedurale Trocken-/Erddominanz im Bodenlayer. Targeted Capture `phase6-grass-shape-test1` (G6/G7) bei unveränderten Dreieckszahlen: G7 wirkt weniger stachelig und der Bodenanschluss ist grüner; G6 bleibt wegen Ruinen-/Erdgewichtung fast unverändert.
 - **Bewertung:** kleiner echter Fortschritt, noch kein M1-Pass. Der nächste Hebel ist nicht noch einmal dieselbe Halmform, sondern die Kopplung aus Wiesengrundfarbe, trockener Makro-Gewichtung und sichtbarer Blattfläche pro Büschel.
 
+### Verworfene Gras-Dichteprobe / Filter-Faktencheck
+
+- **Negativtest:** `density 5.5→6.8` plus früherem Grass-LOD (`0.20×viewDistance`) verbesserte G7 nur moderat, erhöhte den Capture-Peak aber auf **4.047.590 Dreiecke** und wurde daher verworfen; `main.ts` ist wieder exakt auf dem committed Stand.
+- **Faktencheck:** Die Terrain-Array-Texturen nutzen bereits `anisotropy = 4`; ein vermeintlich neuer Filterpatch war daher wirkungslos/nicht nötig. Nahbodenglättung ist folglich kein einfacher fehlender-Anisotropie-Bug, sondern weiterhin ein Farb-/Gewichtungs-/Coverage-Problem.
+
