@@ -35,6 +35,39 @@ interface ChannelImage {
   data: Uint8ClampedArray;
 }
 
+/** Decode packed macro RGBA without canvas premultiplication; alpha channels are data, not opacity. */
+async function decodeUnpremultiplied(blob: Blob): Promise<ChannelImage> {
+  const bitmap = await createImageBitmap(blob, {
+    premultiplyAlpha: "none",
+    colorSpaceConversion: "none",
+  });
+  const width = bitmap.width, height = bitmap.height;
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const gl = canvas.getContext("webgl2");
+    if (!gl) throw new Error("WebGL2-Datenpfad für Makrokarten nicht verfügbar");
+    const tex = gl.createTexture();
+    const fbo = gl.createFramebuffer();
+    if (!tex || !fbo) throw new Error("WebGL2-Makrodecodierung konnte keine Textur/Framebuffer erzeugen");
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 0);
+    gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, bitmap);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    const out = new Uint8Array(width * height * 4);
+    gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, out);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.deleteFramebuffer(fbo);
+    gl.deleteTexture(tex);
+    return { width, height, data: new Uint8ClampedArray(out.buffer) };
+  } finally {
+    bitmap.close();
+  }
+}
+
 export class GrassMacroSampler {
   #grass: ChannelImage;
   #color: ChannelImage;
@@ -56,21 +89,13 @@ export class GrassMacroSampler {
     );
   }
 
-  /** Decode both macro webp files through an offscreen canvas (browser only). */
+  /** Decode both macro webp files through the unpremultiplied WebGL2 data path (browser only). */
   static async load(baseUrl: string, config?: GrassMacroConfig): Promise<GrassMacroSampler> {
     const decode = async (file: string): Promise<ChannelImage> => {
       const response = await fetch(new URL(file, baseUrl).href);
       if (!response.ok) throw new Error(`Makrokarte ${file}: HTTP ${response.status}`);
       const blob = await response.blob();
-      const bitmap = await createImageBitmap(blob);
-      const canvas = document.createElement("canvas");
-      canvas.width = bitmap.width;
-      canvas.height = bitmap.height;
-      const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
-      ctx.drawImage(bitmap, 0, 0);
-      bitmap.close();
-      const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      return { width: img.width, height: img.height, data: img.data };
+      return decodeUnpremultiplied(blob);
     };
     const [grass, color] = await Promise.all([decode("macro_grass.webp"), decode("macro_color_ao.webp")]);
     return new GrassMacroSampler(grass, color, config);
