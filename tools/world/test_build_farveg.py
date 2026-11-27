@@ -46,6 +46,8 @@ def make_params(**overrides) -> farveg.FarvegParams:
         "target_instances": 140,
         "max_instances": 140,
         "hard_slope_deg": 31.0,
+        "tree_line_start_m": 430.0,
+        "tree_line_end_m": 650.0,
         "min_above_water_m": 2.5,
         "water_edge_buffer_m": 1.5,
         "slice_transition_m": 8.0,
@@ -242,6 +244,18 @@ class FarvegGeneratorTests(unittest.TestCase):
         }
         circles = farveg.extract_exclusion_circles(placements, base_radius_m=10.0)
         self.assertEqual(circles, ((1.0, 2.0, 20.0),))
+
+    def test_treeline_fades_high_altitude_forest(self):
+        low = dense_result(make_env(height_values=np.full((GRID_N, GRID_N), 430.0, dtype=np.float32)))
+        high = dense_result(make_env(height_values=np.full((GRID_N, GRID_N), 650.0, dtype=np.float32)))
+        self.assertGreater(len(low.instances), 20)
+        self.assertEqual(len(high.instances), 0)
+        savanna_high = farveg.generate_instances(
+            make_env(height_values=np.full((GRID_N, GRID_N), 650.0, dtype=np.float32)),
+            make_params(savanna_floor=1.0),
+            constant_density(0.0),
+        )
+        self.assertEqual(len(savanna_high.instances), 0)
 
     def test_json_roundtrip(self):
         env = make_env()

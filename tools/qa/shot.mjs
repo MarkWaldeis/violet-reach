@@ -43,7 +43,7 @@ try {
       .filter(([asset]) => asset.startsWith("tree_"))
       .map(([asset, v]) => `${asset}:${v.lods.join("/")} r${v.reflections}`)
       .join(" ");
-    console.log(`${id}: ${join(dir, `${id}.png`)} agl=${s.camera.agl?.toFixed(2)} y=${s.camera.y.toFixed(1)} tris=${s.triangles} draws=${s.drawCalls} grassTris=${s.grass?.triangles ?? 0} reflTris=${s.reflection?.triangles ?? 0}${treeLods ? ` trees=${treeLods}` : ""}`);
+    console.log(`${id}: ${join(dir, `${id}.png`)} agl=${s.camera.agl?.toFixed(2)} y=${s.camera.y.toFixed(1)} tris=${s.triangles} draws=${s.drawCalls} grassTris=${s.grass?.triangles ?? 0} farvegTris=${s.farveg?.triangles ?? 0} farvegInst=${s.farveg?.visibleInstances ?? 0} reflTris=${s.reflection?.triangles ?? 0}${treeLods ? ` trees=${treeLods}` : ""}`);
   }
 } catch (error) {
   console.error(error.message ?? error);

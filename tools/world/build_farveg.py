@@ -101,9 +101,11 @@ class FarvegParams:
     candidate_jitter_fraction: float = 0.42
     density_scale: float = 1.0
     savanna_floor: float = 0.022
-    target_instances: int = 8000
-    max_instances: int = 8000
+    target_instances: int = 10000
+    max_instances: int = 10000
     hard_slope_deg: float = 31.0
+    tree_line_start_m: float = 430.0
+    tree_line_end_m: float = 650.0
     min_above_water_m: float = 2.5
     water_edge_buffer_m: float = 1.5
     slice_transition_m: float = 120.0
@@ -112,11 +114,11 @@ class FarvegParams:
     embed_min_m: float = 1.0
     embed_max_m: float = 2.0
     gradient_step_m: float = 2.0
-    core_spacing_min_m: float = 45.0
-    core_spacing_max_m: float = 70.0
-    edge_spacing_min_m: float = 80.0
-    edge_spacing_max_m: float = 130.0
-    savanna_spacing_m: float = 240.0
+    core_spacing_min_m: float = 28.0
+    core_spacing_max_m: float = 48.0
+    edge_spacing_min_m: float = 45.0
+    edge_spacing_max_m: float = 75.0
+    savanna_spacing_m: float = 120.0
 
 
 @dataclass
@@ -458,6 +460,14 @@ def generate_instances(
     else:
         forest_density = np.asarray(density_fn(x, z), dtype=np.float32)
     forest_density = np.clip(forest_density, 0.0, 1.0)
+    # The shared macro forest noise intentionally has no altitude term: in the ground
+    # bake, rock/strata weights already suppress high-alpine vegetation.  Real crown
+    # geometry needs an explicit treeline, otherwise isolated instances appear on
+    # bright alpine plates and rock faces where the macro colour reads as stone.
+    altitude_factor = 1.0 - macro.smoothstep(
+        float(params.tree_line_start_m), float(params.tree_line_end_m), terrain_y
+    )
+    forest_density = forest_density * altitude_factor
 
     # The macro value is a canopy-opacity/occupancy mask rather than a literal
     # per-tree probability.  The default density_scale of 1 nevertheless keeps it
@@ -468,6 +478,9 @@ def generate_instances(
     # multiplies that floor so the hand-dressed core does not leak crowns.
     calibrated_forest = np.clip(forest_density * float(params.density_scale), 0.0, 1.0)
     density = np.maximum(calibrated_forest, float(params.savanna_floor))
+    # Sparse savanna accents are still full-sized trees, not alpine shrubs: the treeline
+    # must gate the floor as well as the dense-forest term.
+    density = density * altitude_factor
     density = density * slice_density_factor(x, z, env.slice_bounds, params.slice_transition_m)
     density = np.clip(density, 0.0, 1.0).astype(np.float32)
 
@@ -500,6 +513,7 @@ def generate_instances(
         "rejected_inside_slice": int(np.count_nonzero(inside_slice)),
         "rejected_low_above_water": int(np.count_nonzero(above_water < float(params.min_above_water_m))),
         "rejected_steep_slope": int(np.count_nonzero(slope_deg >= float(params.hard_slope_deg))),
+        "treeline_faded_candidates": int(np.count_nonzero(altitude_factor < 0.999)),
         "mean_effective_density": round(float(density[hard_valid].mean()) if np.any(hard_valid) else 0.0, 5),
     }
 
@@ -707,6 +721,7 @@ def build_payload(result: GenerationResult, env: FarvegEnvironment, params: Farv
             "target_instances": int(params.target_instances),
             "max_instances": int(params.max_instances),
             "hard_slope_deg": float(params.hard_slope_deg),
+            "tree_line_m": [float(params.tree_line_start_m), float(params.tree_line_end_m)],
             "min_above_water_m": float(params.min_above_water_m),
             "water_edge_buffer_m": float(params.water_edge_buffer_m),
             "path_clearance_m": float(params.path_clearance_m),
@@ -754,6 +769,8 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--savanna-floor", type=float, default=FarvegParams.savanna_floor, help="minimum density for sparse open-country accents")
     ap.add_argument("--slice-transition", type=float, default=FarvegParams.slice_transition_m, help="density ramp outside the hard-excluded slice core, in metres")
     ap.add_argument("--hard-slope", type=float, default=FarvegParams.hard_slope_deg, help="hard slope exclusion in degrees")
+    ap.add_argument("--tree-line-start", type=float, default=FarvegParams.tree_line_start_m, help="terrain height where the forest density treeline fade starts")
+    ap.add_argument("--tree-line-end", type=float, default=FarvegParams.tree_line_end_m, help="terrain height where procedural forest density reaches zero")
     ap.add_argument("--min-above-water", type=float, default=FarvegParams.min_above_water_m, help="hard minimum height above local water in metres")
     ap.add_argument("--water-edge-buffer", type=float, default=FarvegParams.water_edge_buffer_m, help="hard signed distance buffer outside water edges in metres")
     ap.add_argument("--path-clearance", type=float, default=FarvegParams.path_clearance_m, help="clearance beyond path edge in metres")
@@ -774,6 +791,8 @@ def main(argv: list[str] | None = None) -> None:
         target_instances=args.target_instances,
         max_instances=args.max_instances,
         hard_slope_deg=args.hard_slope,
+        tree_line_start_m=args.tree_line_start,
+        tree_line_end_m=args.tree_line_end,
         min_above_water_m=args.min_above_water,
         water_edge_buffer_m=args.water_edge_buffer,
         slice_transition_m=args.slice_transition,

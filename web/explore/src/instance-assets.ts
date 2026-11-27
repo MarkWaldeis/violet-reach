@@ -2,9 +2,7 @@ import {
   Box3, Color, Frustum, Group, InstancedMesh, Matrix4, Mesh,
   PerspectiveCamera, Sphere, Vector3, type BufferGeometry, type Material, type WebGPURenderer,
 } from "three/webgpu";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
-import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
+import { loadAssetGLB } from "./asset-gltf.ts";
 import type { InstancePlacement } from "./placements.ts";
 import { placementRotation } from "./placement-rotation.ts";
 import { aerialLODDistances, assetRenderOptions, chunkVisible, instanceLOD, instanceTint, lodDistances, spatialChunks, type AssetRenderOptions, type Chunk } from "./instance-lod.ts";
@@ -39,17 +37,10 @@ export class InstanceAssets {
     renderer?: WebGPURenderer,
   ) {
     const result = new InstanceAssets();
-    const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
-    let ktx2: KTX2Loader | undefined;
-    if (renderer && typeof location !== "undefined") {
-      ktx2 = new KTX2Loader().setTranscoderPath(new URL("./basis/", location.href).href).detectSupport(renderer);
-      loader.setKTX2Loader(ktx2);
-    }
     const ids = [...new Set(placements.map((p) => p.asset))];
     await prepareDetailMapsForAssets(ids);
-    try {
       for (const id of ids) {
-        const gltf = await loader.loadAsync(new URL(`./assets/${id}.glb`, location.href).href);
+        const gltf = await loadAssetGLB(id, renderer);
         gltf.scene.updateMatrixWorld(true);
         const levels = new Map<number, Mesh<BufferGeometry, Material | Material[]>[]>();
         gltf.scene.traverse((node) => {
@@ -125,9 +116,6 @@ export class InstanceAssets {
         const chunks = spatialChunks(instances, (p) => rootRadius * p.scale);
         result.#batches.push({ id, parts, chunks, size, maxDistance: settings.maxDistance, lodScale: settings.lodScale, lodRatio: settings.lodRatio, aerialLODScale: settings.aerialLODScale, reflectionIndex });
       }
-    } finally {
-      ktx2?.dispose();
-    }
     result.stats.assets = result.#batches.length;
     result.stats.total = placements.length;
     return result;

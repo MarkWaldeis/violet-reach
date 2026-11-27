@@ -18,6 +18,7 @@ import { adapterInfo, FrameHistory, FrameStability, STABLE_FRAMES, trackTextures
 import { freezeWorldTime, worldTimeFrozen } from "./world-time.ts";
 import { GrassMacroSampler } from "./grass-macro.ts";
 import { GrassSystem, grassSectorSlotUpperBound } from "./grass-system.ts";
+import { FarVegetation, parseFarvegPayload, resolveFarvegOptions } from "./far-vegetation.ts";
 import { createLandmarkEffects, hasLandmarkEffects, validateSliceEffects } from "./landmark-effects.ts";
 
 const stage = document.querySelector<HTMLElement>("#stage")!;
@@ -119,6 +120,13 @@ async function main() {
   if (landmarkEffects) scene.add(landmarkEffects.group);
   const assets = slice ? await sliceAssets(slice, terrain, params, quality.assetDistanceScale, renderer) : undefined;
   if (assets) scene.add(assets.group);
+  let farveg: FarVegetation | undefined;
+  if (slice && !params.has("nofarveg")) {
+    status.textContent = "Fernvegetation wird geladen …";
+    const payload = parseFarvegPayload(await readJSON<unknown>("./farveg/farveg.json"));
+    farveg = await FarVegetation.load(payload, resolveFarvegOptions(quality.assetDistanceScale), renderer);
+    scene.add(farveg.group);
+  }
   let grass: GrassSystem | undefined;
   if (slice && !params.has("nograss")) {
     status.textContent = "Gras-Makrokarten werden geladen …";
@@ -266,6 +274,7 @@ async function main() {
         textureBytes: textures.bytes(), textureBytesThree: info.memory.texturesSize, textureSizes: textures.summary(),
         camera: { x: p.x, y: p.y, z: p.z, yaw: nav.yaw, pitch: nav.pitch, agl: ground === undefined ? null : p.y - ground, fov: camera.fov, mode: nav.mode },
         terrain: terrainStatus(), assets: assets ? { ...assets.stats } : null, grass: grass ? { ...grass.stats } : null,
+        farveg: farveg ? { ...farveg.stats } : null,
         reflection: { ...reflectionStats }, frozen: worldTimeFrozen(),
       };
     },
@@ -308,6 +317,9 @@ async function main() {
       }
     }
     if (ready) nav.update(dt);
+    const farvegStart = performance.now();
+    farveg?.update(camera, now);
+    const farvegMs = performance.now() - farvegStart;
     atmosphere.update(camera);
     const fullHeight = terrain.fullHeightAt(position.x, position.z);
     const assetsStart = performance.now();
@@ -323,11 +335,11 @@ async function main() {
     frameId++;
     const p = camera.position, t = terrainStatus(), a = assets?.stats;
     const grassPending = grass?.stats.suspended ? 0 : grass?.stats.pendingVisible ?? 0;
-    const signature = [ready, t.complete, t.lods, t.pending, a?.lods, a?.visibleChunks, grassPending, p.x, p.y, p.z, nav.yaw, nav.pitch].join("|");
+    const signature = [ready, t.complete, t.lods, t.pending, a?.lods, a?.visibleChunks, grassPending, farveg?.stats.visibleInstances, p.x, p.y, p.z, nav.yaw, nav.pitch].join("|");
     probeReady = ready && t.complete && grassPending === 0 && stability.observe(signature) >= STABLE_FRAMES;
     const record = {
       now, frameMs, cpuMs: performance.now() - cpuStart, triangles: renderer.info.render.triangles, drawCalls: renderer.info.render.drawCalls,
-      terrainMs: grassStart - terrainStart, grassMs: grassDone - grassStart, assetsMs: renderStart - assetsStart, renderMs: renderDone - renderStart,
+      terrainMs: grassStart - terrainStart, grassMs: grassDone - grassStart, farvegMs, assetsMs: renderStart - assetsStart, renderMs: renderDone - renderStart,
       grassCells: grass?.stats.cells ?? 0, grassPending: grass?.stats.pendingVisible ?? 0, grassBuilding: grass?.stats.building ?? 0, grassSlots: grass?.stats.slots ?? 0,
       grassTriangles: grass?.stats.triangles ?? 0, grassVisibleInstances: grass?.stats.visibleInstances ?? 0,
     };
@@ -357,6 +369,10 @@ async function main() {
     if (assets) {
       const stats = assets.stats;
       telemetry.textContent += `\n${stats.assets} Assets · Instanz-LOD: ${stats.lods.join(" / ")}\n${stats.lods.reduce((a, b) => a + b, 0)}/${fmt(stats.total)} Instanzen · ${stats.visibleChunks}/${stats.chunks} Chunks`;
+    }
+    if (farveg) {
+      const stats = farveg.stats;
+      telemetry.textContent += `\nFernvegetation: ${stats.visibleInstances}/${fmt(stats.instances)} · ${fmt(stats.triangles)} Dreiecke`;
     }
     streamStatus.textContent = missing ? `${missing} Kacheln nicht verfügbar` : loaded < total || pending ? "Kacheln werden geladen" : "Gelände geladen";
     streamStatus.dataset.state = missing ? "error" : loaded < total || pending ? "loading" : "ready";

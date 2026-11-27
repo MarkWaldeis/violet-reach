@@ -23,7 +23,7 @@ const index = { run, created: new Date().toISOString(), quality, tonemapping: ar
 const writeIndex = () => writeFileSync(join(dir, "index.json"), JSON.stringify(index, null, 2) + "\n");
 const extraQuery = args.extra ? Object.fromEntries(new URLSearchParams(args.extra)) : {};
 const query = (pose, fov) => ({ ...extraQuery, hud: 0, freeze: 1, cam: camParam(pose), agl: 1, fov, quality, tonemapping: args.tonemapping, exposure: args.exposure, webgl: args.webgl ? 1 : undefined });
-const pick = (s) => ({ quality: s.quality, frozen: s.frozen, triangles: s.triangles, drawCalls: s.drawCalls, textureBytes: s.textureBytes, terrain: s.terrain, assets: s.assets, grass: s.grass, reflection: s.reflection, camera: s.camera });
+const pick = (s) => ({ quality: s.quality, frozen: s.frozen, triangles: s.triangles, drawCalls: s.drawCalls, textureBytes: s.textureBytes, terrain: s.terrain, assets: s.assets, grass: s.grass, farveg: s.farveg, reflection: s.reflection, camera: s.camera });
 
 console.log(`Lauf ${run} → ${dir}`);
 const server = await ensureServer();
