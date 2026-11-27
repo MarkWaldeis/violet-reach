@@ -43,6 +43,8 @@ export interface FarvegOptions {
   cellSize?: number;
   /** canopy colour variation matching the regular tree instances */
   tintVariation?: number;
+  canopyBrightness?: number;
+  canopyEmissionScale?: number;
 }
 
 export interface ResolvedFarvegOptions {
@@ -51,6 +53,8 @@ export interface ResolvedFarvegOptions {
   distantPriorityCut: number;
   cellSize: number;
   tintVariation: number;
+  canopyBrightness: number;
+  canopyEmissionScale: number;
 }
 
 const VARIANT_SET = new Set<string>(FARVEG_VARIANTS);
@@ -90,6 +94,15 @@ export function parseFarvegPayload(value: unknown): FarvegPayload {
   return { format: FARVEG_FORMAT, version: FARVEG_VERSION, instance_count: raw.instance_count as number, instances };
 }
 
+/** Clone a canopy material for far vegetation and reduce only its emissive translucency floor. */
+export function cloneFarCanopyMaterial(source: Material, emissionScale: number): Material {
+  if (!Number.isFinite(emissionScale) || emissionScale < 0 || emissionScale > 1) throw new Error("Invalid far canopy emission scale");
+  const material = source.clone() as Material & { emissive?: Color; emissiveIntensity?: number };
+  if (typeof material.emissiveIntensity === "number") material.emissiveIntensity *= emissionScale;
+  else material.emissive?.multiplyScalar(emissionScale);
+  return material;
+}
+
 /** Resolve conservative distance defaults from the active quality scale. */
 export function resolveFarvegOptions(assetDistanceScale = 1, options: FarvegOptions = {}): ResolvedFarvegOptions {
   if (!Number.isFinite(assetDistanceScale) || assetDistanceScale <= 0) throw new Error("Invalid far vegetation distance settings");
@@ -97,13 +110,15 @@ export function resolveFarvegOptions(assetDistanceScale = 1, options: FarvegOpti
   const trunkDistance = options.trunkDistance ?? Math.min(1400, maxDistance * 0.75);
   const distantPriorityCut = options.distantPriorityCut ?? 0;
   const cellSize = options.cellSize ?? 256;
-  const tintVariation = options.tintVariation ?? 0.09;
+  const tintVariation = options.tintVariation ?? 0.06;
+  const canopyBrightness = options.canopyBrightness ?? 0.72;
+  const canopyEmissionScale = options.canopyEmissionScale ?? 0.45;
   if (![maxDistance, trunkDistance, cellSize].every((n) => Number.isFinite(n) && n > 0) || trunkDistance > maxDistance) {
     throw new Error("Invalid far vegetation distance settings");
   }
   if (!Number.isFinite(distantPriorityCut) || distantPriorityCut < 0 || distantPriorityCut > 1) throw new Error("Invalid far vegetation priority thinning");
-  if (!Number.isFinite(tintVariation) || tintVariation < 0 || tintVariation > 1) throw new Error("Invalid far vegetation tint variation");
-  return { maxDistance, trunkDistance, distantPriorityCut, cellSize, tintVariation };
+  if (!Number.isFinite(tintVariation) || tintVariation < 0 || tintVariation > 1 || !Number.isFinite(canopyBrightness) || canopyBrightness < 0.4 || canopyBrightness > 1 || !Number.isFinite(canopyEmissionScale) || canopyEmissionScale < 0 || canopyEmissionScale > 1) throw new Error("Invalid far vegetation tint variation");
+  return { maxDistance, trunkDistance, distantPriorityCut, cellSize, tintVariation, canopyBrightness, canopyEmissionScale };
 }
 
 /**
@@ -162,6 +177,7 @@ export class FarVegetation {
   #frustum = new Frustum();
   #projection = new Matrix4();
   #matrix = new Matrix4();
+  #white = new Color(1, 1, 1);
   #updated = -Infinity;
   #options: ResolvedFarvegOptions;
   stats = {
@@ -218,11 +234,12 @@ export class FarVegetation {
             order,
             matrix,
             sphere: { centre: sphere.center, radius: sphere.radius },
-            tint: new Color(...instanceTint(p.x, p.z, options.tintVariation)),
+            tint: new Color(...instanceTint(p.x, p.z, options.tintVariation)).multiplyScalar(options.canopyBrightness),
           };
         });
 
         const parts: FarvegPart[] = [];
+        const farMaterials = new Map<Material, Material>();
         for (const source of lodNodes) {
           const materials = Array.isArray(source.material) ? source.material : [source.material];
           const groups = Array.isArray(source.material)
@@ -232,17 +249,23 @@ export class FarVegetation {
             const geometry = source.geometry.clone();
             geometry.clearGroups();
             geometry.setDrawRange(group.start, group.count);
-            const material = materials[group.materialIndex ?? 0];
-            if (!material) continue;
+            const sourceMaterial = materials[group.materialIndex ?? 0];
+            if (!sourceMaterial) continue;
+            const bark = isBarkMaterial(sourceMaterial);
+            let material = sourceMaterial;
+            if (!bark) {
+              material = farMaterials.get(sourceMaterial) ?? cloneFarCanopyMaterial(sourceMaterial, options.canopyEmissionScale);
+              farMaterials.set(sourceMaterial, material);
+            }
             const mesh = new InstancedMesh(geometry, material, instances.length);
-            mesh.name = `${variant}_far_LOD${bestLod}${isBarkMaterial(material) ? "_bark" : "_canopy"}`;
+            mesh.name = `${variant}_far_LOD${bestLod}${bark ? "_bark" : "_canopy"}`;
             mesh.count = 0;
             mesh.setColorAt(0, new Color(1, 1, 1));
             mesh.frustumCulled = false;
             mesh.castShadow = false;
             mesh.receiveShadow = false;
             result.group.add(mesh);
-            parts.push({ mesh, local: source.matrixWorld.clone(), triangles: meshTriangles(geometry), bark: isBarkMaterial(material) });
+            parts.push({ mesh, local: source.matrixWorld.clone(), triangles: meshTriangles(geometry), bark });
           }
         }
         if (!parts.length) throw new Error(`${variant}: keine renderbaren LOD-Materialgruppen`);
@@ -287,7 +310,7 @@ export class FarVegetation {
             const index = written[partIndex]++;
             this.#matrix.multiplyMatrices(instance.matrix, part.local);
             part.mesh.setMatrixAt(index, this.#matrix);
-            part.mesh.setColorAt(index, instance.tint);
+            part.mesh.setColorAt(index, part.bark ? this.#white : instance.tint);
           }
         }
       }

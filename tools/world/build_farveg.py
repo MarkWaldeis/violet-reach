@@ -33,10 +33,10 @@ RUNTIME_DIR = macro.RUNTIME_DIR
 
 VALID_VARIANTS = ("tree_oak_a", "tree_beech_a", "tree_willow_a", "tree_ancient_a")
 VARIANT_SCALE_RANGES = {
-    "tree_oak_a": (0.90, 1.25),
-    "tree_beech_a": (0.95, 1.32),
-    "tree_willow_a": (0.85, 1.18),
-    "tree_ancient_a": (1.25, 1.75),
+    "tree_oak_a": (1.00, 1.38),
+    "tree_beech_a": (1.05, 1.45),
+    "tree_willow_a": (0.95, 1.28),
+    "tree_ancient_a": (1.35, 1.85),
 }
 MONUMENT_ASSET_PREFIXES = (
     "monument_",
@@ -114,10 +114,10 @@ class FarvegParams:
     embed_min_m: float = 1.0
     embed_max_m: float = 2.0
     gradient_step_m: float = 2.0
-    core_spacing_min_m: float = 28.0
-    core_spacing_max_m: float = 48.0
-    edge_spacing_min_m: float = 45.0
-    edge_spacing_max_m: float = 75.0
+    core_spacing_min_m: float = 24.0
+    core_spacing_max_m: float = 40.0
+    edge_spacing_min_m: float = 40.0
+    edge_spacing_max_m: float = 65.0
     savanna_spacing_m: float = 120.0
 
 

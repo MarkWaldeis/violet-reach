@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { farvegPriorityVisible, parseFarvegPayload, resolveFarvegOptions } from "../src/far-vegetation.ts";
+import { Color, MeshStandardMaterial } from "three/webgpu";
+import { cloneFarCanopyMaterial, farvegPriorityVisible, parseFarvegPayload, resolveFarvegOptions } from "../src/far-vegetation.ts";
 
 const validInstance = {
   x: 10.5, y: 200.25, z: -30.5, variant: "tree_oak_a", scale: 1.1, yaw: 0.25, priority: 0.8, embed: 1.2,
@@ -32,14 +33,16 @@ test("far vegetation quality distances and validation are conservative", () => {
     trunkDistance: 1400,
     distantPriorityCut: 0,
     cellSize: 256,
-    tintVariation: 0.09,
+    tintVariation: 0.06,
+    canopyBrightness: 0.72,
+    canopyEmissionScale: 0.45,
   });
   assert.equal(resolveFarvegOptions(0.5).maxDistance, 1900);
   assert.equal(resolveFarvegOptions(1.25).maxDistance, 4750);
   assert.equal(resolveFarvegOptions(1, { maxDistance: 2200 }).maxDistance, 2200);
   for (const scale of [0, -1, NaN, Infinity]) assert.throws(() => resolveFarvegOptions(scale), /Invalid far vegetation/);
   for (const options of [
-    { maxDistance: 0 }, { maxDistance: NaN }, { trunkDistance: 0 }, { distantPriorityCut: -0.1 }, { distantPriorityCut: 1.1 }, { tintVariation: 1.1 }, { cellSize: 0 },
+    { maxDistance: 0 }, { maxDistance: NaN }, { trunkDistance: 0 }, { distantPriorityCut: -0.1 }, { distantPriorityCut: 1.1 }, { tintVariation: 1.1 }, { canopyBrightness: 0.2 }, { canopyEmissionScale: 1.1 }, { cellSize: 0 },
   ]) assert.throws(() => resolveFarvegOptions(1, options), /Invalid far vegetation/);
   assert.throws(() => resolveFarvegOptions(1, { maxDistance: 1000, trunkDistance: 1001 }), /Invalid far vegetation/);
 });
@@ -56,4 +59,14 @@ test("far priority thinning is distance-ramped, deterministic and disabled by de
   for (const args of [[NaN, 1, 1, 0], [0, NaN, 1, 0], [0, 1, 0, 0], [0, 1, 1, NaN]]) {
     assert.throws(() => farvegPriorityVisible(...args), /Invalid far vegetation/);
   }
+});
+
+test("far canopy clone reduces emission without mutating the shared asset material", () => {
+  const source = new MeshStandardMaterial({ emissive: new Color(0.22, 0.22, 0.22), emissiveIntensity: 1 });
+  const clone = cloneFarCanopyMaterial(source, 0.45) as MeshStandardMaterial;
+  assert.notEqual(clone, source);
+  assert.equal(source.emissiveIntensity, 1);
+  assert.equal(clone.emissiveIntensity, 0.45);
+  assert.equal(clone.emissive.r, source.emissive.r);
+  assert.throws(() => cloneFarCanopyMaterial(source, 1.1), /emission/);
 });
