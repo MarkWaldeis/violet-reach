@@ -226,3 +226,9 @@ Median aus 3 unabhängigen Prüfern (`reviewer_a`, `reviewer_b`, `reviewer_c`; E
 - **Negativtest:** `density 5.5→6.8` plus früherem Grass-LOD (`0.20×viewDistance`) verbesserte G7 nur moderat, erhöhte den Capture-Peak aber auf **4.047.590 Dreiecke** und wurde daher verworfen; `main.ts` ist wieder exakt auf dem committed Stand.
 - **Faktencheck:** Die Terrain-Array-Texturen nutzen bereits `anisotropy = 4`; ein vermeintlich neuer Filterpatch war daher wirkungslos/nicht nötig. Nahbodenglättung ist folglich kein einfacher fehlender-Anisotropie-Bug, sondern weiterhin ein Farb-/Gewichtungs-/Coverage-Problem.
 
+### Gras-/Bodenkopplung Test 4 (Team-Analyse integriert)
+
+- **Patch:** keine Dichte-/Dreieckserhöhung, sondern vier gezielte Kopplungsfixes: weniger prozedurale Hang-Erde/Trockeninseln im Boden, Dry-Mix weniger stark künstlich begrünt (`1.7→1.35`), deutlich reduzierter Halm-interner Wertkontrast (Wurzel `0.40→0.68`, weniger heiße Spitzen/Hashvariation) sowie eine zweistufige Wiesenstruktur aus niedriger breiter Unterfläche und wenigen hohen Akzenten.
+- **Verifikation:** Explorer-Suite **181/181**, TypeScript grün. Targeted Capture `phase6-grass-coupling-test4` bei unveränderten Dreieckszahlen (`G7 3.988.796`, `G6 3.758.724`): G3 wirkt erstmals als zusammenhängende saftige Wiese statt Einzelhalme; G7 ist deutlich weniger schwertartig und besser am Boden verankert; G6 bleibt trockener/ruinöser, aber die Halme schneiden sich farblich weniger ab.
+- **Bewertung:** erster wirklich großer Gras-Fortschritt ohne Perf-Kosten. Noch offen: G6-Stein/Kristall, G7-Felsintegration, F3-Kronenmaterial und strukturelle Fernvegetation.
+

@@ -593,16 +593,16 @@ export function terrainMaterial(surface?: SurfaceData) {
   const mossIsland = smoothstep(0.24, 0.90, mossSignal);
 
   const soilPatch = smoothstep(0.38, 0.88, earthField.mul(0.50).add(macro18.mul(0.32)).add(macroGrainField.mul(0.18)));
-  const slopeSoil = smoothstep(0.085, 0.22, geomSlope).mul(0.46);
+  const slopeSoil = smoothstep(0.085, 0.22, geomSlope).mul(0.30);
 
   const screeVegFade = screeBand.mul(0.55).oneMinus();
-  let wDry: Node<"float"> = macroWA.g.mul(0.35).add(dryIsland.mul(0.62)).mul(screeVegFade);
+  let wDry: Node<"float"> = macroWA.g.mul(0.35).add(dryIsland.mul(0.44)).mul(screeVegFade);
   let wMoss: Node<"float"> = macroWA.a.mul(0.30).add(mossIsland.mul(0.62)).mul(screeVegFade);
   let wSoil: Node<"float"> = macroWA.b.mul(0.26)
     .add(soilPatch.mul(0.38))
     .add(slopeSoil)
     .add(screeBand.mul(0.66));
-  const islandSuppression = dryIsland.mul(0.52).max(mossIsland.mul(0.42)).max(soilPatch.mul(0.36)).clamp(0, 0.64).oneMinus();
+  const islandSuppression = dryIsland.mul(0.34).max(mossIsland.mul(0.42)).max(soilPatch.mul(0.36)).clamp(0, 0.64).oneMinus();
   let wGrass: Node<"float"> = macroWA.r.max(0.66).mul(islandSuppression).max(0.24).mul(screeVegFade);
   let wSand: Node<"float"> = float(0);
   let wWet: Node<"float"> = float(0);

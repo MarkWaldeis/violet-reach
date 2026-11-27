@@ -322,7 +322,7 @@ test("grass material constructs nodes without renderer", () => {
 test("grass material tuning softens fins and decorrelates colour variation per instance", () => {
   assert.equal(GRASS_WIDTH_BOOST_NEAR, 1.22, "nahe Width-Basis unverändert");
   assert.equal(GRASS_WIDTH_BOOST_FAR, 1.32, "Fern-Width-Boost deutlich unter den alten 1.45");
-  assert.equal(GRASS_ROOT_SHADE, 0.40, "Wurzeln moderat heller als die alten 0.34");
+  assert.equal(GRASS_ROOT_SHADE, 0.68, "Wurzeln bleiben bodennah statt als dunkle Schwerter abzulesen");
   assert.equal(GRASS_ACROSS_SHADE_STRENGTH, 0.14, "Quer-Shading-Amplitude reduziert");
   assert.equal(GRASS_ACROSS_SHADE_BASE, 0.90, "Kantenhelligkeit hält die mittlere Helligkeit stabil");
   const acrossEdge = GRASS_ACROSS_SHADE_BASE;
@@ -350,7 +350,7 @@ test("grass aerial/dryness helpers are conservative, deterministic and ground-sa
 
   const rawDry = 0.65;
   const softened = grassInstanceDryMix(rawDry);
-  assert.ok(softened < rawDry * 0.8, `typisches Makro-Dry wird deutlich gebändigt: ${rawDry} → ${softened}`);
+  assert.ok(softened < rawDry && softened > rawDry * 0.45, `typisches Makro-Dry wird moderat gebändigt, aber nicht gelöscht: ${rawDry} → ${softened}`);
   assert.ok(grassInstanceDryMix(0.97) > 0.9, "echte Trocken-Ausreißer bleiben erkennbar trocken");
   assert.equal(grassInstanceDryMix(0), 0);
   assert.equal(GRASS_DRY_MIX_EXPONENT > 1, true, "Dry-Kompression ist eine nichtlineare Makro-Korrektur");
@@ -498,7 +498,7 @@ test("grass instance generation decorrelates the grid and softens dry/canopy mac
   const drySource = dryByte / 255;
   const expectedDry = grassInstanceDryMix(drySource);
   assert.ok(Math.abs(shade[1] - expectedDry) < 2e-5, `aShade.y nutzt gebändigtes Dry: ${shade[1]} statt ${expectedDry}`);
-  assert.ok(shade[1] < drySource * 0.9, "gespeichertes Dry ist weniger gelb/strohig als die Makro-Rohware, ohne echte Trockenheit zu löschen");
+  assert.ok(shade[1] < drySource && shade[1] > drySource * 0.65, "gespeichertes Dry bleibt an die trockene Makrofläche gekoppelt, ohne die alte Härte voll zu übernehmen");
   const expectedShade = grassMacroShade(canopyByte / 255, 1);
   assert.ok(Math.abs(shade[0] - expectedShade) < 2e-5, "Canopy/Makro-AO wird entschärft statt doppelt multipliziert");
 

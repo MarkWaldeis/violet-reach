@@ -69,7 +69,7 @@ export const GRASS_AERIAL_DENSITY_FACTOR = 0.68;
 export const GRASS_AERIAL_WIDTH_HEIGHT = 9;
 export const GRASS_AERIAL_WIDTH_HYSTERESIS = 4;
 /** The macro map is intentionally dry; exponentiating keeps true dry outliers but softens the median. */
-export const GRASS_DRY_MIX_EXPONENT = 1.7;
+export const GRASS_DRY_MIX_EXPONENT = 1.35;
 /** Fraction of the dry→lush palette correction applied when dryMix is softened. */
 export const GRASS_DRY_TINT_CORRECTION = 0.85;
 /** The macro tint already contains canopy darkening; keep a floor against applying that shadow twice. */
@@ -529,9 +529,14 @@ export class GrassSystem {
       const y = this.#heightAt(pt.x, pt.z);
       if (y === undefined) { this.stats.skipHeight++; continue; }
 
-      const scale = 0.72 + pt.h2 * 0.55;
+      // Two-tier meadow structure from the proven Fantasy grass rollout: most instances form
+      // a low, horizontally broad under-carpet; a minority become narrower tall accents. This
+      // adds perceived coverage without increasing instance or triangle counts.
+      const lowTier = pt.h2 < 0.65;
+      const scale = lowTier ? 1.10 + pt.h2 * 0.22 : 0.92 + (pt.h2 - 0.65) * 0.29;
+      const heightJitter = lowTier ? 0.58 + pt.h2 * 0.43 : 0.95 + (pt.h2 - 0.65) * 1.0;
       const hs = 0.65 + s.heightScale * 0.7;
-      const heightScale = hs * scale;
+      const heightScale = hs * heightJitter;
       const dryMix = grassInstanceDryMix(s.dryMix);
       job.minY = Math.min(job.minY, y);
       job.maxY = Math.max(job.maxY, y);

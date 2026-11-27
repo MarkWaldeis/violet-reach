@@ -36,9 +36,9 @@ export interface GrassMaterialOptions {
 const LUSH_K = [0.82, 1.38, 0.60] as const;
 const STRAW_K = [1.12, 1.02, 0.45] as const;
 /** tip warming: red rises relative to green, blue stays compressed (sun-lit yellow-green tips). */
-const TIP_WARM = [1.48, 1.30, 0.82] as const;
+const TIP_WARM = [1.28, 1.18, 0.88] as const;
 /** root brightness fraction of mid brightness. */
-export const GRASS_ROOT_SHADE = 0.40;
+export const GRASS_ROOT_SHADE = 0.68;
 /** distance width compensation range; kept low so distant grass stays blade-like instead of fin-like. */
 export const GRASS_WIDTH_BOOST_NEAR = 1.22;
 export const GRASS_WIDTH_BOOST_FAR = 1.32;
@@ -131,7 +131,7 @@ export function grassMaterial(instanceData?: GrassInstanceData, options: GrassMa
   // brightness/hue pattern on every clump because all instances share this vertex data; aInfo.w
   // decorrelates neighbouring instances while preserving blade-to-blade variance inside a clump.
   const colourHash = mix(bladeHash, aInfo.w, float(GRASS_COLOR_INSTANCE_MIX));
-  const hashVar = mix(float(0.86), float(1.14), colourHash);
+  const hashVar = mix(float(0.92), float(1.08), colourHash);
   const hueVarK = mix(hueK, strawK, colourHash.mul(0.16));
 
   // per-instance variation + canopy shadow
