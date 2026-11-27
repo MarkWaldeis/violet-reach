@@ -61,6 +61,32 @@
       "bytes": 5881392
     },
     {
+      "id": "monument_rib_crown_a",
+      "category": "monuments",
+      "title": "Ribbed Crown Sanctuary",
+      "file": "monument_rib_crown_a.glb",
+      "size_m": [
+        107.064,
+        94.71,
+        119.311
+      ],
+      "bytes": 3070148,
+      "material_class": "stone_white"
+    },
+    {
+      "id": "monument_split_disc_a",
+      "category": "monuments",
+      "title": "Gespaltenes Inselmonument A",
+      "file": "monument_split_disc_a.glb",
+      "size_m": [
+        33.017,
+        24.587,
+        42.072
+      ],
+      "bytes": 3552968,
+      "material_class": "stone_white"
+    },
+    {
       "id": "ruin_wall_a",
       "category": "monuments",
       "title": "Ruinenmauer Kalkstein A",
@@ -125,6 +151,58 @@
       "material_class": "rock_chalk"
     },
     {
+      "id": "cliff_chalk_corner_a",
+      "category": "rocks",
+      "title": "Kalkstein-Klippen-Ecke A",
+      "file": "cliff_chalk_corner_a.glb",
+      "size_m": [
+        41.75,
+        40.717,
+        24.407
+      ],
+      "bytes": 4900100,
+      "material_class": "rock_chalk"
+    },
+    {
+      "id": "cliff_chalk_wall_a",
+      "category": "rocks",
+      "title": "Kalkstein-Klippenwand A",
+      "file": "cliff_chalk_wall_a.glb",
+      "size_m": [
+        32.081,
+        25.866,
+        24.211
+      ],
+      "bytes": 4873628,
+      "material_class": "rock_chalk"
+    },
+    {
+      "id": "cliff_chalk_wall_b",
+      "category": "rocks",
+      "title": "Kalkstein-Klippenwand B",
+      "file": "cliff_chalk_wall_b.glb",
+      "size_m": [
+        36.419,
+        20.625,
+        24.505
+      ],
+      "bytes": 4881224,
+      "material_class": "rock_chalk"
+    },
+    {
+      "id": "rock_pillar_chalk_a",
+      "category": "rocks",
+      "title": "Kalkstein-Felssäule A",
+      "file": "rock_pillar_chalk_a.glb",
+      "size_m": [
+        17.796,
+        11.949,
+        34.73
+      ],
+      "bytes": 4934652,
+      "material_class": "rock_chalk"
+    },
+    {
       "id": "rock_slab_a",
       "category": "rocks",
       "title": "Kalkstein-Felsplatte A",
@@ -174,6 +252,32 @@
         1.145
       ],
       "bytes": 5120352
+    },
+    {
+      "id": "skyship_pod_a",
+      "category": "sky",
+      "title": "Himmelskapsel A (Groß)",
+      "file": "skyship_pod_a.glb",
+      "size_m": [
+        23.042,
+        23.026,
+        60.0
+      ],
+      "bytes": 3181792,
+      "material_class": "stone_white"
+    },
+    {
+      "id": "skyship_pod_b",
+      "category": "sky",
+      "title": "Himmelskapsel B (Begleiter)",
+      "file": "skyship_pod_b.glb",
+      "size_m": [
+        8.798,
+        8.897,
+        24.0
+      ],
+      "bytes": 1515088,
+      "material_class": "stone_white"
     },
     {
       "id": "bush_lush_a",
@@ -257,11 +361,11 @@
       "title": "Knorriger Altbaum A",
       "file": "tree_ancient_a.glb",
       "size_m": [
-        12.057,
-        12.117,
-        11.569
+        11.31,
+        12.058,
+        11.028
       ],
-      "bytes": 9314592,
+      "bytes": 9849120,
       "material_class": "foliage"
     },
     {
@@ -270,11 +374,11 @@
       "title": "Wiesen-Buche A",
       "file": "tree_beech_a.glb",
       "size_m": [
-        10.615,
-        11.491,
-        11.323
+        10.843,
+        11.326,
+        11.349
       ],
-      "bytes": 8521996,
+      "bytes": 8949324,
       "material_class": "foliage"
     },
     {
@@ -283,11 +387,11 @@
       "title": "Wiesen-Eiche A",
       "file": "tree_oak_a.glb",
       "size_m": [
-        10.466,
-        11.897,
-        11.482
+        10.869,
+        12.027,
+        11.785
       ],
-      "bytes": 9611580,
+      "bytes": 9868948,
       "material_class": "foliage"
     },
     {
@@ -296,11 +400,11 @@
       "title": "Ufer-Weide A",
       "file": "tree_willow_a.glb",
       "size_m": [
-        8.81,
-        8.985,
-        8.999
+        8.861,
+        8.221,
+        8.677
       ],
-      "bytes": 9530836,
+      "bytes": 9864204,
       "material_class": "foliage"
     },
     {

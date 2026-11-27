@@ -95,6 +95,12 @@ def source_hash(asset_dir):
         inputs += [os.path.join(BLENDER_TOOLS, "vrmat.py"), os.path.join(ROOT, "art", "palette.json")]
     if "vrcolumn" in imports:
         inputs.append(os.path.join(BLENDER_TOOLS, "vrcolumn.py"))
+    if "vrtrees" in imports:
+        inputs.append(os.path.join(BLENDER_TOOLS, "vrtrees.py"))
+    if "vrtrees_polish" in imports:
+        inputs.append(os.path.join(BLENDER_TOOLS, "vrtrees_polish.py"))
+    if "vrcliffs" in imports:
+        inputs.append(os.path.join(BLENDER_TOOLS, "vrcliffs.py"))
     return hashlib.sha256("".join(sha256(path) for path in inputs).encode()).hexdigest()
 
 

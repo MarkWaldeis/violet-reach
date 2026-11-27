@@ -1,0 +1,56 @@
+{
+  "id": "skyship_pod_b",
+  "category": "sky",
+  "title": "Himmelskapsel B (Begleiter)",
+  "description": "Kleinere begleitende Himmelskapsel (~9 × 9 × 24 m) mit matten weißen Stein-/Keramikfacetten und violettem Gürtelband (#8553C6).",
+  "target_size_m": [
+    9,
+    9,
+    24
+  ],
+  "lod_triangles": [
+    14000,
+    5000,
+    1600
+  ],
+  "texture_size": 1024,
+  "meshy_class": "B",
+  "material_class": "stone_white",
+  "texture_format": "ktx2",
+  "status": "exported",
+  "builder": "agy-builder-phase5",
+  "review": {
+    "reviewer": "agy-gate-rev-p5-r3",
+    "scores": {
+      "silhouette": 9,
+      "form_detail": 9,
+      "material": 9,
+      "scale": 9,
+      "style": 9,
+      "defects": 9
+    },
+    "notes": "R2 normal-pinch and zigzag defects completely resolved across equatorial belt, chamfered polygonal panels, and upper/lower collar seams. Matte ivory stone/ceramic finish, restrained violet belt, and 24m scale read cleanly across all views.",
+    "round": 3,
+    "source_sha256": "c1f9bccb38296677b47c550f1a62146ad440b04b355e7cbcc06bd15172865d7f",
+    "sheet_sha256": "4fc9bfb99490e89d4392eb91c750b125a044f387ca6622e7f6f0e083d2c82570"
+  },
+  "review_rounds": 3,
+  "size_m": [
+    8.798,
+    8.897,
+    24.0
+  ],
+  "export": {
+    "file": "export/skyship_pod_b.glb",
+    "bytes": 1515088,
+    "sha256": "c2913d7c958cb19c118deb575b1ad3ac7a8e487e8af1ad9e44b3d42c6e39a82d",
+    "source_sha256": "c1f9bccb38296677b47c550f1a62146ad440b04b355e7cbcc06bd15172865d7f",
+    "sheet_sha256": "4fc9bfb99490e89d4392eb91c750b125a044f387ca6622e7f6f0e083d2c82570",
+    "lod_triangles": [
+      14000,
+      5000,
+      1600
+    ],
+    "texture_size": 1024
+  }
+}

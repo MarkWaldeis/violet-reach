@@ -1,0 +1,26 @@
+{
+  "asset": "skyship_pod_a",
+  "class": "A",
+  "image": {
+    "task_id": "01a2185f-0f2f-73c8-8411-e3dcb1bc513f",
+    "resource": "text-to-image",
+    "ai_model": "gpt-image-2-5-flare",
+    "prompt": "Große vertikal schwebende Himmelskapsel (~23 × 23 × 60 m) mit matten elfenbeinweißen Längspaneelen und markantem violettem Band (#8553C6).",
+    "aspect_ratio": "1:1",
+    "remove_background": true,
+    "credits": 9,
+    "file": "skyship_pod_a/image/chosen.png",
+    "sha256": "98c549b47c2397d78f183533f0f14854deaa1364651a8e9f8e1d9874558f59e7"
+  },
+  "model": {
+    "task_id": "01a21860-e77f-70e3-9485-3c998b410711",
+    "resource": "image-to-3d",
+    "model_type": "standard",
+    "texture_model": "meshy-7",
+    "enable_pbr": true,
+    "texture_resolution": "4k",
+    "credits": 30,
+    "file": "skyship_pod_a/model/A-v1/model.glb",
+    "sha256": "08517c1ca5bd2ed3967259ebb0ab593ef4b6b7f5182bf7b90bd12bb5e9aacace"
+  }
+}

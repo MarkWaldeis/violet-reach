@@ -21,32 +21,32 @@
   "status": "exported",
   "builder": "devin-builder-trees",
   "review": {
-    "reviewer": "devin-gate-rev-r5",
+    "reviewer": "agy-gate-rev-beech-r96",
     "scores": {
-      "silhouette": 9,
+      "silhouette": 8,
       "form_detail": 8,
-      "material": 8,
+      "material": 9,
       "scale": 9,
-      "style": 8,
+      "style": 9,
       "defects": 8
     },
-    "notes": "Approved. Most coherent crown of the set, good scale and leafy closeup; no continuous pot rim or sawn/bulbous terminal pattern. Nonblocking polish: dark right-side fork/short stub and claw-like root points remain visible in closeups.",
-    "round": 5,
-    "source_sha256": "6f8752ac43e891de08cc8ada842e57eaf85ef56e434a091ce2dd6ead226134da",
-    "sheet_sha256": "d10d4985a8ba2ffab92a7190019259efa5a40fb7cdd468f8b80b2ae927c2ac10"
+    "notes": "R9.6 pass: oak-matched warm bark (#41321D) with closed root flare, U-collar removed, central trunk apex blunted and veiled by arching olive (#696F44) beech sprays, atlas stem needles/halos trimmed, clean bright clay tile, plausible 10.84 x 11.33 x 11.35 m scale beside 1.8 m figure. Minor closeup note: an interior lower-right branch tip in closeup_upper remains uncapped near the right foliage gap and tiny residual dark specks appear at 2-3 card bases (within tree_oak_a parity).",
+    "round": 8,
+    "source_sha256": "8b3445a4facbeccf71c5858ec85eee534c18d00791149b87d1562517155903b0",
+    "sheet_sha256": "d518eb84b58f84b6d3bed2346915ebe24a2fa2a5638fe3104b4534ea14b335ac"
   },
-  "review_rounds": 5,
+  "review_rounds": 8,
   "size_m": [
-    10.615,
-    11.491,
-    11.323
+    10.843,
+    11.326,
+    11.349
   ],
   "export": {
     "file": "export/tree_beech_a.glb",
-    "bytes": 8521996,
-    "sha256": "639d693c5321ed848600ef8a4338e737fa8e29c7fed392dfb2094512c4af5012",
-    "source_sha256": "6f8752ac43e891de08cc8ada842e57eaf85ef56e434a091ce2dd6ead226134da",
-    "sheet_sha256": "d10d4985a8ba2ffab92a7190019259efa5a40fb7cdd468f8b80b2ae927c2ac10",
+    "bytes": 8949324,
+    "sha256": "a9e503d03d383b89a358efb82f2645384390ffef3df1e2bc1b6c1b5bd066dd1c",
+    "source_sha256": "8b3445a4facbeccf71c5858ec85eee534c18d00791149b87d1562517155903b0",
+    "sheet_sha256": "d518eb84b58f84b6d3bed2346915ebe24a2fa2a5638fe3104b4534ea14b335ac",
     "lod_triangles": [
       2700,
       1100,

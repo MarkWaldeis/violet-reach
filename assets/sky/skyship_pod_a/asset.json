@@ -1,0 +1,56 @@
+{
+  "id": "skyship_pod_a",
+  "category": "sky",
+  "title": "Himmelskapsel A (Groß)",
+  "description": "Große vertikal schwebende Himmelskapsel (~23 × 23 × 60 m) mit matten elfenbeinweißen Längspaneelen und markantem violettem Band (#8553C6).",
+  "target_size_m": [
+    23,
+    23,
+    60
+  ],
+  "lod_triangles": [
+    24000,
+    8000,
+    2400
+  ],
+  "texture_size": 2048,
+  "meshy_class": "A",
+  "material_class": "stone_white",
+  "texture_format": "ktx2",
+  "status": "exported",
+  "builder": "agy-builder-phase5",
+  "review": {
+    "reviewer": "agy-gate-rev-p5",
+    "scores": {
+      "silhouette": 9,
+      "form_detail": 9,
+      "material": 8,
+      "scale": 9,
+      "style": 9,
+      "defects": 9
+    },
+    "notes": "APPROVE: Clean 60 m symmetrical teardrop hull (min_z=0.0, zero skirt), crisp 8-rib vertical paneling and recessed band geometry, watertight mesh in clay/wire/all 8 angles, and clear 60 m scale vs 1.8 m figure. Matte ivory body reads clean with contrasting violet-indigo band.",
+    "round": 1,
+    "source_sha256": "214cc344c5a5188569641d07f432a9b064b2936c0f8b2cf592bc1885beba0777",
+    "sheet_sha256": "b1d71ca33a853f9beed9bab271b012c5da43b8dd71c9e8035873db4de1ad949d"
+  },
+  "review_rounds": 1,
+  "size_m": [
+    23.042,
+    23.026,
+    60.0
+  ],
+  "export": {
+    "file": "export/skyship_pod_a.glb",
+    "bytes": 3181792,
+    "sha256": "6dd2e7eb2182b2c6675405d6424c92fee42ce32ec21540f18e7a800f2589280e",
+    "source_sha256": "214cc344c5a5188569641d07f432a9b064b2936c0f8b2cf592bc1885beba0777",
+    "sheet_sha256": "b1d71ca33a853f9beed9bab271b012c5da43b8dd71c9e8035873db4de1ad949d",
+    "lod_triangles": [
+      24000,
+      8000,
+      2400
+    ],
+    "texture_size": 2048
+  }
+}

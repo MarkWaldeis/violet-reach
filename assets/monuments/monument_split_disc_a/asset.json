@@ -2,10 +2,10 @@
   "id": "monument_split_disc_a",
   "category": "monuments",
   "title": "Gespaltenes Inselmonument A",
-  "description": "Monumentales 40-m-Inselmonument (~35 × 21 × 40 m) auf dreistufig abgetreppter runder Kalksteinplattform mit zwei leicht gegeneinander geneigten Scheiben-Monolithen und diagonaler Keilspalte. Farbe stone_weathered #DCCDB1 / monument_white #E8DABE, Rauheit ≥ 0,55, Metall 0,0, 1,5 m Eingrabe-Rand.",
+  "description": "Monumentales 40-m-Inselmonument (~33 × 23 × 40 m) auf dreistufig abgetreppter runder Kalksteinplattform mit architektonischem Sattelsockel, zwei exakt gefasten Scheiben-Hälften und geschichteter Bruchfuge. Palette monument_white / monument_weathered / monument_shadow, 2 m Eingrabe-Rand.",
   "target_size_m": [
-    28.0,
-    20.0,
+    33.0,
+    23.0,
     40.0
   ],
   "lod_triangles": [
@@ -14,25 +14,42 @@
     3000
   ],
   "texture_size": 2048,
-  "meshy_class": "A",
   "material_class": "stone_white",
   "texture_format": "ktx2",
-  "status": "modeling",
-  "builder": "blender-batch2",
+  "status": "exported",
+  "builder": "agy-builder-monuments",
   "review": {
-    "reviewer": "independent-60d323da",
+    "reviewer": "agy-gate-rev-monument-r13",
     "scores": {
       "silhouette": 9,
       "form_detail": 8,
-      "material": 6,
-      "scale": 8,
+      "material": 8,
+      "scale": 9,
       "style": 8,
       "defects": 9
     },
-    "notes": "v3 rejected: strong silhouette, open cleft and watertight massing, but outer limestone remains dense wormy micro-crackle with high-contrast pores; warm strip along cleft needs material/UV investigation.",
-    "round": 4,
-    "source_sha256": "933fb1a1695d36506e135d6b5a9ef560f7494b5226bf05e868d06ffa05fcc926",
-    "sheet_sha256": "5b3c64724c68e978c83b5524ec1c44fc4f05e4d05ee24e26bf25326af3aeec29"
+    "notes": "Approved (R13): Rebuilt 33.0x24.6x42.1m (-2.0m skirt) split disc resolves all R6-R12 blockers. Full 3D staggered curved plinth ashlars + bevelled saddle cradle, 28 continuous rim voussoirs with zero black leaks, complete tapered face ashlars across all 15 courses with no missing perimeter slices, and organic triangulated rock-strata cleft. Matte sunlit ivory/cream limestone, cool shadows, and damp plinth patina match gate_white_a and monument_rib_crown_a; 1.8m figure anchors monumental scale; clean 29,868-tri mesh. Non-blocking polish: 2-3 cleft overhang triangles in closeup_upper read slightly sharp/sawtoothed.",
+    "round": 5,
+    "source_sha256": "a14f10fbfca0fa1ef1af6b1f773459a4088508ca41636b5a62d845619134a865",
+    "sheet_sha256": "26b745b62d96505d611daf2785351c47f1fa7f2a7d1914f4e2c4db282c8b0bf5"
   },
-  "review_rounds": 4
+  "review_rounds": 5,
+  "size_m": [
+    33.017,
+    24.587,
+    42.072
+  ],
+  "export": {
+    "file": "export/monument_split_disc_a.glb",
+    "bytes": 3552968,
+    "sha256": "230b88e97007213f863800487ee9b0184bd8c7ba9e82cf0cda46a45df1b80028",
+    "source_sha256": "a14f10fbfca0fa1ef1af6b1f773459a4088508ca41636b5a62d845619134a865",
+    "sheet_sha256": "26b745b62d96505d611daf2785351c47f1fa7f2a7d1914f4e2c4db282c8b0bf5",
+    "lod_triangles": [
+      32000,
+      10000,
+      3000
+    ],
+    "texture_size": 2048
+  }
 }

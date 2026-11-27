@@ -74327,6 +74327,78 @@
       "yaw": -2.05,
       "scale": 0.96,
       "y_offset": -0.35
+    },
+    {
+      "asset": "monument_split_disc_a",
+      "x": 680.0,
+      "z": 1561.0,
+      "yaw": -0.65,
+      "scale": 1.25,
+      "y_offset": -1.6
+    },
+    {
+      "asset": "monument_rib_crown_a",
+      "x": 150.0,
+      "z": 1830.0,
+      "yaw": -2.45,
+      "scale": 1.0,
+      "y_offset": -5.8
+    },
+    {
+      "asset": "cliff_chalk_corner_a",
+      "x": 688.0,
+      "z": 1170.0,
+      "yaw": -1.57,
+      "scale": 1.0,
+      "y_offset": -8.8
+    },
+    {
+      "asset": "cliff_chalk_wall_a",
+      "x": 682.0,
+      "z": 1205.0,
+      "yaw": -1.57,
+      "scale": 1.0,
+      "y_offset": -5.5
+    },
+    {
+      "asset": "cliff_chalk_wall_b",
+      "x": 682.0,
+      "z": 1244.0,
+      "yaw": -1.57,
+      "scale": 1.0,
+      "y_offset": -1.2
+    },
+    {
+      "asset": "rock_pillar_chalk_a",
+      "x": 688.0,
+      "z": 1278.0,
+      "yaw": -1.57,
+      "scale": 1.0,
+      "y_offset": -1.0
+    },
+    {
+      "asset": "skyship_pod_a",
+      "x": 790.0,
+      "z": 1780.0,
+      "yaw": 0.25,
+      "scale": 1.0,
+      "y_offset": 195.0
+    },
+    {
+      "asset": "skyship_pod_b",
+      "x": 735.0,
+      "z": 1740.0,
+      "yaw": 0.85,
+      "scale": 1.0,
+      "y_offset": 175.0
+    },
+    {
+      "asset": "skyship_pod_b",
+      "x": 835.0,
+      "z": 1720.0,
+      "yaw": -0.55,
+      "scale": 1.0,
+      "y_offset": 162.0
     }
   ]
 }

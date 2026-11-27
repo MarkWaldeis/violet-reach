@@ -1,0 +1,28 @@
+{
+  "triangles": 1131040,
+  "size_m": [
+    36.419,
+    20.625,
+    24.505
+  ],
+  "objects": 1,
+  "samples": 64,
+  "render_seconds": 259.8,
+  "blender": "5.2.2 LTS",
+  "tiles": [
+    "turn_020",
+    "turn_065",
+    "turn_110",
+    "turn_155",
+    "turn_200",
+    "turn_245",
+    "turn_290",
+    "turn_335",
+    "closeup_upper",
+    "closeup_base",
+    "wire",
+    "clay"
+  ],
+  "source_sha256": "198b8f529968778fe2e2fdb1aab39af88914c01eb5c931c3bfd6ec5eb7797d99",
+  "sheet_sha256": "00d68af8decb2e1853d2f2b3e48a3c1ade474869cb6de2c0a006dd8277934086"
+}

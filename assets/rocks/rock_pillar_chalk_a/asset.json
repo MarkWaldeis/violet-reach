@@ -1,0 +1,55 @@
+{
+  "id": "rock_pillar_chalk_a",
+  "category": "rocks",
+  "title": "Kalkstein-Felssäule A",
+  "description": "Geschichteter verjüngter Kalkstein-Monolith (~19 × 13 × 35 m) als 0-Credit-Kitbash aus cliff_chalk_wall_a und boulder_chalk_a mit klaren waagrechten Schichtbänken und asymmetrischem Sockelpfeiler. Farbe canyon_chalk #BCB296, Rauheit ≥ 0,68, 2,5 m Eingrabe-Rand.",
+  "target_size_m": [
+    19,
+    13,
+    35
+  ],
+  "lod_triangles": [
+    24000,
+    8000,
+    2400
+  ],
+  "texture_size": 2048,
+  "material_class": "rock_chalk",
+  "texture_format": "ktx2",
+  "status": "exported",
+  "builder": "agy-builder-phase5",
+  "review": {
+    "reviewer": "agy-gate-rev-p5-r4",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 8,
+      "material": 9,
+      "scale": 9,
+      "style": 9,
+      "defects": 9
+    },
+    "notes": "Monumental 17.8x11.9x34.7m asymmetric stratified chalk sea-stack with anchored boulder_chalk_a shoulder buttress, zero organ-pipe cylinders or floating debris, cohesive #BCB296 chalk and flint-grey horizontal bands matching cliff_chalk_wall_a/b, crisp closeup fractures without vertical stretching (slight crest pinch at very apex is acceptable), min_z=-2.5 verified, clean wire/clay and bakeable [24000,8000,2400] LODs.",
+    "round": 4,
+    "source_sha256": "1592900ed9adeccfdae5a0bcecd7fb09f976c6062c0128e21e3b20c48fe08be2",
+    "sheet_sha256": "93f2aabcaceb8d6abc991402fdc8b3a2c6e45b00c0fb4fd13f688d105580eae7"
+  },
+  "review_rounds": 4,
+  "size_m": [
+    17.796,
+    11.949,
+    34.73
+  ],
+  "export": {
+    "file": "export/rock_pillar_chalk_a.glb",
+    "bytes": 4934652,
+    "sha256": "ca5f439e5ede1eaa21f2cc798cefb4f94e6de4982b7d04044b75e22e1e3bda2b",
+    "source_sha256": "1592900ed9adeccfdae5a0bcecd7fb09f976c6062c0128e21e3b20c48fe08be2",
+    "sheet_sha256": "93f2aabcaceb8d6abc991402fdc8b3a2c6e45b00c0fb4fd13f688d105580eae7",
+    "lod_triangles": [
+      24000,
+      8000,
+      2400
+    ],
+    "texture_size": 2048
+  }
+}

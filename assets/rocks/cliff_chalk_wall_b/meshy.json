@@ -1,0 +1,26 @@
+{
+  "asset": "cliff_chalk_wall_b",
+  "class": "A",
+  "image": {
+    "task_id": "01a2185e-f42e-74ee-bfda-3c22de117255",
+    "resource": "text-to-image",
+    "ai_model": "gpt-image-2-5-flare",
+    "prompt": "Abgetreppte Kalkstein-Klippenwand (~36 × 18 × 25 m) mit deutlich versetzten Felsschultern für Steilflanken. Farbe canyon_chalk #BCB296, Rauheit ≥ 0,68, 2,5 m Eingrabe-Rand.",
+    "aspect_ratio": "1:1",
+    "remove_background": true,
+    "credits": 9,
+    "file": "cliff_chalk_wall_b/image/chosen.png",
+    "sha256": "c4d2d345cab7a32e832e17bb773ea8ae10a9eeb5977547ccd9f564d48ba71ad2"
+  },
+  "model": {
+    "task_id": "01a21860-ba06-72f9-909a-5f8a174931ca",
+    "resource": "image-to-3d",
+    "model_type": "standard",
+    "texture_model": "meshy-7",
+    "enable_pbr": true,
+    "texture_resolution": "4k",
+    "credits": 30,
+    "file": "cliff_chalk_wall_b/model/A-v1/model.glb",
+    "sha256": "1159dbb622d636d6a4c7340af712849a74659ea0467096f5a5db1812d7266d0e"
+  }
+}

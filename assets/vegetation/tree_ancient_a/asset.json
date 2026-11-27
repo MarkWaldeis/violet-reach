@@ -21,32 +21,32 @@
   "status": "exported",
   "builder": "devin-builder-trees",
   "review": {
-    "reviewer": "devin-gate-rev-r6",
+    "reviewer": "agy-gate-rev-ancient-r96",
     "scores": {
       "silhouette": 8,
       "form_detail": 8,
-      "material": 8,
+      "material": 9,
       "scale": 9,
-      "style": 8,
+      "style": 9,
       "defects": 8
     },
-    "notes": "Approved narrowly. R6 addresses the prior blockers: the bark now reads warm brown with visible fibrous/gnarled structure rather than black plastic; most outer terminals continue into tapered twigs with attached leaf tufts; and the base reads as separate rounded surface roots rather than a continuous collar. The crown is broad, open and suitably ancient at correct 12 m scale. Nonblocking polish: a few perimeter leaf cards still read planar or nearly floating, several large scaffold limbs remain smooth/waxy in closeup, and isolated root tips/ground intersections remain sharp.",
-    "round": 6,
-    "source_sha256": "e308ede46f0c9193bd80c813c85dcd03d65cd409e7444884054d66054c7a8e91",
-    "sheet_sha256": "b1fffd8b287039242c1b863557c5d007d647407f310197519066437fd496a96a"
+    "notes": "Broad gnarled ancient oak silhouette across all 8 angles matching tree_oak_a bark (#41321D, p50 ~ [0.345, 0.263, 0.161]) and cupped olive foliage (#696F44) with closed ground-line root flare, clean bright clay tile (zero inverted terminator faces), and plausible 11.31 x 12.06 x 11.03 m scale beside 1.8 m figure. Disconnected stubs and lower-left/lower-right hooks resolved cleanly; only minor interior upper-fork visibility in closeup and a tiny 2-o'clock edge-on leaf tip in hero remain (non-blocking).",
+    "round": 10,
+    "source_sha256": "d0261368e38bbd820f05c64605c91006bfdd4bd2310bbc8985c18145c0c5659a",
+    "sheet_sha256": "b229f663ba4393b7fc7a58a055338daef00356cc34037ce696e3ed860ab22426"
   },
-  "review_rounds": 6,
+  "review_rounds": 10,
   "size_m": [
-    12.057,
-    12.117,
-    11.569
+    11.31,
+    12.058,
+    11.028
   ],
   "export": {
     "file": "export/tree_ancient_a.glb",
-    "bytes": 9314592,
-    "sha256": "4072bcd3dc28a5d027867d4359f62249d53d90fe43c9d06983e476a10edcef38",
-    "source_sha256": "e308ede46f0c9193bd80c813c85dcd03d65cd409e7444884054d66054c7a8e91",
-    "sheet_sha256": "b1fffd8b287039242c1b863557c5d007d647407f310197519066437fd496a96a",
+    "bytes": 9849120,
+    "sha256": "86f494c4390ddb875e3425b23aff5ce4ca37dabbd6c20fc8bf2f555707e52b12",
+    "source_sha256": "d0261368e38bbd820f05c64605c91006bfdd4bd2310bbc8985c18145c0c5659a",
+    "sheet_sha256": "b229f663ba4393b7fc7a58a055338daef00356cc34037ce696e3ed860ab22426",
     "lod_triangles": [
       5290,
       2000,

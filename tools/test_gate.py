@@ -199,6 +199,29 @@ def main():
         baseline = vr.source_hash(d)
         with patch.object(vr, "sha256", side_effect=lambda p: "changed" if str(p).endswith("vrmeshy.py") else real_sha256(p)):
             results.append(expect("comments and strings do not opt into vrmeshy", [] if vr.source_hash(d) == baseline else ["changed"], None))
+        for statement in ("import vrtrees", "import vrtrees as trees", "from vrtrees import build_tree", "from tools.blender import vrtrees"):
+            Path(d, "build.py").write_text(statement + "\ndef build(): pass\n")
+            baseline = vr.source_hash(d)
+            with patch.object(vr, "sha256", side_effect=lambda p: "changed" if str(p).endswith("vrtrees.py") else real_sha256(p)):
+                results.append(expect(statement + " includes tree helper hash", ["changed"] if vr.source_hash(d) != baseline else [], "changed"))
+        Path(d, "build.py").write_text('# import vrtrees\nTEXT = "vrtrees"\n')
+        baseline = vr.source_hash(d)
+        with patch.object(vr, "sha256", side_effect=lambda p: "changed" if str(p).endswith("vrtrees.py") else real_sha256(p)):
+            results.append(expect("comments and strings do not opt into vrtrees", [] if vr.source_hash(d) == baseline else ["changed"], None))
+        for statement in ("import vrtrees_polish", "from vrtrees_polish import brighten_bark"):
+            Path(d, "build.py").write_text(statement + "\ndef build(): pass\n")
+            baseline = vr.source_hash(d)
+            with patch.object(vr, "sha256", side_effect=lambda p: "changed" if str(p).endswith("vrtrees_polish.py") else real_sha256(p)):
+                results.append(expect(statement + " includes tree polish helper hash", ["changed"] if vr.source_hash(d) != baseline else [], "changed"))
+        for statement in ("import vrcliffs", "import vrcliffs as cliffs", "from vrcliffs import shape_cliff", "from tools.blender import vrcliffs"):
+            Path(d, "build.py").write_text(statement + "\ndef build(): pass\n")
+            baseline = vr.source_hash(d)
+            with patch.object(vr, "sha256", side_effect=lambda p: "changed" if str(p).endswith("vrcliffs.py") else real_sha256(p)):
+                results.append(expect(statement + " includes cliff helper hash", ["changed"] if vr.source_hash(d) != baseline else [], "changed"))
+        Path(d, "build.py").write_text('# import vrcliffs\nTEXT = "vrcliffs"\n')
+        baseline = vr.source_hash(d)
+        with patch.object(vr, "sha256", side_effect=lambda p: "changed" if str(p).endswith("vrcliffs.py") else real_sha256(p)):
+            results.append(expect("comments and strings do not opt into vrcliffs", [] if vr.source_hash(d) == baseline else ["changed"], None))
         Path(d, "build.py").write_text("def build(): pass\n")
         Path(d, "build.py").write_bytes(("def build(): pass" + chr(10)).encode())
         lf_hash = vr.source_hash(d)

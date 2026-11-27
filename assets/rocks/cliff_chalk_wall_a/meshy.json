@@ -1,0 +1,26 @@
+{
+  "asset": "cliff_chalk_wall_a",
+  "class": "A",
+  "image": {
+    "task_id": "01a2185e-ebae-74d1-b0de-d45b5e269347",
+    "resource": "text-to-image",
+    "ai_model": "gpt-image-2-5-flare",
+    "prompt": "Geschichtete Kalkstein-Klippenwand (~32 × 24 × 25 m) mit klaren waagrechten Sedimentbänken und senkrechten Zerklüftungen für Steilhänge. Farbe canyon_chalk #BCB296, Rauheit ≥ 0,68, 2,5 m Eingrabe-Rand.",
+    "aspect_ratio": "1:1",
+    "remove_background": true,
+    "credits": 9,
+    "file": "cliff_chalk_wall_a/image/chosen.png",
+    "sha256": "104c080887f65887ee4b24306e8c876656a35d60fec98ada9ebf128d61277f66"
+  },
+  "model": {
+    "task_id": "01a21860-a8ee-76d0-b058-7330fb45b680",
+    "resource": "image-to-3d",
+    "model_type": "standard",
+    "texture_model": "meshy-7",
+    "enable_pbr": true,
+    "texture_resolution": "4k",
+    "credits": 30,
+    "file": "cliff_chalk_wall_a/model/A-v1/model.glb",
+    "sha256": "91689d02a9d5d65436c2950dfb01652319eb47eda217cbd7276d713c98df43b6"
+  }
+}

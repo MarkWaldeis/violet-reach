@@ -11,7 +11,7 @@ import { aerialLODDistances, assetRenderOptions, chunkVisible, instanceLOD, inst
 import { applyAssetDetailMap, prepareDetailMapsForAssets } from "./detail-maps.ts";
 import { REFLECTION_LAYER } from "./quality.ts";
 
-const REFLECTED_HERO_ASSETS = new Set(["gate_white_a", "bridge_arch_a", "column_white_a", "stair_terrace_a", "trunk_acacia_a", "trunk_acacia_b", "trunk_baobab_a"]);
+const REFLECTED_HERO_ASSETS = new Set(["gate_white_a", "bridge_arch_a", "column_white_a", "stair_terrace_a", "trunk_acacia_a", "trunk_acacia_b", "trunk_baobab_a", "monument_split_disc_a", "monument_rib_crown_a"]);
 const REFLECTED_CANOPY_ASSETS = new Set(["tree_oak_a", "tree_beech_a", "tree_ancient_a", "tree_willow_a"]);
 
 /** First simplified LOD usable as the reflection proxy for canopy assets, or -1 when capped to LOD0. */

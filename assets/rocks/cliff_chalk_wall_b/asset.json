@@ -1,0 +1,56 @@
+{
+  "id": "cliff_chalk_wall_b",
+  "category": "rocks",
+  "title": "Kalkstein-Klippenwand B",
+  "description": "Abgetreppte Kalkstein-Klippenwand (~36 × 18 × 25 m) mit deutlich versetzten Felsschultern für Steilflanken. Farbe canyon_chalk #BCB296, Rauheit ≥ 0,68, 2,5 m Eingrabe-Rand.",
+  "target_size_m": [
+    36,
+    18,
+    25
+  ],
+  "lod_triangles": [
+    30000,
+    10000,
+    3000
+  ],
+  "texture_size": 2048,
+  "meshy_class": "A",
+  "material_class": "rock_chalk",
+  "texture_format": "ktx2",
+  "status": "exported",
+  "builder": "agy-builder-phase5",
+  "review": {
+    "reviewer": "agy-gate-rev-p5-r3",
+    "scores": {
+      "silhouette": 9,
+      "form_detail": 8,
+      "material": 9,
+      "scale": 9,
+      "style": 9,
+      "defects": 9
+    },
+    "notes": "Lower-front cavity healed seamlessly with vertical chalk fissures and strata (no boxy patch), 360-degree stepped back slope verified in turn_200-335, cohesive canyon_chalk #BCB296 matte strata matching cliff_chalk_wall_a, min_z=-2.5 verified.",
+    "round": 2,
+    "source_sha256": "198b8f529968778fe2e2fdb1aab39af88914c01eb5c931c3bfd6ec5eb7797d99",
+    "sheet_sha256": "00d68af8decb2e1853d2f2b3e48a3c1ade474869cb6de2c0a006dd8277934086"
+  },
+  "review_rounds": 2,
+  "size_m": [
+    36.419,
+    20.625,
+    24.505
+  ],
+  "export": {
+    "file": "export/cliff_chalk_wall_b.glb",
+    "bytes": 4881224,
+    "sha256": "220968fd4309a0be3094ed176bad82afc30cbb5314878a525b33734cbe8cc709",
+    "source_sha256": "198b8f529968778fe2e2fdb1aab39af88914c01eb5c931c3bfd6ec5eb7797d99",
+    "sheet_sha256": "00d68af8decb2e1853d2f2b3e48a3c1ade474869cb6de2c0a006dd8277934086",
+    "lod_triangles": [
+      30000,
+      10000,
+      3000
+    ],
+    "texture_size": 2048
+  }
+}

@@ -21,32 +21,32 @@
   "status": "exported",
   "builder": "devin-builder-trees",
   "review": {
-    "reviewer": "devin-gate-rev-r5",
+    "reviewer": "agy-gate-rev-willow-r98",
     "scores": {
       "silhouette": 8,
       "form_detail": 8,
       "material": 8,
       "scale": 9,
-      "style": 8,
+      "style": 9,
       "defects": 8
     },
-    "notes": "Approved narrowly. Weeping habit reads from every turn and the former rectangular curtains are broken into varied ragged hanging pieces. Nonblocking polish: a few flat or square-ended strips, stiff upright blades and dark smooth branch sections remain.",
-    "round": 5,
-    "source_sha256": "dfe1c0bbbdb63bc691eac46c7bbad2cece7f18285cc471e6f211a346bca2ecfe",
-    "sheet_sha256": "4669d252b6e648b6b9b111902c9d01f5b3902d46dd1557bb5aef1c5fe49f97d9"
+    "notes": "R9.8 weeping willow silhouette and 14-ribbon crown dome hold cleanly across all 8 angles with zero black alpha-bounce rectangles, anchored outer-left curtain, bright clay tile, organic pointed leaf tips (no horizontal card cuts), smooth per-component foliage normals, blunted/draped forks (only minor interior blunt branch tips visible in tight closeup), oak-matched matte bark (#41321D), olive foliage (#696F44), clean root grounding, and plausible 8.86x8.22x8.68 m scale beside 1.8 m figure.",
+    "round": 8,
+    "source_sha256": "33564b9e1b9e5df80fe86bb8e2c9d69926e5b649f1c034ba458007d93bd43687",
+    "sheet_sha256": "d59ada130978e5fc90eecb23f83b347ea6d0983afae9f4254961dc0545bdaed2"
   },
-  "review_rounds": 5,
+  "review_rounds": 8,
   "size_m": [
-    8.81,
-    8.985,
-    8.999
+    8.861,
+    8.221,
+    8.677
   ],
   "export": {
     "file": "export/tree_willow_a.glb",
-    "bytes": 9530836,
-    "sha256": "b03df2e52f71a3b04a3fff89442e247fbbaa8c430a0751bf77babd2ec7aaaf03",
-    "source_sha256": "dfe1c0bbbdb63bc691eac46c7bbad2cece7f18285cc471e6f211a346bca2ecfe",
-    "sheet_sha256": "4669d252b6e648b6b9b111902c9d01f5b3902d46dd1557bb5aef1c5fe49f97d9",
+    "bytes": 9864204,
+    "sha256": "98a9720f0f601c2763133a4fa065a78a5ff256140b588e6d857dc382226c08fe",
+    "source_sha256": "33564b9e1b9e5df80fe86bb8e2c9d69926e5b649f1c034ba458007d93bd43687",
+    "sheet_sha256": "d59ada130978e5fc90eecb23f83b347ea6d0983afae9f4254961dc0545bdaed2",
     "lod_triangles": [
       2596,
       1000,

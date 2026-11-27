@@ -21,32 +21,32 @@
   "status": "exported",
   "builder": "devin-builder-trees",
   "review": {
-    "reviewer": "devin-gate-rev-r5",
+    "reviewer": "agy-gate-rev-trees-r9",
     "scores": {
       "silhouette": 8,
       "form_detail": 8,
-      "material": 8,
+      "material": 9,
       "scale": 9,
-      "style": 8,
+      "style": 9,
       "defects": 8
     },
-    "notes": "Approved narrowly. R4 collar/pot rim is gone: the base reads as separate horizontal roots, the crown is broad and open, and branch tips are mostly tapered into foliage. Nonblocking polish: soften the sharpest root points and reduce isolated planar cards/dark shoots at the outer crown.",
-    "round": 5,
-    "source_sha256": "d1a37c4b7c2b8166d5ede19cbac9bd3a90d3934e377e04c935cc9d0705dde989",
-    "sheet_sha256": "b56985aa877a36ba7cda60427a6a5d0bbeeef7f4d796f67eeabad160b1f984b9"
+    "notes": "Broad asymmetrical oak silhouette across all 8 angles with cupped olive foliage (#696F44), readable backlit translucency, matte bark (#41321D), clean buried fluted roots (min_z=-0.65), and plausible ~11.8 m scale beside 1.8 m figure. No floating/black cards or spear-tips.",
+    "round": 6,
+    "source_sha256": "c8c709f46e557e23945db9c71615f459e491f9a5b6c56a8e3e0c284ae475a59c",
+    "sheet_sha256": "91e8471fa64239709b7b4ac29be6bc1d78eba9d0e5c6a0eeec547a5f200418b9"
   },
-  "review_rounds": 5,
+  "review_rounds": 6,
   "size_m": [
-    10.466,
-    11.897,
-    11.482
+    10.869,
+    12.027,
+    11.785
   ],
   "export": {
     "file": "export/tree_oak_a.glb",
-    "bytes": 9611580,
-    "sha256": "d7bb91f5b9969607e5dd673f55ec19530b2258d6f149f5e2afac19a46a0645f8",
-    "source_sha256": "d1a37c4b7c2b8166d5ede19cbac9bd3a90d3934e377e04c935cc9d0705dde989",
-    "sheet_sha256": "b56985aa877a36ba7cda60427a6a5d0bbeeef7f4d796f67eeabad160b1f984b9",
+    "bytes": 9868948,
+    "sha256": "46bfb825f3f092be1b47ff2854a14b6acc2c5c6df522932d5c4600ca155d8859",
+    "source_sha256": "c8c709f46e557e23945db9c71615f459e491f9a5b6c56a8e3e0c284ae475a59c",
+    "sheet_sha256": "91e8471fa64239709b7b4ac29be6bc1d78eba9d0e5c6a0eeec547a5f200418b9",
     "lod_triangles": [
       3820,
       1500,

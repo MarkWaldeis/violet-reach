@@ -1,0 +1,55 @@
+{
+  "id": "cliff_chalk_corner_a",
+  "category": "rocks",
+  "title": "Kalkstein-Klippen-Ecke A",
+  "description": "Geschichtete L-förmige Kalkstein-Klippen-Ecke (~44 × 36 × 25 m) als 0-Credit-Kitbash aus cliff_chalk_wall_a und cliff_chalk_wall_b mit großzügigem Ecküberlapp, waagrechten Sedimentbänken und senkrechten Zerklüftungen. Farbe canyon_chalk #BCB296, Rauheit ≥ 0,68, 2,5 m Eingrabe-Rand.",
+  "target_size_m": [
+    44,
+    36,
+    25
+  ],
+  "lod_triangles": [
+    30000,
+    10000,
+    3000
+  ],
+  "texture_size": 2048,
+  "material_class": "rock_chalk",
+  "texture_format": "ktx2",
+  "status": "exported",
+  "builder": "agy-builder-phase5",
+  "review": {
+    "reviewer": "agy-gate-rev-p5-r4",
+    "scores": {
+      "silhouette": 9,
+      "form_detail": 8,
+      "material": 9,
+      "scale": 9,
+      "style": 9,
+      "defects": 9
+    },
+    "notes": "Cohesive 41.8x40.7x24.4m L-shaped chalk headland combining cliff_chalk_wall_a/b with clean ~10m corner overlap, seamless lower-front cavity heal, #BCB296 canyon_chalk with crisp flint-grey strata and vertical fissures, zero vertical UV stretching, min_z=-2.5 verified, clean wire/clay and bakeable [30000,10000,3000] LODs.",
+    "round": 4,
+    "source_sha256": "4cbe5a7a77f1b31e798a6594e6cdfd4910b97389379e33581906757dc7669a89",
+    "sheet_sha256": "51561936230b7d8fe18dfbed7e2a1b8b555880d6ae4403a7106bf2dbb549514a"
+  },
+  "review_rounds": 4,
+  "size_m": [
+    41.75,
+    40.717,
+    24.407
+  ],
+  "export": {
+    "file": "export/cliff_chalk_corner_a.glb",
+    "bytes": 4900100,
+    "sha256": "5b785a299497f737e722899bc9a7b5e53c81c58b028e704c15d155d52dbe8192",
+    "source_sha256": "4cbe5a7a77f1b31e798a6594e6cdfd4910b97389379e33581906757dc7669a89",
+    "sheet_sha256": "51561936230b7d8fe18dfbed7e2a1b8b555880d6ae4403a7106bf2dbb549514a",
+    "lod_triangles": [
+      30000,
+      10000,
+      3000
+    ],
+    "texture_size": 2048
+  }
+}

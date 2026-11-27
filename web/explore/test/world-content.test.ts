@@ -8,9 +8,10 @@ import { pathMask } from "../src/hydrology.ts";
 import type { Slice } from "../src/slice.ts";
 
 const vegetation = ["tree_oak_a", "tree_beech_a", "tree_ancient_a", "tree_willow_a", "bush_lush_a", "fern_cluster_a", "fern_lush_a", "reed_cluster_a", "log_fallen_a", "stump_roots_a"];
-const monuments = ["gate_white_a", "column_white_a", "stair_terrace_a"];
+const monuments = ["gate_white_a", "column_white_a", "stair_terrace_a", "monument_split_disc_a", "monument_rib_crown_a"];
 const pilot = ["boulder_chalk_a", "ruin_wall_a", "trunk_acacia_a", "trunk_acacia_b", "trunk_baobab_a"];
-const rocks = ["arch_sandstone_a", "scree_pile_a", "shore_rocks_wet_a", "boulder_chalk_c", "rock_slab_a"];
+const rocks = ["arch_sandstone_a", "scree_pile_a", "shore_rocks_wet_a", "boulder_chalk_c", "rock_slab_a", "cliff_chalk_wall_a", "cliff_chalk_wall_b", "cliff_chalk_corner_a", "rock_pillar_chalk_a"];
+const sky = ["skyship_pod_a", "skyship_pod_b"];
 
 test("approved spire landmark is slightly buried and the energy core stays out", () => {
   const { placements } = JSON.parse(readFileSync(worldFiles().get("placements.json")!, "utf8"));
@@ -118,10 +119,10 @@ test("shore path frames the gate and reaches the terrace without the dead uphill
 test("world content includes real terrain and only registered placed assets", () => {
   const files = worldFiles();
   assert.equal([...files.keys()].filter((p) => p.endsWith(".r16")).length, 256);
-  for (const key of ["terrain/manifest.json", "slice.json", "hydrology.json", "placements.json", "assets/crystal_cluster_b.glb", "assets/crystal_spire_a.glb", "assets/bridge_arch_a.glb", "assets/lake_shore_a.glb", ...[...vegetation, ...monuments, ...pilot, ...rocks].map((asset) => `assets/${asset}.glb`)]) assert.ok(files.has(key));
-  assert.equal([...files.keys()].filter((p) => p.endsWith(".glb")).length, 4 + vegetation.length + monuments.length + pilot.length + rocks.length);
+  for (const key of ["terrain/manifest.json", "slice.json", "hydrology.json", "placements.json", "assets/crystal_cluster_b.glb", "assets/crystal_spire_a.glb", "assets/bridge_arch_a.glb", "assets/lake_shore_a.glb", ...[...vegetation, ...monuments, ...pilot, ...rocks, ...sky].map((asset) => `assets/${asset}.glb`)]) assert.ok(files.has(key));
+  assert.equal([...files.keys()].filter((p) => p.endsWith(".glb")).length, 4 + vegetation.length + monuments.length + pilot.length + rocks.length + sky.length);
 });
-for (const asset of ["bridge_arch_a", "lake_shore_a", "crystal_spire_a", ...vegetation, ...monuments, ...pilot, ...rocks]) test(`${asset} export contains the LODs declared in asset.json`, () => {
+for (const asset of ["bridge_arch_a", "lake_shore_a", "crystal_spire_a", ...vegetation, ...monuments, ...pilot, ...rocks, ...sky]) test(`${asset} export contains the LODs declared in asset.json`, () => {
   const glbPath = worldFiles().get(`assets/${asset}.glb`)!;
   const glb = readFileSync(glbPath);
   assert.equal(glb.toString("ascii", 0, 4), "glTF");

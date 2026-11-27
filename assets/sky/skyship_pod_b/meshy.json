@@ -1,0 +1,27 @@
+{
+  "asset": "skyship_pod_b",
+  "class": "B",
+  "image": {
+    "task_id": "01a2185f-1835-7269-85a8-74b4ded78239",
+    "resource": "text-to-image",
+    "ai_model": "gpt-image-2-5-flare",
+    "prompt": "Kleinere begleitende Himmelskapsel (~9 × 9 × 24 m) mit matten weißen Stein-/Keramikfacetten und violettem Gürtelband (#8553C6).",
+    "aspect_ratio": "1:1",
+    "remove_background": true,
+    "credits": 9,
+    "file": "skyship_pod_b/image/chosen.png",
+    "sha256": "683d646d48787447e564d42ea315256a4fa464a7724f4a79c5e20b241fdb25ee"
+  },
+  "model": {
+    "task_id": "01a21861-8f68-71b9-be2f-dcc20d1769d8",
+    "resource": "image-to-3d",
+    "model_type": "smart-topology",
+    "texture_model": "meshy-7",
+    "enable_pbr": true,
+    "texture_resolution": "4k",
+    "credits": 15,
+    "file": "skyship_pod_b/model/B-v1/model.glb",
+    "sha256": "a17b7e16eb8f43ed2d45dcd8776f2dcf57088a2769d8c6eb347a9799fd2889d7",
+    "target_polycount": 30000
+  }
+}

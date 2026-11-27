@@ -108,6 +108,38 @@
     "stair_terrace_a": {
       "lodScale": 0.7,
       "shadowLODs": 2
+    },
+    "monument_rib_crown_a": {
+      "maxDistance": 1800,
+      "shadowLODs": 1
+    },
+    "monument_split_disc_a": {
+      "maxDistance": 1400,
+      "shadowLODs": 1
+    },
+    "cliff_chalk_wall_a": {
+      "maxDistance": 900,
+      "shadowLODs": 1
+    },
+    "cliff_chalk_wall_b": {
+      "maxDistance": 900,
+      "shadowLODs": 1
+    },
+    "cliff_chalk_corner_a": {
+      "maxDistance": 900,
+      "shadowLODs": 1
+    },
+    "rock_pillar_chalk_a": {
+      "maxDistance": 900,
+      "shadowLODs": 1
+    },
+    "skyship_pod_a": {
+      "maxDistance": 1600,
+      "shadowLODs": 0
+    },
+    "skyship_pod_b": {
+      "maxDistance": 1600,
+      "shadowLODs": 0
     }
   }
 }

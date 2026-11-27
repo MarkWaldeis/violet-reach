@@ -1,0 +1,56 @@
+{
+  "id": "cliff_chalk_wall_a",
+  "category": "rocks",
+  "title": "Kalkstein-Klippenwand A",
+  "description": "Geschichtete Kalkstein-Klippenwand (~32 × 24 × 25 m) mit klaren waagrechten Sedimentbänken und senkrechten Zerklüftungen für Steilhänge. Farbe canyon_chalk #BCB296, Rauheit ≥ 0,68, 2,5 m Eingrabe-Rand.",
+  "target_size_m": [
+    32,
+    24,
+    25
+  ],
+  "lod_triangles": [
+    30000,
+    10000,
+    3000
+  ],
+  "texture_size": 2048,
+  "meshy_class": "A",
+  "material_class": "rock_chalk",
+  "texture_format": "ktx2",
+  "status": "exported",
+  "builder": "agy-builder-phase5",
+  "review": {
+    "reviewer": "agy-gate-rev-p5-r2",
+    "scores": {
+      "silhouette": 9,
+      "form_detail": 8,
+      "material": 8,
+      "scale": 9,
+      "style": 9,
+      "defects": 9
+    },
+    "notes": "Strong 32x26x24m stratified chalk cliff with bold vertical fracture columns, crisp horizontal sedimentary beds (1-6m), matte canyon_chalk/canyon_strata finish, and zero vertical texture stretching across all 360-degree views.",
+    "round": 2,
+    "source_sha256": "3c54fa34e0db73c70c94f3d32925f2cca03e0c932626d962c6a6344ea97b297e",
+    "sheet_sha256": "5d869fc5d2f1799f7d90559ae25aef0d5ee9b538f6874ccd8f3b9d80070d3004"
+  },
+  "review_rounds": 2,
+  "size_m": [
+    32.081,
+    25.866,
+    24.211
+  ],
+  "export": {
+    "file": "export/cliff_chalk_wall_a.glb",
+    "bytes": 4873628,
+    "sha256": "9a8a7b5a754af0a2df21d1ae4bce546b6cf689f509ddba5452a96ff9d5e7b2d1",
+    "source_sha256": "3c54fa34e0db73c70c94f3d32925f2cca03e0c932626d962c6a6344ea97b297e",
+    "sheet_sha256": "5d869fc5d2f1799f7d90559ae25aef0d5ee9b538f6874ccd8f3b9d80070d3004",
+    "lod_triangles": [
+      30000,
+      10000,
+      3000
+    ],
+    "texture_size": 2048
+  }
+}
