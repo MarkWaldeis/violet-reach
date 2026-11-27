@@ -74333,15 +74333,15 @@
       "x": 680.0,
       "z": 1561.0,
       "yaw": 0.79,
-      "scale": 1.5,
-      "y_offset": -2.7
+      "scale": 3.0,
+      "y_offset": -8.5
     },
     {
       "asset": "monument_split_disc_a",
       "x": 680.0,
       "z": 1561.0,
       "yaw": 0.05,
-      "scale": 1.25,
+      "scale": 1.0,
       "y_offset": 4.6
     },
     {

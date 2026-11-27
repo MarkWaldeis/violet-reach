@@ -170,6 +170,21 @@ test("grove pilot converts only three fern rings near G2/G4 to fern_lush_a", () 
   }
 });
 
+test("split-disc monument is grounded on a visible island shoal", () => {
+  const { placements } = JSON.parse(readFileSync(worldFiles().get("placements.json")!, "utf8"));
+  const island = placements.filter((p: { asset: string }) => p.asset === "island_shoal_a");
+  assert.equal(island.length, 1, "exactly one exported shoal island carries the split-disc monument");
+  assert.equal(island[0].x, 680);
+  assert.equal(island[0].z, 1561);
+  assert.ok(island[0].scale >= 2.8 && island[0].scale <= 3.2, "the shoal must be large enough to remain visible around the monument");
+  assert.ok(island[0].y_offset <= -8.1 && island[0].y_offset >= -8.9, "the shoal terraces must emerge around the plinth without swallowing it");
+  const monument = placements.find((p: { asset: string; x: number; z: number }) => p.asset === "monument_split_disc_a" && p.x === 680 && p.z === 1561);
+  assert.ok(monument, "the split-disc monument is missing from the island centre");
+  assert.equal(monument.scale, 1, "the authored 40 m monument scale is sufficient and must not cover the whole shoal");
+  assert.equal(monument.yaw, 0.05, "the disc stays oblique enough to show thickness instead of a flat face-on coin");
+  assert.equal(monument.y_offset, 4.6);
+});
+
 test("ruin field forms a distributed slope band with restrained debris", () => {
   const { placements } = JSON.parse(readFileSync(worldFiles().get("placements.json")!, "utf8"));
   const walls = placements.filter((p: { asset: string; scatter?: unknown }) => p.asset === "ruin_wall_a" && !p.scatter);

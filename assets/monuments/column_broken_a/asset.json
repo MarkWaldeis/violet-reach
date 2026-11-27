@@ -16,9 +16,23 @@
   "texture_size": 2048,
   "material_class": "stone_white",
   "texture_format": "ktx2",
-  "status": "blender_review",
+  "status": "modeling",
   "builder": "devin-phase6-column-broken",
-  "review": null,
+  "review": {
+    "reviewer": "devin-independent-column-r1",
+    "scores": {
+      "silhouette": 8,
+      "form_detail": 7,
+      "material": 8,
+      "scale": 9,
+      "style": 8,
+      "defects": 7
+    },
+    "notes": "R2 rejected, but much improved: end fractures are now chunky and jagged, the long cracks have real width and depth, and the moulded round base reads clearly. Remaining blockers: the crown cap is still a shallow folded rim rather than a deep mineral break; several upright and seam spalls read as long laminar paper-like strips; drum grounding still shows a continuous dark slit with hard narrow soil strips; the capital abacus remains a clean intact square plaque. Deepen and vary the crown loss, thicken or remove laminar spalls, bury and feather the drum contact organically, and chip the capital slab silhouette.",
+    "round": 2,
+    "source_sha256": "d0e3e6aac5b67b0b4b2bca38ffdcf40fac04a7d6f95e7837488b3a47fb309ef3",
+    "sheet_sha256": "2143270998ba5519b86fb429b5c84a212588fc9b583065ae888ff25b4f6de34e"
+  },
   "references": [
     "assets/monuments/column_broken_a/concept_prompt.txt",
     "assets/monuments/column_broken_a/concept_grok_error.txt",
@@ -26,5 +40,5 @@
     "art/reference/ref_06_weathered_wall.jpg",
     "art/reference/ref_08_ribbed_crown.jpg"
   ],
-  "review_rounds": 1
+  "review_rounds": 2
 }
