@@ -58,6 +58,11 @@ const STRATA_RELIEF_WEIGHT = 0.75;
 const STRATA_SLOPE_PER_TILE = 0.12;
 const DISTANT_CLIFF_CALM_START = 280;
 const DISTANT_CLIFF_CALM_END = 950;
+const MACRO_GROUND_BLEND_START = 280;
+const MACRO_GROUND_BLEND_END = 1250;
+const MACRO_GROUND_BLEND_STRENGTH = 0.74;
+const MACRO_GROUND_ALPINE_BOOST = 0.18;
+const MACRO_GROUND_COLOR_MIX = 0.82;
 
 function clampNumber(value: number, min = 0, max = 1): number {
   return Math.min(max, Math.max(min, value));
@@ -113,6 +118,12 @@ export function evaluateWallStrataWarp(
 /** Numeric mirror of the distance ramp that calms high-frequency rock striping only in far views. */
 export function evaluateDistantCliffCalm(distanceM: number): number {
   return smoothstepNumber(DISTANT_CLIFF_CALM_START, DISTANT_CLIFF_CALM_END, distanceM);
+}
+
+export function evaluateMacroGroundBlend(distanceM: number, heightM: number): number {
+  const distanceBlend = smoothstepNumber(MACRO_GROUND_BLEND_START, MACRO_GROUND_BLEND_END, distanceM) * MACRO_GROUND_BLEND_STRENGTH;
+  const alpineBoost = smoothstepNumber(380, 1400, distanceM) * smoothstepNumber(260, 420, heightM) * MACRO_GROUND_ALPINE_BOOST;
+  return clampNumber(distanceBlend + alpineBoost, 0, 0.9);
 }
 
 function configureArrayTexture(tex: DataArrayTexture, colorSpace: typeof SRGBColorSpace | typeof LinearSRGBColorSpace): DataArrayTexture {
@@ -810,13 +821,17 @@ export function terrainMaterial(surface?: SurfaceData) {
   const canopyAlbedo = nearAlbedo.mul(vec3(0.72, 0.85, 0.60));
   const landscapeAlbedo = mix(nearAlbedo, canopyAlbedo, canopyMask);
 
-  const farAlpine = mix(landscapeAlbedo, macroColorAo.rgb, float(0.18));
+  const macroGroundBlend = smoothstep(MACRO_GROUND_BLEND_START, MACRO_GROUND_BLEND_END, dist)
+    .mul(MACRO_GROUND_BLEND_STRENGTH)
+    .add(alpineFarFade.mul(MACRO_GROUND_ALPINE_BOOST))
+    .clamp(0, 0.9);
+  const farMacroAlbedo = mix(landscapeAlbedo, macroColorAo.rgb, float(MACRO_GROUND_COLOR_MIX));
   const combinedOrh = mix(planarOrh, cliffOrh, cliffMask);
   const softOrhAo = mix(float(0.66), float(1.0), combinedOrh.r);
   const microAO = mix(float(1), mix(softOrhAo, combinedOrh.r, cliffMask), microAoFade);
   const macroAO = mix(float(0.76), float(1.14), macroColorAo.a);
   const meadowLift = float(1.0).add(bw0.mul(0.06).add(bw1.mul(0.10)).mul(cliffMask.oneMinus()));
-  const finalColor = mix(landscapeAlbedo, farAlpine, alpineFarFade).mul(microAO).mul(macroAO).mul(shoreDampMul).mul(meadowLift);
+  const finalColor = mix(landscapeAlbedo, farMacroAlbedo, macroGroundBlend).mul(microAO).mul(macroAO).mul(shoreDampMul).mul(meadowLift);
 
   const dryRough = mix(planarOrh.g.max(0.91), cliffOrh.g.max(0.95), cliffMask);
   const wetGlossRough = mix(dryRough, float(0.42), bw4.mul(cliffMask.oneMinus()));

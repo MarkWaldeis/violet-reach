@@ -16,6 +16,7 @@ const hooks = registerHooks({
 const {
   evaluateDistantCliffCalm,
   evaluateFarRockMask,
+  evaluateMacroGroundBlend,
   evaluateWallStrataWarp,
   terrainMaterial,
   terrainReflectionMaterial,
@@ -119,4 +120,15 @@ test("Phase 6 distant stripe calming leaves G7/F4 untouched and reaches full str
   assert.ok(mid < 0.75);
   assert.equal(evaluateDistantCliffCalm(950), 1);
   assert.equal(evaluateDistantCliffCalm(1400), 1);
+});
+
+test("Phase 6 macro ground colour stays out of close views and carries distant lowland vegetation", () => {
+  assert.equal(evaluateMacroGroundBlend(80, 220), 0);
+  assert.equal(evaluateMacroGroundBlend(260, 220), 0);
+  const mid = evaluateMacroGroundBlend(700, 220);
+  assert.ok(mid > 0.18);
+  assert.ok(mid < 0.55);
+  assert.equal(evaluateMacroGroundBlend(1250, 220), 0.74);
+  assert.ok(evaluateMacroGroundBlend(1250, 420) > evaluateMacroGroundBlend(1250, 220));
+  assert.ok(evaluateMacroGroundBlend(2400, 700) <= 0.9);
 });
