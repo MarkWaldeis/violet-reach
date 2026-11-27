@@ -34,12 +34,12 @@ function hash(n: number): number {
 
 export function buildBladeClump(options: ClumpOptions = {}): BufferGeometry {
   const blades = options.blades ?? 6;
-  const height = options.height ?? 0.55;
+  const height = options.height ?? 0.52;
   const width = options.width ?? 0.045;
-  const spread = options.spread ?? 0.50;
-  const arc = options.arc ?? 0.68;
-  const rootRadius = options.rootRadius ?? 0.105;
-  const midWidth = options.midWidth ?? 0.42;
+  const spread = options.spread ?? 0.68;
+  const arc = options.arc ?? 0.90;
+  const rootRadius = options.rootRadius ?? 0.16;
+  const midWidth = options.midWidth ?? 0.38;
   const seed = options.seed ?? 1;
   const curved = options.curved ?? true;
 

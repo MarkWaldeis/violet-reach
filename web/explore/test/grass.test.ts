@@ -162,11 +162,11 @@ test("clump geometry: tapered blades with wind channels, budget triangle count",
 
   // Phase-4.2 silhouette defaults: narrower blades, stronger fan/arc, wider independent root scatter
   // and a less triangular mid row — all without increasing the 18-triangle near budget.
-  const explicitTuned = buildBladeClump({ width: 0.045, spread: 0.50, arc: 0.68, rootRadius: 0.105, midWidth: 0.42 });
+  const explicitTuned = buildBladeClump({ width: 0.045, spread: 0.68, arc: 0.90, rootRadius: 0.16, midWidth: 0.38 });
   assert.deepEqual(Array.from(pos.array), Array.from(explicitTuned.getAttribute("position").array), "Defaults entsprechend der abgestimmten Silhouette");
   const radii = clumpRootCentreRadii(g);
   assert.ok(Math.max(...radii) > 0.09, `Wurzeln streuen über den alten ±4.5-cm-Kern hinaus: ${radii.map((r) => r.toFixed(3)).join("/")}`);
-  assert.ok(Math.max(...radii) <= 0.105 + 1e-6, `Wurzelradius bleibt bei maximal ±10.5 cm: ${Math.max(...radii)}`);
+  assert.ok(Math.max(...radii) <= 0.16 + 1e-6, `Wurzelradius bleibt bei maximal ±16 cm: ${Math.max(...radii)}`);
   const signedRoots = clumpSignedRootDisplacements(g);
   assert.ok(Math.min(...signedRoots) < 0 && Math.max(...signedRoots) > 0, "Wurzelversatz nutzt beide Seiten der Büschelmitte");
 
@@ -188,7 +188,7 @@ test("clump geometry: tapered blades with wind channels, budget triangle count",
 
   const rowWidths = clumpRowWidths(g);
   for (const [blade, widths] of rowWidths.entries()) {
-    assert.ok(Math.abs(widths.mid! / widths.root - 0.84) < 1e-5, `Blatt ${blade}: Mitte behält 84% der Wurzelbreite statt extrem zuzuspitzen`);
+    assert.ok(Math.abs(widths.mid! / widths.root - 0.76) < 1e-5, `Blatt ${blade}: Mitte behält 76% der Wurzelbreite statt extrem zuzuspitzen`);
   }
   const far = buildBladeClump({ blades: 6, curved: false });
   assert.equal(clumpTriangles({ blades: 6, curved: false }), 6, "Fern-LOD: ein Dreieck pro Halm");
@@ -199,12 +199,12 @@ test("clump geometry: tapered blades with wind channels, budget triangle count",
 test("production grass shape and far/aerial compensation use the tuned parameters", () => {
   assert.deepEqual(GRASS_CLUMP_SHAPE, {
     blades: 6,
-    height: 0.58,
+    height: 0.52,
     width: 0.034,
-    spread: 0.58,
-    arc: 0.78,
-    rootRadius: 0.12,
-    midWidth: 0.34,
+    spread: 0.68,
+    arc: 0.9,
+    rootRadius: 0.16,
+    midWidth: 0.38,
     seed: 3,
   }, "Produktions-Büschel: feinere Halme, breitere Wurzelstreuung, mehr Bogen/Fächer ohne Vertexzusatz");
   assert.equal(GRASS_FAR_WIDTH_FACTOR, 1.18, "Ferngeometrie kompensiert die schmalere Nahsilhouette nur moderat");

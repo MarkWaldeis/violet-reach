@@ -216,3 +216,8 @@ Median aus 3 unabhängigen Prüfern (`reviewer_a`, `reviewer_b`, `reviewer_c`; E
 - **Verifikation:** Explorer-Suite **181/181**, `tsc --noEmit`, Vite-Build und `python tools/vr.py check` (**38/38 Assets**) grün. Targeted Regression `phase6-macro-ground-regression` für G6/G7/F2/F3/H1: keine neue Ufer-, Weg-, Wasser- oder Nahsichtkatastrophe; H2 gegenüber `phase6-aerial-veg-water-fix3` sichtbar strukturierter und weniger leer.
 - **Noch offen:** H2/H1 wirken trotz besserer Makrofärbung weiterhin zu sparsam an echter Fernvegetation; die dunklen AO-/Canopy-Flächen sind teils zu weich. G6/G7-Hauptblocker ist jetzt eindeutig die Gras-Nahsilhouette (wenige breite, dunkelgrüne Schwert-Halme auf trockenem/hellem Boden statt dichter Wiesenfilz), gefolgt von plastischem Weißstein/Kristall und der noch zu glatten F3-Rippenkrone.
 
+### Gras-Nahsilhouette Test 1
+
+- **Patch:** gleiche Dreieckskosten, aber niedrigere/stärker gebogene Halme, größere Wurzelstreuung und weniger prozedurale Trocken-/Erddominanz im Bodenlayer. Targeted Capture `phase6-grass-shape-test1` (G6/G7) bei unveränderten Dreieckszahlen: G7 wirkt weniger stachelig und der Bodenanschluss ist grüner; G6 bleibt wegen Ruinen-/Erdgewichtung fast unverändert.
+- **Bewertung:** kleiner echter Fortschritt, noch kein M1-Pass. Der nächste Hebel ist nicht noch einmal dieselbe Halmform, sondern die Kopplung aus Wiesengrundfarbe, trockener Makro-Gewichtung und sichtbarer Blattfläche pro Büschel.
+

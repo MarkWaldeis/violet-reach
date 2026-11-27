@@ -37,12 +37,12 @@ const INSTANCE_UPLOAD_CHUNK = 512;
  */
 export const GRASS_CLUMP_SHAPE = {
   blades: 6,
-  height: 0.58,
+  height: 0.52,
   width: 0.034,
-  spread: 0.58,
-  arc: 0.78,
-  rootRadius: 0.12,
-  midWidth: 0.34,
+  spread: 0.68,
+  arc: 0.9,
+  rootRadius: 0.16,
+  midWidth: 0.38,
   seed: 3,
 } as const;
 

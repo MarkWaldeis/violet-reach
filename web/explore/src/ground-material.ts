@@ -596,10 +596,10 @@ export function terrainMaterial(surface?: SurfaceData) {
   const slopeSoil = smoothstep(0.085, 0.22, geomSlope).mul(0.46);
 
   const screeVegFade = screeBand.mul(0.55).oneMinus();
-  let wDry: Node<"float"> = macroWA.g.mul(0.35).add(dryIsland.mul(0.92)).mul(screeVegFade);
+  let wDry: Node<"float"> = macroWA.g.mul(0.35).add(dryIsland.mul(0.62)).mul(screeVegFade);
   let wMoss: Node<"float"> = macroWA.a.mul(0.30).add(mossIsland.mul(0.62)).mul(screeVegFade);
   let wSoil: Node<"float"> = macroWA.b.mul(0.26)
-    .add(soilPatch.mul(0.48))
+    .add(soilPatch.mul(0.38))
     .add(slopeSoil)
     .add(screeBand.mul(0.66));
   const islandSuppression = dryIsland.mul(0.52).max(mossIsland.mul(0.42)).max(soilPatch.mul(0.36)).clamp(0, 0.64).oneMinus();
