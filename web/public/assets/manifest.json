@@ -10,7 +10,8 @@
         6.48,
         7.251
       ],
-      "bytes": 4929480
+      "bytes": 4929480,
+      "material_class": "stone_white"
     },
     {
       "id": "crystal_cluster_b",
@@ -22,7 +23,8 @@
         2.979,
         2.98
       ],
-      "bytes": 4906200
+      "bytes": 4906200,
+      "material_class": "crystal"
     },
     {
       "id": "crystal_spire_a",
@@ -34,7 +36,8 @@
         3.587,
         7.111
       ],
-      "bytes": 4716752
+      "bytes": 4716752,
+      "material_class": "crystal"
     },
     {
       "id": "column_white_a",
@@ -46,7 +49,8 @@
         6.712,
         18.047
       ],
-      "bytes": 5570592
+      "bytes": 5570592,
+      "material_class": "stone_white"
     },
     {
       "id": "gate_white_a",
@@ -58,7 +62,8 @@
         46.23,
         33.092
       ],
-      "bytes": 5881392
+      "bytes": 5881392,
+      "material_class": "stone_white"
     },
     {
       "id": "monument_rib_crown_a",
@@ -109,7 +114,8 @@
         13.804,
         6.509
       ],
-      "bytes": 8144844
+      "bytes": 8144844,
+      "material_class": "stone_white"
     },
     {
       "id": "arch_sandstone_a",
@@ -302,7 +308,8 @@
         1.441,
         0.556
       ],
-      "bytes": 2776896
+      "bytes": 2776896,
+      "material_class": "foliage"
     },
     {
       "id": "fern_lush_a",
@@ -340,7 +347,8 @@
         1.558,
         1.816
       ],
-      "bytes": 2166416
+      "bytes": 2166416,
+      "material_class": "foliage"
     },
     {
       "id": "stump_roots_a",

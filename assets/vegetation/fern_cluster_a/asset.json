@@ -50,5 +50,6 @@
     ],
     "texture_size": 1024
   },
-  "texture_format": "ktx2"
+  "texture_format": "ktx2",
+  "material_class": "foliage"
 }

@@ -46,6 +46,109 @@ let waterFoamTex: Texture = makeWaterFallback([0, 0, 0, 255]);
 let waterTexturesPromise: Promise<void> | null = null;
 
 /**
+ * Planar-reflection pass configuration. Kept as one exported, testable value so the
+ * Spiegelsee reflection remains a single bounded-resolution pass on both backends.
+ */
+export const WATER_REFLECTION_PASS = Object.freeze({
+  resolutionScale: 0.35,
+  bounces: false,
+  generateMipmaps: true,
+});
+
+/**
+ * Conservative screen-space reflection-distortion tuning. The UV scales are deliberately
+ * smaller than the legacy vec2(0.18, 0.30) multiplier; the additional normal/distance/view
+ * attenuation below is what keeps distant aerial reflections coherent instead of striped.
+ * Near-field effective Y coefficients are 0.21 × 0.42 ≈ 0.088 for a calm open lake and
+ * at most 0.21 × 0.78 ≈ 0.164 in shallow/rough water (legacy: unfiltered 0.30).
+ */
+export const WATER_REFLECTION_DISTORTION = Object.freeze({
+  uvScaleX: 0.13,
+  uvScaleY: 0.21,
+  distanceNearM: 30,
+  distanceFarM: 320,
+  distanceFloor: 0.24,
+  steepViewStart: 0.24,
+  steepViewEnd: 0.82,
+  steepViewFloor: 0.58,
+  calmNormalScale: 0.42,
+  roughNormalScale: 0.78,
+  breezeAgitation: 0.72,
+  shoreFullDepthM: 0.22,
+  shoreFadeDepthM: 1.55,
+});
+
+/** Shoreline/foam tuning shared by the shader and the pure Node test probes. */
+export const WATER_SHORE_TUNING = Object.freeze({
+  edgeFadeWidthM: 1.15,
+  depthFadeWidthM: 0.72,
+  foamBreakupLow: 0.40,
+  foamBreakupHigh: 0.74,
+  foamPatchLow: 0.28,
+  foamPatchHigh: 0.80,
+  foamContactPeak: 0.56,
+  foamSwashBase: 0.28,
+  foamSwashWave: 0.72,
+  foamStrength: 0.90,
+  foamMax: 0.76,
+});
+
+const clamp01Cpu = (v: number) => Math.min(1, Math.max(0, v));
+const smoothstepCpu = (low: number, high: number, x: number) => {
+  const t = clamp01Cpu((x - low) / (high - low));
+  return t * t * (3 - 2 * t);
+};
+
+/** CPU mirror of the shader distance LOD for reflection distortion (1 near, floor far). */
+export function waterReflectionDistanceScale(distanceM: number, tuning = WATER_REFLECTION_DISTORTION) {
+  return 1 - smoothstepCpu(tuning.distanceNearM, tuning.distanceFarM, distanceM) * (1 - tuning.distanceFloor);
+}
+
+/** CPU mirror of the steep-view attenuation (grazing views keep stronger distortions). */
+export function waterReflectionViewScale(viewElevation: number, tuning = WATER_REFLECTION_DISTORTION) {
+  return 1 - smoothstepCpu(tuning.steepViewStart, tuning.steepViewEnd, viewElevation) * (1 - tuning.steepViewFloor);
+}
+
+/** CPU mirror of the combined shallow-shore and wind-ruffle agitation weight in [0, 1]. */
+export function waterReflectionWaveZone(depthM: number, breeze: number, tuning = WATER_REFLECTION_DISTORTION) {
+  const shore = 1 - smoothstepCpu(tuning.shoreFullDepthM, tuning.shoreFadeDepthM, depthM);
+  return Math.max(shore, clamp01Cpu(breeze) * tuning.breezeAgitation);
+}
+
+/** CPU mirror of the normal-slope scale used only for planar-reflection UV distortion. */
+export function waterReflectionNormalScale(depthM: number, breeze: number, tuning = WATER_REFLECTION_DISTORTION) {
+  const zone = waterReflectionWaveZone(depthM, breeze, tuning);
+  return tuning.calmNormalScale + (tuning.roughNormalScale - tuning.calmNormalScale) * zone;
+}
+
+/** Combined dimensionless reflection-distortion attenuation used by the shader configuration. */
+export function waterReflectionDistortionScale(distanceM: number, viewElevation: number, depthM: number, breeze: number, tuning = WATER_REFLECTION_DISTORTION) {
+  return waterReflectionNormalScale(depthM, breeze, tuning)
+    * waterReflectionDistanceScale(distanceM, tuning)
+    * waterReflectionViewScale(viewElevation, tuning);
+}
+
+/** Pure shoreline coverage fade: 0 exactly at the waterline, 1 after the configured width inside. */
+export function waterEdgeFade(distanceInsideM: number, tuning = WATER_SHORE_TUNING) {
+  return smoothstepCpu(0, tuning.edgeFadeWidthM, distanceInsideM);
+}
+
+/** Pure depth coverage fade for clear shallow water; complements the world-space waterline fade. */
+export function waterDepthFade(depthM: number, tuning = WATER_SHORE_TUNING) {
+  return smoothstepCpu(0, tuning.depthFadeWidthM, depthM);
+}
+
+/** Pure foam-breakup gate used to verify the shader keeps soft but real zero areas. */
+export function waterFoamBreakupGate(breakup: number, tuning = WATER_SHORE_TUNING) {
+  return smoothstepCpu(tuning.foamBreakupLow, tuning.foamBreakupHigh, breakup);
+}
+
+/** Pure along-shore patch gate: unlike the old constant floor, calm stretches reach exactly zero. */
+export function waterFoamPatchGate(cluster: number, tuning = WATER_SHORE_TUNING) {
+  return smoothstepCpu(tuning.foamPatchLow, tuning.foamPatchHigh, cluster);
+}
+
+/**
  * Preloads the tiled normal and foam maps for water rendering.
  * Resolves immediately in Node unit tests without network calls.
  */
@@ -100,6 +203,11 @@ export function waterMaterial(surface: SurfaceData, reflection?: ReturnType<type
     .mul(smoothstep(0.0, 0.025, surfUv.x.oneMinus()))
     .mul(smoothstep(0.0, 0.025, surfUv.y.oneMinus()));
   const depth = p.y.sub(field.r).max(0);
+  // field.b is zero at the visible waterline and negative inside both lakes and rivers.
+  // This narrow world-space coverage fade is shared by body alpha and foam: even where
+  // the bed drops quickly, the first metre stays slightly translucent instead of drawing
+  // a hard turquoise or white vector contour at aerial resolutions.
+  const waterEdgeFade = smoothstep(float(-WATER_SHORE_TUNING.edgeFadeWidthM), float(0), field.b).oneMinus();
   const lake = attribute("lake", "float");
   const footprint = lake.greaterThan(0.5).and(field.a.lessThanEqual(-3)).or(lake.lessThan(0.5).and(field.a.greaterThan(-3)));
   material.maskNode = p.y.sub(field.r).greaterThan(0.002).and(field.b.lessThan(0.30)).and(footprint);
@@ -255,20 +363,27 @@ export function waterMaterial(surface: SurfaceData, reflection?: ReturnType<type
   const swashWave = sin(depth.mul(25.0).sub(time.mul(1.6)).add(foamCluster.mul(5.0))).mul(0.5).add(0.5);
 
   const shallowFoamZone = smoothstep(0.008, 0.032, depth).mul(smoothstep(0.05, 0.32, depth).oneMinus());
-  const contactLap = smoothstep(0.006, 0.022, depth).mul(smoothstep(0.022, 0.11, depth).oneMinus());
-  const foamShape = shallowFoamZone.mul(swashWave.mul(0.62).add(0.38)).max(contactLap.mul(0.78));
+  const contactLap = smoothstep(0.006, 0.022, depth).mul(smoothstep(0.022, 0.085, depth).oneMinus())
+    .mul(float(WATER_SHORE_TUNING.foamContactPeak));
+  const foamShape = shallowFoamZone
+    .mul(swashWave.mul(float(WATER_SHORE_TUNING.foamSwashWave)).add(float(WATER_SHORE_TUNING.foamSwashBase)))
+    .max(contactLap);
 
   const foamBreakup = foamTex1.mul(0.56).add(foamTex2.mul(0.30)).add(closeRippleNorm.mul(0.14));
-  const foamPatchMask = smoothstep(0.24, 0.74, foamCluster).mul(0.88).add(0.12);
+  // Both gates reach exactly zero. The old additive patch floor painted a continuous bright
+  // waterline everywhere; the wider smoothstep ranges keep the remaining foam lacy instead of hard.
+  const foamBreakupMask = smoothstep(float(WATER_SHORE_TUNING.foamBreakupLow), float(WATER_SHORE_TUNING.foamBreakupHigh), foamBreakup);
+  const foamPatchMask = smoothstep(float(WATER_SHORE_TUNING.foamPatchLow), float(WATER_SHORE_TUNING.foamPatchHigh), foamCluster);
   const foamDistFade = smoothstep(95, 210, dist).oneMinus();
-  const foamFactor = smoothstep(0.38, 0.66, foamBreakup)
+  const foamFactor = foamBreakupMask
     .mul(foamShape)
     .mul(foamPatchMask)
     .mul(isOpenLake)
+    .mul(waterEdgeFade)
     .mul(surfEdgeFade)
     .mul(foamDistFade)
-    .mul(0.95)
-    .clamp(0, 0.88);
+    .mul(float(WATER_SHORE_TUNING.foamStrength))
+    .clamp(0, float(WATER_SHORE_TUNING.foamMax));
 
   // Daylight Voronoi shallow-water caustics (ported from shader_reference/water.gdshader caustics_lod)
   const hash22 = (p2: typeof p.xz) => {
@@ -324,17 +439,59 @@ export function waterMaterial(surface: SurfaceData, reflection?: ReturnType<type
 
   let finalRefl: Node<"vec3"> = analyticSky.mul(0.66);
   if (reflection) {
-    reflection.uvNode = screenUV.flipX().add(normalXZ.mul(vec2(0.18, 0.30))).clamp(vec2(0.002), vec2(0.998));
+    // Distort the planar reflection with a filtered copy of the wave slope, not with the
+    // full lighting normal. Close lighting ripples may stay crisp while the mirror image
+    // remains coherent; shallow/wind-ruffled water still receives a stronger breakup.
+    const reflectionZone = smoothstep(
+      float(WATER_REFLECTION_DISTORTION.shoreFullDepthM),
+      float(WATER_REFLECTION_DISTORTION.shoreFadeDepthM),
+      depth,
+    ).oneMinus().max(breeze.mul(float(WATER_REFLECTION_DISTORTION.breezeAgitation)));
+    const reflectionDistanceScale = smoothstep(
+      float(WATER_REFLECTION_DISTORTION.distanceNearM),
+      float(WATER_REFLECTION_DISTORTION.distanceFarM),
+      dist,
+    ).oneMinus()
+      .mul(float(1 - WATER_REFLECTION_DISTORTION.distanceFloor))
+      .add(float(WATER_REFLECTION_DISTORTION.distanceFloor));
+    // Use the macroscopic incidence of the flat water plane, not the noisy microfacet ndotv,
+    // so the view-angle filter itself cannot imprint additional wave-scale brightness bands.
+    const viewElevation = toEye.y.clamp(0, 1);
+    const reflectionViewScale = smoothstep(
+      float(WATER_REFLECTION_DISTORTION.steepViewStart),
+      float(WATER_REFLECTION_DISTORTION.steepViewEnd),
+      viewElevation,
+    ).oneMinus()
+      .mul(float(1 - WATER_REFLECTION_DISTORTION.steepViewFloor))
+      .add(float(WATER_REFLECTION_DISTORTION.steepViewFloor));
+    const reflectionSlopeScale = mix(
+      float(WATER_REFLECTION_DISTORTION.calmNormalScale),
+      float(WATER_REFLECTION_DISTORTION.roughNormalScale),
+      reflectionZone,
+    ).mul(reflectionDistanceScale).mul(reflectionViewScale);
+    const reflectionXZ = normalXZ.mul(reflectionSlopeScale);
+
+    // World x/z is not screen x/y. Project the slope into the camera azimuth frame:
+    // slope across the view shifts horizontally, slope along the view shifts vertically.
+    // This removes the artificial world-axis-aligned horizontal/rectangular banding while
+    // keeping the physically important in-plane reflection perturbation.
+    const viewXZ = cameraPosition.xz.sub(p.xz);
+    const viewLenXZ = viewXZ.length().max(0.75);
+    const viewAlong = viewXZ.div(viewLenXZ);
+    const viewAcross = vec2(viewAlong.y, viewAlong.x.negate());
+    const reflectionUVOffset = vec2(
+      reflectionXZ.dot(viewAcross).mul(float(WATER_REFLECTION_DISTORTION.uvScaleX)),
+      reflectionXZ.dot(viewAlong).mul(float(WATER_REFLECTION_DISTORTION.uvScaleY)),
+    );
+    reflection.uvNode = screenUV.flipX().add(reflectionUVOffset).clamp(vec2(0.002), vec2(0.998));
+
     const flatLake = smoothstep(0.35, 3.2, p.y.sub(lakeY).abs()).oneMinus();
     const reflTone = reflection.rgb.div(reflection.rgb.add(vec3(1.15))).mul(0.78);
     const planarBlend = mix(float(0.54), float(0.30), breeze);
     finalRefl = mix(analyticSky.mul(0.66), mix(analyticSky.mul(0.66), reflTone, planarBlend), flatLake);
   }
 
-  // Lake shorelines sit at field.b ~= -15 m (lake_outline inset=18), so lakes feather cleanly by depth;
-  // riverbanks keep field.b edge feathering alongside depth.
-  const riverBankFade = mix(smoothstep(-0.65, 0.25, field.b).oneMinus(), float(1.0), lake);
-  const shoreAlpha = smoothstep(0.0, 0.50, depth).mul(riverBankFade).mul(surfEdgeFade);
+  const shoreAlpha = smoothstep(float(0.0), float(WATER_SHORE_TUNING.depthFadeWidthM), depth).mul(waterEdgeFade).mul(surfEdgeFade);
   const riverOrDeep = shallowClear.max(lake.oneMinus().mul(0.80));
   const reflFloor = mix(float(0.03), mix(float(0.07), float(0.18), slick), shallowClear.max(lake.oneMinus().mul(0.45)));
   const reflRaw = fresnel.mul(mix(float(0.32), float(0.42), slick)).add(mix(float(0.025), float(0.12), slick));
@@ -382,7 +539,7 @@ export function waterSurface(region: WaterRegion, surface: SurfaceData, onReflec
   const lakeY = (region.lakes[0]?.water_y ?? 180) + 0.03;
   let reflection: ReturnType<typeof reflector> | undefined;
   if (typeof window !== "undefined") {
-    reflection = reflector({ resolutionScale: 0.35, bounces: false, generateMipmaps: true });
+    reflection = reflector(WATER_REFLECTION_PASS);
     reflection.target.position.set(900, lakeY, 1900);
     reflection.target.rotation.x = -Math.PI / 2;
     group.add(reflection.target);

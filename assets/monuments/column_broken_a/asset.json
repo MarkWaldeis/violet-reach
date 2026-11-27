@@ -1,0 +1,30 @@
+{
+  "id": "column_broken_a",
+  "category": "monuments",
+  "title": "Zerbrochene elfenbeinweiße Monumentalsäule A",
+  "description": "Creditfreies Blender-Ruinenelement für die Phase-6-Ruinenfelder: kompakte, bodenstabile Bruchgruppe aus aufrechtem kanneliertem Säulenstumpf mit eingetieftem Rundsockel, zwei liegenden kannelierten Schafttrommeln, einem gestuften Kapitellfragment und Mauerwerksbruch. Matte verwitterte Elfenbein-/Kreideoptik mit blassen mineralischen Bruchflächen, dunklen Rissen, Kantenbrüchen sowie dezenter Erd- und Moosanlagerung; keine schwebenden Teile und keine papierdünnen Flächen.",
+  "target_size_m": [
+    6.1,
+    4.0,
+    2.3
+  ],
+  "lod_triangles": [
+    20000,
+    6000,
+    1500
+  ],
+  "texture_size": 2048,
+  "material_class": "stone_white",
+  "texture_format": "ktx2",
+  "status": "blender_review",
+  "builder": "devin-phase6-column-broken",
+  "review": null,
+  "references": [
+    "assets/monuments/column_broken_a/concept_prompt.txt",
+    "assets/monuments/column_broken_a/concept_grok_error.txt",
+    "art/reference/ref_01_white_monuments_sky.jpg",
+    "art/reference/ref_06_weathered_wall.jpg",
+    "art/reference/ref_08_ribbed_crown.jpg"
+  ],
+  "review_rounds": 1
+}

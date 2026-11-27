@@ -1,0 +1,14 @@
+Grok-Konzeptbildversuch vom 2026-11-27 (frischer Prozess, `grok -p ... --always-approve`):
+
+Ergebnis: fehlgeschlagen vor der Bilderzeugung. Die Grok-CLI meldete beim eigentlichen Konzeptlauf:
+
+API error (status 402 Payment Required): personal-team-blocked:spending-limit:
+You have run out of credits or need a Grok subscription. Add credits at https://grok.com/?_s=usage
+or upgrade at https://grok.com/supergrok.
+
+Es wurde daher kein concept.jpg erzeugt. Der vollständig verwendete Bildprompt liegt in concept_prompt.txt,
+der rohe CLI-Auszug in concept_grok_log.txt. Das Asset wird creditfrei und lokal gegen art/STYLE.md,
+art/palette.json sowie die Referenzbilder ref_10_lake_shore.jpg, ref_22_chalk_cliff_layers.jpg,
+ref_28_disc_lake_island.jpg, ref_29_shallow_beach_water.jpg, ref_30_layered_rock_disc.jpg und
+ref_31_rock_ledge_shore.jpg modelliert. Vor unabhängiger Freigabe kann der Grok-Lauf nachgeholt werden,
+sobald das Konto wieder Bilder erzeugen kann.

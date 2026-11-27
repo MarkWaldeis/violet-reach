@@ -37,6 +37,84 @@ const ARRAY_RESOLUTION = 1024;
 const MACRO_MIN = -4096;
 const MACRO_SIZE = 8192;
 
+// CPU mirrors of the small geological scalars used by the TSL shader below.
+// Keeping the thresholds in one place lets the Node tests verify the slope/height-led
+// rock model without evaluating WebGPU nodes in a browser.
+const FAR_ROCK_SLOPE_START = 0.215; // 1 - normal.y; soft onset near 38 deg terrain slope
+const FAR_ROCK_SLOPE_END = 0.345; // fully exposed near 49 deg terrain slope
+const FAR_ROCK_ALPINE_SLOPE_START = 0.030; // approx. 14 deg
+const FAR_ROCK_ALPINE_SLOPE_END = 0.100; // approx. 26 deg
+const FAR_ROCK_ALPINE_HEIGHT_START = 315;
+const FAR_ROCK_ALPINE_HEIGHT_END = 400;
+const FAR_ROCK_CAP_HEIGHT_START = 420;
+const FAR_ROCK_CAP_HEIGHT_END = 490;
+const FAR_ROCK_MACRO_BASE = 0.78;
+const FAR_ROCK_MACRO_RANGE = 0.44;
+const FAR_ROCK_NOISE_JITTER = 0.032;
+const FAR_ROCK_GRAIN_JITTER = 0.020;
+const FAR_ROCK_HEIGHT_JITTER_M = 24.0;
+const STRATA_FOLD_PER_TILE = 0.16;
+const STRATA_RELIEF_WEIGHT = 0.75;
+const STRATA_SLOPE_PER_TILE = 0.12;
+const DISTANT_CLIFF_CALM_START = 280;
+const DISTANT_CLIFF_CALM_END = 950;
+
+function clampNumber(value: number, min = 0, max = 1): number {
+  return Math.min(max, Math.max(min, value));
+}
+
+function smoothstepNumber(edge0: number, edge1: number, value: number): number {
+  const t = clampNumber((value - edge0) / (edge1 - edge0));
+  return t * t * (3 - 2 * t);
+}
+
+/**
+ * Numeric mirror of the distant-rock mask. `slope01` is the shader's `1 - normal.y`
+ * measure, not degrees. Macro weight only scales an existing geological exposure;
+ * it can never create rock on flat lowland by itself.
+ */
+export function evaluateFarRockMask(
+  heightM: number,
+  slope01: number,
+  macroHint: number,
+  variation = 0.5,
+  grain = 0.5,
+  broadVariation = variation,
+): number {
+  const jitter = (variation - 0.5) * FAR_ROCK_NOISE_JITTER + (grain - 0.5) * FAR_ROCK_GRAIN_JITTER;
+  const organicHeightM = heightM + (broadVariation - 0.5) * FAR_ROCK_HEIGHT_JITTER_M;
+  const slopeExposure = smoothstepNumber(FAR_ROCK_SLOPE_START, FAR_ROCK_SLOPE_END, slope01 + jitter);
+  const alpineSlopeExposure = smoothstepNumber(FAR_ROCK_ALPINE_HEIGHT_START, FAR_ROCK_ALPINE_HEIGHT_END, organicHeightM)
+    * smoothstepNumber(FAR_ROCK_ALPINE_SLOPE_START, FAR_ROCK_ALPINE_SLOPE_END, slope01 + jitter * 0.5)
+    * 0.78;
+  const alpineCapExposure = smoothstepNumber(FAR_ROCK_CAP_HEIGHT_START, FAR_ROCK_CAP_HEIGHT_END, organicHeightM) * 0.92;
+  const geologicalExposure = Math.max(slopeExposure, alpineSlopeExposure, alpineCapExposure);
+  const macroModulation = FAR_ROCK_MACRO_BASE + FAR_ROCK_MACRO_RANGE * clampNumber(macroHint);
+  return clampNumber(geologicalExposure * macroModulation);
+}
+
+/**
+ * Numeric mirror of the terrain-following vertical domain warp used for cliff strata.
+ * Positive terrain relief means a local hollow; negative values mean a ridge or shoulder.
+ */
+export function evaluateWallStrataWarp(
+  scaleM: number,
+  warpScale: number,
+  terrainReliefM: number,
+  slope01: number,
+  foldNoise01: number,
+): number {
+  const fold = (foldNoise01 - 0.5) * scaleM * STRATA_FOLD_PER_TILE * warpScale;
+  const relief = clampNumber(terrainReliefM, -3.5, 3.5) * STRATA_RELIEF_WEIGHT * warpScale;
+  const slopeDrape = slope01 * scaleM * STRATA_SLOPE_PER_TILE * warpScale;
+  return fold + relief + slopeDrape;
+}
+
+/** Numeric mirror of the distance ramp that calms high-frequency rock striping only in far views. */
+export function evaluateDistantCliffCalm(distanceM: number): number {
+  return smoothstepNumber(DISTANT_CLIFF_CALM_START, DISTANT_CLIFF_CALM_END, distanceM);
+}
+
 function configureArrayTexture(tex: DataArrayTexture, colorSpace: typeof SRGBColorSpace | typeof LinearSRGBColorSpace): DataArrayTexture {
   tex.colorSpace = colorSpace;
   tex.format = RGBAFormat;
@@ -248,6 +326,7 @@ export function terrainMaterial(surface?: SurfaceData) {
   const geomNormal = normalWorldGeometry.normalize();
   let smoothNormal: Node<"vec3"> = geomNormal;
   let hollow: Node<"float"> = float(0);
+  let terrainRelief: Node<"float"> = float(0);
   let damp: Node<"float"> = float(0);
   let shoreDampMul: Node<"float"> = float(1);
 
@@ -267,7 +346,9 @@ export function terrainMaterial(surface?: SurfaceData) {
       .add(surface.sample(planar.add(vec2(0, 14))).r)
       .add(surface.sample(planar.sub(vec2(0, 14))).r)
       .mul(0.25);
-    hollow = smoothstep(0.15, 1.7, neighbours.sub(field.r)).mul(surfaceBorder);
+    const signedRelief = neighbours.sub(field.r);
+    terrainRelief = signedRelief.clamp(-3.5, 3.5).mul(surfaceBorder);
+    hollow = smoothstep(0.15, 1.7, signedRelief).mul(surfaceBorder);
   }
 
   const macroUv = planar.sub(vec2(MACRO_MIN, MACRO_MIN)).div(MACRO_SIZE).clamp(0, 1);
@@ -280,7 +361,7 @@ export function terrainMaterial(surface?: SurfaceData) {
   const microNormalFade = smoothstep(8, 42, dist).oneMinus();
   const closeTileFade = smoothstep(12.0, 48.0, dist);
   const midNormalFade = smoothstep(22, 88, dist).mul(smoothstep(380, 1300, dist).oneMinus().mul(0.65).add(0.35));
-  const cliffNormalFade = smoothstep(60, 1200, dist).oneMinus().mul(0.50).add(0.50);
+  const cliffNormalFade = smoothstep(60, 1200, dist).oneMinus().mul(0.60).add(0.40);
 
   // Lean 4-noise budget (3 planar + 1 cliff strata, matching p2-r14 ALU) with pure-trig domain warp (+-48 m):
   // breaks smooth velvet hills into sweeping 140m/55m/18m islands without circular polka-dots or extra noise cost.
@@ -410,19 +491,35 @@ export function terrainMaterial(surface?: SurfaceData) {
   const mossBalanced = desatLinear(lMossRaw.albedo.mul(vec3(1.18, 1.06, 0.82)), 0.20).mul(1.22);
   const lMoss = { ...lMossRaw, albedo: mossBalanced.mul(meadowMottle) };
 
-  // Noise-warped dominant horizontal axis selection (zero 50/50 45-deg crosshatch overlap)
+  // Continuous dominant-axis wall projection with a noise-broken transition. The wider blend avoids
+  // knife-edge axis flips on diagonal spurs, while pure X/Z faces still keep their correct projection.
   const geomSlope = geomNormal.y.abs().oneMinus();
   const hAx = abs(geomNormal.x);
   const hAz = abs(geomNormal.z);
-  const axisBias = hAx.sub(hAz).add(macro18.sub(0.5).mul(0.045));
-  const wx = smoothstep(-0.045, 0.045, axisBias);
+  const axisBias = hAx.sub(hAz).add(macro18.sub(0.5).mul(0.075));
+  const wx = smoothstep(-0.12, 0.12, axisBias);
   const wz = wx.oneMinus();
 
-  const sampleWallCliff = (layerIndex: number, scaleM: number, includeOrh: boolean) => {
+  // Reuse the existing organic noise fields as a domain warp: sediment bands bend around local
+  // relief and changes in steepness instead of running as world-horizontal/vertical texture columns.
+  const wallFoldNoise = macro55.mul(0.70).add(macro18.mul(0.30));
+  const strataWarpForScale = (scaleM: number, warpScale: number) =>
+    wallFoldNoise.sub(0.5).mul(scaleM * STRATA_FOLD_PER_TILE * warpScale)
+      .add(terrainRelief.mul(STRATA_RELIEF_WEIGHT * warpScale))
+      .add(geomSlope.mul(scaleM * STRATA_SLOPE_PER_TILE * warpScale));
+
+  const sampleWallCliff = (layerIndex: number, scaleM: number, includeOrh: boolean, warpScale: number) => {
     const idx = int(layerIndex);
     const inv = 1 / scaleM;
-    const uvX = vec2(p.z.mul(inv), p.y.negate().mul(inv));
-    const uvZ = vec2(p.x.mul(inv), p.y.negate().mul(inv));
+    // The broad trig warp already present for the macro field supplies a very low-frequency
+    // horizontal wander. A bounded height-sine adds only ~1.8% tile-scale horizontal phase shift, enough to keep
+    // vertical cracks/columns from reading as perfectly straight world-axis stripes.
+    const horizontalWarp = warpX.add(warpZ).mul(scaleM / 5600)
+      .add(smallNoise.sub(0.5).mul(0.18 + Math.min(scaleM * 0.006, 0.30)))
+      .add(sin(p.y.mul(0.31).add(macro55.mul(4.2))).mul(scaleM * 0.018));
+    const verticalWarp = strataWarpForScale(scaleM, warpScale);
+    const uvX = vec2(p.z.add(horizontalWarp).mul(inv), p.y.negate().add(verticalWarp).mul(inv));
+    const uvZ = vec2(p.x.add(horizontalWarp).mul(inv), p.y.negate().add(verticalWarp).mul(inv));
 
     const alb = texture(albedoArray, uvX).depth(idx).rgb.mul(wx)
       .add(texture(albedoArray, uvZ).depth(idx).rgb.mul(wz));
@@ -438,18 +535,28 @@ export function terrainMaterial(surface?: SurfaceData) {
     return { albedo: alb, deltaWorld, orh };
   };
 
-  const cChalkFine = sampleWallCliff(6, 9.5, true);
-  const cStrataMacro = sampleWallCliff(6, 64.0, false);
+  const cChalkFine = sampleWallCliff(6, 9.5, true, 0.45);
+  const cStrataMacro = sampleWallCliff(7, 64.0, false, 1.0);
 
-  // Genuine steep cliffs (>= 40 deg near, >= 41 deg + alpine macroWB far) with soft soil+gravel scree collar
+  // Genuine steep cliffs near; distant exposure is led by terrain slope/elevation. MacroWB only
+  // scales that geological exposure (0.78..1.22x), so low flatland can never turn into rock
+  // merely because a blurred macro weight or strata fraction is nonzero there.
   const farLod = smoothstep(70, 220, dist);
   const nearRockBreakup = cChalkFine.orh.b.sub(0.5).mul(0.085).add(smallNoise.sub(0.5).mul(0.042)).add(macro18.sub(0.5).mul(0.038));
   const nearCliff = smoothstep(0.228, 0.278, geomSlope.add(nearRockBreakup.mul(1.35)));
   const screeJitter = smallNoise.sub(0.5).mul(0.048).add(macro18.sub(0.5).mul(0.036));
   const screeBand = smoothstep(0.135, 0.245, geomSlope.add(screeJitter)).mul(nearCliff.oneMinus()).mul(farLod.oneMinus());
-  const farRockSignal = macroWB.b.add(macroWB.a).clamp(0, 1);
-  const farRockBreakup = macro18.sub(0.5).mul(0.18).add(cChalkFine.orh.b.sub(0.5).mul(0.14));
-  const farCliff = smoothstep(0.34, 0.68, farRockSignal.add(farRockBreakup));
+  const farRockHint = macroWB.b.add(macroWB.a).clamp(0, 1);
+  const farRockJitter = macro18.sub(0.5).mul(FAR_ROCK_NOISE_JITTER).add(cChalkFine.orh.b.sub(0.5).mul(FAR_ROCK_GRAIN_JITTER));
+  const organicRockHeight = p.y.add(macro55.sub(0.5).mul(FAR_ROCK_HEIGHT_JITTER_M));
+  const slopeExposure = smoothstep(FAR_ROCK_SLOPE_START, FAR_ROCK_SLOPE_END, geomSlope.add(farRockJitter));
+  const alpineSlopeExposure = smoothstep(FAR_ROCK_ALPINE_HEIGHT_START, FAR_ROCK_ALPINE_HEIGHT_END, organicRockHeight)
+    .mul(smoothstep(FAR_ROCK_ALPINE_SLOPE_START, FAR_ROCK_ALPINE_SLOPE_END, geomSlope.add(farRockJitter.mul(0.5))))
+    .mul(0.78);
+  const alpineCapExposure = smoothstep(FAR_ROCK_CAP_HEIGHT_START, FAR_ROCK_CAP_HEIGHT_END, organicRockHeight).mul(0.92);
+  const geologicalRock = slopeExposure.max(alpineSlopeExposure).max(alpineCapExposure);
+  const macroRockModulation = farRockHint.mul(FAR_ROCK_MACRO_RANGE).add(FAR_ROCK_MACRO_BASE);
+  const farCliff = geologicalRock.mul(macroRockModulation).clamp(0, 1);
   const cliffMask = mix(nearCliff, farCliff, farLod);
   const normal = mix(smoothNormal, geomNormal, cliffMask.mul(farLod.oneMinus())).normalize();
   const slope = normal.y.abs().oneMinus();
@@ -656,18 +763,29 @@ export function terrainMaterial(surface?: SurfaceData) {
     .add(lGravel.orh.mul(bw5))
     .add(lMoss.orh.mul(bw6));
 
-  // Distance-scaled fractured limestone strata for both near hero cliffs (G7) and far mountains
-  const strataY = p.y.add(macro140.sub(0.5).mul(26.0)).add(macro18.sub(0.5).mul(5.0));
+  // Distance-scaled fractured limestone strata for both near hero cliffs (G7) and far mountains.
+  // The vertical phase shares the wall UV terrain warp, so ledges undulate around ridges, shoulders
+  // and hollows rather than locking to a single world-horizontal elevation or a directional sine axis.
+  const strataY = p.y.sub(strataWarpForScale(64.0, 0.9));
   const bandBroad = mx_noise_float(vec3(p.x.mul(0.008), strataY.mul(0.11), p.z.mul(0.008))).mul(0.5).add(0.5);
   const ledgeStep = smoothstep(0.28, 0.72, bandBroad);
   const bandShift = ledgeStep.mul(0.68).add(cChalkFine.orh.b.mul(0.32));
 
   const chalkCol = cChalkFine.albedo.mul(vec3(1.07, 1.03, 0.95));
   const strataCol = cStrataMacro.albedo.mul(vec3(0.84, 0.80, 0.72));
-  const strataMix = smoothstep(0.10, 0.82, bandShift).mul(0.52).add(0.36).add(macroWB.a.mul(0.10)).clamp(0, 0.94);
+  const macroRockWeight = macroWB.b.add(macroWB.a).max(0.001);
+  const macroStrataRatio = macroWB.a.div(macroRockWeight).clamp(0, 1);
+  const strataMix = smoothstep(0.10, 0.82, bandShift).mul(0.52).add(0.36)
+    .add(macroStrataRatio.sub(0.5).mul(0.16))
+    .clamp(0, 0.94);
   const cliffFarMix = smoothstep(35, 320, dist).mul(0.62).add(strataMix.mul(0.38)).clamp(0, 1);
-  const strataTone = mix(float(0.72), float(1.14), ledgeStep);
-  const cliffAlbedo = mix(chalkCol, strataCol, cliffFarMix).mul(strataTone);
+  const distantCliffCalm = smoothstep(DISTANT_CLIFF_CALM_START, DISTANT_CLIFF_CALM_END, dist);
+  const strataToneDetail = mix(float(0.72), float(1.14), ledgeStep);
+  const strataTone = mix(strataToneDetail, float(1), distantCliffCalm.mul(0.55));
+  const cliffAlbedoDetail = mix(chalkCol, strataCol, cliffFarMix).mul(strataTone);
+  const distantRockSwatch = swatch("canyon_chalk").clone().lerp(swatch("canyon_strata"), 0.35);
+  const distantRockTone = vec3(distantRockSwatch.r, distantRockSwatch.g, distantRockSwatch.b);
+  const cliffAlbedo = mix(cliffAlbedoDetail, distantRockTone, distantCliffCalm.mul(0.48));
   const cliffDeltaWorld = mix(cChalkFine.deltaWorld.mul(0.85), cStrataMacro.deltaWorld.mul(1.30), cliffFarMix);
   const cliffOrh = cChalkFine.orh;
 

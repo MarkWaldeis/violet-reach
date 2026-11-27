@@ -18,6 +18,7 @@ import { adapterInfo, FrameHistory, FrameStability, STABLE_FRAMES, trackTextures
 import { freezeWorldTime, worldTimeFrozen } from "./world-time.ts";
 import { GrassMacroSampler } from "./grass-macro.ts";
 import { GrassSystem, grassSectorSlotUpperBound } from "./grass-system.ts";
+import { createLandmarkEffects, hasLandmarkEffects, validateSliceEffects } from "./landmark-effects.ts";
 
 const stage = document.querySelector<HTMLElement>("#stage")!;
 const status = document.querySelector<HTMLElement>("#status")!;
@@ -73,6 +74,7 @@ async function main() {
     if (response.ok) slice = await response.json() as Slice;
     else if (response.status !== 404) throw new Error(`slice.json: HTTP ${response.status}`);
   }
+  const effectConfig = slice?.effects === undefined ? undefined : validateSliceEffects(slice.effects, slice.bounds);
   const manifest = params.get("terrain") ?? (slice ? "./terrain/manifest.json" : "./demo-terrain/manifest.json");
   terrainLabel.textContent = slice ? "Spiegelsee · Phase-2-Ausschnitt" : params.has("terrain") ? "Höhenkartenvorschau" : "Testlandschaft";
   document.querySelector("#phase")!.textContent = slice ? "PHASE 2 · SPIEGELSEE-AUSSCHNITT" : params.has("terrain") ? "GELÄNDEVORSCHAU" : "DEMO · TESTLANDSCHAFT";
@@ -92,6 +94,14 @@ async function main() {
     groundMaterial.copy(terrainMaterial(surface));
     scene.add(waterSurface(region, surface, (active) => terrain.setReflectionMaterial(active ? reflTerrainMaterial : null)));
   }
+  const landmarkEffects = slice && effectConfig && hasLandmarkEffects(effectConfig)
+    ? createLandmarkEffects(effectConfig, {
+      quality,
+      bounds: slice.bounds,
+      heightAt: (x, z) => terrain.fullHeightAt(x, z),
+    })
+    : undefined;
+  if (landmarkEffects) scene.add(landmarkEffects.group);
   const assets = slice ? await sliceAssets(slice, terrain, params, quality.assetDistanceScale, renderer) : undefined;
   if (assets) scene.add(assets.group);
   let grass: GrassSystem | undefined;

@@ -12,8 +12,9 @@
 //   · accepted instances are written contiguously into that prefix and marked in bounded
 //     update chunks while the invisible build mesh is already in the scene, spreading GPU
 //     buffer uploads over the build instead of paying one large completion upload
-//   · distant sectors switch the shared clump vertex data from curved 18-triangle clumps to
-//     straight 6-triangle clumps while keeping the exact same instances and material inputs
+//   · distant or elevated sectors switch the shared clump vertex data from curved 18-triangle
+//     clumps to straight 6-triangle far/aerial width variants while keeping the exact same
+//     instances and material inputs
 //   · one sector is one mesh/render object independent of how many old 16 m cells it covers
 import {
   BufferGeometry, Group, InstancedBufferAttribute, InstancedMesh, Sphere, Vector3,
@@ -29,31 +30,57 @@ import {
 const INSTANCE_UPLOAD_CHUNK = 512;
 
 /**
- * Production clump silhouette. The widened ±10.5 cm root scatter, stronger fan/arc and
- * narrower blades break up sword-like close-range bundles without adding vertices.
+ * Production clump silhouette. Narrower blades, a wider independent root scatter and a
+ * stronger fan/arc break up sword-like close-range bundles without adding vertices.
+ * The lower mid row width also starts the taper earlier, so blades read as grass instead
+ * of broad triangular swords while the triangle budget stays unchanged.
  */
 export const GRASS_CLUMP_SHAPE = {
   blades: 6,
   height: 0.58,
-  width: 0.045,
-  spread: 0.50,
-  arc: 0.68,
-  rootRadius: 0.105,
-  midWidth: 0.42,
+  width: 0.034,
+  spread: 0.58,
+  arc: 0.78,
+  rootRadius: 0.12,
+  midWidth: 0.34,
   seed: 3,
 } as const;
 
-/** Far clumps keep only a slight geometric width compensation; most distance fill comes from density. */
-export const GRASS_FAR_WIDTH_FACTOR = 1.10;
+/**
+ * Distance geometry compensates some of the thinner production silhouette, but remains
+ * absolutely narrower than the old 4.5 cm blades. Aerial geometry is wider again: from
+ * flight height individual blades otherwise collapse into a high-frequency dark pinstripe
+ * raster. Both variants share the same one-triangle-per-blade vertex cost.
+ */
+export const GRASS_FAR_WIDTH_FACTOR = 1.18;
+export const GRASS_AERIAL_WIDTH_FACTOR = 1.32;
 /** Uniform far-prefix fraction at the end of the distance-density ramp. */
-export const GRASS_DISTANCE_DENSITY_FACTOR = 0.64;
+export const GRASS_DISTANCE_DENSITY_FACTOR = 0.50;
+/** Default macro handoff envelope as fractions of the configured maximum grass view distance. */
+export const GRASS_DISTANCE_FADE_START_FRACTION = 0.40;
+export const GRASS_DISTANCE_FADE_END_FRACTION = 0.80;
+/** Extra positional decorrelation in metres; small enough not to thin the close carpet. */
+export const GRASS_SCATTER_DECORRELATION_RADIUS = 0.10;
+/** Elevated-view thinning keeps low-frequency coverage but removes part of the moiré energy. */
+export const GRASS_AERIAL_DENSITY_START = 8;
+export const GRASS_AERIAL_DENSITY_END = 26;
+export const GRASS_AERIAL_DENSITY_FACTOR = 0.68;
+/** Vertical clearance at which wider cheap aerial geometry replaces the close silhouette. */
+export const GRASS_AERIAL_WIDTH_HEIGHT = 9;
+export const GRASS_AERIAL_WIDTH_HYSTERESIS = 4;
+/** The macro map is intentionally dry; exponentiating keeps true dry outliers but softens the median. */
+export const GRASS_DRY_MIX_EXPONENT = 1.7;
+/** Fraction of the dry→lush palette correction applied when dryMix is softened. */
+export const GRASS_DRY_TINT_CORRECTION = 0.85;
+/** The macro tint already contains canopy darkening; keep a floor against applying that shadow twice. */
+export const GRASS_MACRO_SHADOW_FLOOR = 0.16;
 
 export interface GrassSystemOptions {
   /** metres; streaming/scatter sector edge length (default: 32) */
   sectorSize?: number;
   /** @deprecated backwards-compatible alias for sectorSize (new code should use sectorSize) */
   cellSize?: number;
-  /** metres; grass sectors stream in inside this radius */
+  /** metres; maximum grass radius and reference scale for the default macro-handoff fade */
   viewDistance?: number;
   /** target clumps per m² at density 1.0, near ring */
   density?: number;
@@ -65,12 +92,22 @@ export interface GrassSystemOptions {
   distanceDensityFactor?: number;
   /** metres; full instance count inside this distance */
   distanceDensityStart?: number;
-  /** metres; distanceDensityFactor reached here (same default as the material fade start) */
+  /** metres; distanceDensityFactor reached here and the material scale fade reaches exactly zero */
   distanceDensityEnd?: number;
   /** metres; beyond this distance curved clumps switch to straight one-triangle blades */
   geometryLodDistance?: number;
   /** metres of dead zone around geometryLodDistance; defaults to sectorSize/8 (4 m at 32 m) */
   geometryLodHysteresis?: number;
+  /** metres of camera clearance where elevated-view thinning starts (0 keeps ground density unchanged) */
+  aerialDensityStart?: number;
+  /** metres of camera clearance where elevated-view thinning reaches aerialDensityFactor */
+  aerialDensityEnd?: number;
+  /** minimum retained uniform-prefix fraction for elevated views */
+  aerialDensityFactor?: number;
+  /** metres of sector-relative camera clearance for the wider one-triangle aerial clump */
+  aerialWidthHeight?: number;
+  /** metres of dead zone around aerialWidthHeight */
+  aerialWidthHysteresis?: number;
   /** persistent render slots allocated up front so scene warm-up can upload their buffers before streaming */
   preallocateSlots?: number;
 }
@@ -89,6 +126,8 @@ interface Sector {
   maxY?: number | null;
   /** hysteresis state for the sector-wide geometry LOD; undefined/near is the conservative initial state */
   farLod?: boolean;
+  /** hysteresis state for the wider elevated-view geometry; undefined/ground is conservative */
+  aerialLod?: boolean;
 }
 
 interface SectorBuild {
@@ -110,6 +149,7 @@ interface SectorBuild {
 interface SectorSlot {
   nearGeometry: BufferGeometry;
   farGeometry: BufferGeometry;
+  aerialGeometry: BufferGeometry;
   mesh: InstancedMesh;
   aInfo: InstancedBufferAttribute;
   aShade: InstancedBufferAttribute;
@@ -124,9 +164,13 @@ interface SectorSlot {
  * Preallocating this many slots costs only a few MiB of fixed instance buffers and prevents first-use
  * allocation spikes when the circular streaming working set grows mid-route.
  */
-export function grassSectorSlotUpperBound(viewDistance: number, sectorSize = 32): number {
+export function grassSectorSlotUpperBound(viewDistance: number, sectorSize = 32, distanceDensityEnd = viewDistance * GRASS_DISTANCE_FADE_END_FRACTION): number {
   if (!(viewDistance > 0) || !(sectorSize > 0)) return 1;
-  const exitRadius = viewDistance + Math.max(2, sectorSize * 0.125);
+  // Streaming stops at the shader fade-out radius, not at the nominal maximum view distance.
+  // Size the warm-up pool for that real working set; callers with a custom fade end can pass it
+  // explicitly without changing main.ts.
+  const renderDistance = Math.max(0, Math.min(viewDistance, distanceDensityEnd));
+  const exitRadius = renderDistance + Math.max(2, sectorSize * 0.125);
   const expandedRadius = exitRadius + sectorSize * Math.SQRT1_2;
   return Math.ceil(Math.PI * (expandedRadius / sectorSize) ** 2) + 8;
 }
@@ -147,10 +191,77 @@ export function grassDistanceVisibleCount(count: number, distance: number, start
   return Math.max(farCount, Math.min(count, Math.round(count * fraction)));
 }
 
+function clamp01(v: number): number {
+  return Math.min(1, Math.max(0, v));
+}
+
+/**
+ * Additional camera-clearance thinning for elevated views. It is deliberately separate from
+ * the distance ramp: walking density is bit-identical, while flight views trade some redundant
+ * overlapping micro-blades for wider lower-frequency coverage.
+ */
+export function grassAerialDensityFactor(
+  clearance: number,
+  start = GRASS_AERIAL_DENSITY_START,
+  end = GRASS_AERIAL_DENSITY_END,
+  minimum = GRASS_AERIAL_DENSITY_FACTOR,
+): number {
+  const minFactor = clamp01(minimum);
+  if (!(clearance > start)) return 1;
+  const rampEnd = Math.max(start + 0.001, end);
+  const t = clamp01((clearance - start) / (rampEnd - start));
+  const smooth = t * t * (3 - 2 * t);
+  return 1 - (1 - minFactor) * smooth;
+}
+
+/** Nonlinear dry-macro compression: true dry outliers stay dry, the very dry median becomes greener. */
+export function grassInstanceDryMix(dryMix: number): number {
+  return Math.pow(clamp01(dryMix), GRASS_DRY_MIX_EXPONENT);
+}
+
+/**
+ * Macro tint correction matching the dryMix compression. The macro colour was baked with the
+ * original dry endpoint; when the shader receives a softer dry factor, shift the linear tint
+ * part-way from grass_dry back toward grass_green by the same delta. This keeps large-scale
+ * macro patches intact instead of replacing them with a flat green.
+ */
+export function grassCorrectedMacroTint(tintR: number, tintG: number, tintB: number, sourceDryMix: number, instanceDryMix = grassInstanceDryMix(sourceDryMix)): [number, number, number] {
+  // art/palette.json linear_rgb: grass_green #696F44 minus grass_dry #635C30.
+  const lushMinusDryR = 0.0164915;
+  const lushMinusDryG = 0.0519377;
+  const lushMinusDryB = 0.0282486;
+  const correction = Math.max(0, clamp01(sourceDryMix) - clamp01(instanceDryMix)) * GRASS_DRY_TINT_CORRECTION;
+  return [
+    clamp01(tintR + lushMinusDryR * correction),
+    clamp01(tintG + lushMinusDryG * correction),
+    clamp01(tintB + lushMinusDryB * correction),
+  ];
+}
+
+/**
+ * The macro RGB already darkens grass under canopy. Keep the macro coupling, but lift the
+ * multiplier away from zero so the same shadow is not applied at full strength a second time.
+ */
+export function grassMacroShade(canopyShadow: number, ao: number): number {
+  const raw = clamp01(canopyShadow) * (0.55 + clamp01(ao) * 0.45);
+  return GRASS_MACRO_SHADOW_FLOOR + (1 - GRASS_MACRO_SHADOW_FLOOR) * raw;
+}
+
+/**
+ * Tall blades are slender rather than proportionally wider; short blades stay a little broader
+ * for ground coverage. Inputs/outputs are dimensionless multipliers in the existing aShade channels.
+ */
+export function grassInstanceWidthScale(scale: number, heightScale: number, dryMix: number): number {
+  const tallness = clamp01((heightScale - 0.55) / 0.9);
+  const slender = 1.10 - tallness * 0.14;
+  const drySlender = 1 - clamp01(dryMix) * 0.05;
+  return scale * slender * drySlender;
+}
+
 export class GrassSystem {
   readonly group = new Group();
   #sectors = new Map<string, Sector>();
-  #base: Record<"near" | "far", BufferGeometry>;
+  #base: Record<"near" | "far" | "aerial", BufferGeometry>;
   #sampler: GrassMacroSampler;
   #heightAt: (x: number, z: number) => number | undefined;
   #maxHeightInRect?: (minX: number, minZ: number, maxX: number, maxZ: number) => number | undefined;
@@ -186,28 +297,35 @@ export class GrassSystem {
       maxBuildPerFrame: options.maxBuildPerFrame ?? 2,
       buildBudgetMs: options.buildBudgetMs ?? 1.5,
       distanceDensityFactor: options.distanceDensityFactor ?? GRASS_DISTANCE_DENSITY_FACTOR,
-      // Keep full density everywhere before the material's existing fade/width compensation.
-      // Thinning inside that same envelope avoids a visible sparse band at mid distance.
-      distanceDensityStart: options.distanceDensityStart ?? viewDistance * 0.72,
-      distanceDensityEnd: options.distanceDensityEnd ?? viewDistance,
+      // Hand the carpet to the macro/detailed ground over a long envelope instead of keeping
+      // high-frequency micro-blades alive almost to the streaming edge. Both the shader scale
+      // fade and the no-rebuild density prefix use exactly this envelope.
+      distanceDensityStart: options.distanceDensityStart ?? viewDistance * GRASS_DISTANCE_FADE_START_FRACTION,
+      distanceDensityEnd: options.distanceDensityEnd ?? viewDistance * GRASS_DISTANCE_FADE_END_FRACTION,
       // Curvature is sub-pixel well before the old 0.44× fade envelope; switching to the
       // straight clump at about a quarter of the view distance removes a large share of
       // vertex/triangle load without changing the close-range silhouette.
       geometryLodDistance: options.geometryLodDistance ?? viewDistance * 0.25,
       geometryLodHysteresis: options.geometryLodHysteresis ?? Math.max(2, sectorSize * 0.125),
+      aerialDensityStart: options.aerialDensityStart ?? GRASS_AERIAL_DENSITY_START,
+      aerialDensityEnd: options.aerialDensityEnd ?? GRASS_AERIAL_DENSITY_END,
+      aerialDensityFactor: options.aerialDensityFactor ?? GRASS_AERIAL_DENSITY_FACTOR,
+      aerialWidthHeight: options.aerialWidthHeight ?? GRASS_AERIAL_WIDTH_HEIGHT,
+      aerialWidthHysteresis: options.aerialWidthHysteresis ?? GRASS_AERIAL_WIDTH_HYSTERESIS,
       preallocateSlots: Math.max(0, Math.floor(options.preallocateSlots ?? 0)),
     };
     const clump = GRASS_CLUMP_SHAPE;
     this.#base = {
       near: buildBladeClump({ ...clump, curved: true }),
-      // Dropping the curved mid row removes silhouette area, but the old 24% width compensation
-      // produced repetitive distant blade fins. Far geometry therefore stays close to the near
-      // width; the higher retained instance fraction fills the carpet with varied thin blades instead.
+      // Dropping the curved mid row removes silhouette area. The moderately wider straight
+      // far/aerial variants restore pixel coverage at different viewing heights while their
+      // absolute widths stay below the old broad 4.5 cm production blades.
       far: buildBladeClump({ ...clump, width: clump.width * GRASS_FAR_WIDTH_FACTOR, curved: false }),
+      aerial: buildBladeClump({ ...clump, width: clump.width * GRASS_AERIAL_WIDTH_FACTOR, curved: false }),
     };
     this.#nearTriangles = clumpTriangles({ ...clump, curved: true });
     this.#farTriangles = clumpTriangles({ ...clump, curved: false });
-    this.#material = grassMaterial(undefined, { fadeStart: this.#opts.viewDistance * 0.72, fadeEnd: this.#opts.viewDistance });
+    this.#material = grassMaterial(undefined, { fadeStart: this.#opts.distanceDensityStart, fadeEnd: this.#opts.distanceDensityEnd });
     this.#scatterTarget = Math.round(sectorSize * sectorSize * this.#opts.density);
     this.#scatterCapacity = cellScatterCapacity(this.#scatterTarget);
     // A different seed family than the positional hashes avoids correlating the prefix order
@@ -223,7 +341,8 @@ export class GrassSystem {
 
   update(px: number, pz: number, py?: number) {
     this.stats.updates++;
-    const { sectorSize, viewDistance } = this.#opts;
+    const { sectorSize } = this.#opts;
+    const viewDistance = this.#renderDistance();
     const groundY = this.#heightAt(px, pz);
     let verticalDistance = 0;
     if (py !== undefined && groundY !== undefined) {
@@ -267,7 +386,8 @@ export class GrassSystem {
    * exit radius are kept even when they are outside the entry radius (that gap is the hysteresis).
    */
   #refreshStreaming(px: number, pz: number) {
-    const { sectorSize, viewDistance } = this.#opts;
+    const { sectorSize } = this.#opts;
+    const viewDistance = this.#renderDistance();
     if (viewDistance <= 0) {
       const sx = Math.floor(px / sectorSize), sz = Math.floor(pz / sectorSize);
       const keepKey = `${sx},${sz}`;
@@ -390,6 +510,16 @@ export class GrassSystem {
       const pt = cellScatterPositionInto(sector.sx, sector.sz, this.#opts.sectorSize, this.#scatterTarget, 7, scatterIndex, job.point);
       sinceClockCheck++;
 
+      // The jittered grid is excellent for close blue-noise density, but its rows survive as a
+      // pinstripe/moiré carrier frequency in 20–30 m flight views. Add a small deterministic
+      // decorrelation (±10 cm) without allocating another scatter array or weakening the near
+      // density. Linear combinations of the two existing hashes avoid extra trigonometry in the
+      // scan; the sector bounding sphere already has metres of slack for edge crossings.
+      const decorX = ((pt.h1 * 5.317 + pt.h2 * 1.713) % 1 - 0.5) * 2 * GRASS_SCATTER_DECORRELATION_RADIUS;
+      const decorZ = ((pt.h1 * 2.911 + pt.h2 * 6.127) % 1 - 0.5) * 2 * GRASS_SCATTER_DECORRELATION_RADIUS;
+      pt.x += decorX;
+      pt.z += decorZ;
+
       const density = this.#sampler.densityAt(pt.x, pt.z);
       // density mask: stochastic thinning, hard zero on water/paths/rock/sand. The scan itself is
       // importance-sampled by the sector's conservative maximum density; multiplying h1 by that upper
@@ -401,6 +531,8 @@ export class GrassSystem {
 
       const scale = 0.72 + pt.h2 * 0.55;
       const hs = 0.65 + s.heightScale * 0.7;
+      const heightScale = hs * scale;
+      const dryMix = grassInstanceDryMix(s.dryMix);
       job.minY = Math.min(job.minY, y);
       job.maxY = Math.max(job.maxY, y);
       const i = job.placed++;
@@ -408,17 +540,24 @@ export class GrassSystem {
       info[i4] = pt.x;
       info[i4 + 1] = y - 0.02;
       info[i4 + 2] = pt.z;
-      info[i4 + 3] = pt.h1;
-      shade[i4] = Math.min(1, s.canopyShadow * (0.55 + s.ao * 0.45)); // canopy shadow x macro AO
-      shade[i4 + 1] = s.dryMix;
-      shade[i4 + 2] = hs * scale;
-      shade[i4 + 3] = scale;
+      // The acceptance hash is intentionally not reused as yaw/colour hash: after density
+      // thinning it is a biased subset. One integer-seeded independent hash keeps instance yaw,
+      // wind phase and colour variation uniform in sparse macro areas as well.
+      info[i4 + 3] = hash2(scatterIndex + sector.sx * 19.19, sector.sz * 23.23 - scatterIndex * 0.71, 167.13);
+      shade[i4] = grassMacroShade(s.canopyShadow, s.ao);
+      shade[i4 + 1] = dryMix;
+      shade[i4 + 2] = heightScale;
+      shade[i4 + 3] = grassInstanceWidthScale(scale, heightScale, dryMix);
       // macro bytes are sRGB-encoded; the terrain shader samples them with an SRGBColorSpace
       // texture (auto-linearised), so the instance tint must be linearised here as well —
       // otherwise blades render raw-sRGB-as-linear (bright but badly desaturated/muddy).
-      tint[i4] = srgbToLinear(s.tintR);
-      tint[i4 + 1] = srgbToLinear(s.tintG);
-      tint[i4 + 2] = srgbToLinear(s.tintB);
+      const linearR = srgbToLinear(s.tintR);
+      const linearG = srgbToLinear(s.tintG);
+      const linearB = srgbToLinear(s.tintB);
+      const [tintR, tintG, tintB] = grassCorrectedMacroTint(linearR, linearG, linearB, s.dryMix, dryMix);
+      tint[i4] = tintR;
+      tint[i4 + 1] = tintG;
+      tint[i4 + 2] = tintB;
       tint[i4 + 3] = 1;
     }
 
@@ -521,6 +660,8 @@ export class GrassSystem {
     const hysteresis = Math.max(0, this.#opts.geometryLodHysteresis);
     const enterFar = threshold + hysteresis;
     const exitFar = Math.max(0, threshold - hysteresis);
+    const enterAerial = this.#opts.aerialWidthHeight + Math.max(0, this.#opts.aerialWidthHysteresis);
+    const exitAerial = Math.max(0, this.#opts.aerialWidthHeight - Math.max(0, this.#opts.aerialWidthHysteresis));
     for (const sector of this.#sectors.values()) {
       if (!sector.mesh || !sector.slot || !sector.count) continue;
       if (!this.#sectorPotentiallyVisible(sector, px, pz, py)) {
@@ -528,12 +669,21 @@ export class GrassSystem {
         sector.mesh.visible = false;
         continue;
       }
-      const distance = this.#sectorSurfaceDistance(sector, px, pz);
+      const horizontalDistance = this.#sectorSurfaceDistance(sector, px, pz);
+      const clearance = this.#sectorVerticalClearance(sector, py);
+      // The shader fades by true camera distance, not by horizontal map distance. Mirror that
+      // slant range here so flight height does not keep dense/expensive grass alive underneath
+      // the camera merely because its xz position is inside the sector.
+      const distance = Math.hypot(horizontalDistance, clearance);
       // Conservative hysteresis: an unknown/near sector must be clearly beyond the threshold before
       // it uses the cheap geometry; once far, it must come clearly back inside before restoring curves.
       const useFar = sector.farLod ? distance >= exitFar : distance >= enterFar;
       sector.farLod = useFar;
-      const geometry = useFar ? sector.slot.farGeometry : sector.slot.nearGeometry;
+      const useAerial = sector.aerialLod ? clearance >= exitAerial : clearance >= enterAerial;
+      sector.aerialLod = useAerial;
+      const geometry = useAerial
+        ? sector.slot.aerialGeometry
+        : useFar ? sector.slot.farGeometry : sector.slot.nearGeometry;
       if (sector.mesh.geometry !== geometry) sector.mesh.geometry = geometry;
       // Geometry quality is conservative per sector surface. The density prefix keeps the cheaper
       // centre-distance LOD for the sector interior; using the nearest surface for the whole curve
@@ -541,8 +691,16 @@ export class GrassSystem {
       // however, lie up to 22 m outside a 32 m sector that still clips the view circle. Never cull
       // such a clipping sector completely: retain the same far prefix that the normal LOD reaches
       // at fadeEnd and let the shader fade its individual instances exactly by world position.
-      const centerCount = this.#visibleCount(sector.count, this.#sectorCenterDistance(sector, px, pz));
-      const edgeFactor = Math.min(1, Math.max(0, this.#opts.distanceDensityFactor));
+      const centerDistance = Math.hypot(this.#sectorCenterDistance(sector, px, pz), clearance);
+      let centerCount = this.#visibleCount(sector.count, centerDistance);
+      const aerialFactor = grassAerialDensityFactor(
+        clearance,
+        this.#opts.aerialDensityStart,
+        this.#opts.aerialDensityEnd,
+        this.#opts.aerialDensityFactor,
+      );
+      if (centerCount > 0 && aerialFactor < 1) centerCount = Math.max(1, Math.round(centerCount * aerialFactor));
+      const edgeFactor = Math.min(1, Math.max(0, this.#opts.distanceDensityFactor)) * aerialFactor;
       const visibleCount = centerCount === 0 && distance < this.#opts.distanceDensityEnd
         ? Math.max(1, Math.round(sector.count * edgeFactor))
         : centerCount;
@@ -556,16 +714,39 @@ export class GrassSystem {
 
   #sectorPotentiallyVisible(sector: Sector, px: number, pz: number, py?: number, rangeMargin = 0) {
     const horizontal = this.#sectorSurfaceDistance(sector, px, pz);
-    const range = this.#opts.viewDistance + rangeMargin;
+    const range = this.#renderDistance() + rangeMargin;
     if (horizontal > range) return false;
     if (py === undefined || !this.#maxHeightInRect) return true;
+    const clearance = this.#sectorVerticalClearance(sector, py);
+    if (!this.#maxHeightInRect || sector.maxY === null) return true;
+    const vertical = Math.max(0, clearance - 1.5);
+    return Math.hypot(horizontal, vertical) <= range;
+  }
+
+  /**
+   * Conservative camera clearance above the highest terrain sample of a sector. The maxima are
+   * cached per static sector, so flight-height LODs add no height-field scans or buffer writes
+   * to the per-frame path. Without a max-height callback the system intentionally keeps the
+   * ground-level behaviour instead of guessing from the camera tile.
+   */
+  #sectorVerticalClearance(sector: Sector, py?: number): number {
+    if (py === undefined || !this.#maxHeightInRect) return 0;
     if (sector.maxY === undefined) {
       const x0 = sector.sx * this.#opts.sectorSize, z0 = sector.sz * this.#opts.sectorSize;
       sector.maxY = this.#maxHeightInRect(x0, z0, x0 + this.#opts.sectorSize, z0 + this.#opts.sectorSize) ?? null;
     }
-    if (sector.maxY === null) return true;
-    const vertical = Math.max(0, py - (sector.maxY + 1.5));
-    return Math.hypot(horizontal, vertical) <= range;
+    if (sector.maxY === null) return 0;
+    return Math.max(0, py - sector.maxY);
+  }
+
+  /**
+   * Distance beyond which the shader can no longer produce pixels. Streaming uses this shorter
+   * macro-handoff radius rather than building an outer ring of permanently zero-scaled grass.
+   */
+  #renderDistance(): number {
+    const { viewDistance, distanceDensityEnd } = this.#opts;
+    if (viewDistance <= 0) return 0;
+    return Math.max(0, Math.min(viewDistance, distanceDensityEnd));
   }
 
   #visibleCount(count: number, distance: number): number {
@@ -605,6 +786,7 @@ export class GrassSystem {
     sector.mesh = undefined;
     sector.count = 0;
     sector.farLod = undefined;
+    sector.aerialLod = undefined;
   }
 
   #releaseSlot(slot: SectorSlot) {
@@ -630,6 +812,7 @@ export class GrassSystem {
     const tint = new InstancedBufferAttribute(new Float32Array(capacity * 4), 4);
     const nearGeometry = this.#instanceGeometry(this.#base.near, aInfo, aShade, tint);
     const farGeometry = this.#instanceGeometry(this.#base.far, aInfo, aShade, tint);
+    const aerialGeometry = this.#instanceGeometry(this.#base.aerial, aInfo, aShade, tint);
     // Resolve aInfo/aShade by geometry attribute name rather than baking the per-slot attribute
     // objects into the TSL node graph. BufferAttributeNode hashes object identity, which would give
     // every pooled slot its own shader/pipeline cache key; geometry attributes keep the same step
@@ -645,7 +828,7 @@ export class GrassSystem {
     mesh.receiveShadow = true;
     mesh.frustumCulled = true;
     mesh.name = "grass_sector_slot";
-    const slot: SectorSlot = { nearGeometry, farGeometry, mesh, aInfo, aShade, tint, free: true, persistent };
+    const slot: SectorSlot = { nearGeometry, farGeometry, aerialGeometry, mesh, aInfo, aShade, tint, free: true, persistent };
     this.#slots.push(slot);
     return slot;
   }
@@ -673,7 +856,7 @@ export class GrassSystem {
         sectors++;
         instances += sector.count;
         visibleInstances += sector.mesh.count;
-        triangles += sector.mesh.count * (sector.mesh.geometry === sector.slot?.farGeometry ? this.#farTriangles : this.#nearTriangles);
+        triangles += sector.mesh.count * (sector.mesh.geometry === sector.slot?.nearGeometry ? this.#nearTriangles : this.#farTriangles);
       }
     }
     this.stats.cells = sectors;
@@ -695,6 +878,7 @@ export class GrassSystem {
       slot.mesh.dispose();
       slot.nearGeometry.dispose();
       slot.farGeometry.dispose();
+      slot.aerialGeometry.dispose();
     }
     this.#material.dispose();
     this.#slots = [];

@@ -1,16 +1,368 @@
 {
   "version": 1,
-  "bounds": {"minX": -100, "minZ": 1100, "maxX": 900, "maxZ": 2100},
-  "centre": {"x": 400, "z": 1600},
+  "bounds": {
+    "minX": -100,
+    "minZ": 1100,
+    "maxX": 900,
+    "maxZ": 2100
+  },
+  "centre": {
+    "x": 400,
+    "z": 1600
+  },
   "paths": [
-    {"width": 2.4, "polyline": [[350,1360],[385,1375],[420,1390],[450,1400],[455,1420],[445,1440],[440,1460],[435,1485],[444,1500],[453,1512],[465.5,1518.5]]},
-    {"width": 2.4, "polyline": [[494.5,1489.5],[503,1502.2],[513.6,1512.8],[522,1510],[529.5,1502.6],[541,1499],[555,1497.5],[570,1495.8],[582,1493.5],[593.869,1490.652]]}
+    {
+      "width": 2.4,
+      "polyline": [
+        [
+          350,
+          1360
+        ],
+        [
+          385,
+          1375
+        ],
+        [
+          420,
+          1390
+        ],
+        [
+          450,
+          1400
+        ],
+        [
+          455,
+          1420
+        ],
+        [
+          445,
+          1440
+        ],
+        [
+          440,
+          1460
+        ],
+        [
+          435,
+          1485
+        ],
+        [
+          444,
+          1500
+        ],
+        [
+          453,
+          1512
+        ],
+        [
+          465.5,
+          1518.5
+        ]
+      ]
+    },
+    {
+      "width": 2.4,
+      "polyline": [
+        [
+          494.5,
+          1489.5
+        ],
+        [
+          503,
+          1502.2
+        ],
+        [
+          513.6,
+          1512.8
+        ],
+        [
+          522,
+          1510
+        ],
+        [
+          529.5,
+          1502.6
+        ],
+        [
+          541,
+          1499
+        ],
+        [
+          555,
+          1497.5
+        ],
+        [
+          570,
+          1495.8
+        ],
+        [
+          582,
+          1493.5
+        ],
+        [
+          593.869,
+          1490.652
+        ]
+      ]
+    },
+    {
+      "width": 1.8,
+      "polyline": [
+        [
+          445,
+          1440
+        ],
+        [
+          441.5,
+          1434.5
+        ],
+        [
+          437.5,
+          1429
+        ],
+        [
+          433,
+          1423.5
+        ],
+        [
+          429.5,
+          1419
+        ],
+        [
+          427,
+          1415.5
+        ],
+        [
+          424,
+          1412
+        ]
+      ]
+    },
+    {
+      "width": 2.2,
+      "polyline": [
+        [
+          440,
+          1460
+        ],
+        [
+          444.5,
+          1453
+        ],
+        [
+          450,
+          1448.5
+        ],
+        [
+          456.5,
+          1447
+        ],
+        [
+          462,
+          1452
+        ],
+        [
+          470,
+          1450
+        ],
+        [
+          479,
+          1447
+        ],
+        [
+          488,
+          1444
+        ],
+        [
+          496,
+          1441.5
+        ],
+        [
+          505,
+          1439
+        ],
+        [
+          516,
+          1436
+        ],
+        [
+          522,
+          1440.5
+        ],
+        [
+          528,
+          1445
+        ],
+        [
+          535.5,
+          1442.5
+        ],
+        [
+          543.5,
+          1443
+        ],
+        [
+          552,
+          1448
+        ]
+      ]
+    },
+    {
+      "width": 1.8,
+      "polyline": [
+        [
+          552,
+          1448
+        ],
+        [
+          560,
+          1452
+        ],
+        [
+          570,
+          1456
+        ],
+        [
+          579,
+          1460
+        ],
+        [
+          583,
+          1468
+        ],
+        [
+          590,
+          1474
+        ],
+        [
+          598,
+          1481
+        ],
+        [
+          598,
+          1484
+        ],
+        [
+          598,
+          1487
+        ],
+        [
+          593.869,
+          1490.652
+        ]
+      ]
+    },
+    {
+      "width": 2.0,
+      "polyline": [
+        [
+          360,
+          1680
+        ],
+        [
+          352,
+          1686
+        ],
+        [
+          338,
+          1684
+        ],
+        [
+          322,
+          1668
+        ],
+        [
+          306,
+          1662
+        ],
+        [
+          280,
+          1660
+        ],
+        [
+          260,
+          1658
+        ],
+        [
+          240,
+          1655
+        ],
+        [
+          220,
+          1656
+        ],
+        [
+          200,
+          1658
+        ],
+        [
+          180,
+          1662
+        ],
+        [
+          160,
+          1667
+        ],
+        [
+          145,
+          1673
+        ],
+        [
+          130,
+          1682
+        ],
+        [
+          118,
+          1692
+        ],
+        [
+          108,
+          1700
+        ],
+        [
+          100,
+          1705
+        ],
+        [
+          92,
+          1708
+        ],
+        [
+          86,
+          1712
+        ],
+        [
+          80,
+          1715
+        ],
+        [
+          78,
+          1718
+        ],
+        [
+          82,
+          1720
+        ],
+        [
+          78,
+          1722
+        ]
+      ]
+    }
   ],
   "spawn": {
-    "fly": {"x": 200, "z": 1200, "yaw": -2.5},
-    "walk": {"x": 350, "z": 1360, "yaw": -1.3734}
+    "fly": {
+      "x": 200,
+      "z": 1200,
+      "yaw": -2.5
+    },
+    "walk": {
+      "x": 350,
+      "z": 1360,
+      "yaw": -1.3734
+    }
   },
-  "justification": "Nordwestufer des Spiegelsees: mäandrierende Weißfall- und Dornbachmündung mit gerundeten Mündungsfächern, rund 40 % Seehülle (37 % sichtbares Wasser), Buchten und ein bis 299 m hoher Rücken als gestaffelte Silhouette.",
+  "justification": "Nordwestufer des Spiegelsees: m\u00e4andrierende Wei\u00dffall- und Dornbachm\u00fcndung mit gerundeten M\u00fcndungsf\u00e4chern, rund 40 % Seeh\u00fclle (37 % sichtbares Wasser), Buchten und ein bis 299 m hoher R\u00fccken als gestaffelte Silhouette.",
   "measurements": {
     "lake_fraction": 0.4005,
     "land_fraction": 0.5995,
@@ -18,7 +370,10 @@
     "min_height": 157.9949188232422,
     "max_height": 299.1663818359375,
     "relief": 141.1714630126953,
-    "river_length_m": {"Weißfall": 896.05, "Dornbach": 818.89},
+    "river_length_m": {
+      "Wei\u00dffall": 896.05,
+      "Dornbach": 818.89
+    },
     "method": "Lake outline occupancy at 10 m cell centres (shore envelope); visible lake additionally requires nearest R16 height below water_y 180. Height extrema at all 2 m R16 samples; river centrelines clipped to bounds."
   },
   "asset_options": {
@@ -96,7 +451,7 @@
       "tintVariation": 0.1
     },
     "reed_cluster_a": {
-      "maxDistance": 12,
+      "maxDistance": 45,
       "lodScale": 0.25,
       "shadowLODs": 0,
       "tintVariation": 0.08
@@ -140,6 +495,100 @@
     "skyship_pod_b": {
       "maxDistance": 1600,
       "shadowLODs": 0
+    },
+    "ruin_wall_a": {
+      "maxDistance": 700,
+      "shadowLODs": 1
+    },
+    "crystal_cluster_b": {
+      "maxDistance": 650,
+      "shadowLODs": 1
+    },
+    "shore_rocks_wet_a": {
+      "maxDistance": 420,
+      "shadowLODs": 1
+    },
+    "boulder_chalk_a": {
+      "maxDistance": 520,
+      "shadowLODs": 1
+    },
+    "boulder_chalk_c": {
+      "maxDistance": 520,
+      "shadowLODs": 1
+    },
+    "scree_pile_a": {
+      "maxDistance": 520,
+      "shadowLODs": 1
     }
+  },
+  "effects": {
+    "light_columns": [
+      {
+        "id": "gate_beam",
+        "x": 522.0,
+        "z": 1510.0,
+        "y_offset": 1.2,
+        "height": 150.0,
+        "radius": 2.4,
+        "intensity": 1.15,
+        "violet": 0.42
+      }
+    ],
+    "crystal_glows": [
+      {
+        "id": "spire_west",
+        "x": 424.0,
+        "z": 1412.0,
+        "y_offset": 3.5,
+        "radius": 4.2,
+        "intensity": 0.62,
+        "violet": 0.95,
+        "light": true,
+        "light_radius": 24,
+        "light_intensity": 1.8
+      },
+      {
+        "id": "spire_pit",
+        "x": 590.0,
+        "z": 1464.0,
+        "y_offset": 4.7,
+        "radius": 5.2,
+        "intensity": 0.78,
+        "violet": 1.0,
+        "light": true,
+        "light_radius": 30,
+        "light_intensity": 2.2
+      },
+      {
+        "id": "pit_cluster_south",
+        "x": 600.0,
+        "z": 1469.0,
+        "y_offset": 1.8,
+        "radius": 2.7,
+        "intensity": 0.34,
+        "violet": 0.92,
+        "light": false
+      },
+      {
+        "id": "pit_cluster_northwest",
+        "x": 584.0,
+        "z": 1457.0,
+        "y_offset": 1.8,
+        "radius": 2.8,
+        "intensity": 0.34,
+        "violet": 0.92,
+        "light": false
+      },
+      {
+        "id": "colonnade_cluster",
+        "x": 542.0,
+        "z": 1447.0,
+        "y_offset": 1.7,
+        "radius": 2.4,
+        "intensity": 0.3,
+        "violet": 0.9,
+        "light": false
+      }
+    ]
   }
 }

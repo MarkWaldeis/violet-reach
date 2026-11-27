@@ -74332,7 +74332,7 @@
       "asset": "monument_split_disc_a",
       "x": 680.0,
       "z": 1561.0,
-      "yaw": -0.65,
+      "yaw": 0.79,
       "scale": 1.25,
       "y_offset": -1.6
     },
@@ -74340,7 +74340,7 @@
       "asset": "monument_rib_crown_a",
       "x": 150.0,
       "z": 1830.0,
-      "yaw": -2.45,
+      "yaw": -1.85,
       "scale": 1.0,
       "y_offset": -5.8
     },
@@ -74386,19 +74386,573 @@
     },
     {
       "asset": "skyship_pod_b",
-      "x": 735.0,
-      "z": 1740.0,
-      "yaw": 0.85,
+      "x": 620.0,
+      "z": 1620.0,
+      "yaw": -0.95,
       "scale": 1.0,
-      "y_offset": 175.0
+      "y_offset": 105.0
     },
     {
       "asset": "skyship_pod_b",
-      "x": 835.0,
-      "z": 1720.0,
-      "yaw": -0.55,
+      "x": 680.0,
+      "z": 1640.0,
+      "yaw": 0.35,
       "scale": 1.0,
-      "y_offset": 162.0
+      "y_offset": 128.0
+    },
+    {
+      "asset": "crystal_cluster_b",
+      "x": 421.0,
+      "z": 1409.0,
+      "yaw": 1.9,
+      "scale": 0.72,
+      "y_offset": -0.95,
+      "pitch": 0.12,
+      "roll": 0.08
+    },
+    {
+      "asset": "crystal_cluster_b",
+      "x": 428.5,
+      "z": 1406.5,
+      "yaw": 4.6,
+      "scale": 0.6,
+      "y_offset": -1.1,
+      "pitch": -0.09,
+      "roll": -0.13
+    },
+    {
+      "asset": "crystal_cluster_b",
+      "x": 418.0,
+      "z": 1416.5,
+      "yaw": 0.6,
+      "scale": 0.85,
+      "y_offset": -0.8,
+      "pitch": 0.06,
+      "roll": -0.1
+    },
+    {
+      "asset": "crystal_cluster_b",
+      "x": 420.5,
+      "z": 1420.5,
+      "yaw": 3.3,
+      "scale": 0.5,
+      "y_offset": -1.25,
+      "pitch": -0.14,
+      "roll": 0.05
+    },
+    {
+      "asset": "ruin_wall_a",
+      "x": 551.5,
+      "z": 1438.5,
+      "yaw": 0.55,
+      "scale": 0.85,
+      "y_offset": -1.15,
+      "pitch": 0.03,
+      "roll": -0.03
+    },
+    {
+      "asset": "ruin_wall_a",
+      "x": 519.0,
+      "z": 1462.0,
+      "yaw": 2.9,
+      "scale": 0.8,
+      "y_offset": -1.05,
+      "pitch": -0.02,
+      "roll": 0.04
+    },
+    {
+      "asset": "ruin_wall_a",
+      "x": 545.5,
+      "z": 1454.0,
+      "yaw": 2.1,
+      "scale": 0.46,
+      "y_offset": -0.72,
+      "pitch": 0.14,
+      "roll": -0.09
+    },
+    {
+      "asset": "rock_slab_a",
+      "x": 510.0,
+      "z": 1447.0,
+      "yaw": 1.35,
+      "scale": 0.5,
+      "y_offset": -0.24,
+      "pitch": 0.1,
+      "roll": -0.08
+    },
+    {
+      "asset": "rock_slab_a",
+      "x": 536.0,
+      "z": 1431.0,
+      "yaw": 0.9,
+      "scale": 0.44,
+      "y_offset": -0.2,
+      "pitch": 0.12,
+      "roll": -0.08
+    },
+    {
+      "asset": "scree_pile_a",
+      "x": 521.5,
+      "z": 1451.0,
+      "yaw": 1.6,
+      "scale": 0.48,
+      "y_offset": -0.12,
+      "pitch": 0.04,
+      "roll": -0.03
+    },
+    {
+      "asset": "boulder_chalk_c",
+      "x": 543.5,
+      "z": 1438.5,
+      "yaw": 2.2,
+      "scale": 0.9,
+      "y_offset": -0.35,
+      "pitch": 0.07,
+      "roll": -0.05
+    },
+    {
+      "asset": "shore_rocks_wet_a",
+      "x": 556.5,
+      "z": 1542.5,
+      "yaw": 1.9,
+      "scale": 0.85,
+      "y_offset": -0.04,
+      "pitch": 0.02,
+      "roll": -0.02
+    },
+    {
+      "asset": "shore_rocks_wet_a",
+      "x": 570.5,
+      "z": 1548.5,
+      "yaw": 2.7,
+      "scale": 1.0,
+      "y_offset": -0.03,
+      "pitch": -0.02,
+      "roll": 0.02
+    },
+    {
+      "asset": "shore_rocks_wet_a",
+      "x": 586.5,
+      "z": 1554.5,
+      "yaw": 0.15,
+      "scale": 1.05,
+      "pitch": 0.03,
+      "roll": 0.02,
+      "y_offset": -0.03
+    },
+    {
+      "asset": "shore_rocks_wet_a",
+      "x": 603.5,
+      "z": 1559.5,
+      "yaw": 1.2,
+      "scale": 0.9,
+      "pitch": -0.03,
+      "roll": -0.02,
+      "y_offset": -0.03
+    },
+    {
+      "asset": "shore_rocks_wet_a",
+      "x": 632.5,
+      "z": 1535.5,
+      "yaw": 0.75,
+      "scale": 0.95,
+      "y_offset": -0.03,
+      "pitch": 0.02,
+      "roll": 0.03
+    },
+    {
+      "asset": "shore_rocks_wet_a",
+      "x": 649.0,
+      "z": 1543.5,
+      "yaw": 2.35,
+      "scale": 0.88,
+      "y_offset": -0.02,
+      "pitch": -0.02,
+      "roll": -0.03
+    },
+    {
+      "asset": "shore_rocks_wet_a",
+      "x": 694.0,
+      "z": 1444.5,
+      "yaw": 0.55,
+      "scale": 1.05,
+      "y_offset": -0.03,
+      "pitch": 0.02,
+      "roll": -0.02
+    },
+    {
+      "asset": "shore_rocks_wet_a",
+      "x": 676.5,
+      "z": 1470.5,
+      "yaw": 1.85,
+      "scale": 0.92,
+      "y_offset": -0.02,
+      "pitch": -0.03,
+      "roll": 0.02
+    },
+    {
+      "asset": "fern_lush_a",
+      "scatter": {
+        "seed": 27401,
+        "count": 6,
+        "polygon": [
+          [
+            355.8,
+            1677.46
+          ],
+          [
+            354.41,
+            1678.44
+          ],
+          [
+            352.88,
+            1678.43
+          ],
+          [
+            351.1,
+            1678.56
+          ],
+          [
+            350.48,
+            1677.09
+          ],
+          [
+            350.95,
+            1675.8
+          ],
+          [
+            351.37,
+            1674.26
+          ],
+          [
+            353.14,
+            1674.21
+          ],
+          [
+            354.39,
+            1674.99
+          ],
+          [
+            355.91,
+            1675.82
+          ]
+        ],
+        "min_spacing": 0.8,
+        "max_slope": 26,
+        "min_height_above_water": 2,
+        "max_height_above_water": 40,
+        "scale": [
+          0.8,
+          1.15
+        ],
+        "align_to_slope": true
+      }
+    },
+    {
+      "asset": "fern_lush_a",
+      "scatter": {
+        "seed": 27402,
+        "count": 5,
+        "polygon": [
+          [
+            370.32,
+            1676.88
+          ],
+          [
+            368.46,
+            1677.0
+          ],
+          [
+            366.89,
+            1677.17
+          ],
+          [
+            365.28,
+            1676.37
+          ],
+          [
+            365.73,
+            1674.77
+          ],
+          [
+            366.02,
+            1673.39
+          ],
+          [
+            367.37,
+            1672.28
+          ],
+          [
+            368.94,
+            1673.15
+          ],
+          [
+            370.34,
+            1673.82
+          ],
+          [
+            371.1,
+            1675.31
+          ]
+        ],
+        "min_spacing": 0.8,
+        "max_slope": 26,
+        "min_height_above_water": 2,
+        "max_height_above_water": 40,
+        "scale": [
+          0.8,
+          1.15
+        ],
+        "align_to_slope": true
+      }
+    },
+    {
+      "asset": "bush_lush_a",
+      "scatter": {
+        "seed": 27403,
+        "count": 3,
+        "polygon": [
+          [
+            366.45,
+            1662.05
+          ],
+          [
+            364.55,
+            1661.81
+          ],
+          [
+            362.37,
+            1661.75
+          ],
+          [
+            361.79,
+            1659.91
+          ],
+          [
+            362.62,
+            1658.41
+          ],
+          [
+            363.36,
+            1656.62
+          ],
+          [
+            365.54,
+            1656.71
+          ],
+          [
+            366.92,
+            1657.86
+          ],
+          [
+            368.65,
+            1659.03
+          ],
+          [
+            367.86,
+            1660.81
+          ]
+        ],
+        "min_spacing": 1.6,
+        "max_slope": 26,
+        "min_height_above_water": 2,
+        "max_height_above_water": 40,
+        "scale": [
+          0.85,
+          1.2
+        ],
+        "align_to_slope": true
+      }
+    },
+    {
+      "asset": "boulder_chalk_a",
+      "x": 716.0,
+      "z": 1228.0,
+      "yaw": 0.65,
+      "scale": 0.86,
+      "y_offset": -0.24,
+      "pitch": 0.08,
+      "roll": -0.05
+    },
+    {
+      "asset": "boulder_chalk_c",
+      "x": 681.0,
+      "z": 1222.0,
+      "yaw": 2.35,
+      "scale": 0.72,
+      "y_offset": -0.18,
+      "pitch": -0.06,
+      "roll": 0.07
+    },
+    {
+      "asset": "scree_pile_a",
+      "x": 713.0,
+      "z": 1242.0,
+      "yaw": 1.4,
+      "scale": 0.7,
+      "y_offset": -0.14,
+      "pitch": 0.04,
+      "roll": 0.03
+    },
+    {
+      "asset": "boulder_chalk_c",
+      "x": 718.0,
+      "z": 1276.0,
+      "yaw": -0.55,
+      "scale": 0.68,
+      "y_offset": -0.2,
+      "pitch": 0.05,
+      "roll": -0.06
+    },
+    {
+      "asset": "scree_pile_a",
+      "x": 690.0,
+      "z": 1240.0,
+      "yaw": 0.25,
+      "scale": 0.58,
+      "y_offset": -0.12,
+      "pitch": -0.03,
+      "roll": 0.04
+    },
+    {
+      "asset": "ruin_wall_a",
+      "x": 500.0,
+      "z": 1484.0,
+      "yaw": 1.1,
+      "scale": 0.72,
+      "y_offset": -1.2,
+      "pitch": 0.04,
+      "roll": -0.05
+    },
+    {
+      "asset": "ruin_wall_a",
+      "x": 510.0,
+      "z": 1488.0,
+      "yaw": -0.4,
+      "scale": 0.62,
+      "y_offset": -1.0,
+      "pitch": -0.03,
+      "roll": 0.04
+    },
+    {
+      "asset": "ruin_wall_a",
+      "x": 578.0,
+      "z": 1486.0,
+      "yaw": 2.65,
+      "scale": 0.78,
+      "y_offset": -1.1,
+      "pitch": 0.02,
+      "roll": 0.03
+    },
+    {
+      "asset": "ruin_wall_a",
+      "x": 606.0,
+      "z": 1484.0,
+      "yaw": 0.8,
+      "scale": 0.68,
+      "y_offset": -1.05,
+      "pitch": -0.04,
+      "roll": -0.02
+    },
+    {
+      "asset": "crystal_spire_a",
+      "x": 590.0,
+      "z": 1464.0,
+      "yaw": 0.95,
+      "scale": 1.08,
+      "y_offset": -1.2,
+      "pitch": 0.03,
+      "roll": -0.04
+    },
+    {
+      "asset": "crystal_cluster_b",
+      "x": 584.0,
+      "z": 1457.0,
+      "yaw": 0.4,
+      "scale": 0.72,
+      "y_offset": -0.8,
+      "pitch": 0.06,
+      "roll": -0.1
+    },
+    {
+      "asset": "crystal_cluster_b",
+      "x": 596.0,
+      "z": 1458.0,
+      "yaw": 1.7,
+      "scale": 0.62,
+      "y_offset": -0.75,
+      "pitch": -0.08,
+      "roll": 0.07
+    },
+    {
+      "asset": "crystal_cluster_b",
+      "x": 600.0,
+      "z": 1469.0,
+      "yaw": 2.55,
+      "scale": 0.78,
+      "y_offset": -0.9,
+      "pitch": 0.09,
+      "roll": 0.06
+    },
+    {
+      "asset": "crystal_cluster_b",
+      "x": 580.0,
+      "z": 1470.0,
+      "yaw": -0.65,
+      "scale": 0.55,
+      "y_offset": -0.68,
+      "pitch": -0.05,
+      "roll": -0.09
+    },
+    {
+      "asset": "crystal_cluster_b",
+      "x": 576.0,
+      "z": 1465.0,
+      "yaw": 3.35,
+      "scale": 0.5,
+      "y_offset": -0.62,
+      "pitch": 0.07,
+      "roll": 0.1
+    },
+    {
+      "asset": "crystal_cluster_b",
+      "x": 606.0,
+      "z": 1463.0,
+      "yaw": -1.35,
+      "scale": 0.48,
+      "y_offset": -0.58,
+      "pitch": -0.06,
+      "roll": -0.08
+    },
+    {
+      "asset": "rock_slab_a",
+      "x": 582.0,
+      "z": 1474.0,
+      "yaw": 1.9,
+      "scale": 0.55,
+      "y_offset": -0.24,
+      "pitch": 0.08,
+      "roll": -0.06
+    },
+    {
+      "asset": "boulder_chalk_c",
+      "x": 601.0,
+      "z": 1455.0,
+      "yaw": 0.35,
+      "scale": 0.5,
+      "y_offset": -0.42,
+      "pitch": -0.06,
+      "roll": 0.08
+    },
+    {
+      "asset": "scree_pile_a",
+      "x": 607.0,
+      "z": 1470.0,
+      "yaw": 2.8,
+      "scale": 0.6,
+      "y_offset": -0.3,
+      "pitch": 0.02,
+      "roll": -0.03
     }
   ]
 }

@@ -32,20 +32,32 @@ const {
 } = await import("../src/grass-material.ts");
 const {
   GrassSystem,
+  grassAerialDensityFactor,
+  grassCorrectedMacroTint,
   grassDistanceVisibleCount,
+  grassInstanceDryMix,
+  grassInstanceWidthScale,
+  grassMacroShade,
   grassSectorSlotUpperBound,
+  GRASS_AERIAL_DENSITY_END,
+  GRASS_AERIAL_DENSITY_FACTOR,
+  GRASS_AERIAL_DENSITY_START,
+  GRASS_AERIAL_WIDTH_FACTOR,
   GRASS_CLUMP_SHAPE,
   GRASS_DISTANCE_DENSITY_FACTOR,
+  GRASS_DRY_MIX_EXPONENT,
   GRASS_FAR_WIDTH_FACTOR,
+  GRASS_SCATTER_DECORRELATION_RADIUS,
+  srgbToLinear,
 } = await import("../src/grass-system.ts");
 hooks.deregister();
 
-function uniformGrassSampler(densityByte = 255) {
+function uniformGrassSampler(densityByte = 255, dryByte = 0, tint: [number, number, number] = [100, 120, 60], canopyByte = 255) {
   const w = 8, h = 8;
   const data = new Uint8ClampedArray(w * h * 4);
-  for (let i = 0; i < w * h; i++) { data[i * 4] = densityByte; data[i * 4 + 1] = 200; data[i * 4 + 3] = 255; }
+  for (let i = 0; i < w * h; i++) { data[i * 4] = densityByte; data[i * 4 + 1] = 200; data[i * 4 + 2] = dryByte; data[i * 4 + 3] = canopyByte; }
   const cd = new Uint8ClampedArray(w * h * 4);
-  for (let i = 0; i < w * h; i++) { cd[i * 4] = 100; cd[i * 4 + 1] = 120; cd[i * 4 + 2] = 60; cd[i * 4 + 3] = 255; }
+  for (let i = 0; i < w * h; i++) { cd[i * 4] = tint[0]; cd[i * 4 + 1] = tint[1]; cd[i * 4 + 2] = tint[2]; cd[i * 4 + 3] = 255; }
   return GrassMacroSampler.fromImageData(new ImageData(data, w, h), new ImageData(cd, w, h), { minX: -4096, minZ: -4096, size: 8192 });
 }
 
@@ -184,19 +196,21 @@ test("clump geometry: tapered blades with wind channels, budget triangle count",
   assert.equal(far.getAttribute("position").count, 18, "Wurzelpaar + Spitze je Halm");
 });
 
-test("production grass shape and far compensation use the tuned parameters", () => {
+test("production grass shape and far/aerial compensation use the tuned parameters", () => {
   assert.deepEqual(GRASS_CLUMP_SHAPE, {
     blades: 6,
     height: 0.58,
-    width: 0.045,
-    spread: 0.50,
-    arc: 0.68,
-    rootRadius: 0.105,
-    midWidth: 0.42,
+    width: 0.034,
+    spread: 0.58,
+    arc: 0.78,
+    rootRadius: 0.12,
+    midWidth: 0.34,
     seed: 3,
-  }, "Produktions-Büschel: schmalere Halme, breitere Wurzelstreuung, mehr Bogen/Fächer");
-  assert.equal(GRASS_FAR_WIDTH_FACTOR, 1.10, "Ferngeometrie nur noch leicht verbreitert");
-  assert.equal(GRASS_DISTANCE_DENSITY_FACTOR, 0.64, "mehr instanzvarierte dünne Halme statt breiter Fernzinnen");
+  }, "Produktions-Büschel: feinere Halme, breitere Wurzelstreuung, mehr Bogen/Fächer ohne Vertexzusatz");
+  assert.equal(GRASS_FAR_WIDTH_FACTOR, 1.18, "Ferngeometrie kompensiert die schmalere Nahsilhouette nur moderat");
+  assert.equal(GRASS_AERIAL_WIDTH_FACTOR, 1.32, "Flight-Geometrie ist breiter, aber absolut nicht breiter als die alten 4.5-cm-Schwerter");
+  assert.ok(GRASS_CLUMP_SHAPE.width * GRASS_AERIAL_WIDTH_FACTOR < 0.045 + 1e-9, "Aerial-Breite bleibt unter der alten Schwertbreite");
+  assert.equal(GRASS_DISTANCE_DENSITY_FACTOR, 0.50, "weniger, dafür etwas breitere Fernhalme gegen dunklen Punktnoise");
 
   // The constructor must actually use these constants for its shared near geometry.
   const sys = new GrassSystem(uniformGrassSampler(), () => 10, { viewDistance: 0, density: 1, buildBudgetMs: 0 });
@@ -213,8 +227,8 @@ test("production grass shape and far compensation use the tuned parameters", () 
   sys.dispose();
 
   assert.equal(grassDistanceVisibleCount(1000, 20, 20, 40, GRASS_DISTANCE_DENSITY_FACTOR), 1000, "volle Dichte vor der Rampe");
-  assert.equal(grassDistanceVisibleCount(1000, 30, 20, 40, GRASS_DISTANCE_DENSITY_FACTOR), 820, "gleichmäßige smoothstep-Verdünnung in der Rampe");
-  assert.equal(grassDistanceVisibleCount(1000, 39.999, 20, 40, GRASS_DISTANCE_DENSITY_FACTOR), 640, "64% Präfix am Fernende");
+  assert.equal(grassDistanceVisibleCount(1000, 30, 20, 40, GRASS_DISTANCE_DENSITY_FACTOR), 750, "gleichmäßige smoothstep-Verdünnung in der Rampe");
+  assert.equal(grassDistanceVisibleCount(1000, 39.999, 20, 40, GRASS_DISTANCE_DENSITY_FACTOR), 500, "50% Präfix am Fernende");
   assert.equal(grassDistanceVisibleCount(1000, 40, 20, 40, GRASS_DISTANCE_DENSITY_FACTOR), 0, "hinter fadeEnd bleibt der Nullschnitt unverändert");
 });
 
@@ -327,10 +341,46 @@ test("grass material tuning softens fins and decorrelates colour variation per i
   assert.ok(source.includes("float(GRASS_WIDTH_BOOST_FAR)"), "Width-Boost-Maximum ist an die Testkonstante gebunden");
 });
 
-test("grass system uses 32 m sectors: ~28 streaming slots at 72 m and 5625-instance capacity", () => {
+test("grass aerial/dryness helpers are conservative, deterministic and ground-safe", () => {
+  assert.equal(grassAerialDensityFactor(0), 1, "Bodenkamera behält die volle Nahdichte");
+  assert.equal(grassAerialDensityFactor(GRASS_AERIAL_DENSITY_START), 1, "Beginn der Höhenrampe ist neutral");
+  assert.equal(grassAerialDensityFactor(GRASS_AERIAL_DENSITY_END), GRASS_AERIAL_DENSITY_FACTOR, "Ende der Höhenrampe erreicht den konfigurierten Restanteil");
+  const mid = grassAerialDensityFactor((GRASS_AERIAL_DENSITY_START + GRASS_AERIAL_DENSITY_END) / 2);
+  assert.ok(mid < 1 && mid > GRASS_AERIAL_DENSITY_FACTOR, `Höhenrampe verläuft weich: ${mid}`);
+
+  const rawDry = 0.65;
+  const softened = grassInstanceDryMix(rawDry);
+  assert.ok(softened < rawDry * 0.8, `typisches Makro-Dry wird deutlich gebändigt: ${rawDry} → ${softened}`);
+  assert.ok(grassInstanceDryMix(0.97) > 0.9, "echte Trocken-Ausreißer bleiben erkennbar trocken");
+  assert.equal(grassInstanceDryMix(0), 0);
+  assert.equal(GRASS_DRY_MIX_EXPONENT > 1, true, "Dry-Kompression ist eine nichtlineare Makro-Korrektur");
+
+  const baseTint: [number, number, number] = [0.12, 0.105, 0.028];
+  const corrected = grassCorrectedMacroTint(baseTint[0], baseTint[1], baseTint[2], rawDry, softened);
+  assert.ok(corrected[1] > baseTint[1] && corrected[2] > baseTint[2], "Tint rückt mit der Dry-Bändigung Richtung grass_green statt braun zu bleiben");
+  assert.ok(corrected[1] - baseTint[1] < 0.02, "Makrostruktur wird nur moderat statt flächig umgefärbt");
+  assert.ok(corrected.every((v) => v >= 0 && v <= 1), "korrigierter Tint bleibt im linearen Bereich");
+
+  assert.equal(grassMacroShade(1, 1), 1, "offenes Himmellicht bleibt unverändert");
+  const rawShade = 0.5 * (0.55 + 0.5 * 0.45);
+  assert.ok(grassMacroShade(0.5, 0.5) > rawShade, "Canopy/Makro-AO wird nicht doppelt voll angewendet");
+  assert.ok(grassMacroShade(0.5, 0.5) < 1, "Canopy-Schattierung bleibt erhalten");
+
+  const shortWidth = grassInstanceWidthScale(1, 0.55, 0);
+  const tallWidth = grassInstanceWidthScale(1, 1.45, 0.8);
+  assert.ok(tallWidth < shortWidth, `hohe Halme werden relativ schlanker: ${shortWidth} → ${tallWidth}`);
+  assert.ok(grassInstanceWidthScale(1, 1, 0) > grassInstanceWidthScale(1, 1, 1), "trockene Halme wirken etwas feiner");
+});
+
+test("grass system uses 32 m sectors: compact macro-handoff ring and 5625-instance capacity", () => {
+  const compactUpper = grassSectorSlotUpperBound(96, 32);
+  const fullRadiusUpper = grassSectorSlotUpperBound(96, 32, 96);
+  assert.ok(compactUpper < fullRadiusUpper, `Warm-up-Pool folgt dem realen Macro-Handoff-Radius: ${compactUpper} statt ${fullRadiusUpper}`);
+  assert.ok(fullRadiusUpper - compactUpper >= 8, "der nicht mehr sichtbare Außenring spart messbar feste Slot-Allokationen");
+
   const sys = new GrassSystem(uniformGrassSampler(), () => 10, { viewDistance: 72, density: 5.5, buildBudgetMs: 0 });
   sys.update(16, 16);
-  assert.ok(sys.stats.wanted >= 24 && sys.stats.wanted <= 33, `grober Sektorring statt ~87 Zellen: ${sys.stats.wanted}`);
+  assert.ok(sys.stats.wanted >= 17 && sys.stats.wanted <= 25, `kompakter 32-m-Sektorring ohne unsichtbaren Außenring: ${sys.stats.wanted}`);
   assert.equal(sys.stats.pending, sys.stats.wanted);
   assert.equal(sys.stats.building, 1, "nächster Sektor wird inkrementell gebaut");
   assert.equal(sys.group.children.length, 1, "Baustellen-Mesh ist für progressive Uploads in der Szene");
@@ -362,6 +412,8 @@ test("grass system streams sectors around the camera and reuses bounded slots", 
 test("grass sector streaming follows rectangle distance with a small exit hysteresis", () => {
   const sys = new GrassSystem(uniformGrassSampler(), () => 10, {
     sectorSize: 32, viewDistance: 20, density: 0.01, buildBudgetMs: 8, maxBuildPerFrame: 8,
+    // Isolate the rectangle/hysteresis contract from the shorter default macro-handoff radius.
+    distanceDensityEnd: 20,
   });
   const hasEastSector = () => sys.group.children.some((m) => (m as { name?: string }).name === "grass_sector_1_0");
   pumpGrass(sys, 0, 16, undefined, 40);
@@ -426,6 +478,59 @@ test("grass density importance scan keeps the mean placement rate in sparse sect
   const expected = Math.ceil(cellScatterCapacity(target) * (densityByte / 255));
   assert.equal(sys.stats.instances, expected, "halb dichte Makrozelle scannt nur den statistisch nötigen Kandidatenanteil");
   assert.equal(sys.stats.skipDensity, 0, "innerhalb des Maximums ist die skalierte Akzeptanz exakt kompensiert");
+  sys.dispose();
+});
+
+test("grass instance generation decorrelates the grid and softens dry/canopy macro input", () => {
+  const dryByte = 200, canopyByte = 128, tintBytes: [number, number, number] = [100, 120, 60];
+  const sys = new GrassSystem(uniformGrassSampler(255, dryByte, tintBytes, canopyByte), () => 10, {
+    sectorSize: 32, viewDistance: 0, density: 1, buildBudgetMs: 20,
+    distanceDensityStart: 1000, distanceDensityEnd: 1001,
+  });
+  pumpGrass(sys, 8, 8, undefined, 20);
+  assert.equal(sys.stats.builds, 1, "Testsektor vollständig gebaut");
+  const mesh = sys.group.children[0] as unknown as { count: number; geometry: { getAttribute(name: string): { array: Float32Array; count: number } } };
+  assert.equal(mesh.count, 1024);
+  const info = mesh.geometry.getAttribute("aInfo").array;
+  const shade = mesh.geometry.getAttribute("aShade").array;
+  const tint = mesh.geometry.getAttribute("aTint").array;
+
+  const drySource = dryByte / 255;
+  const expectedDry = grassInstanceDryMix(drySource);
+  assert.ok(Math.abs(shade[1] - expectedDry) < 2e-5, `aShade.y nutzt gebändigtes Dry: ${shade[1]} statt ${expectedDry}`);
+  assert.ok(shade[1] < drySource * 0.9, "gespeichertes Dry ist weniger gelb/strohig als die Makro-Rohware, ohne echte Trockenheit zu löschen");
+  const expectedShade = grassMacroShade(canopyByte / 255, 1);
+  assert.ok(Math.abs(shade[0] - expectedShade) < 2e-5, "Canopy/Makro-AO wird entschärft statt doppelt multipliziert");
+
+  const expectedTint = grassCorrectedMacroTint(
+    srgbToLinear(tintBytes[0] / 255),
+    srgbToLinear(tintBytes[1] / 255),
+    srgbToLinear(tintBytes[2] / 255),
+    drySource,
+    expectedDry,
+  );
+  for (let c = 0; c < 3; c++) {
+    assert.ok(Math.abs(tint[c] - expectedTint[c]) < 2e-5, `aTint Kanal ${c} folgt der korrigierten linearen Makrofarbe`);
+  }
+  assert.ok(tint[1] > srgbToLinear(tintBytes[1] / 255), "Dry-Korrektur hebt den Grünanteil des Makro-Tints an");
+
+  // All 1024 candidates are accepted in the uniform full-density map. Their first 64 placements
+  // can therefore be mapped exactly back through the shared deterministic permutation.
+  const target = 1024, total = cellScatterCapacity(target), order = cellScatterOrder(total, 113.17);
+  const start = Math.floor(hash2(0, 0, 29.71) * total);
+  const displacements: number[] = [];
+  let independentHashes = 0;
+  const maxDisplacement = Math.SQRT2 * GRASS_SCATTER_DECORRELATION_RADIUS + 1e-6;
+  for (let k = 0; k < 64; k++) {
+    const scatterIndex = order[(start + k) % total];
+    const raw = cellScatterPositionAt(0, 0, 32, target, 7, scatterIndex);
+    displacements.push(Math.hypot(info[k * 4] - raw.x, info[k * 4 + 2] - raw.z));
+    if (Math.abs(info[k * 4 + 3] - raw.h1) > 1e-6) independentHashes++;
+  }
+  const meanDisplacement = displacements.reduce((sum, v) => sum + v, 0) / displacements.length;
+  assert.ok(Math.max(...displacements) <= maxDisplacement, `Dekorrelation bleibt ±10-cm-gebunden: max ${Math.max(...displacements)}`);
+  assert.ok(meanDisplacement > 0.03, `Gitterträgerfrequenz ist messbar aufgebrochen: mean ${meanDisplacement}`);
+  assert.ok(independentHashes >= 60, `Instanz-Yaw/Farbe hängt nicht am Akzeptanz-Hash: ${independentHashes}/64 unabhängig`);
   sys.dispose();
 });
 
@@ -503,6 +608,61 @@ test("grass sector geometry LOD is conservative, hysteretic and shares instance 
   assert.equal(sectorMesh()!.geometry, farGeometry, "Hysterese verhindert Flackern Richtung near");
   for (let i = 0; i < 3; i++) sys.update(35, 16); // 3 m: eindeutig innerhalb 8−4 m
   assert.equal(sectorMesh()!.geometry, nearGeometry, "nahe Sektorfläche stellt die volle Geometrie wieder her");
+  sys.dispose();
+});
+
+test("grass aerial LOD widens cheap geometry and thins elevated views without touching ground density", () => {
+  const sys = new GrassSystem(uniformGrassSampler(), () => 10, {
+    sectorSize: 32, viewDistance: 40, density: 0.2, buildBudgetMs: 8, maxBuildPerFrame: 8,
+    // Isolate aerial behaviour from the horizontal distance ramps.
+    geometryLodDistance: 1000, geometryLodHysteresis: 0,
+    distanceDensityStart: 1000, distanceDensityEnd: 1400,
+  }, () => 10);
+  pumpGrass(sys, 16, 16, 11.7);
+  const sectorMesh = () => sys.group.children.find((m) => (m as { name?: string }).name === "grass_sector_0_0") as unknown as {
+    count: number; geometry: { getAttribute(name: string): { count: number } & object };
+  } | undefined;
+  assert.ok(sectorMesh(), "Zielsektor gebaut");
+  const nearGeometry = sectorMesh()!.geometry;
+  const groundCount = sectorMesh()!.count;
+  assert.equal(nearGeometry.getAttribute("position").count, 30, "1.7 m Augenhöhe behält gekrümmte Nahgeometrie");
+  assert.ok(groundCount > 0, "volle Boden-Nahdichte ohne Höhenverdünnung");
+  const buildsBeforeAerial = sys.stats.builds;
+  const uploadRangeCounts = ["aInfo", "aShade", "aTint"].map((name) =>
+    (sectorMesh()!.geometry.getAttribute(name) as unknown as { updateRanges: unknown[] }).updateRanges.length
+  );
+
+  sys.update(16, 16, 34); // 24 m über derselben flachen Grassfläche: F3-artige Flughöhe
+  const aerialGeometry = sectorMesh()!.geometry;
+  const aerialCount = sectorMesh()!.count;
+  assert.notEqual(aerialGeometry, nearGeometry, "Flughöhe schaltet auf die eigene Aerial-Geometrie um");
+  assert.equal(aerialGeometry.getAttribute("position").count, 18, "Aerial bleibt ein günstiges 6-Dreiecks-Büschel");
+  assert.ok(aerialCount < groundCount * 0.8, `24-m-Sicht wird spürbar aber nicht radikal verdünnt: ${aerialCount}/${groundCount}`);
+  assert.ok(aerialCount > groundCount * 0.55, "Aerial-Verdünnung bleibt konservativ");
+  const meanRootWidth = (geometry, curved: boolean) => clumpRowWidths(geometry, curved).reduce((sum, row) => sum + row.root, 0) / 6;
+  const aerialNearWidthRatio = meanRootWidth(aerialGeometry, false) / meanRootWidth(nearGeometry, true);
+  assert.ok(Math.abs(aerialNearWidthRatio - GRASS_AERIAL_WIDTH_FACTOR) < 1e-5, `Aerialbreite ist ${GRASS_AERIAL_WIDTH_FACTOR}× der feineren Nahbreite: ${aerialNearWidthRatio}`);
+  assert.equal(aerialGeometry.getAttribute("aInfo"), nearGeometry.getAttribute("aInfo"), "Aerial teilt weiterhin dieselben Instanzattribute");
+  assert.equal(aerialGeometry.getAttribute("aShade"), nearGeometry.getAttribute("aShade"), "keine Attribut-Rewrites pro Frame");
+  assert.equal(sys.stats.builds, buildsBeforeAerial, "Höhen-LOD triggert keinen Sektor-Rebuild");
+  assert.deepEqual(
+    ["aInfo", "aShade", "aTint"].map((name) =>
+      (sectorMesh()!.geometry.getAttribute(name) as unknown as { updateRanges: unknown[] }).updateRanges.length
+    ),
+    uploadRangeCounts,
+    "Höhen-LOD erzeugt keine zusätzlichen Attribut-Uploads pro Frame",
+  );
+
+  const frozenCount = sectorMesh()!.count;
+  sys.update(16, 16, 34);
+  assert.equal(sectorMesh()!.count, frozenCount, "freeze-stabil: wiederholtes Update ohne Kamerabewegung ändert nichts");
+  assert.equal(sectorMesh()!.geometry, aerialGeometry, "freeze-stabil: keine Geometry-Oszillation");
+
+  sys.update(16, 16, 19); // 9 m clearance: Hysterese-Totzone, aerial bleibt nach dem Aufstieg aktiv
+  assert.equal(sectorMesh()!.geometry, aerialGeometry, "Aerial-Hysterese verhindert Flackern beim Sinken");
+  sys.update(16, 16, 12); // 2 m clearance: eindeutig wieder Bodensicht
+  assert.equal(sectorMesh()!.geometry, nearGeometry, "Rückkehr in Bodenhöhe stellt die Nahsilhouette wieder her");
+  assert.equal(sectorMesh()!.count, groundCount, "Nahdichte wird vollständig wiederhergestellt");
   sys.dispose();
 });
 

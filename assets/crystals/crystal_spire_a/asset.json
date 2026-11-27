@@ -50,5 +50,6 @@
     ],
     "texture_size": 2048
   },
-  "texture_format": "ktx2"
+  "texture_format": "ktx2",
+  "material_class": "crystal"
 }

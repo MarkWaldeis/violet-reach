@@ -16,6 +16,29 @@ export const giantPlanetDirection = new Vector3(0.55, 0.205, 0.808).normalize();
 export const shatteredMoonADirection = new Vector3(0.26, 0.285, 0.922).normalize();
 /** Secondary shattered moon visible in SSW views (F3, G1). */
 export const shatteredMoonBDirection = new Vector3(-0.22, 0.24, 0.94).normalize();
+/**
+ * Small distant broken-moon shard low in the NE haze. Its azimuth/elevation match the
+ * approved G3 sight axis (yaw −0.68, pitch 0) closely enough to anchor that view without
+ * competing with the monumental SE planet/moon group or entering the F1/F2/H2 frusta.
+ * At ≈8.9° elevation it clears the horizon monuments and most of the distant skyline,
+ * while its upper rim just reaches the thin lower edge of the NE cloud deck.
+ */
+const shatteredMoonCYaw = -0.68;
+const shatteredMoonCElevation = 0.155;
+export const shatteredMoonCDirection = new Vector3(
+  -Math.sin(shatteredMoonCYaw) * Math.cos(shatteredMoonCElevation),
+  Math.sin(shatteredMoonCElevation),
+  -Math.cos(shatteredMoonCYaw) * Math.cos(shatteredMoonCElevation),
+).normalize();
+
+/**
+ * Celestial disk radii in the shader's tangent-plane units. At the disk edge these equal
+ * sin(angular radius); tests use asin(radius) when reporting degrees.
+ */
+export const giantPlanetRadius = 0.118;
+export const shatteredMoonARadius = 0.102;
+export const shatteredMoonBRadius = 0.056;
+export const shatteredMoonCRadius = 0.021;
 
 interface CloudCellMeta {
   name: string;
@@ -381,7 +404,7 @@ export function buildCelestialBodiesNode(direction: Node<"vec3">, skyColor: Node
     const P = vec3(giantPlanetDirection);
     const U = normalize(cross(vec3(0, 1, 0), P));
     const V = cross(P, U);
-    const radius = float(0.118);
+    const radius = float(giantPlanetRadius);
     const px = dot(direction, U).div(radius);
     const py = dot(direction, V).div(radius);
     const pzSky = dot(direction, P);
@@ -431,7 +454,17 @@ export function buildCelestialBodiesNode(direction: Node<"vec3">, skyColor: Node
     { cx: 0.86, cy: 0.16, sx: 0.11, sy: 0.06, rot: -0.95, seed: 19.8 },
   ];
 
-  const addShatteredMoon = (moonVec: Vector3, rad: number, tiltAngle: number) => {
+  const addShatteredMoon = (
+    moonVec: Vector3,
+    rad: number,
+    tiltAngle: number,
+    options: { skyBlend?: number; lightweight?: boolean; shadowVisibility?: number; sunU?: number; sunV?: number } = {},
+  ) => {
+    const skyBlend = options.skyBlend ?? 0.18;
+    const lightweight = options.lightweight ?? false;
+    const shadowVisibility = options.shadowVisibility ?? 0;
+    const sunU = options.sunU ?? -0.65;
+    const sunV = options.sunV ?? 0.45;
     const P = vec3(moonVec);
     const U = normalize(cross(vec3(0, 1, 0), P));
     const V = cross(P, U);
@@ -446,25 +479,30 @@ export function buildCelestialBodiesNode(direction: Node<"vec3">, skyColor: Node
     const rx = px.mul(cosT).sub(py.mul(sinT));
     const ry = px.mul(sinT).add(py.mul(cosT));
 
-    // Ridged angular fracture noise carves a razor-crisp craggy canyon bite in the upper-right quadrant
-    const biteN1 = abs(mx_noise_float(vec3(rx.mul(3.8), ry.mul(3.8), 1.3))).mul(0.28);
-    const biteN2 = abs(mx_noise_float(vec3(rx.mul(10.5), ry.mul(10.5), 4.7))).mul(0.10);
+    // Ridged angular fracture noise carves a razor-crisp craggy canyon bite in the upper-right quadrant.
+    // The distant shard keeps the same silhouette language but skips the finest octave: at ~45 px
+    // that octave is only marginally readable, while every noise node here costs full-screen shader work.
+    const biteN1 = abs(mx_noise_float(vec3(rx.mul(3.8), ry.mul(3.8), 1.3))).mul(lightweight ? 0.22 : 0.28);
+    const biteN2 = lightweight ? float(0) : abs(mx_noise_float(vec3(rx.mul(10.5), ry.mul(10.5), 4.7))).mul(0.10);
     const biteX = rx.sub(0.56);
     const biteY = ry.sub(0.48);
     const biteDist = sqrt(biteX.mul(biteX).add(biteY.mul(biteY))).add(biteN1).add(biteN2);
     const intactMask = smoothstep(1.0, 0.982, d2).mul(smoothstep(0.56, 0.578, biteDist));
 
-    // Six sharp polygonal rock plates & shards (razor-crisp anti-aliased edges)
+    // Sharp polygonal rock plates & shards (razor-crisp anti-aliased edges). Distant mode uses
+    // the three dominant plates and one shared jagged field instead of six independent noise samples.
+    const activeChunks = lightweight ? rockChunks.slice(0, 3) : rockChunks;
+    const sharedJagged = lightweight ? abs(mx_noise_float(vec3(rx.mul(8.5), ry.mul(8.5), 13.6))).mul(0.20) : float(0);
     let chunkMask: Node<"float"> = float(0);
     let chunkNxAcc: Node<"float"> = float(0);
     let chunkNyAcc: Node<"float"> = float(0);
-    for (const c of rockChunks) {
+    for (const c of activeChunks) {
       const cosC = Math.cos(c.rot), sinC = Math.sin(c.rot);
       const dx = rx.sub(c.cx), dy = ry.sub(c.cy);
       const ux = dx.mul(cosC).add(dy.mul(sinC)).div(c.sx);
       const uy = dx.mul(-sinC).add(dy.mul(cosC)).div(c.sy);
       const polyDist = max(abs(ux), abs(uy)).mul(0.65).add(abs(ux).add(abs(uy)).mul(0.35));
-      const jagged = abs(mx_noise_float(vec3(rx.mul(8.5), ry.mul(8.5), c.seed))).mul(0.28);
+      const jagged = lightweight ? sharedJagged : abs(mx_noise_float(vec3(rx.mul(8.5), ry.mul(8.5), c.seed))).mul(0.28);
       const m = smoothstep(1.0, 0.975, polyDist.add(jagged));
       chunkMask = max(chunkMask, m);
       chunkNxAcc = chunkNxAcc.add(ux.mul(0.6).mul(m));
@@ -473,7 +511,7 @@ export function buildCelestialBodiesNode(direction: Node<"vec3">, skyColor: Node
 
     const totalMask = max(intactMask, chunkMask).mul(smoothstep(0.0, 0.05, pzSky));
     const crater = mx_noise_float(vec3(px.mul(6.5), py.mul(6.5), nz.mul(4.5))).mul(0.5).add(0.5);
-    const fineCrater = mx_noise_float(vec3(px.mul(16.0), py.mul(16.0), nz.mul(10.0))).mul(0.5).add(0.5);
+    const fineCrater = lightweight ? crater : mx_noise_float(vec3(px.mul(16.0), py.mul(16.0), nz.mul(10.0))).mul(0.5).add(0.5);
     const craterTex = crater.mul(0.68).add(fineCrater.mul(0.32));
 
     const cliffBevel = smoothstep(0.56, 0.74, biteDist).oneMinus().mul(intactMask);
@@ -481,22 +519,34 @@ export function buildCelestialBodiesNode(direction: Node<"vec3">, skyColor: Node
     const fractureShade = color(new Color("#3B4250"));
     const rockAlbedo = mix(dustLight, fractureShade, craterTex.mul(0.76).add(cliffBevel.mul(0.52)).clamp(0, 1));
 
-    const sunProjected = normalize(vec3(sunDir).add(U.mul(-0.65)).add(V.mul(0.45)));
+    const sunProjected = normalize(vec3(sunDir).add(U.mul(sunU)).add(V.mul(sunV)));
     const sphereNormal = normalize(U.mul(px).add(V.mul(py)).sub(P.mul(nz)));
     const chunkLocalNormal = normalize(U.mul(chunkNxAcc).add(V.mul(chunkNyAcc)).sub(P.mul(0.75)));
     const normalWorld = mix(sphereNormal, chunkLocalNormal, chunkMask.mul(intactMask.oneMinus()));
     const nDotL = dot(normalWorld, sunProjected);
     const phase = smoothstep(-0.10, 0.34, nDotL);
     const moonLit = mix(fractureShade.mul(1.05), rockAlbedo.mul(1.08), phase.mul(0.88).add(0.12));
-    const sunlitMask = phase.max(chunkMask.mul(0.78));
-    const veiledMoon = mix(skyColor, mix(moonLit, skyColor, float(0.18)), sunlitMask);
+    const sunlitMask = shadowVisibility > 0
+      ? max(phase.max(chunkMask.mul(0.78)), float(shadowVisibility))
+      : phase.max(chunkMask.mul(0.78));
+    const veiledMoon = mix(skyColor, mix(moonLit, skyColor, float(skyBlend)), sunlitMask);
 
     const aboveHorizon = smoothstep(0.02, 0.13, direction.y);
     result = mix(result, veiledMoon, totalMask.mul(aboveHorizon));
   };
 
-  addShatteredMoon(shatteredMoonADirection, 0.102, 0.55);
-  addShatteredMoon(shatteredMoonBDirection, 0.056, -0.42);
+  addShatteredMoon(shatteredMoonADirection, shatteredMoonARadius, 0.55);
+  addShatteredMoon(shatteredMoonBDirection, shatteredMoonBRadius, -0.42);
+  // Low-contrast distant shard: same fractured procedural language as A/B, but small,
+  // slightly more sky-veiled and noise-reduced. Unlike anti-sun A/B it uses the unbent sun vector;
+  // a low earthshine-style floor keeps the dark side of this high-phase NE fragment readable.
+  addShatteredMoon(shatteredMoonCDirection, shatteredMoonCRadius, 0.32, {
+    skyBlend: 0.30,
+    lightweight: true,
+    shadowVisibility: 0.28,
+    sunU: 0,
+    sunV: 0,
+  });
 
   return result;
 }

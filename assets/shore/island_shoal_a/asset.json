@@ -1,0 +1,38 @@
+{
+  "id": "island_shoal_a",
+  "category": "shore",
+  "title": "Flachwasser-Insel Scholle A",
+  "description": "Creditfreie, heroische aber natürliche Flachwasser-Insel/Scholle für das Split-Disc-Monument im Spiegelsee: eine niedrige, unregelmäßige Kalk-/Sandsteinbank mit geschlossener Unterseite, abgestuften horizontalen Kreidebänken, senkrechten Bruchspuren, warmen Sandsteinpocketen und einem zentralen, nur leicht gewellten Monumentplateau von etwa 11–13 m Durchmesser. Ein dunkler, glatterer Feuchte-/Wasserlinienzug liegt auf den oberen Flanken; wenige kantige Brocken sind in die Terrassen eingelassen. Sparsame olivgrüne Gras- und Moosbesatzung sitzt nur auf der oberen trockenen Kappe, als Volumen ohne Vegetationskarten oder papierdünne Flächen. Bei Basis z=0 ist die Scholle für einen Seegrund um ca. 175 m und Wasser bei 180 m dimensioniert, sodass die Oberkante typischerweise knapp über dem Spiegel liegt.",
+  "target_size_m": [
+    34.0,
+    27.0,
+    5.5
+  ],
+  "lod_triangles": [
+    12000,
+    4000,
+    1200
+  ],
+  "texture_size": 2048,
+  "material_class": "rock_chalk",
+  "material_class_notes": "Dominant geschichtetes Kalkgestein; Sandstein, nasse Uferzone und sparsame Gras-/Mooskappe sind sekundäre, lokal begrenzte Materialfarben innerhalb desselben Felsassets.",
+  "texture_format": "ktx2",
+  "status": "blender_review",
+  "builder": "devin-island-shoal-builder",
+  "review": null,
+  "references": [
+    "assets/shore/island_shoal_a/concept_prompt.txt",
+    "assets/shore/island_shoal_a/concept_grok_error.txt",
+    "assets/shore/island_shoal_a/reference_board.md",
+    "art/reference/ref_10_lake_shore.jpg",
+    "art/reference/ref_22_chalk_cliff_layers.jpg",
+    "art/reference/ref_28_disc_lake_island.jpg",
+    "art/reference/ref_29_shallow_beach_water.jpg",
+    "art/reference/ref_30_layered_rock_disc.jpg",
+    "art/reference/ref_31_rock_ledge_shore.jpg",
+    "assets/shore/lake_shore_a/review/sheet.jpg",
+    "assets/rocks/shore_rocks_wet_a/review/sheet.jpg",
+    "assets/rocks/cliff_chalk_wall_a/review/sheet.jpg",
+    "assets/monuments/monument_split_disc_a/review/sheet.jpg"
+  ]
+}

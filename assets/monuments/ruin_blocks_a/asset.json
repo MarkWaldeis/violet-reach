@@ -1,0 +1,28 @@
+{
+  "id": "ruin_blocks_a",
+  "category": "monuments",
+  "title": "Ruinenblöcke Elfenbeinkalkstein A",
+  "description": "Kreditfreies Blender-Prozeduralasset: modular wirkende, geerdete Gruppe mehrerer elfenbeinweißer Ruinenblöcke und Werksteinbruchstücke (~7,2 × 4,4 × 2,8 m; Einzelteile ca. 0,8–3,8 m) für Phase-6-Ruinenfelder. Matte verwitterte Kreide-/Sandsteinoptik in monument_white #E8DABE / stone_weathered #DCCDB1, gebrochene Kanten, echte Rissaussparungen, niedriges Erd-/Moosbett und mindestens 12 cm, lokal bis ca. 30 cm tiefe Eingrabung. Keine Meshy- oder externen 3D-Credits.",
+  "target_size_m": [
+    7.2,
+    4.4,
+    2.8
+  ],
+  "lod_triangles": [
+    18000,
+    6000,
+    1600
+  ],
+  "texture_size": 1024,
+  "material_class": "stone_white",
+  "texture_format": "ktx2",
+  "status": "blender_review",
+  "builder": "devin-phase6-ruin-blocks",
+  "review": null,
+  "references": [
+    "assets/monuments/ruin_blocks_a/reference_concept_fallback.png",
+    "art/reference/ref_06_weathered_wall.jpg",
+    "art/reference/ref_03_canyon_cliffs.jpg",
+    "art/reference/ref_04_white_ribbed_arches.jpg"
+  ]
+}
