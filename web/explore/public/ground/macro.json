@@ -37,7 +37,7 @@
       ],
       "metres_per_pixel": 2.0,
       "color_space": "sRGB (RGB) + linear AO (A)",
-      "bytes": 5999498,
+      "bytes": 6243400,
       "channels": {
         "R": "Macro ground & grass albedo tint R (sRGB, aligned with art/palette.json)",
         "G": "Macro ground & grass albedo tint G (sRGB, aligned with art/palette.json)",
@@ -53,7 +53,7 @@
       ],
       "metres_per_pixel": 4.0,
       "color_space": "linear",
-      "bytes": 773308,
+      "bytes": 849730,
       "channels": {
         "R": "grass weight (0..1)",
         "G": "grass_dry weight (0..1)",
@@ -85,7 +85,7 @@
       ],
       "metres_per_pixel": 4.0,
       "color_space": "linear",
-      "bytes": 3136688,
+      "bytes": 3215886,
       "channels": {
         "R": "grass_density (0..1) — zero in water, on gravel paths, on steep rock >=32 deg, and on dry beach sand",
         "G": "grass_height_scale (0..1)",
@@ -98,8 +98,8 @@
     "height_min_m": 97.52,
     "height_max_m": 1731.36,
     "slope_max_deg": 89.46,
-    "ao_min": 0.171,
-    "ao_mean": 0.757,
+    "ao_min": 0.141,
+    "ao_mean": 0.733,
     "grass_coverage_fraction": 0.4139,
     "rock_coverage_fraction": 0.5883
   }

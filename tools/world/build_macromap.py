@@ -427,12 +427,22 @@ def compute_canopy_shadow(
     )
     forest_macro *= 1.0 - smoothstep(18.0, 31.0, slope_2k)
     forest_macro *= smoothstep(2.5, 10.0, above_2k)
-    crown_clumps = smoothstep(
-        0.25,
-        0.78,
-        0.5 + 0.35 * value_noise(x_grid_2k, y_b_2k, 22.0, 64) + 0.20 * value_noise(x_grid_2k, y_b_2k, 11.0, 68),
+
+    # Crown-scale structure belongs in the 4k target map, not in a bilinearly blurred 2k field.
+    # Broadcast the 1D axes instead of materialising two full meshgrids; the resulting noise is
+    # still one 4096² float layer at a time. A nonzero woodland floor plus shaped clumps avoids
+    # the old multiplicative 0.5×0.5×0.36≈0.09 washout while preserving clearings.
+    x_row_4k = x_axis_4k[None, :]
+    y_col_4k = -z_axis_4k[:, None]
+    crown_detail_4k = smoothstep(
+        0.24,
+        0.74,
+        0.5
+        + 0.35 * value_noise(x_row_4k, y_col_4k, 22.0, 64)
+        + 0.20 * value_noise(x_row_4k, y_col_4k, 11.0, 68),
     )
-    proc_canopy_2k = forest_macro * crown_clumps * 0.36
+    crown_detail_2k = downsample_2x(crown_detail_4k)
+    proc_canopy_2k = forest_macro * (0.14 + 0.46 * crown_detail_2k)
 
     # Smoothly mask out procedural canopy inside the 1x1 km Spiegelsee slice where exact placements govern
     sb_min_x = float(slice_bounds.get("minX", -100.0))
@@ -835,8 +845,16 @@ def main(argv: list[str] | None = None) -> None:
     c_strata = np.array(palette["canyon_strata"]["linear_rgb"], dtype=np.float32)  # #9B8E7E
     c_water_deep = np.array(palette["water_deep"]["linear_rgb"], dtype=np.float32)  # #254447
 
-    # Subtle meadow hue/value variation so grass & ground share rich organic patches
-    patch_tint = (0.90 + 0.20 * noise_patches_4k)[..., None]
+    # Subtle meadow hue/value variation so grass & ground share rich organic patches. The
+    # native 4k fine octave is deliberately low-amplitude: it supplies aerial tussock/shrub grain
+    # that close grass cannot carry at 350 m AGL, without turning close terrain into cow-spots.
+    x_row_4k = axis_4k[None, :]
+    y_col_4k = -axis_4k[:, None]
+    meadow_fine_4k = 0.5 + 0.5 * (
+        0.46 * value_noise(x_row_4k, y_col_4k, 15.0, 108)
+        + 0.54 * value_noise(x_row_4k, y_col_4k, 38.0, 109)
+    )
+    patch_tint = (0.88 + 0.18 * noise_patches_4k + 0.10 * (meadow_fine_4k - 0.5))[..., None]
     canopy_shade_mix = np.clip((1.0 - canopy_ao_4k) * 1.35 + hollow_4k * 0.25, 0.0, 0.75)[..., None]
     c_grass_varied = (
         c_grass_lit[None, None, :] * (1.0 - canopy_shade_mix) + c_grass_shadow[None, None, :] * canopy_shade_mix
@@ -854,6 +872,35 @@ def main(argv: list[str] | None = None) -> None:
         + w_chalk_4k[..., None] * c_chalk[None, None, :] * (0.94 + 0.12 * strata_band_4k)[..., None]
         + w_strata_4k[..., None] * c_strata[None, None, :] * (0.92 + 0.14 * noise_patches_4k)[..., None]
     )
+
+    # Correlate a small part of the fine meadow grain with moisture and existing grass weights.
+    # This darkens only open vegetated ground (never rock/path/shore) toward leaf_green and gives
+    # H1/H2 a structural meadow floor while keeping the palette hue-safe.
+    open_meadow_4k = np.clip(w_grass_4k + w_grass_dry_4k, 0.0, 1.0) * (1.0 - rock_mask_4k) * dry_land
+    meadow_dark_4k = (
+        smoothstep(0.50, 0.82, meadow_fine_4k + 0.18 * (moisture_4k - 0.5))
+        * open_meadow_4k
+        * 0.36
+    )[..., None]
+    macro_lin_4k = macro_lin_4k * (1.0 - meadow_dark_4k) + c_grass_shadow[None, None, :] * meadow_dark_4k
+
+    # Tree canopy is not merely darkened soil: from H1/H2 the visible surface is the crown volume
+    # itself. Once the baked crown occupancy is significant, replace part of the ground-layer colour
+    # with a hue-safe olive leaf/canopy mixture. This is what gives distant woods a continuous
+    # structural read while exact clearings, rock, paths and shores remain untouched.
+    canopy_darkness_4k = 1.0 - canopy_ao_4k
+    canopy_cover_4k = (
+        smoothstep(0.055, 0.34, canopy_darkness_4k)
+        * (1.0 - rock_mask_4k)
+        * dry_land
+        * (1.0 - np.maximum(wet_shore_4k, dry_beach_4k))
+        * 0.68
+    )[..., None]
+    canopy_tone_4k = (0.78 + 0.34 * noise_patches_4k + 0.16 * (meadow_fine_4k - 0.5))[..., None]
+    c_canopy_4k = (
+        (0.62 * c_grass_shadow + 0.38 * c_grass_lit)[None, None, :] * canopy_tone_4k
+    )
+    macro_lin_4k = macro_lin_4k * (1.0 - canopy_cover_4k) + c_canopy_4k * canopy_cover_4k
 
     # Deepen underwater basin color slightly for realistic depth when seen through transparent water
     deep_water_mix = (smoothstep(-0.3, -4.5, above_water_4k) * underwater_4k)[..., None]

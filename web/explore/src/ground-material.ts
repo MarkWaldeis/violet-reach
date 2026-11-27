@@ -59,8 +59,8 @@ const STRATA_SLOPE_PER_TILE = 0.12;
 const DISTANT_CLIFF_CALM_START = 280;
 const DISTANT_CLIFF_CALM_END = 950;
 const MACRO_GROUND_BLEND_START = 280;
-const MACRO_GROUND_BLEND_END = 1250;
-const MACRO_GROUND_BLEND_STRENGTH = 0.74;
+const MACRO_GROUND_BLEND_END = 1050;
+const MACRO_GROUND_BLEND_STRENGTH = 0.82;
 const MACRO_GROUND_ALPINE_BOOST = 0.18;
 const MACRO_GROUND_COLOR_MIX = 0.82;
 
@@ -817,7 +817,7 @@ export function terrainMaterial(surface?: SurfaceData) {
     .mul(canopyAltitude)
     .mul(cliffMask.oneMinus())
     .mul(vegetationCover)
-    .mul(0.48);
+    .mul(0.28);
   const canopyAlbedo = nearAlbedo.mul(vec3(0.72, 0.85, 0.60));
   const landscapeAlbedo = mix(nearAlbedo, canopyAlbedo, canopyMask);
 

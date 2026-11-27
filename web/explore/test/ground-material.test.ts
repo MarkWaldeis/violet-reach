@@ -128,7 +128,7 @@ test("Phase 6 macro ground colour stays out of close views and carries distant l
   const mid = evaluateMacroGroundBlend(700, 220);
   assert.ok(mid > 0.18);
   assert.ok(mid < 0.55);
-  assert.equal(evaluateMacroGroundBlend(1250, 220), 0.74);
+  assert.equal(evaluateMacroGroundBlend(1050, 220), 0.82);
   assert.ok(evaluateMacroGroundBlend(1250, 420) > evaluateMacroGroundBlend(1250, 220));
   assert.ok(evaluateMacroGroundBlend(2400, 700) <= 0.9);
 });
