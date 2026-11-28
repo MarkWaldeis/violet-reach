@@ -199,6 +199,32 @@ class FarvegGeneratorTests(unittest.TestCase):
         self.assertLessEqual(float(spacing[1]), params.edge_spacing_max_m)
         self.assertAlmostEqual(float(spacing[2]), params.core_spacing_min_m, places=5)
 
+    def test_open_savanna_density_is_clumped_but_floor_controlled(self):
+        x = np.linspace(-600.0, 600.0, 181, dtype=np.float32)
+        z = np.linspace(-600.0, 600.0, 181, dtype=np.float32)
+        density, clump = farveg.savanna_open_density(x, z, 0.022, 20.0)
+        self.assertTrue(np.all(density >= 0.0))
+        self.assertLess(float(density.min()), 0.022 * 0.5)
+        self.assertGreater(float(density.max()), 0.022 * 3.0)
+        self.assertGreater(float(clump.max()) - float(clump.min()), 0.5)
+        again, _ = farveg.savanna_open_density(x, z, 0.022, 20.0)
+        np.testing.assert_array_equal(density, again)
+        zero, zero_clump = farveg.savanna_open_density(x, z, 0.0, 8.0)
+        self.assertEqual(float(zero.max()), 0.0)
+        self.assertEqual(float(zero_clump.max()), 0.0)
+
+    def test_noise_deformed_slice_transition_breaks_rectangular_iso_lines(self):
+        bounds = {"minX": 0.0, "minZ": 0.0, "maxX": 60.0, "maxZ": 60.0}
+        # Same nominal 30 m outside distance on four different sides/directions.
+        x = np.array([-30.0, 90.0, 30.0, 30.0])
+        z = np.array([30.0, 30.0, -30.0, 90.0])
+        plain = farveg.slice_density_factor(x, z, bounds, 90.0, 0.0)
+        deformed = farveg.slice_density_factor(x, z, bounds, 90.0, 42.0)
+        np.testing.assert_allclose(plain, plain[0], rtol=1e-6, atol=1e-6)
+        self.assertGreater(float(deformed.max()) - float(deformed.min()), 0.01)
+        inside = farveg.slice_density_factor(np.array([30.0]), np.array([30.0]), bounds, 90.0, 42.0)
+        self.assertEqual(float(inside[0]), 0.0)
+
     def test_spacing_and_no_obvious_exact_raster(self):
         params = make_params()
         result = dense_result(make_env(), params)

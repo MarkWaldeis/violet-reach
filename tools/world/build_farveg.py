@@ -108,7 +108,9 @@ class FarvegParams:
     tree_line_end_m: float = 650.0
     min_above_water_m: float = 2.5
     water_edge_buffer_m: float = 1.5
-    slice_transition_m: float = 120.0
+    slice_transition_m: float = 90.0
+    slice_noise_m: float = 42.0
+    savanna_clump_multiplier: float = 20.0
     path_clearance_m: float = 5.0
     monument_clearance_m: float = 8.0
     embed_min_m: float = 1.0
@@ -207,10 +209,47 @@ def rect_outside_distance(x: np.ndarray, z: np.ndarray, bounds: dict[str, float]
     return np.hypot(dx, dz).astype(np.float32)
 
 
-def slice_density_factor(x: np.ndarray, z: np.ndarray, bounds: dict[str, float], transition_m: float) -> np.ndarray:
+def slice_density_factor(
+    x: np.ndarray,
+    z: np.ndarray,
+    bounds: dict[str, float],
+    transition_m: float,
+    noise_m: float = 0.0,
+) -> np.ndarray:
+    inside = rect_inside_mask(x, z, bounds)
     if transition_m <= 0.0:
-        return np.where(rect_inside_mask(x, z, bounds), 0.0, 1.0).astype(np.float32)
-    return macro.smoothstep(0.0, float(transition_m), rect_outside_distance(x, z, bounds))
+        return np.where(inside, 0.0, 1.0).astype(np.float32)
+    distance = rect_outside_distance(x, z, bounds)
+    if noise_m > 0.0:
+        # Smooth low-frequency deformation breaks the otherwise exact rounded-rectangle
+        # density iso-lines without ever letting far vegetation enter the hard core.
+        distance = np.maximum(distance + macro.value_noise(x, -z, 230.0, 76) * float(noise_m), 0.0)
+    factor = macro.smoothstep(0.0, float(transition_m), distance)
+    return np.where(inside, 0.0, factor).astype(np.float32)
+
+
+def savanna_open_density(
+    x: np.ndarray,
+    z: np.ndarray,
+    floor: float,
+    clump_multiplier: float,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Clumped open-country density instead of a mathematically uniform dotted floor.
+
+    The floor remains the overall abundance control: a zero floor means no savanna
+    trees at all.  Where low-frequency clump noise is weak, only rare accents remain;
+    where it is strong, density rises into the existing tighter spacing curve and the
+    same candidate grid forms loose groves rather than evenly salted points.
+    """
+    if floor <= 0.0 or clump_multiplier <= 0.0:
+        zeros = np.zeros_like(np.asarray(x, dtype=np.float32))
+        return zeros, zeros
+    broad = macro.value_noise(x, -z, 380.0, 74)
+    medium = macro.value_noise(x, -z, 135.0, 75)
+    clump = macro.smoothstep(-0.12, 0.38, broad + 0.35 * medium)
+    shaped = np.power(clump, 1.7)
+    density = float(floor) * (0.15 + float(clump_multiplier) * shaped)
+    return np.clip(density, 0.0, 1.0).astype(np.float32), clump.astype(np.float32)
 
 
 def path_edge_distance_points(x: np.ndarray, z: np.ndarray, paths: list[dict]) -> np.ndarray:
@@ -477,11 +516,16 @@ def generate_instances(
     # Sparse savanna accents use a small unscaled floor; the slice ramp also
     # multiplies that floor so the hand-dressed core does not leak crowns.
     calibrated_forest = np.clip(forest_density * float(params.density_scale), 0.0, 1.0)
-    density = np.maximum(calibrated_forest, float(params.savanna_floor))
+    savanna_density, savanna_clump = savanna_open_density(
+        x, z, float(params.savanna_floor), float(params.savanna_clump_multiplier)
+    )
+    density = np.maximum(calibrated_forest, savanna_density)
     # Sparse savanna accents are still full-sized trees, not alpine shrubs: the treeline
     # must gate the floor as well as the dense-forest term.
     density = density * altitude_factor
-    density = density * slice_density_factor(x, z, env.slice_bounds, params.slice_transition_m)
+    density = density * slice_density_factor(
+        x, z, env.slice_bounds, params.slice_transition_m, params.slice_noise_m
+    )
     density = np.clip(density, 0.0, 1.0).astype(np.float32)
 
     accept_probability = density
@@ -515,6 +559,7 @@ def generate_instances(
         "rejected_steep_slope": int(np.count_nonzero(slope_deg >= float(params.hard_slope_deg))),
         "treeline_faded_candidates": int(np.count_nonzero(altitude_factor < 0.999)),
         "mean_effective_density": round(float(density[hard_valid].mean()) if np.any(hard_valid) else 0.0, 5),
+        "mean_savanna_clump": round(float(savanna_clump[hard_valid].mean()) if np.any(hard_valid) else 0.0, 5),
     }
 
     if len(kept_indices) == 0:
@@ -718,6 +763,8 @@ def build_payload(result: GenerationResult, env: FarvegEnvironment, params: Farv
             "candidate_jitter_fraction": float(params.candidate_jitter_fraction),
             "density_scale": float(params.density_scale),
             "savanna_floor": float(params.savanna_floor),
+            "savanna_clump_multiplier": float(params.savanna_clump_multiplier),
+            "slice_noise_m": float(params.slice_noise_m),
             "target_instances": int(params.target_instances),
             "max_instances": int(params.max_instances),
             "hard_slope_deg": float(params.hard_slope_deg),
@@ -796,6 +843,8 @@ def main(argv: list[str] | None = None) -> None:
         min_above_water_m=args.min_above_water,
         water_edge_buffer_m=args.water_edge_buffer,
         slice_transition_m=args.slice_transition,
+        slice_noise_m=FarvegParams.slice_noise_m,
+        savanna_clump_multiplier=FarvegParams.savanna_clump_multiplier,
         path_clearance_m=args.path_clearance,
         monument_clearance_m=args.monument_clearance,
     )

@@ -302,6 +302,14 @@ Median aus 3 unabhängigen Prüfern (`reviewer_a`, `reviewer_b`, `reviewer_c`; E
 - **Bodenregression:** `phase6-farveg-density-regression1` zeigt in G3 keine neue Artefaktbildung; die zusätzlichen Fernkronen bleiben im Hintergrund eine moderate Bereicherung. G3 liegt bei `2.777.395` Dreiecken/`283` Draws, davon Farveg etwa `166k` — mehr als der erste Pilot, aber weiterhin ohne zusätzliche Passes und innerhalb des bisherigen Nahbudgets.
 - **Verifikation:** `test_build_farveg.py` **13/13**, Explorer-Suite **186/186**, TypeScript/Vite-Build und Asset-Gate **38/38** grün.
 
+### Farveg-Verteilung: klumpige offene Landschaft und deformierte Slice-Kante
+
+- **Befund des unabhängigen Audits:** die erste produktive Verteilung erzeugte mathematisch garantiert gleichmäßige Savannenpunkte, weil `savanna_floor` flach war und das variable Spacing selbst offene Baumgruppen bei ca. 110 m hielt. Zusätzlich war die 120-m-Slice-Rampe exakt rechteckparallel und erzeugte einen künstlichen Low-Density-Halo um den handgepflegten Ausschnitt.
+- **Patch:** `build_farveg.py` moduliert die offene Fläche jetzt mit niederfrequentem 380/135-m-Clumpnoise. Schwache Bereiche behalten nur sehr seltene Akzente, starke Bereiche steigen in echte Gehölz-/Parklanddichte. Die Slice-Rampe ist kürzer (`90 m`) und um `±42 m` noise-deformiert; der harte Slice-Kern bleibt weiterhin absolut frei. Produktiv wurden **6153 Instanzen** (`768707` Bytes) erzeugt, Varianten Oak/Beech/Willow/Ancient `2583/2536/759/275`.
+- **Messung `phase6-crystal-farveg-test2`:** H1 `1436` sichtbare Farveg-Instanzen/`171.695` Dreiecke/`8` Draws; H2 `1198`/`146.386`/`8`; G6 `1237`/`150.332`/`8`. Das nähert H2 dem angestrebten +200k-Bereich weiter an, ohne Schatten-, Reflexions- oder zusätzliche Drawcall-Kosten.
+- **Visueller Befund:** H1/H2 zeigen jetzt erkennbare Gehölzcluster statt nur gleichmäßig gesalzener Einzelpunkte; die offene Savanne bleibt bewusst nicht geschlossener Wald. H2 bleibt wegen der sehr großen sichtbaren Weltfläche weiterhin luftig, ist aber deutlich glaubwürdiger strukturiert.
+- **Verifikation:** `test_build_farveg.py` **15/15**, fokussierte Farveg-/Welt-Tests grün. Der Slice-Rand-LOD3-Kompromiss bleibt dokumentiert, ist aber gegenüber Verteilung/Rechteckhalo der kleinere Restfehler.
+
 ### F3-Rippenkrone: asset-lokale Mineralstruktur und moderatere Sockelsetzung
 
 - **Befund:** zwei getrennte Probleme wurden vermischt. Die Rippenkrone wirkte zu glatt, weil der signed MaterialX-Perlin auch bei scheinbar großen Albedo-Amplituden nur eine sehr kleine effektive Variation lieferte. Gleichzeitig liegt die Krone auf einem über 90 m mehr als 20 m abfallenden Uferhang; ein einzelner `y_offset` kann keine perfekte horizontale Terrasse ersetzen.
