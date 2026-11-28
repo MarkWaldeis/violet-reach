@@ -46,6 +46,8 @@ export interface DetailClassTuning {
   readonly noiseTileM: number;
   /** metres; large-scale albedo variation can outlive the normal-detail octave on huge monuments. */
   readonly noiseFadeEndM: number;
+  /** Optional normalization for signed low-amplitude MaterialX Perlin noise. */
+  readonly noiseGain?: number;
 }
 
 function freezeTuning(tuning: DetailClassTuning): DetailClassTuning {
@@ -133,6 +135,23 @@ export const DETAIL_CLASS_TUNING: Readonly<Record<string, DetailClassTuning>> = 
 
 export function detailTuningForClass(cls: string): DetailClassTuning {
   return DETAIL_CLASS_TUNING[cls] ?? DEFAULT_DETAIL_TUNING;
+}
+
+const RIB_CROWN_DETAIL_TUNING = freezeTuning({
+  ...DETAIL_CLASS_TUNING.stone_white,
+  // At 250-500 m the ordinary 7 m noise is only a faint +/-2-3% signed Perlin variation.
+  // The crown needs broader mineral banding within individual 6-13 m ribs, so its override
+  // is deliberately stronger while remaining asset-local rather than changing all white stone.
+  albedoNoise: 0.14,
+  noiseTileM: 8.0,
+  noiseGain: 8.0,
+  noiseFadeEndM: 700,
+});
+
+/** Per-asset exceptions for structures whose scale makes class-wide detail wavelengths invisible. */
+export function detailTuningForAsset(assetId: string, cls: string): DetailClassTuning {
+  if (assetId === "monument_rib_crown_a" && cls === "stone_white") return RIB_CROWN_DETAIL_TUNING;
+  return detailTuningForClass(cls);
 }
 
 const assetClassMap = new Map<string, string>();
@@ -264,7 +283,8 @@ export function applyAssetDetailMap(material: Material, assetId: string): Materi
   }
 
   let byClass = patchedCache.get(material);
-  if (byClass?.has(cls)) return byClass.get(cls)!;
+  const patchKey = `${assetId}:${cls}`;
+  if (byClass?.has(patchKey)) return byClass.get(patchKey)!;
 
   let nodeMat: MeshStandardNodeMaterial;
   if (material instanceof MeshStandardNodeMaterial) {
@@ -287,7 +307,7 @@ export function applyAssetDetailMap(material: Material, assetId: string): Materi
   nodeMat.side = material.side;
   nodeMat.alphaToCoverage = material.alphaToCoverage;
 
-  const tuning = detailTuningForClass(cls);
+  const tuning = detailTuningForAsset(assetId, cls);
   const p = positionWorld;
   const nW = normalWorldGeometry.normalize();
   const blend = abs(nW).pow(4);
@@ -373,7 +393,7 @@ export function applyAssetDetailMap(material: Material, assetId: string): Materi
     .add(roughMacroSignal.mul(tuning.albedoMicro).mul(0.85).mul(macroFade));
   if (tuning.albedoNoise > 0) {
     const noisePos = p.mul(float(1 / tuning.noiseTileM)).add(vec3(17.13, 41.7, 9.31));
-    luminanceDetail = luminanceDetail.add(mx_noise_float(noisePos).mul(tuning.albedoNoise).mul(noiseFade));
+    luminanceDetail = luminanceDetail.add(mx_noise_float(noisePos).mul(tuning.noiseGain ?? 1).clamp(-1, 1).mul(tuning.albedoNoise).mul(noiseFade));
   }
   if (cls === "stone_white") {
     // Weathered pale monuments are defined more by long vertical runoff than by isotropic dirt.
@@ -412,6 +432,6 @@ export function applyAssetDetailMap(material: Material, assetId: string): Materi
     byClass = new Map<string, Material>();
     patchedCache.set(material, byClass);
   }
-  byClass.set(cls, nodeMat);
+  byClass.set(patchKey, nodeMat);
   return nodeMat;
 }

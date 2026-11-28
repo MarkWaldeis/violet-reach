@@ -185,6 +185,15 @@ test("split-disc monument is grounded on a visible island shoal", () => {
   assert.equal(monument.y_offset, 4.6);
 });
 
+test("rib crown keeps its monumental scale but is seated deeply enough for the sloped shore", () => {
+  const { placements } = JSON.parse(readFileSync(worldFiles().get("placements.json")!, "utf8"));
+  const crown = placements.find((p: { asset: string; x: number; z: number }) => p.asset === "monument_rib_crown_a" && p.x === 150 && p.z === 1830);
+  assert.ok(crown, "the monumental rib crown is missing");
+  assert.equal(crown.scale, 1, "the authored >100 m crown scale remains intact");
+  assert.equal(crown.yaw, -1.85, "the crown keeps its composed open-side orientation");
+  assert.ok(crown.y_offset <= -2.2 && crown.y_offset >= -3.2, `crown y_offset ${crown.y_offset} is outside the grounded-but-visible footing band`);
+});
+
 test("ruin field forms a distributed slope band with restrained debris", () => {
   const { placements } = JSON.parse(readFileSync(worldFiles().get("placements.json")!, "utf8"));
   const walls = placements.filter((p: { asset: string; scatter?: unknown }) => p.asset === "ruin_wall_a" && !p.scatter);

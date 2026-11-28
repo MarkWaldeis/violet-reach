@@ -6,7 +6,7 @@ import {
 } from "three/webgpu";
 import { float, vec3, vec4 } from "three/tsl";
 import {
-  applyAssetDetailMap, DETAIL_CLASS_TUNING, detailClassForMaterial, detailMapsTestHooks,
+  applyAssetDetailMap, DETAIL_CLASS_TUNING, detailClassForMaterial, detailMapsTestHooks, detailTuningForAsset,
   prepareDetailMapsForAssets,
 } from "../src/detail-maps.ts";
 
@@ -207,6 +207,28 @@ test("existing node material color, roughness and normal graphs are composed rat
   assert.equal(base.roughnessNode, originalRoughnessNode);
   assert.equal(base.normalNode, originalNormalNode);
   assert.equal(applyAssetDetailMap(base, "unit_monument"), detailed);
+  detailMapsTestHooks.reset();
+});
+
+test("rib crown receives an asset-local large-scale mineral tuning without changing ordinary white stone", () => {
+  const crown = detailTuningForAsset("monument_rib_crown_a", "stone_white");
+  const ordinary = detailTuningForAsset("column_white_a", "stone_white");
+  assert.equal(crown.noiseTileM, 8.0);
+  assert.equal(crown.albedoNoise, 0.14);
+  assert.equal(crown.noiseFadeEndM, 700);
+  assert.equal(crown.noiseGain, 8.0);
+  assert.equal(ordinary, DETAIL_CLASS_TUNING.stone_white);
+  assert.ok(crown.albedoNoise <= 0.14, "even the crown exception remains a mineral tint variation, not paint");
+  assert.ok(Object.isFrozen(crown));
+
+  detailMapsTestHooks.reset();
+  detailMapsTestHooks.registerAssetClass("monument_rib_crown_a", "stone_white");
+  detailMapsTestHooks.registerAssetClass("column_white_a", "stone_white");
+  detailMapsTestHooks.registerDetailClass("stone_white", makeLoadedDetail(0.5, 0.78));
+  const base = new MeshStandardMaterial({ roughness: 0.66 });
+  const crownDetail = applyAssetDetailMap(base, "monument_rib_crown_a");
+  const ordinaryDetail = applyAssetDetailMap(base, "column_white_a");
+  assert.notEqual(crownDetail, ordinaryDetail, "asset-specific tuning must not share the class-only cached material");
   detailMapsTestHooks.reset();
 });
 
