@@ -69,8 +69,9 @@ export async function sliceAssets(slice: Slice, terrain: TerrainStream, params: 
     readJSON<{ placements: Placement[] }>("./placements.json"), readJSON<Hydrology>("./hydrology.json"),
   ]);
   const entries = slicePlacementEntries(document.placements, slice.bounds, params);
-  const instances = expandSlicePlacements(entries, slice, terrain, hydrology);
+  const skipAssets = new Set((params.get("skipassets") ?? "").split(",").map((id) => id.trim()).filter(Boolean));
+  const instances = expandSlicePlacements(entries, slice, terrain, hydrology).filter((p) => !skipAssets.has(p.asset));
   const maxDistance = params.has("assetDistance") ? Number(params.get("assetDistance")) : undefined;
   if (maxDistance !== undefined && (!Number.isFinite(maxDistance) || maxDistance <= 0)) throw new Error("assetDistance muss positiv sein");
-  return InstanceAssets.load(instances, { maxDistance, distanceScale }, slice.asset_options, renderer);
+  return InstanceAssets.load(instances, { maxDistance, distanceScale }, slice.asset_options, renderer, !params.has("nodetail"));
 }

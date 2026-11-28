@@ -3,7 +3,7 @@
 // instances. This runtime deliberately uses only the approved tree LOD3 meshes: no shadow
 // passes, no reflection layer, no per-instance LOD switching and no placeholder billboards.
 import {
-  Box3, Color, Frustum, Group, InstancedMesh, Matrix4, Mesh, PerspectiveCamera, Quaternion,
+  Box3, Color, FrontSide, Frustum, Group, InstancedMesh, Matrix4, Mesh, PerspectiveCamera, Quaternion,
   Sphere, Vector3, type BufferGeometry, type Material, type WebGPURenderer,
 } from "three/webgpu";
 import { loadAssetGLB } from "./asset-gltf.ts";
@@ -94,12 +94,14 @@ export function parseFarvegPayload(value: unknown): FarvegPayload {
   return { format: FARVEG_FORMAT, version: FARVEG_VERSION, instance_count: raw.instance_count as number, instances };
 }
 
-/** Clone a canopy material for far vegetation and reduce only its emissive translucency floor. */
+/** Clone a canopy material for far vegetation, reduce its emissive translucency floor and
+ * front-side-rasterize the already simplified distant canopy shells to avoid double alpha fill. */
 export function cloneFarCanopyMaterial(source: Material, emissionScale: number): Material {
   if (!Number.isFinite(emissionScale) || emissionScale < 0 || emissionScale > 1) throw new Error("Invalid far canopy emission scale");
   const material = source.clone() as Material & { emissive?: Color; emissiveIntensity?: number };
   if (typeof material.emissiveIntensity === "number") material.emissiveIntensity *= emissionScale;
   else material.emissive?.multiplyScalar(emissionScale);
+  material.side = FrontSide;
   return material;
 }
 

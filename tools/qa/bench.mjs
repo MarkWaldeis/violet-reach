@@ -1,5 +1,5 @@
 // One command for the performance report (GRAFIK_PLAN.md 6, step 3 and section 11):
-//   node tools/qa/bench.mjs [--run <name>] [--quality high] [--webgl] [--only ground,flight] [--timeout <s>]
+//   node tools/qa/bench.mjs [--run <name>] [--quality high] [--webgl] [--only ground,flight] [--extra "nofarveg=1"] [--timeout <s>]
 // Drives the fixed routes from world/bookmarks.json in real time (pose interpolated from the rAF timestamp),
 // collects per-frame times and renderer counters, writes <run>/bench.json and checks web/explore/perf-budget.json.
 // Exit codes: 0 ok, 1 error, 3 invalid run (not WebGPU on the AMD GPU), 4 budget violated.
@@ -10,7 +10,7 @@ import {
   timestamp, validateBackend,
 } from "./lib.mjs";
 
-const args = parseArgs(process.argv.slice(2), { run: "value", quality: "value", webgl: "flag", only: "value", timeout: "value" });
+const args = parseArgs(process.argv.slice(2), { run: "value", quality: "value", webgl: "flag", only: "value", extra: "value", timeout: "value" });
 const quality = args.quality ?? "high";
 const run = args.run ?? timestamp();
 const timeout = Number(args.timeout ?? 180) * 1000;
@@ -19,6 +19,7 @@ const routes = doc.routes.filter((r) => !args.only || args.only.split(",").inclu
 const budgetFile = readJSON(join(EXPLORE, "perf-budget.json"));
 const budget = budgetFile.levels[quality];
 const dir = runDir(run);
+const extraQuery = args.extra ? Object.fromEntries(new URLSearchParams(args.extra)) : {};
 
 const sum = (a) => a.reduce((x, y) => x + y, 0);
 const mean = (a) => a.length ? sum(a) / a.length : 0;
@@ -72,7 +73,7 @@ let exitCode = 0;
 try {
   for (const route of routes) {
     const start = route.keys[0];
-    const { page } = await openApp(context, { hud: 0, cam: camParam(start), agl: 1, quality, webgl: args.webgl ? 1 : undefined }, { timeout, label: `Strecke ${route.id}` });
+    const { page } = await openApp(context, { ...extraQuery, hud: 0, cam: camParam(start), agl: 1, quality, webgl: args.webgl ? 1 : undefined }, { timeout, label: `Strecke ${route.id}` });
     const stats = await page.evaluate(() => window.__vr.stats());
     const verdict = validateBackend(stats, !!args.webgl);
     Object.assign(report, { backend: stats.backend, adapter: stats.adapter, valid: verdict.valid, renderer: verdict.valid ? verdict.label : `UNGÜLTIG: ${verdict.reason}` });

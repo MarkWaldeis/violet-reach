@@ -2,6 +2,7 @@
 //   node tools/qa/shot.mjs --run <name> [--quality high] [--fov 57] id=x,agl,z,yaw,pitch [id2=...]
 // y is metres above ground (agl). Append `,abs` to interpret y as absolute metres instead.
 // One browser session, __vr.setCamera per pose.
+import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ensureServer, launchChrome, openApp, runDir, timestamp, validateBackend, waitReady } from "./lib.mjs";
 
@@ -38,6 +39,7 @@ try {
     await page.evaluate(([v, agl]) => window.__vr.setCamera(v[0], v[1], v[2], v[3], v[4], { agl }), [v, agl]);
     await waitReady(page, 120_000, id);
     const s = await page.evaluate(() => window.__vr.stats());
+    await writeFile(join(dir, `${id}.stats.json`), JSON.stringify(s, null, 2));
     await page.screenshot({ path: join(dir, `${id}.png`) });
     const treeLods = Object.entries(s.assets?.byAsset ?? {})
       .filter(([asset]) => asset.startsWith("tree_"))

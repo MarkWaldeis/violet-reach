@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { Color, MeshStandardMaterial } from "three/webgpu";
+import { Color, DoubleSide, FrontSide, MeshStandardMaterial } from "three/webgpu";
 import { cloneFarCanopyMaterial, farvegPriorityVisible, parseFarvegPayload, resolveFarvegOptions } from "../src/far-vegetation.ts";
 
 const validInstance = {
@@ -63,10 +63,13 @@ test("far priority thinning is distance-ramped, deterministic and disabled by de
 
 test("far canopy clone reduces emission without mutating the shared asset material", () => {
   const source = new MeshStandardMaterial({ emissive: new Color(0.22, 0.22, 0.22), emissiveIntensity: 1 });
+  source.side = DoubleSide;
   const clone = cloneFarCanopyMaterial(source, 0.45) as MeshStandardMaterial;
   assert.notEqual(clone, source);
   assert.equal(source.emissiveIntensity, 1);
   assert.equal(clone.emissiveIntensity, 0.45);
   assert.equal(clone.emissive.r, source.emissive.r);
+  assert.equal(clone.side, FrontSide, "distant simplified canopy shells are front-side rasterized to halve alpha fill cost");
+  assert.equal(source.side, DoubleSide, "shared source material remains unchanged");
   assert.throws(() => cloneFarCanopyMaterial(source, 1.1), /emission/);
 });

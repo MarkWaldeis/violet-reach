@@ -10,6 +10,8 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+from pack_detail import main as pack_detail
+
 HERE = Path(__file__).parent
 ROOT = HERE.parents[1]
 PUB = ROOT / "web" / "explore" / "public"
@@ -58,5 +60,6 @@ if __name__ == "__main__":
         for name, rc, out in ex.map(run, todo):
             print(("OK  " if rc == 0 else "ERR ") + out[-600:])
     manifests()
+    pack_detail()
     tot = sum(p.stat().st_size for k in ("ground", "detail") for p in (PUB / k).rglob("*") if p.is_file())
     print(f"public/ground + public/detail: {tot / 1e6:.2f} MB")

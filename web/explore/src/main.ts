@@ -108,7 +108,7 @@ async function main() {
     status.textContent = "Gewässer und Ufermaterialien werden geladen …";
     const surface = await surfaceData(region, slice, terrain);
     groundMaterial.copy(terrainMaterial(surface));
-    scene.add(waterSurface(region, surface, observeReflectionPass, !qaFlag(params.get("noreflection"))));
+    if (!params.has("nowater")) scene.add(waterSurface(region, surface, observeReflectionPass, !qaFlag(params.get("noreflection"))));
   }
   const landmarkEffects = slice && effectConfig && hasLandmarkEffects(effectConfig)
     ? createLandmarkEffects(effectConfig, {
@@ -118,7 +118,7 @@ async function main() {
     })
     : undefined;
   if (landmarkEffects) scene.add(landmarkEffects.group);
-  const assets = slice ? await sliceAssets(slice, terrain, params, quality.assetDistanceScale, renderer) : undefined;
+  const assets = slice && !params.has("noassets") ? await sliceAssets(slice, terrain, params, quality.assetDistanceScale, renderer) : undefined;
   if (assets) scene.add(assets.group);
   let farveg: FarVegetation | undefined;
   if (slice && !params.has("nofarveg")) {

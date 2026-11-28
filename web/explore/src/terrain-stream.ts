@@ -19,6 +19,7 @@ interface Tile {
   reflected?: boolean;
   data?: HeightTile;
   mesh?: Mesh<BufferGeometry, Material>;
+  reflectionMesh?: Mesh<BufferGeometry, Material>;
   pending?: AbortController;
   attempts: number;
   retryAt: number;
@@ -178,8 +179,8 @@ export class TerrainStream {
   setReflectionMaterial(material: Material | null) {
     const target = material ?? this.#material;
     for (const tile of this.#active.values()) {
-      if (tile.mesh && tile.reflected && tile.mesh.material !== target) {
-        tile.mesh.material = target;
+      if (tile.reflectionMesh && tile.reflectionMesh.material !== target) {
+        tile.reflectionMesh.material = target;
       }
     }
   }
@@ -193,10 +194,15 @@ export class TerrainStream {
 
   #remove(tile: Tile) {
     tile.pending?.abort();
-    if (!tile.mesh) return;
-    this.group.remove(tile.mesh);
-    tile.mesh.dispose();
-    tile.mesh.geometry.dispose();
+    if (tile.mesh) {
+      this.group.remove(tile.mesh);
+      tile.mesh.dispose();
+      tile.mesh.geometry.dispose();
+    }
+    if (tile.reflectionMesh) {
+      this.group.remove(tile.reflectionMesh);
+      tile.reflectionMesh.geometry.dispose();
+    }
   }
 
   #canReflect(tx: number, tz: number, data: HeightTile) {
@@ -222,9 +228,16 @@ export class TerrainStream {
       tile.reflected = this.#canReflect(tile.coords.x, tile.coords.z, tile.data!);
       tile.mesh = new Mesh(geometry, this.#material);
       tile.mesh.receiveShadow = tile.mesh.castShadow = true;
-      if (tile.reflected) tile.mesh.layers.enable(REFLECTION_LAYER);
       tile.mesh.position.set(m.originX + tile.coords.x * m.tileSize, 0, m.originZ + tile.coords.z * m.tileSize);
       this.group.add(tile.mesh);
+      if (tile.reflected) {
+        const reflectionGeometry = buildTerrainMesh(m, tile.coords, tile.data!, 3);
+        tile.reflectionMesh = new Mesh(reflectionGeometry, this.#material);
+        tile.reflectionMesh.castShadow = tile.reflectionMesh.receiveShadow = false;
+        tile.reflectionMesh.layers.set(REFLECTION_LAYER);
+        tile.reflectionMesh.position.copy(tile.mesh.position);
+        this.group.add(tile.reflectionMesh);
+      }
     }
     tile.lod = tile.wantedLOD;
   }

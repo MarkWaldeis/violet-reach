@@ -50,7 +50,7 @@ let waterTexturesPromise: Promise<void> | null = null;
  * Spiegelsee reflection remains a single bounded-resolution pass on both backends.
  */
 export const WATER_REFLECTION_PASS = Object.freeze({
-  resolutionScale: 0.35,
+  resolutionScale: 0.15,
   bounces: false,
   generateMipmaps: true,
 });

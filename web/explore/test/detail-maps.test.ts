@@ -19,8 +19,7 @@ function detailTexture(rgba: [number, number, number, number]): DataTexture {
 function makeLoadedDetail(tileM = 1, roughCenter = 0.5) {
   return {
     tileM,
-    normalTex: detailTexture([128, 128, 255, 255]),
-    roughTex: detailTexture([128, 128, 128, 255]),
+    normalTex: detailTexture([128, 128, 128, 255]),
     roughCenter,
   };
 }
@@ -71,9 +70,9 @@ test("detail-maps resolves safely in Node without browser fetch and preserves ba
   assert.equal(result.alphaTest, 0.5);
 });
 
-test("mixed foliage assets keep leaf detail and use bark detail on woody primitives", () => {
-  assert.equal(detailClassForMaterial("foliage", "V3_mat_foliage_tree_meadow_oak"), "foliage");
-  assert.equal(detailClassForMaterial("foliage", "tree_oak_a_LOD1_foliage"), "foliage");
+test("mixed foliage assets skip leaf detail and use bark detail on woody primitives", () => {
+  assert.equal(detailClassForMaterial("foliage", "V3_mat_foliage_tree_meadow_oak"), undefined);
+  assert.equal(detailClassForMaterial("foliage", "tree_oak_a_LOD1_foliage"), undefined);
   assert.equal(detailClassForMaterial("foliage", "V3_mat_bark_tree_meadow_oak"), "bark");
   assert.equal(detailClassForMaterial("foliage", "trunk_acacia_wood"), "bark");
   assert.equal(detailClassForMaterial("bark", "Material_0"), "bark");
@@ -123,24 +122,37 @@ test("detail patch clones once per base material/class, preserves alpha/PBR flag
 
 test("patched-material cache is keyed by detail class as well as base material", () => {
   detailMapsTestHooks.reset();
+  detailMapsTestHooks.registerAssetClass("unit_rock", "rock_chalk");
+  detailMapsTestHooks.registerAssetClass("unit_stone", "stone_white");
+  detailMapsTestHooks.registerDetailClass("rock_chalk", makeLoadedDetail(0.6, 0.9));
+  detailMapsTestHooks.registerDetailClass("stone_white", makeLoadedDetail(0.5, 0.78));
+
+  const base = new MeshStandardMaterial({ roughness: 0.8 });
+  const rockDetail = applyAssetDetailMap(base, "unit_rock");
+  assert.notEqual(rockDetail, base);
+  assert.equal(applyAssetDetailMap(base, "unit_rock"), rockDetail);
+
+  const stoneDetail = applyAssetDetailMap(base, "unit_stone");
+  assert.notEqual(stoneDetail, base);
+  assert.notEqual(stoneDetail, rockDetail);
+  assert.equal(applyAssetDetailMap(base, "unit_stone"), stoneDetail);
+  assert.equal(applyAssetDetailMap(base, "unit_rock"), rockDetail);
+  detailMapsTestHooks.reset();
+});
+
+test("mixed foliage bark is patched while leaf materials keep their unmodified alpha material", () => {
+  detailMapsTestHooks.reset();
   detailMapsTestHooks.registerAssetClass("unit_tree", "foliage");
-  detailMapsTestHooks.registerDetailClass("foliage", makeLoadedDetail(0.15, 0.55));
   detailMapsTestHooks.registerDetailClass("bark", makeLoadedDetail(0.6, 0.9));
 
   const base = new MeshStandardMaterial({ roughness: 0.8 });
   base.name = "V3_mat_foliage_tree_meadow_oak";
-  const leafDetail = applyAssetDetailMap(base, "unit_tree");
-  assert.notEqual(leafDetail, base);
-  assert.equal(applyAssetDetailMap(base, "unit_tree"), leafDetail);
+  assert.equal(applyAssetDetailMap(base, "unit_tree"), base);
 
   base.name = "V3_mat_bark_tree_meadow_oak";
   const barkDetail = applyAssetDetailMap(base, "unit_tree");
   assert.notEqual(barkDetail, base);
-  assert.notEqual(barkDetail, leafDetail);
   assert.equal(applyAssetDetailMap(base, "unit_tree"), barkDetail);
-
-  base.name = "V3_mat_foliage_tree_meadow_oak";
-  assert.equal(applyAssetDetailMap(base, "unit_tree"), leafDetail);
   detailMapsTestHooks.reset();
 });
 

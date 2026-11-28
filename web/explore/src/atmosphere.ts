@@ -11,7 +11,7 @@ import { swatch } from "./palette.ts";
 import {
   buildCelestialBodiesNode, createCloudBillboards, createSkyEnvironmentTexture,
 } from "./sky-bodies.ts";
-import { REFLECTION_LAYER } from "./quality.ts";
+import { REFLECTION_LAYER, SHADOW_PROXY_LAYER } from "./quality.ts";
 
 export const sunDirection = new Vector3(-0.56, 0.52, -0.62).normalize();
 
@@ -41,12 +41,10 @@ export function setupAtmosphere(scene: Scene, quality: ShadowSettings = DEFAULT_
   const shellDenom = direction.y.max(0.04).add(0.16);
   const shellUV = direction.xz.div(shellDenom);
   const cirrusPatch = smoothstep(0.05, 0.65, mx_noise_float(vec3(shellUV.mul(0.85).add(drift2), 0.7)));
-  const cirrusWarp = mx_noise_float(vec3(shellUV.mul(1.8).add(drift2), 1.4)).mul(0.32);
-  const cirrusCoord = vec2(shellUV.x.mul(1.65).add(cirrusWarp), shellUV.y.mul(2.95).sub(cirrusWarp.mul(0.5)));
+  const cirrusCoord = vec2(shellUV.x.mul(1.65), shellUV.y.mul(2.95));
   const c1 = mx_noise_float(vec3(cirrusCoord.add(drift2), 2.3));
   const c2 = mx_noise_float(vec3(cirrusCoord.mul(2.4).add(drift2.mul(1.3)), 5.1)).mul(0.55);
-  const c3 = mx_noise_float(vec3(cirrusCoord.mul(5.2).sub(drift2), 8.9)).mul(0.28);
-  const cirrus = smoothstep(0.32, 0.88, c1.add(c2).add(c3))
+  const cirrus = smoothstep(0.32, 0.88, c1.add(c2))
     .mul(cirrusPatch)
     .mul(smoothstep(0.10, 0.34, direction.y))
     .mul(0.24);
@@ -95,6 +93,7 @@ export function setupAtmosphere(scene: Scene, quality: ShadowSettings = DEFAULT_
   sun.shadow.mapSize.set(quality.shadowMapSize, quality.shadowMapSize);
   sun.shadow.bias = -0.00012;
   sun.shadow.normalBias = 0.45;
+  sun.shadow.camera.layers.enable(SHADOW_PROXY_LAYER);
   const csm = shadows
     ? new CSMShadowNode(sun, {
       cascades: quality.shadowCascades,

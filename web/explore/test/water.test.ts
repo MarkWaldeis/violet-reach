@@ -63,7 +63,7 @@ async function testSurface() {
 }
 
 test("planar reflection pass stays single, bounded and mipmapped; tuning ranges are valid", () => {
-  assert.deepEqual(WATER_REFLECTION_PASS, { resolutionScale: 0.35, bounces: false, generateMipmaps: true });
+  assert.deepEqual(WATER_REFLECTION_PASS, { resolutionScale: 0.15, bounces: false, generateMipmaps: true });
   assert.ok(WATER_REFLECTION_DISTORTION.distanceFarM > WATER_REFLECTION_DISTORTION.distanceNearM);
   assert.ok(WATER_REFLECTION_DISTORTION.steepViewEnd > WATER_REFLECTION_DISTORTION.steepViewStart);
   assert.ok(WATER_REFLECTION_DISTORTION.shoreFadeDepthM > WATER_REFLECTION_DISTORTION.shoreFullDepthM);
