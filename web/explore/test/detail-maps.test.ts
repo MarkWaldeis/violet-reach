@@ -144,7 +144,7 @@ test("patched-material cache is keyed by detail class as well as base material",
   detailMapsTestHooks.reset();
 });
 
-test("flattened standard crystal exports become physical and keep only restrained emission", () => {
+test("flattened standard crystal exports become physical and use selective vein emission", () => {
   detailMapsTestHooks.reset();
   registerDetailAsset("unit_crystal_flat", "crystal", 0.4, 0.25);
 
@@ -157,8 +157,9 @@ test("flattened standard crystal exports become physical and keep only restraine
   assert.equal(physical.clearcoatRoughness, 0.08);
   assert.equal(physical.ior, 1.6);
   for (const channel of ["r", "g", "b"] as const) {
-    assert.ok(Math.abs(physical.emissive[channel] - base.emissive[channel] * 0.18) < 1e-6);
+    assert.ok(Math.abs(physical.emissive[channel] - base.emissive[channel] * 0.16) < 1e-6);
   }
+  assert.ok(physical.emissiveNode, "crystal emission must be a selective node graph rather than a flat wash");
   assert.equal(base.emissive.r, 0.8);
   assert.equal(base.emissive.g, 0.4);
   assert.equal(base.emissive.b, 1.0);

@@ -4,10 +4,15 @@ import {
   TextureLoader, type Material, type Node,
 } from "three/webgpu";
 import {
-  abs, cameraPosition, cameraViewMatrix, cos, float, materialColor, materialNormal, materialRoughness,
-  mx_noise_float, normalViewGeometry, normalWorldGeometry, positionWorld, sin, smoothstep, texture,
-  vec2, vec3, vec4,
+  abs, cameraPosition, cameraViewMatrix, cos, dot, float, materialColor, materialEmissive,
+  materialNormal, materialRoughness, mx_noise_float, normalViewGeometry, normalWorldGeometry,
+  positionGeometry, positionWorld, sin, smoothstep, texture, vec2, vec3, vec4,
 } from "three/tsl";
+
+// Keep detail-maps importable in bare Node tests: atmosphere.ts/palette.ts use Vite-only raw JSON.
+// These constants are the normalized values of atmosphere.ts sunDirection and palette violet_glow.
+const DETAIL_SUN_DIRECTION = vec3(-0.5690634, 0.5284160, -0.6300345);
+const CRYSTAL_GLOW_LINEAR = vec3(0.7454042, 0.5271151, 0.7454042);
 
 interface DetailTextureEntry {
   tile_m: number;
@@ -104,10 +109,11 @@ export const DETAIL_CLASS_TUNING: Readonly<Record<string, DetailClassTuning>> = 
     microNormal: 0.20,
     macroNormal: 0.10,
     albedoMicro: 0.022,
-    albedoNoise: 0.034,
+    albedoNoise: 0.046,
     roughness: 0.022,
     macroTileM: 2.0,
-    noiseTileM: 6.0,
+    noiseTileM: 1.8,
+    noiseGain: 4.0,
     noiseFadeEndM: 300,
   }),
   // Organic classes stay deliberately restrained: no procedural color patches and no coarse octave.
@@ -419,9 +425,35 @@ export function applyAssetDetailMap(material: Material, assetId: string): Materi
   } else if (cls === "bark") {
     nodeMat.color = nodeMat.color.clone().multiply(new Color(1.45, 1.38, 1.28));
   } else if (cls === "crystal") {
-    // The baked GLB preserves the violet internal glow, but at nearly full strength it overruns
-    // the diffuse facet shading. Keep a visible core glow while letting the crystal body shade.
-    nodeMat.emissive = nodeMat.emissive.clone().multiplyScalar(0.18);
+    // The baked emission map is mostly a flat violet body (inspected after KTX2 extraction):
+    // the internal structure visible in the Cycles review did not survive the bake. Keep only a
+    // restrained baked core glow, then rebuild the missing cloudy/veined mineral structure in
+    // object space. MaterialX noise is low-amplitude, so it is normalized before shaping.
+    nodeMat.emissive = nodeMat.emissive.clone().multiplyScalar(0.16);
+    const existingEmissiveNode = material instanceof MeshStandardNodeMaterial ? material.emissiveNode : null;
+    const bakedEmission = (existingEmissiveNode ?? materialEmissive) as unknown as Node<"vec3">;
+    const emissionEnergy = dot(bakedEmission, vec3(1 / 3, 1 / 3, 1 / 3));
+    const veinGate = smoothstep(0.06, 0.24, emissionEnergy).pow(1.25);
+    const selectiveEmission = bakedEmission.mul(float(0.06).add(veinGate.mul(0.90)));
+
+    const objectP = positionGeometry;
+    const cloudNoise = mx_noise_float(objectP.mul(1 / 2.2).add(vec3(4.7, 9.1, 2.3))).mul(4).clamp(-1, 1);
+    const cloud = cloudNoise.mul(0.5).add(0.5);
+    const veinNoiseA = abs(mx_noise_float(objectP.mul(1 / 1.15).add(vec3(8.3, 2.9, 5.7))).mul(5)).clamp(0, 1);
+    const veinNoiseB = abs(mx_noise_float(objectP.mul(1 / 2.05).add(vec3(2.4, 11.7, 7.1))).mul(4)).clamp(0, 1);
+    const veinA = smoothstep(0.025, 0.18, veinNoiseA).oneMinus();
+    const veinB = smoothstep(0.018, 0.12, veinNoiseB).oneMinus();
+    const veinMask = veinA.mul(0.72).add(veinB.mul(0.42)).clamp(0, 1);
+    const internalGlow = CRYSTAL_GLOW_LINEAR.mul(cloud.mul(0.030).add(veinMask.mul(0.150)));
+
+    // Cheap mineral translucency: thin silhouettes receive only a very restrained violet backlight,
+    // strongest on faces turned away from the sun. No costly transmission pass is introduced.
+    const viewDir = cameraPosition.sub(positionWorld).normalize();
+    const rim = abs(dot(nW, viewDir)).oneMinus().clamp(0, 1).pow(2.2);
+    const sunBack = dot(nW, DETAIL_SUN_DIRECTION).negate().clamp(0, 1);
+    const translucency = CRYSTAL_GLOW_LINEAR.mul(rim).mul(float(0.35).add(sunBack.mul(0.65))).mul(0.015);
+    nodeMat.emissiveNode = selectiveEmission.add(internalGlow).add(translucency);
+
     const physical = nodeMat as MeshPhysicalNodeMaterial;
     if (!physical.clearcoat) physical.clearcoat = 0.55;
     if (!physical.clearcoatRoughness) physical.clearcoatRoughness = 0.08;
