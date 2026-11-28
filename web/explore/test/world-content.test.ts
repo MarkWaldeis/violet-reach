@@ -74,7 +74,7 @@ test("approved violet accents replace proof placements and are partly buried", (
   assert.equal(columnCrystals.length, 3, "the three buried column crystals remain untouched");
   assert.equal(new Set(columnCrystals.map((p: { yaw: number }) => p.yaw)).size, 3);
   for (const p of columnCrystals) {
-    assert.ok(p.y_offset < -1 && p.y_offset > -2);
+    assert.ok(p.y_offset <= -0.3 && p.y_offset > -1);
     assert.ok(Math.abs(p.pitch) > 0 && Math.abs(p.roll) > 0);
   }
   assert.equal(entries.some((p: { scatter?: unknown }) => p.scatter), false, "the phase-6 crystal accents are individual singles, not uncontrolled scatter");

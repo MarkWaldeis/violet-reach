@@ -269,9 +269,9 @@ export function applyAssetDetailMap(material: Material, assetId: string): Materi
   let nodeMat: MeshStandardNodeMaterial;
   if (material instanceof MeshStandardNodeMaterial) {
     nodeMat = material.clone() as MeshStandardNodeMaterial;
-  } else if (material instanceof MeshPhysicalMaterial) {
-    // Crystal/gem GLBs may use physical transmission/clearcoat terms; copying them into a plain
-    // standard node material would silently flatten that part of their authored PBR response.
+  } else if (material instanceof MeshPhysicalMaterial || cls === "crystal") {
+    // Crystal/gem assets need physical clearcoat/IOR even when the current flattened GLB export
+    // only produced a standard material; copying into plain standard would discard that response.
     nodeMat = new MeshPhysicalNodeMaterial().copy(material);
   } else {
     nodeMat = new MeshStandardNodeMaterial().copy(material);
@@ -398,6 +398,14 @@ export function applyAssetDetailMap(material: Material, assetId: string): Materi
     nodeMat.color = nodeMat.color.clone().multiply(new Color(0.94, 0.90, 0.82));
   } else if (cls === "bark") {
     nodeMat.color = nodeMat.color.clone().multiply(new Color(1.45, 1.38, 1.28));
+  } else if (cls === "crystal") {
+    // The baked GLB preserves the violet internal glow, but at nearly full strength it overruns
+    // the diffuse facet shading. Keep a visible core glow while letting the crystal body shade.
+    nodeMat.emissive = nodeMat.emissive.clone().multiplyScalar(0.18);
+    const physical = nodeMat as MeshPhysicalNodeMaterial;
+    if (!physical.clearcoat) physical.clearcoat = 0.55;
+    if (!physical.clearcoatRoughness) physical.clearcoatRoughness = 0.08;
+    if (Math.abs((physical.ior || 1.5) - 1.5) < 1e-4) physical.ior = 1.6;
   }
 
   if (!byClass) {

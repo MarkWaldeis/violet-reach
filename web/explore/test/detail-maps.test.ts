@@ -144,6 +144,27 @@ test("patched-material cache is keyed by detail class as well as base material",
   detailMapsTestHooks.reset();
 });
 
+test("flattened standard crystal exports become physical and keep only restrained emission", () => {
+  detailMapsTestHooks.reset();
+  registerDetailAsset("unit_crystal_flat", "crystal", 0.4, 0.25);
+
+  const base = new MeshStandardMaterial({ roughness: 0.24 });
+  base.emissive.setRGB(0.8, 0.4, 1.0);
+  const detailed = applyAssetDetailMap(base, "unit_crystal_flat");
+  assert.ok(detailed instanceof MeshPhysicalNodeMaterial);
+  const physical = detailed as MeshPhysicalNodeMaterial;
+  assert.equal(physical.clearcoat, 0.55);
+  assert.equal(physical.clearcoatRoughness, 0.08);
+  assert.equal(physical.ior, 1.6);
+  for (const channel of ["r", "g", "b"] as const) {
+    assert.ok(Math.abs(physical.emissive[channel] - base.emissive[channel] * 0.18) < 1e-6);
+  }
+  assert.equal(base.emissive.r, 0.8);
+  assert.equal(base.emissive.g, 0.4);
+  assert.equal(base.emissive.b, 1.0);
+  detailMapsTestHooks.reset();
+});
+
 test("physical crystal materials keep transmission and clearcoat in a physical node clone", () => {
   detailMapsTestHooks.reset();
   registerDetailAsset("unit_crystal", "crystal", 0.4, 0.25);
